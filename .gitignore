@@ -1,0 +1,13 @@
+# Geheimnisse – niemals versionieren
+.env
+.env.*
+
+# Daten und Sicherungen (gesichert über backup/ und SHA-256 im CHANGELOG)
+data/
+backup/
+*.xlsx
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
