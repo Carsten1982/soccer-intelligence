@@ -322,3 +322,52 @@ def test_real_fixtures():
         assert (md.saison, md.spieltag) == ("2026/2027", 1)
     notes = {k[2]: v for k, v in fx.team_notes.items()}
     assert set(notes) == {"Elversberg", "Paderborn", "Schalke"}
+
+
+# --- Spieltag-Auswahl mit Pfeilen -------------------------------------------------
+
+def _overview(tmp_path, today):
+    from core.matchday import matchday_overview
+    rows = plan_rows() + [
+        ["2026/2027", 3, D(2026, 9, 11), D(2026, 9, 13), "A", "C"],
+        ["2026/2027", 3, D(2026, 9, 11), D(2026, 9, 13), "B", "D"],
+    ]
+    return matchday_overview(plan_df(tmp_path, with_status(rows, [""] * 6)), today)
+
+
+def test_selection_default_and_no_future(tmp_path):
+    from core.matchday import select_matchday
+    ov = _overview(tmp_path, date(2026, 9, 1))          # aktuell: Spieltag 2, Spieltag 3 liegt in der Zukunft
+    sel = select_matchday(ov, {})
+    assert sel.selected.spieltag == 2 and sel.is_current
+    assert [m.spieltag for m in sel.choices] == [1, 2]   # nicht in die Zukunft
+    assert sel.next is None and sel.previous.spieltag == 1
+    future = select_matchday(ov, {"spieltag": "3"})
+    assert future.selected.spieltag == 2 and future.requested_invalid
+
+
+def test_selection_from_address(tmp_path):
+    from core.matchday import params_for, select_matchday
+    ov = _overview(tmp_path, date(2026, 9, 1))
+    sel = select_matchday(ov, {"spieltag": "1"})
+    assert sel.selected.spieltag == 1 and not sel.is_current and sel.next.spieltag == 2
+    assert params_for(sel.selected, sel.current) == {"spieltag": "1"}
+    assert params_for(sel.current, sel.current) == {}
+    for bad in ({"spieltag": "x"}, {"spieltag": "0"}, {"spieltag": "1", "saison": "1999-00"}):
+        s = select_matchday(ov, bad)
+        assert s.is_current and s.requested_invalid
+
+
+def test_selection_across_seasons(tmp_path):
+    from core.matchday import matchday_overview, params_for, select_matchday
+    rows = [
+        ["2025/2026", 34, D(2026, 5, 16), D(2026, 5, 16), "A", "B"],
+        ["2026/2027", 1, D(2026, 8, 28), D(2026, 8, 30), "A", "C"],
+    ]
+    ov = matchday_overview(plan_df(tmp_path, with_status(rows, ["", ""])), date(2026, 8, 1))
+    sel = select_matchday(ov, {})
+    assert (sel.selected.saison, sel.selected.spieltag) == ("2026/2027", 1)
+    prev = sel.previous
+    assert params_for(prev, sel.current) == {"spieltag": "34", "saison": "2025-26"}
+    again = select_matchday(ov, {"spieltag": "34", "saison": "2025-26"})
+    assert again.selected == prev

@@ -1,6 +1,6 @@
 # Soccer Intelligence – Projektübersicht
 
-**Spezifikation v1.1** · Stand 30.10.2026
+**Spezifikation v1.2** · Stand 31.10.2026
 
 ## Worum es geht
 Soccer Intelligence ist eine Fussball-Analyseplattform. Sie berechnet statistische Auffälligkeiten
@@ -25,7 +25,7 @@ kommentiert und schrittweise aufgebaut sein. Nach jedem Schritt kurz erklären, 
 ## Ziel der ersten Phase
 Ein internes Dashboard, das für den aktuellen Spieltag jeder Liga alle Begegnungen mit den
 KPIs 01–04 zeigt, dazu die Top Anomalien und die Datenqualität. Aufbau und Darstellung:
-`docs/05_Dashboard.md` (Dashboard-Briefing v4.2).
+`docs/05_Dashboard.md` (Dashboard-Briefing).
 
 Umsetzung in Etappen gemäss `docs/01_Technisches_Setup.md`, Abschnitt 7:
 - **A – Fundament:** Datenbank einlesen und prüfen, Versionen festlegen (Paket Schritt 1)
@@ -47,15 +47,15 @@ Nicht Teil dieser Phase:
 | docs/02_Datenbasis.md | Aufbau der Excel-Datei (58 Spalten inkl. `Gameday`), Formate, Prüfregeln |
 | docs/03_KPI_Regelwerk.md | Berechnungsregeln, Anomalie-Logik, Top-Anomalien, Dashboard-Texte |
 | docs/04_Spielplan.md | Aufbau des Spielplans (`Datum von` / `Datum bis`), aktueller Spieltag, Prüfregeln |
-| docs/05_Dashboard.md | Dashboard-Briefing v4.2: Aufbau, Navigation, Darstellung, Abnahmekriterien |
+| docs/05_Dashboard.md | Dashboard-Briefing (v4.3): Aufbau, Navigation, Darstellung, Abnahmekriterien |
 | docs/tests/test_kpi01_formkurve.md … test_kpi04_gelbe_karten.md | Bestätigte Testfälle mit erwarteten Ergebnissen (JSON) |
 | data/Database-Soccer-Intelligence.xlsx | Einzige gültige Datenquelle für gespielte Spiele |
 | data/Spielplan.xlsx | Angesetzte Begegnungen |
 | CHANGELOG.md | Änderungsprotokoll, jede Änderung wird dort eingetragen |
 
 Bei Widersprüchen zu Berechnungen gilt das KPI-Regelwerk, bei Darstellung und Navigation das
-Dashboard-Briefing. `03_KPI_Regelwerk.md` und `05_Dashboard.md` sind aus Word-Dokumenten erzeugt
-und werden nicht direkt bearbeitet. Die Testfälle sind die Referenz dafür, ob eine Berechnung korrekt ist; ihre
+Dashboard-Briefing. **Seit 31.10.2026 sind die md-Dateien in `docs/` die einzige massgebliche Quelle.**
+Die Word-Dokumente im Ordner `word/` sind nur noch Archiv und werden nicht mehr gepflegt. Die Testfälle sind die Referenz dafür, ob eine Berechnung korrekt ist; ihre
 JSON-Blöcke werden zu automatischen Tests. Sie gelten für die Datenbank mit der SHA-256, die in
 den Testfällen steht.
 

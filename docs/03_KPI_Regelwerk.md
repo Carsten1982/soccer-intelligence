@@ -1,9 +1,11 @@
 # Soccer Intelligence – KPI-Regelwerk
 
-**Spezifikation v1.1** · Stand 30.10.2026
+**Spezifikation v1.2** · Stand 31.10.2026
 
-Quelle: „Definition der Dashboard-KPIs (final)“, Arbeitsstand **30.10.2026**, KPIs 01–04.
-Diese Datei gibt den Inhalt des Word-Dokuments wieder; Abschnitt 8 sammelt offene Punkte und Unstimmigkeiten.
+> **Massgebliche Quelle seit 31.10.2026.** Änderungen werden nur noch in dieser Datei gemacht, mit Datum in der Änderungshistorie bzw. im `CHANGELOG.md`.
+> Das Word-Dokument „Definition der Dashboard-KPIs (final)“ (Arbeitsstand 30.10.2026) liegt nur noch als Archiv im Ordner `word/` und wird nicht mehr gepflegt.
+
+Abschnitt 8 sammelt offene Punkte.
 
 **Dies ist die einzige gültige md-Fassung des KPI-Regelwerks.** Sie ersetzt `03_KPI_Grundregeln.md` und den Ordner `docs/kpis/` (beide gelöscht am 30.10.2026). Weitere KPIs werden als neue Abschnitte in dieser Datei ergänzt.
 
@@ -14,6 +16,7 @@ Diese Datei gibt den Inhalt des Word-Dokuments wieder; Abschnitt 8 sammelt offen
 | 27.10.2026 | Erstfassung KPIs 01–04 | alle |
 | 28.10.2026 | Ligareferenz über Spalte `Gameday` (letzte 20 Spieltage), Regel für Nachholspiele, fehlende Kartenwerte in Referenzspielen; offener Punkt 5 erledigt | 1.1, 6 |
 | 30.10.2026 | Zeitlicher Abstand von 3 auf 2 Kalendertage reduziert, gilt nur für Teamwerte; offener Punkt 4 erledigt | 1 |
+| 31.10.2026 | v1.2: Diese Datei ist die massgebliche Quelle, Word nur noch Archiv | Kopf |
 | 30.10.2026 | v1.1: Stichtag = „Datum von“ aus dem Spielplan; Reihenfolge bei fehlenden Werten und Sortierung festgehalten; Rundung mit Dezimalarithmetik; Vorzeichen im Text „Keine Anomalie“; Auswahl der Top-Anomalien übernommen (bisher nur in `03_KPI_Grundregeln.md`); Spalten AC/AD für KPI 04; offene Punkte 1, 3 und 8 erledigt, neue Punkte 9 und 10 | 1, 2.3, 2.4, 2.6, 4, 5, 6, 8 |
 
 Weitere KPIs werden im Projektverlauf ergänzt. Beispielrechnungen und Testfälle stehen in `docs/tests/test_kpi01_formkurve.md` bis `test_kpi04_gelbe_karten.md` (je zwei bestätigte Durchgänge: 1. Spieltag 2026/27 und 3. Spieltag 2025/26). Sie sind die verbindliche Referenz für die technische Umsetzung.
@@ -319,7 +322,7 @@ Diese Punkte sollten vor der Umsetzung im Code geklärt werden:
 4. ~~**3-Tage-Regel:** Ligaspiele unter der Woche, Geltung für die Ligareferenz.~~ **Erledigt am 30.10.2026:** auf 2 Kalendertage reduziert (Spiele unter der Woche und dichte Spielpläne, z. B. Premier League über Weihnachten, zählen mit); gilt nur für Teamwerte, nicht für die Ligareferenz. Siehe Abschnitt 1.
 5. ~~**Ligareferenz in KPI 04:** Definition der letzten 20 Spieltage.~~ **Erledigt am 28.10.2026:** einheitlich über Spalte `Gameday` geregelt, siehe Abschnitt 1.1.
 6. **Rundung der Teamabweichungen (KPI 03):** Werden auch diese auf eine Nachkommastelle gerundet angezeigt? Vermutlich ja, sollte aber explizit stehen.
-7. **Datenquelle KPI 04:** Platzhalter „[Name der Quelle]“ im Word ist noch nicht ausgefüllt. Für die Berechnung nicht relevant, nur Dokumentation.
+7. **Datenquelle KPI 04:** Der Name der Datenquelle (im Word-Archiv als Platzhalter „[Name der Quelle]“) ist noch nicht dokumentiert. Bei Bedarf in Abschnitt 6 ergänzen. Für die Berechnung nicht relevant.
 8. ~~**Überschrift KPI 03 negativ:** „Unter 2.5 Goals“ statt „2,5“.~~ **Erledigt am 30.10.2026:** „2,5“ gilt, im Word als Änderung markiert.
 9. **KPI 03 Nachkommastellen Hauptwert:** Das Beispiel „3,10“ hat zwei Nachkommastellen, die allgemeine Regel eine. Die Testfälle verwenden eine (z. B. 4,4). Bitte bestätigen. Abweichung und Einstufung ändern sich dadurch nicht.
 10. **KPI-Karte bei Aufsteiger-Spielen (KPI 02–04):** Die Testfälle nehmen an: Teamwert des Gegners und Ligareferenz werden angezeigt, Hauptwert, Abweichung und Anomalie als „–“. Bitte bestätigen.

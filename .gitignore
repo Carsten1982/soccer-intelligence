@@ -6,6 +6,8 @@
 data/
 backup/
 *.xlsx
+# Ausnahme: fester Referenzstand der Datenbank für die KPI-Testfälle
+!tests/referenz/*.xlsx
 
 # Python
 __pycache__/

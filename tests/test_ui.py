@@ -125,3 +125,34 @@ def test_form_cell():
     from views.kpi_table import form_cell
     html = form_cell(FormTeam("A", ["–", "–", "–", "S", "N"], 2))
     assert html.count("si-form-none") == 3 and "si-form-S" in html and "si-form-N" in html
+
+
+# --- Spieltag-Auswahl mit Pfeilen (Seiten-Test) ----------------------------------------
+
+@needs_files
+def test_league_page_arrow_back_and_address():
+    at = AppTest.from_function(_liga_bundesliga, default_timeout=TIMEOUT).run()
+    assert not at.exception, at.exception
+    prev = at.button(key="prev_bundesliga")
+    nxt = at.button(key="next_bundesliga")
+    assert nxt.disabled                                   # vom aktuellen Spieltag nicht in die Zukunft
+    if prev.disabled:
+        pytest.skip("im Spielplan gibt es nur einen auswählbaren Spieltag")
+    prev.click().run()
+    assert not at.exception, at.exception
+    assert "Ausgewählter Spieltag" in _texts(at)
+    assert at.button(key="current_bundesliga") is not None   # „Zum aktuellen Spieltag“
+    if hasattr(at, "query_params"):
+        assert "spieltag" in at.query_params
+
+
+@needs_files
+def test_league_page_invalid_address_falls_back_to_current():
+    at = AppTest.from_function(_liga_bundesliga, default_timeout=TIMEOUT)
+    if not hasattr(at, "query_params"):
+        pytest.skip("AppTest ohne query_params")
+    at.query_params["spieltag"] = "999"
+    at.run()
+    assert not at.exception, at.exception
+    text = _texts(at) + "\n".join(str(c.value) for c in at.caption)
+    assert "Aktueller Spieltag" in text and "nicht verfügbar" in text

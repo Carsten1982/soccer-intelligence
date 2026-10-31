@@ -290,7 +290,7 @@ Keine Spiele in der Datenbank (Aufsteiger).
 
 1. ~~**Vorzeichen im Text „Keine Anomalie“ (Empfehlung)**~~ **Übernommen am 30.10.2026** (Regelwerk 2.4): Vorzeichen steht immer, bei 0,0 % keins. Gilt einheitlich für KPI 02 und KPI 04.
 2. **KPI-Karte bei Aufsteiger-Spielen:** wie bei KPI 02 (Abschnitt 5, Punkt 1): Teamwert des Gegners und Ligareferenz werden angezeigt, Hauptwert, Abweichung und Anomalie als „–“.
-3. **Datenquelle:** Platzhalter „[Name der Quelle]“ im Word noch offen (Regelwerk, offener Punkt 7). Für die Berechnung nicht relevant.
+3. **Datenquelle:** Name der Datenquelle noch nicht dokumentiert (Regelwerk, offener Punkt 7). Für die Berechnung nicht relevant.
 
 ---
 

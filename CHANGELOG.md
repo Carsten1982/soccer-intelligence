@@ -5,6 +5,16 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 31.10.2026 (abends) – Anpassungen nach Abnahme Etappe C (Paket vorbereitet)
+
+- **Carsten** · Abnahme Etappe C: Zahlen FC Köln geprüft, „sieht gut aus“. Etappe C eingespielt als Git `8cb5f0f`.
+- **Carsten / Claude** · Neue Datenbank (`6b84d8d2…`, mit Spieltag 1 2026/27) und Spielplan Version 2 (Spieltage 1–2) geprüft und aktiviert. Korrigiert: id 119365 Gelbe Karten (Leerzeichen → 2), PL-Spieltag 2 falsch nummeriert, BL-Spieltag 2 unvollständig. Spieltag 1 alt vs. neu nachgerechnet: 57 KPI-Werte, 0 Unterschiede.
+- **Carsten** · Wünsche: (1) Abstand Navigation → Überschrift um 80 % verkleinern, (2) Navigation dunkelgrau mit weisser Schrift, aktiver Tab fett mit blauem Balken, (3) Spieltage mit Pfeilen wählbar, je Liga getrennt, nicht in die Zukunft, Auswahl in der Adresse (`?spieltag=1`), Top Anomalien immer aktueller Spieltag.
+- **Claude** · Umgesetzt (`app/views/components.py`, `app/views/liga.py`, `app/core/matchday.py`). Briefing (`05_Dashboard.md`) Kapitel 3.2 und 14 angepasst.
+- **Claude** · Tests: Referenz-Datenbank `6d68583c…` als Kopie unter `tests/referenz/`, damit die 32 KPI-Testfälle unabhängig vom aktuellen Datenstand laufen. Neue Tests für die Spieltag-Auswahl und dafür, dass spätere Spiele einen früheren Spieltag nicht verändern.
+- **Claude** · `02_Datenbasis.md` und `04_Spielplan.md` auf den neuen Datenstand gebracht.
+- **Carsten** · Entscheidung: Die md-Dateien sind ab sofort die einzige massgebliche Quelle, Word nur noch Archiv. **Claude** · Umgestellt in `03_KPI_Regelwerk.md` (v1.2), `05_Dashboard.md` (v4.3), `CLAUDE.md`, `01_Technisches_Setup.md`, `test_kpi04_gelbe_karten.md`; neu `word/README.md` (Archivhinweis).
+
 ## 31.10.2026 – Etappe C (Paket vorbereitet)
 
 - **Carsten** · Etappe B abgenommen („Darstellung passt“), eingespielt als Git `ff4fbe8`.

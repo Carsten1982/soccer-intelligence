@@ -1,6 +1,6 @@
 # Soccer Intelligence – Technisches Setup
 
-**Stand:** 31.10.2026 · **Status:** Etappen A und B in Betrieb, Etappe C (KPIs) als Paket bereit, Passwortschutz beschlossen (noch nicht umgesetzt)
+**Stand:** 31.10.2026 · **Status:** Etappen A–C in Betrieb, Anpassungen nach der Abnahme (Spieltag-Pfeile, Navigation) als Paket bereit, Passwortschutz beschlossen (noch nicht umgesetzt)
 **Verantwortlich:** Carsten Thiele · **Mitwirkende:** ChatGPT (Server-Setup, Review), Claude (Daten, Architektur, Code)
 
 ---
@@ -22,7 +22,8 @@
 | Versionen festgelegt | ✅ in Betrieb | streamlit 1.66.1, pandas 3.1.0, openpyxl 3.1.5 |
 | Versionierung (Git + GitHub) | ✅ in Betrieb | seit 30.10.2026, privates Repository `Carsten1982/soccer-intelligence` |
 | Spielplan einlesen, aktueller Spieltag, Tabs | ✅ in Betrieb | Etappe B, eingespielt 31.10.2026 (Git `ff4fbe8`) |
-| KPI 01–04 in den Liga-Tabellen, Häufigkeit der Anomalien | 📦 Paket bereit | Etappe C, siehe Abschnitt 7 |
+| KPI 01–04 in den Liga-Tabellen, Häufigkeit der Anomalien | ✅ in Betrieb | Etappe C, eingespielt 31.10.2026 (Git `8cb5f0f`) |
+| Spieltag-Pfeile, Navigation dunkelgrau, kleinerer Abstand | 📦 Paket bereit | Anpassungen nach Abnahme Etappe C (31.10.2026) |
 | KPIs, Top Anomalien, öffentliche Website | ⏳ offen | siehe Abschnitt 7 |
 
 ---
@@ -53,7 +54,9 @@ Ausbaustufen:
 | ~~25.10.2026~~ | ~~Dashboard in Phase 1 öffentlich, ohne Login~~ → **ersetzt am 30.10.2026** (siehe oben). |
 | 25.10.2026 | Daten werden **nur über die Datei auf dem Server** geändert, nie über die App. |
 | 25.10.2026 | **Einzige gültige Datenquelle:** `data/Database-Soccer-Intelligence.xlsx` |
-| 30.10.2026 | **Ein KPI-Regelwerk:** gültig ist nur `docs/03_KPI_Regelwerk.md`. `03_KPI_Grundregeln.md` und `docs/kpis/` sind gelöscht. Massgebliche Quelle bleibt das Word-Dokument „Definition der Dashboard-KPIs“. |
+| 31.10.2026 | **Die md-Dateien in `docs/` sind die einzige massgebliche Quelle.** Die Word-Dokumente (`word/`) sind Archiv und werden nicht mehr gepflegt. Änderungen nur noch in den md-Dateien, mit Eintrag im CHANGELOG. |
+| 31.10.2026 | Spieltag-Pfeile in den Liga-Bereichen (je Liga, nicht in die Zukunft, Auswahl in der Adresse); Top Anomalien immer aktueller Spieltag. |
+| 30.10.2026 | **Ein KPI-Regelwerk:** gültig ist nur `docs/03_KPI_Regelwerk.md`. `03_KPI_Grundregeln.md` und `docs/kpis/` sind gelöscht. ~~Massgebliche Quelle bleibt das Word-Dokument „Definition der Dashboard-KPIs“.~~ (ersetzt am 31.10.2026, siehe oben) |
 | 30.10.2026 | Im Text „Keine Anomalie“ (KPI 02 und 04) steht die Abweichung immer mit Vorzeichen, bei 0,0 % ohne. |
 | 28.10.2026 | Ligareferenz über die Spalte `Gameday` (letzte 20 Spieltage). Spalte in der Datenbank ergänzt. |
 | 25.10.2026 | Spielplan (anstehende Partien) kommt als **eigene Datei** `data/Spielplan.xlsx`, getrennt von den historischen Daten. Aufbau: `04_Spielplan.md` (Datum von / Datum bis, beschlossen 30.10.2026). |
@@ -124,7 +127,8 @@ Besucher → https://soccer-intelligence.com/dashboard…  → Passwortabfrage (
 │   ├── Database-Soccer-Intelligence.xlsx   ← GÜLTIGE Datenbank
 │   └── Spielplan.xlsx                      ← GÜLTIGER Spielplan
 ├── backup/                     Sicherungen, nicht in Git
-├── docs/, word/                Dokumentation
+├── docs/                       Dokumentation, massgebliche Quelle (md)
+├── word/                       Archiv der Word-Dokumente (Stand 30.10.2026, nicht mehr gepflegt)
 ├── CLAUDE.md, CHANGELOG.md
 └── .git/, .gitignore           Versionsverlauf (seit 30.10.2026)
 ```
@@ -311,7 +315,7 @@ CHANGELOG.md              Änderungsprotokoll
 | Spezifikation | Dashboard-Briefing v4.2 (`05_Dashboard.md`), `03_KPI_Regelwerk.md` v1.1, `04_Spielplan.md`, Testfälle KPI 01–04 | – | ✅ fertig; offene KPI-Punkte nicht blockierend (Regelwerk, Abschnitt 8) |
 | A – Fundament | Datenbank einlesen und prüfen, Versionen fest (Paket Schritt 1) | neue Datenbank (58 Spalten) auf dem Server ✅ | ✅ eingespielt 31.10.2026 (Git `ffec276`) |
 | B – Spielplan und Datenqualität | Spielplan einlesen, aktueller Spieltag, Tabs, Bereich Datenqualität | Spielplan auf dem Server ✅ | ✅ eingespielt 31.10.2026 (Git `ff4fbe8`) |
-| C – Liga-Tabellen mit KPIs | KPI 01–04 gemäss Regelwerk, JSON-Blöcke der Testfälle als automatische Tests, Häufigkeit der Anomalien | Gameday ✅, Testfälle ✅ | 📦 Paket bereit (31.10.2026) |
+| C – Liga-Tabellen mit KPIs | KPI 01–04 gemäss Regelwerk, JSON-Blöcke der Testfälle als automatische Tests, Häufigkeit der Anomalien | Gameday ✅, Testfälle ✅ | ✅ eingespielt 31.10.2026 (Git `8cb5f0f`) |
 | D – Top Anomalien | Auswahl-Logik gemäss Regelwerk, Abschnitt 2.6 | Etappe C | offen |
 | E – Dashboard-Zugang | Umzug nach `/dashboard`, Passwortschutz über Traefik, Platzhalterseite unter `/` | separate Freigabe (Traefik-Labels) | beschlossen, offen |
 | Öffentliche Website | eigener Architekturvorschlag (Mobile First) | – | später |
@@ -338,5 +342,5 @@ CHANGELOG.md              Änderungsprotokoll
 
 | Idee | Notiz |
 |---|---|
-| Spieltage im Dashboard vor- und zurückblättern | eigene kleine Spezifikation (Bedienung, Adressen, Verhalten der Top Anomalien) |
+| ~~Spieltage im Dashboard vor- und zurückblättern~~ | umgesetzt am 31.10.2026 (Briefing 3.2) |
 | Internes Test-Datum (`testdatum` in der Konfiguration) | Dashboard verhält sich wie an einem anderen Tag; praktisch zum Durchspielen vergangener Spieltage |

@@ -99,3 +99,74 @@ def date_range(first: date, last: date) -> str:
     if first.year == last.year:
         return f"{first:%d.%m.} – {last:%d.%m.%Y}"
     return f"{first:%d.%m.%Y} – {last:%d.%m.%Y}"
+
+
+# --- Spieltag-Auswahl mit Pfeilen (Änderung 31.10.2026) --------------------------------
+#
+# Je Liga lassen sich alle Spieltage bis einschliesslich des aktuellen auswählen, nicht in die Zukunft.
+# Die Auswahl steht in der Adresse: ?spieltag=1 (bei einer anderen Saison zusätzlich &saison=2025-26).
+# Ohne Angabe oder bei ungültiger Angabe gilt der aktuelle Spieltag.
+
+PARAM_MATCHDAY = "spieltag"
+PARAM_SEASON = "saison"
+
+
+@dataclass(frozen=True)
+class Selection:
+    selected: Matchday
+    current: Matchday
+    choices: list[Matchday]          # auswählbar, alt -> neu; der letzte ist der aktuelle
+    requested_invalid: bool = False  # Adresse nannte einen nicht verfügbaren Spieltag
+
+    @property
+    def index(self) -> int:
+        return self.choices.index(self.selected)
+
+    @property
+    def is_current(self) -> bool:
+        return self.selected == self.current
+
+    @property
+    def previous(self) -> Matchday | None:
+        return self.choices[self.index - 1] if self.index > 0 else None
+
+    @property
+    def next(self) -> Matchday | None:
+        return self.choices[self.index + 1] if self.index < len(self.choices) - 1 else None
+
+
+def season_param(season: str) -> str:
+    """„2026/2027“ -> „2026-27“ (Schreibweise in der Adresse)."""
+    start, end = season.split("/")
+    return f"{start}-{end[-2:]}"
+
+
+def params_for(md: Matchday, current: Matchday) -> dict[str, str]:
+    """Adress-Parameter für einen Spieltag; der aktuelle Spieltag braucht keine."""
+    if md == current:
+        return {}
+    params = {PARAM_MATCHDAY: str(md.spieltag)}
+    if md.saison != current.saison:
+        params[PARAM_SEASON] = season_param(md.saison)
+    return params
+
+
+def select_matchday(overview: list[Matchday], params: dict) -> Selection | None:
+    current = next((m for m in overview if m.status == CURRENT), None)
+    if current is None:
+        return None
+    choices = [m for m in overview if m.key <= current.key]
+    raw_md, raw_season = params.get(PARAM_MATCHDAY), params.get(PARAM_SEASON)
+    if raw_md is None and raw_season is None:
+        return Selection(current, current, choices)
+    season = current.saison
+    if raw_season is not None:
+        season = next((m.saison for m in choices if season_param(m.saison) == str(raw_season)), None)
+    try:
+        wanted = int(str(raw_md))
+    except (TypeError, ValueError):
+        wanted = None
+    match = next((m for m in choices if m.saison == season and m.spieltag == wanted), None)
+    if match is None:
+        return Selection(current, current, choices, requested_invalid=True)
+    return Selection(match, current, choices)

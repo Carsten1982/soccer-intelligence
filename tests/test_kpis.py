@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
-from conftest import KNOWN_DB_SHA, REAL_DATABASE
+from conftest import KNOWN_DB_SHA, REFERENCE_DATABASE
 
 from core.kpis import (
     LIGHT, NONE, STRONG, Match, classify, compute_match, de, de_signed, fmt, fmt_signed, kpi01_team, kpi02, kpi04,
@@ -46,11 +46,10 @@ def id_table(filename: str) -> dict[str, list[int]]:
 
 @pytest.fixture(scope="module")
 def prepared():
-    if not REAL_DATABASE.exists() or not DOCS.exists():
-        pytest.skip("echte Datenbank oder docs/tests nicht vorhanden")
-    db = load_database(REAL_DATABASE)
-    if db.sha256 != KNOWN_DB_SHA:
-        pytest.skip("Testfälle gelten nur für den bekannten Datenbankstand")
+    if not REFERENCE_DATABASE.exists() or not DOCS.exists():
+        pytest.skip("Referenz-Datenbank oder docs/tests nicht vorhanden")
+    db = load_database(REFERENCE_DATABASE)
+    assert db.sha256 == KNOWN_DB_SHA, "Referenz-Datenbank wurde verändert"
     return {name: prepare_league(df) for name, df in db.leagues.items()}
 
 
@@ -254,3 +253,26 @@ def test_kpi03_zero_deviation_has_title_but_no_text():
     r = compute_match(db, m, 34).kpi03
     assert fmt_signed(r.abweichung_rund) == "0.0"
     assert r.ueberschrift == "Keine statistische Besonderheit" and r.text is None
+
+
+def test_later_games_do_not_change_earlier_matchday(prepared):
+    """Spieltag-Auswahl: Spieltag 1 wird so berechnet, als hätte es ihn noch nicht gegeben –
+    auch wenn seine Ergebnisse (und spätere) schon in der Datenbank stehen."""
+    base = prepared["Bundesliga"]
+    m1 = Match("Bundesliga", "2026/2027", 1, date(2026, 8, 28), "Bayern Munich", "Stuttgart")
+    before = compute_match(base, m1, 34)
+    extra = mini_db([
+        (900001, "2026-08-28", "2026/2027", 1, "Bayern Munich", "Stuttgart", 9, 9, 9, 9),
+        (900002, "2026-09-04", "2026/2027", 2, "Stuttgart", "Bayern Munich", 7, 7, 7, 7),
+    ])
+    extended = pd.concat([base, extra]).sort_values(["date", "time", "id"], kind="stable").reset_index(drop=True)
+    after = compute_match(extended, m1, 34)
+    for key in ("kpi02", "kpi03", "kpi04"):
+        a, b = getattr(before, key), getattr(after, key)
+        assert (a.hauptwert, a.abweichung, a.vorlaeufig) == (b.hauptwert, b.abweichung, b.vorlaeufig)
+        if a.referenz:
+            assert (a.referenz.spiele, a.referenz.summe) == (b.referenz.spiele, b.referenz.summe)
+    assert before.form_home.form == after.form_home.form
+    # Spieltag 2 sieht die neuen Spiele dagegen schon
+    m2 = Match("Bundesliga", "2026/2027", 2, date(2026, 9, 4), "Stuttgart", "Bayern Munich")
+    assert 900001 in compute_match(extended, m2, 34).kpi02.heim.ids

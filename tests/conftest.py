@@ -20,6 +20,9 @@ REAL_FIXTURES = REAL_DATA_DIR / "Spielplan.xlsx"
 # Stand der Dateien, für den die genauen Erwartungswerte gelten (siehe docs/02_Datenbasis.md, 04_Spielplan.md).
 # Bei einer neueren Datei prüfen die Tests mit echten Daten nur noch, dass keine Fehler auftreten.
 KNOWN_DB_SHA = "6d68583c2e66616e92c1bf3e8a8611b4b517bcf4c0a7a91c68101ea26a2284e2"
+# Fester Referenzstand der Datenbank für die KPI-Testfälle (docs/tests). Liegt im Repository, damit die
+# Testfälle auch dann laufen, wenn data/ schon eine neuere Datenbank enthält.
+REFERENCE_DATABASE = ROOT / "tests" / "referenz" / "Database-Soccer-Intelligence_6d68583c.xlsx"
 KNOWN_FIXTURES_SHA = "5261e91646d0de697da145e77d85cf874681ccdd562187feb5395bb8c0eb4877"
 
 

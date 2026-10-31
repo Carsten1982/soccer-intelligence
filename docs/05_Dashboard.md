@@ -1,8 +1,9 @@
 # Soccer Intelligence – Dashboard-Briefing
 
-**Version 4.2** · Stand 30.10.2026
+**Version 4.3** · Stand 31.10.2026
 
-> Erzeugt aus dem Word-Dokument *Dashboard-Briefing v4.2*. **Nicht direkt bearbeiten.** Massgeblich ist das Word-Dokument; Änderungen dort vornehmen und diese Datei neu erzeugen lassen.
+> **Massgebliche Quelle seit 31.10.2026.** Änderungen werden nur noch in dieser Datei gemacht, mit Datum in der Änderungshistorie bzw. im `CHANGELOG.md`.
+> Das Word-Dokument *Dashboard-Briefing v4.2* liegt nur noch als Archiv im Ordner `word/` und wird nicht mehr gepflegt. Änderungen seit 31.10.2026 sind im Text als „Änderung“ mit Datum gekennzeichnet.
 >
 > Zusammenspiel der Dokumente: Berechnungen → `03_KPI_Regelwerk.md` · Spielplan → `04_Spielplan.md` · Aufbau, Navigation und Darstellung des Dashboards → diese Datei.
 
@@ -125,7 +126,18 @@ Im oberen Bereich soll Folgendes angezeigt werden:
 
 Rechts im Kopfbereich werden in den Liga-Bereichen Saison und aktueller Spieltag der jeweiligen Liga angezeigt (Regeln siehe 4.4), beispielsweise: «Saison 2026/27 · Spieltag 1». Im Bereich Top Anomalien wird der Spieltag pro Liga angezeigt, beispielsweise: «Bundesliga: Spieltag 1 · Premier League: Spieltag 1».
 
-Es soll in der ersten Version keine zusätzliche Spieltagsnavigation mit Pfeilen oder weiteren Bedienelementen geben.
+~~Es soll in der ersten Version keine zusätzliche Spieltagsnavigation mit Pfeilen oder weiteren Bedienelementen geben.~~
+
+**Änderung 31.10.2026 (Carsten):** In den Liga-Bereichen lässt sich der Spieltag mit Pfeilen ◀ ▶ neben dem Spieltagsfeld wählen:
+
+- Auswählbar sind alle Spieltage der Spielplan-Datei bis einschliesslich des aktuellen Spieltags (gemäss 4.4). Nicht in die Zukunft.
+- Die Auswahl gilt je Liga getrennt.
+- Der gewählte Spieltag steht in der Adresse, z. B. `/bundesliga?spieltag=1` (bei einer früheren Saison zusätzlich `&saison=2025-26`). Ohne Angabe oder bei ungültiger Angabe wird der aktuelle Spieltag angezeigt.
+- Ist nicht der aktuelle Spieltag gewählt, heisst das Feld „Ausgewählter Spieltag“, und es gibt eine Schaltfläche „Zum aktuellen Spieltag“.
+- Die KPIs werden wie immer so berechnet, als wäre der gewählte Spieltag noch nicht gespielt (Stichtag „Datum von“). Spätere Spiele fliessen nicht ein.
+- Der Bereich Top Anomalien zeigt immer den aktuellen Spieltag und reagiert nicht auf die Pfeile.
+
+**Änderung 31.10.2026 (Carsten):** Navigation als dunkelgraue Leiste mit weisser Schrift; aktiver Tab fett mit blauem Balken darunter, die übrigen Tabs in hellgrauer Schrift. Abstand zwischen Navigation und Überschrift deutlich verkleinert.
 
 ### 3.3 Hauptnavigation
 
@@ -525,7 +537,7 @@ Bestehende funktionierende Funktionen sollen erhalten bleiben. Keine unnötigen 
 
 ### 13.1 KPI-Validierung
 
-Die KPI-Berechnungen müssen anhand der Testfälle aus dem Dokument «Beispielberechnungen und Testfälle» überprüft werden. Die Testfälle sind erstellt und abgenommen (28./29.10.2026) und liegen als folgende Dateien vor:
+Die KPI-Berechnungen müssen anhand der Testfälle in `docs/tests/` überprüft werden. Die Testfälle sind erstellt und abgenommen (28./29.10.2026) und liegen als folgende Dateien vor:
 
 - docs/tests/test_kpi01_formkurve.md
 
@@ -575,7 +587,7 @@ Folgende Themen sind in dieser Phase nicht umzusetzen:
 
 - Weitere KPIs, die noch nicht fachlich definiert sind
 
-- Zusätzliche Spieltagsnavigation
+- ~~Zusätzliche Spieltagsnavigation~~ (umgesetzt am 31.10.2026, siehe 3.2)
 
 - Erweiterte Filter- und Sortierfunktionen, sofern sie nicht bereits vorhanden sind
 

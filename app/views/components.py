@@ -20,6 +20,8 @@ SLATE = "#5b6b84"      # Untertitel, Beschriftungen
 LINE = "#d8e0eb"       # feine Trennlinien
 ROW_ALT = "#f3f6fa"    # dezente Zeilenfläche
 HEAD_BG = "#eef2f7"    # Kopfzeile der Tabelle
+NAV_BG = "#343a40"     # Navigationsleiste (dunkelgrau)
+NAV_ACTIVE = "#4a90e2" # Balken unter dem aktiven Tab
 
 CSS = f"""
 <style>
@@ -69,6 +71,20 @@ CSS = f"""
   font-size:.7rem; font-weight:700; cursor:help;}}
 .si-legend {{color:{SLATE}; font-size:.8rem; margin:.25rem 0 1rem 0;}}
 .si-legend .si-dot {{margin-left:.6rem;}}
+.si-matchday-nav {{text-align:center; min-width:0;}}
+
+/* Abstand oben verkleinert (Navigation -> Überschrift, Änderung 31.10.2026) */
+[data-testid="stMainBlockContainer"] {{padding-top:61px !important;}}
+
+/* Navigation: dunkelgraue Leiste, weisse Schrift, aktiver Tab fett mit blauem Balken */
+[data-testid="stHeader"] {{background:{NAV_BG} !important;}}
+[data-testid="stHeader"] [data-testid="stToolbar"] * {{color:#e9ecef !important;}}
+[data-testid="stTopNavLink"] {{color:#c3c9d1 !important; background:transparent !important; border-radius:0 !important;
+  border-bottom:3px solid transparent;}}
+[data-testid="stTopNavLink"] * {{color:inherit !important; font-weight:inherit !important;}}
+[data-testid="stTopNavLink"]:hover {{color:#ffffff !important; background:rgba(255,255,255,.08) !important;}}
+[data-testid="stTopNavLink"][aria-current="page"] {{color:#ffffff !important; font-weight:700 !important;
+  border-bottom:3px solid {NAV_ACTIVE} !important;}}
 </style>
 """
 
@@ -90,6 +106,15 @@ def header_html(right_label: str, right_value: str) -> str:
                  f'<div class="si-box">{escape(right_value)}</div></div>')
     return (f'<div class="si-header"><div><h1>{TITLE}</h1><div class="si-sub">{escape(SUBTITLE)}</div></div>'
             f"{right}</div>")
+
+
+def title_html() -> str:
+    return f'<div class="si-header"><div><h1>{TITLE}</h1><div class="si-sub">{escape(SUBTITLE)}</div></div></div>'
+
+
+def matchday_box_html(label: str, value: str) -> str:
+    return (f'<div class="si-matchday si-matchday-nav"><div class="si-label">{escape(label)}</div>'
+            f'<div class="si-box">{escape(value)}</div></div>')
 
 
 def header(right_label: str = "", right_value: str = "") -> None:

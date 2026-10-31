@@ -158,3 +158,5 @@ Alle Datumswerte sind echte Excel-Datumswerte, die Spalte `Saison` ist vorhanden
 | beide | Spieltag 1 ist beendet, kein neuerer Spieltag eingetragen | Dashboard zeigt Spieltag 1 (Regel 3) |
 
 **Erledigt am 31.10.2026:** Datei liegt unter `data/Spielplan.xlsx` auf dem Server (SHA-256 `5261e916…`).
+
+**Aktualisiert am 31.10.2026 (Version 2):** Spieltage 1 und 2 der Saison 2026/27 (Bundesliga je 9, Premier League je 10 Spiele). Beim Prüfen korrigiert: zweiter PL-Spieltag war als Spieltag 1 erfasst; Bundesliga Spieltag 2 um Augsburg – Eintracht Frankfurt ergänzt. Prüfergebnis: 0 Fehler, 0 Warnungen.

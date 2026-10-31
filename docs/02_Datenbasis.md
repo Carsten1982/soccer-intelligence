@@ -1,12 +1,14 @@
 # Soccer Intelligence – Datenbasis
 
-**Stand:** 30.10.2026 (Datenbank mit Spalte `Gameday`, 58 Spalten)
+**Stand:** 31.10.2026 (Datenbank mit Spalte `Gameday`, 58 Spalten, inkl. Spieltag 1 der Saison 2026/27)
 **Datei:** `/docker/football-dashboard/data/Database-Soccer-Intelligence.xlsx`
-**SHA-256:** `6d68583c2e66616e92c1bf3e8a8611b4b517bcf4c0a7a91c68101ea26a2284e2`
+**SHA-256 (aktiv seit 31.10.2026):** `6b84d8d230f61b02166bead571a72ce599ec8d230cdda8c90f9b258dc8a46014`
+
+**Referenzstand für die KPI-Testfälle:** `6d68583c2e66616e92c1bf3e8a8611b4b517bcf4c0a7a91c68101ea26a2284e2` (Saisons 2020/21–2025/26). Eine Kopie liegt unter `tests/referenz/`, damit die Testfälle unabhängig vom aktuellen Datenstand laufen.
 
 Diese Prüfsumme steht auch in den Testfällen (`docs/tests/`). Nach jeder Änderung an der Datei ändert sie sich. Dann hier und in den Testfällen nachtragen und die Testfälle erneut laufen lassen.
 
-**Server:** Diese Fassung ist seit 31.10.2026 in `data/` aktiv (Prüfsumme auf dem Server kontrolliert). Die alte Fassung mit 57 Spalten (`510886ed…`) liegt in `backup/`.
+**Server:** Die Fassung `6b84d8d2…` ist seit 31.10.2026 in `data/` aktiv. Gegenüber dem Referenzstand neu: die 19 Spiele des 1. Spieltags 2026/27 (Bundesliga 9, Premier League 10). Beim Prüfen korrigiert: id 119365 (FC Koln – Heidenheim) `Home Yellow Cards Full Time` enthielt Leerzeichen statt 2. Ältere Fassungen liegen in `backup/`.
 
 ---
 
