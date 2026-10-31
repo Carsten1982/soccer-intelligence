@@ -26,4 +26,4 @@ LEAGUE_SHEETS = REQUIRED_LEAGUE_SHEETS + OPTIONAL_LEAGUE_SHEETS
 # Anzeige-Zeitzone
 TIMEZONE = "Europe/Zurich"  # massgeblich für „heute“ (aktueller Spieltag)
 
-APP_VERSION = "0.3 – Etappe B: Spielplan und Datenqualität"
+APP_VERSION = "0.4 – Etappe C: KPIs 01–04"

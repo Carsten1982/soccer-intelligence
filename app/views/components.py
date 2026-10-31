@@ -31,7 +31,13 @@ CSS = f"""
 .si-matchday .si-label {{color:{SLATE}; font-size:.8rem;}}
 .si-matchday .si-box {{border:1px solid {LINE}; border-radius:.5rem; padding:.35rem .8rem; color:{NAVY};
   font-weight:600; background:#fff; display:inline-block; margin-top:.2rem;}}
-.si-tablewrap {{overflow-x:auto; border:1px solid {LINE}; border-radius:.5rem; margin-bottom:.5rem;}}
+/* Tabelle scrollt in einem eigenen Rahmen: max. 72 % der Fensterhöhe, damit die horizontale Scrollbar
+   immer sichtbar ist (Briefing 4.3). Kopfzeilen bleiben oben, # und Spiel links stehen. */
+.si-tablewrap {{overflow:auto; max-height:72vh; border:1px solid {LINE}; border-radius:.5rem; margin-bottom:.5rem;
+  scrollbar-width:auto; scrollbar-color:#9aa6b8 {HEAD_BG};}}
+.si-tablewrap::-webkit-scrollbar {{height:14px; width:12px;}}
+.si-tablewrap::-webkit-scrollbar-track {{background:{HEAD_BG};}}
+.si-tablewrap::-webkit-scrollbar-thumb {{background:#9aa6b8; border-radius:7px; border:3px solid {HEAD_BG};}}
 .si-table {{border-collapse:separate; border-spacing:0; width:100%; font-size:.9rem; color:{NAVY};}}
 .si-table th, .si-table td {{padding:.45rem .6rem; border-bottom:1px solid {LINE}; background:#fff;
   vertical-align:middle; white-space:nowrap;}}
@@ -43,11 +49,26 @@ CSS = f"""
 .si-table .si-sticky {{position:sticky; z-index:2;}}
 .si-table .si-c1 {{left:0; width:3rem; min-width:3rem; max-width:3rem; text-align:center;}}
 .si-table .si-c2 {{left:3rem; min-width:13rem; border-right:2px solid {LINE};}}
-.si-table thead .si-sticky {{z-index:3;}}
+.si-table thead th {{position:sticky; top:0; z-index:3;}}
+.si-table thead tr:first-child th {{height:3.6rem; box-sizing:border-box;}}
+.si-table thead tr:nth-child(2) th {{top:3.6rem;}}
+.si-table thead th.si-sticky {{z-index:4;}}
 .si-table .si-team {{display:block; line-height:1.35;}}
 .si-badge {{display:inline-block; margin-top:.2rem; padding:0 .4rem; border-radius:.3rem; font-size:.75rem;
   background:#fde8e8; color:#9b1c1c;}}
 .si-footer {{color:{SLATE}; font-size:.75rem; margin-top:2rem;}}
+.si-groupsub {{font-weight:500; font-size:.8rem; color:{SLATE};}}
+.si-table td.si-desccol {{white-space:normal; min-width:17rem; max-width:20rem; font-size:.8rem; line-height:1.3;}}
+.si-desc strong {{color:{NAVY};}}
+.si-dot {{display:inline-block; width:.8rem; height:.8rem; border-radius:50%; vertical-align:middle; margin:0 .08rem;}}
+.si-formrow {{white-space:nowrap;}}
+.si-form {{display:inline-block; width:.8rem; text-align:center; color:#9aa6b8; margin:0 .08rem;}}
+.si-form-S {{background:#2e9e5b;}} .si-form-U {{background:#9aa6b8;}} .si-form-N {{background:#d64545;}}
+.si-anom-keine {{background:#9aa6b8;}} .si-anom-leicht {{background:#f2c230;}} .si-anom-stark {{background:#d64545;}}
+.si-v {{display:inline-block; padding:0 .3rem; border-radius:.25rem; background:#fff3cd; color:#7a5b00;
+  font-size:.7rem; font-weight:700; cursor:help;}}
+.si-legend {{color:{SLATE}; font-size:.8rem; margin:.25rem 0 1rem 0;}}
+.si-legend .si-dot {{margin-left:.6rem;}}
 </style>
 """
 
@@ -84,9 +105,10 @@ def footer() -> None:
 
 @dataclass
 class ColumnGroup:
-    """Eine KPI-Gruppe, z. B. „KPI 02 · Erwartete Tore“ mit ihren Spalten (ab Etappe C)."""
+    """Eine KPI-Gruppe, z. B. „KPI 02“ / „Erwartete Tore“ mit ihren Spalten."""
     title: str
     columns: list[str] = field(default_factory=list)
+    subtitle: str = ""
 
 
 @dataclass
@@ -105,7 +127,8 @@ def match_table_html(rows: list[MatchRow], groups: list[ColumnGroup] | None = No
     head1 = [f'<th class="si-sticky si-c1"{rs}>#</th>', f'<th class="si-sticky si-c2"{rs}>Spiel</th>']
     head2: list[str] = []
     for g in groups:
-        head1.append(f'<th class="si-group" colspan="{max(len(g.columns), 1)}">{escape(g.title)}</th>')
+        sub = f'<div class="si-groupsub">{escape(g.subtitle)}</div>' if g.subtitle else ""
+        head1.append(f'<th class="si-group" colspan="{max(len(g.columns), 1)}">{escape(g.title)}{sub}</th>')
         for i, c in enumerate(g.columns):
             cls = "si-sub si-groupstart" if i == 0 else "si-sub"
             head2.append(f'<th class="{cls}">{escape(c)}</th>')
@@ -123,9 +146,10 @@ def match_table_html(rows: list[MatchRow], groups: list[ColumnGroup] | None = No
         ]
         pos = 0
         for g in groups:
-            for i in range(len(g.columns)):
+            for i, col in enumerate(g.columns):
                 cell = r.cells[pos] if pos < len(r.cells) else "–"
-                cls = ' class="si-groupstart"' if i == 0 else ""
+                classes = (["si-groupstart"] if i == 0 else []) + (["si-desccol"] if col == "Beschreibung" else [])
+                cls = f' class="{" ".join(classes)}"' if classes else ""
                 tds.append(f"<td{cls}>{cell}</td>")
                 pos += 1
         body.append("<tr>" + "".join(tds) + "</tr>")

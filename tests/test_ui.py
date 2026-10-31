@@ -4,6 +4,7 @@ Die AppTest-Tests laufen nur, wenn Streamlit installiert ist (z. B. im Test-Cont
 und die echten Dateien vorhanden sind. Sie prüfen, dass jede Seite ohne Fehler aufgebaut wird.
 """
 
+from fractions import Fraction
 from pathlib import Path
 
 import pytest
@@ -86,6 +87,7 @@ def test_league_pages(script):
     assert not at.exception, at.exception
     text = _texts(at)
     assert "Aktueller Spieltag" in text and 'class="si-table"' in text
+    assert "KPI 02" in text and "Erwartete Tore" in text and "si-anom-" in text      # KPI-Spalten befüllt
 
 
 @needs_files
@@ -93,3 +95,33 @@ def test_datenqualitaet_page():
     at = AppTest.from_function(_datenqualitaet, default_timeout=TIMEOUT).run()
     assert not at.exception, at.exception
     assert "Datenqualität" in _texts(at)
+
+
+# --- KPI-Zellen (Etappe C) ----------------------------------------------------------
+
+def _kpis(home_games=10, away_games=10, deviation=Fraction(341, 10)):
+    from core.kpis import KpiResult, Reference, TeamValue
+    h = TeamValue("A", home_games, 47 if home_games else None, Fraction(47, 10) if home_games else None)
+    a = TeamValue("B", away_games, 40, Fraction(4))
+    main = (h.wert + a.wert) / 2 if h.wert is not None else None
+    r = KpiResult("KPI02", h, a, Reference("x", 180, 584, Fraction(584, 180)), main,
+                  deviation if main is not None else None, vorlaeufig=min(home_games, away_games) < 10)
+    return r
+
+
+def test_kpi_cells_complete_and_promoted_team():
+    from views.kpi_table import N_CELLS, data_basis_cell, empty_cells, kpi_cells
+    full = kpi_cells(_kpis(), "3,2")
+    assert len(full) == 8 and "+34,1 %" in full[4] and "si-anom-leicht" in full[5] and full[6].endswith("10</span>")
+    promoted = kpi_cells(_kpis(home_games=0), "3,2")
+    assert promoted[0] == "–" and promoted[1] == "4,0"                 # Gegnerwert wird angezeigt
+    assert "–" in promoted[2] and promoted[4] == "–" and promoted[5] == "–"
+    assert "0 / 10" in data_basis_cell(_kpis(home_games=0)) and 'class="si-v"' in data_basis_cell(_kpis(home_games=0))
+    assert len(empty_cells()) == N_CELLS == 2 + 3 * 8
+
+
+def test_form_cell():
+    from core.kpis import FormTeam
+    from views.kpi_table import form_cell
+    html = form_cell(FormTeam("A", ["–", "–", "–", "S", "N"], 2))
+    assert html.count("si-form-none") == 3 and "si-form-S" in html and "si-form-N" in html

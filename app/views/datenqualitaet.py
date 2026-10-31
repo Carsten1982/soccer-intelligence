@@ -8,7 +8,9 @@ import streamlit as st
 from core.issues import FEHLER, HINWEIS, LEVEL_ORDER, WARNUNG
 from core.matchday import CURRENT, date_range, matchday_games, matchday_overview, season_short
 from core.overview import games_per_season, league_summary
-from state import fixtures_banner, fmt_dt, get_active_leagues, get_database, get_fixtures, status_banner, today
+from state import (
+    fixtures_banner, fmt_dt, get_active_leagues, get_database, get_fixtures, get_frequency, status_banner, today,
+)
 from views import components as ui
 
 DB_RULES = """
@@ -180,6 +182,23 @@ def _fixtures_section() -> None:
         st.markdown(FIXTURE_RULES)
 
 
+def _frequency_section() -> None:
+    st.caption("Wie oft zeigen KPI 02–04 keine, leichte oder starke Anomalien? Grundlage: alle Spiele der letzten "
+               "abgeschlossenen Saison, jeweils so berechnet, als wären sie noch nicht gespielt. Dient der Überprüfung "
+               "der Schwellenwerte (±20 % / ±35 %), insbesondere bei KPI 03.")
+    db = get_database()
+    if db.has_errors:
+        st.info("Wird angezeigt, sobald die Datenbank fehlerfrei ist.")
+        return
+    for league in get_active_leagues():
+        season, table = get_frequency(league)
+        st.markdown(f"**{league.name}**" + (f" · Saison {season_short(season)}" if season else ""))
+        if season is None:
+            st.caption("Keine vollständige Saison in der Datenbank.")
+            continue
+        st.dataframe(table, hide_index=True, width="stretch")
+
+
 def render() -> None:
     ui.header()
     st.markdown("### Datenqualität")
@@ -190,6 +209,5 @@ def render() -> None:
     with tab_fx:
         _fixtures_section()
     with tab_freq:
-        st.info("Die Häufigkeit der Anomalien je Liga und KPI folgt, sobald die KPIs berechnet werden (Etappe C).",
-                icon="🛠️")
+        _frequency_section()
     ui.footer()

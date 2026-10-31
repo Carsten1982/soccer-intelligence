@@ -1,6 +1,6 @@
 # Soccer Intelligence – Technisches Setup
 
-**Stand:** 31.10.2026 · **Status:** Etappe A in Betrieb, Etappe B als Paket bereit, Passwortschutz beschlossen (noch nicht umgesetzt)
+**Stand:** 31.10.2026 · **Status:** Etappen A und B in Betrieb, Etappe C (KPIs) als Paket bereit, Passwortschutz beschlossen (noch nicht umgesetzt)
 **Verantwortlich:** Carsten Thiele · **Mitwirkende:** ChatGPT (Server-Setup, Review), Claude (Daten, Architektur, Code)
 
 ---
@@ -12,7 +12,7 @@
 | Server, Container, Traefik-Routing | ✅ in Betrieb | geprüft am 25.10.2026 |
 | Excel-Datei in `data/`, read-only im Container | ✅ in Betrieb | Lesen mit openpyxl im Container getestet |
 | Neue Datenbank mit Spalte `Gameday` (58 Spalten) | ✅ in Betrieb | seit 31.10.2026 in `data/`, SHA-256 `6d68583c…`, siehe `02_Datenbasis.md` |
-| `Spielplan.xlsx` (Spieltag 1, 2026/27) | ✅ auf dem Server | seit 31.10.2026 in `data/`, wird ab Etappe B gelesen |
+| `Spielplan.xlsx` (Spieltag 1, 2026/27) | ✅ in Betrieb | seit 31.10.2026 in `data/`, gelesen seit Etappe B |
 | KPI-Regelwerk und Testfälle KPI 01–04 | ✅ fertig | `03_KPI_Regelwerk.md` v1.1, `docs/tests/` (bestätigt 28./29.10.2026, nachgerechnet 30.10.2026) |
 | openpyxl / pandas im Container | ✅ installiert | Versionen in `requirements.txt` festgelegt |
 | Website soccer-intelligence.com | ✅ erreichbar | zeigt **noch die Platzhalterseite** |
@@ -21,7 +21,8 @@
 | Automatisches Neuladen bei neuer Excel-Datei | ✅ in Betrieb | seit Etappe A |
 | Versionen festgelegt | ✅ in Betrieb | streamlit 1.66.1, pandas 3.1.0, openpyxl 3.1.5 |
 | Versionierung (Git + GitHub) | ✅ in Betrieb | seit 30.10.2026, privates Repository `Carsten1982/soccer-intelligence` |
-| Spielplan einlesen, aktueller Spieltag, Tabs | 📦 Paket bereit | Etappe B, siehe Abschnitt 7 |
+| Spielplan einlesen, aktueller Spieltag, Tabs | ✅ in Betrieb | Etappe B, eingespielt 31.10.2026 (Git `ff4fbe8`) |
+| KPI 01–04 in den Liga-Tabellen, Häufigkeit der Anomalien | 📦 Paket bereit | Etappe C, siehe Abschnitt 7 |
 | KPIs, Top Anomalien, öffentliche Website | ⏳ offen | siehe Abschnitt 7 |
 
 ---
@@ -290,8 +291,11 @@ app/
 │   ├── validation.py     Plausibilitätsprüfungen
 │   ├── config.py         Einlesen der Konfiguration (Etappe B)
 │   ├── fixtures.py       Spielplan einlesen und prüfen (Etappe B)
-│   └── matchday.py       aktueller Spieltag, Spieltagsübersicht (Etappe B)
-└── views/                Bereiche: Top Anomalien, je Liga, Datenqualität; components.py = Kopfbereich, Tabelle
+│   ├── matchday.py       aktueller Spieltag, Spieltagsübersicht (Etappe B)
+│   ├── kpis.py           KPI 01–04 gemäss Regelwerk (Etappe C)
+│   └── frequency.py      Häufigkeit der Anomalien (Etappe C)
+└── views/                Bereiche: Top Anomalien, je Liga, Datenqualität; components.py = Kopfbereich, Tabelle;
+                          kpi_table.py = KPI-Zellen der Liga-Tabelle
 tests/                    automatische Tests
 data/Spielplan.xlsx       anstehende Partien
 docs/                     Dokumentation (01–05, tests/)
@@ -306,8 +310,8 @@ CHANGELOG.md              Änderungsprotokoll
 | Systemprüfung | Ist-Zustand des Servers geprüft | – | ✅ 25.10.2026 |
 | Spezifikation | Dashboard-Briefing v4.2 (`05_Dashboard.md`), `03_KPI_Regelwerk.md` v1.1, `04_Spielplan.md`, Testfälle KPI 01–04 | – | ✅ fertig; offene KPI-Punkte nicht blockierend (Regelwerk, Abschnitt 8) |
 | A – Fundament | Datenbank einlesen und prüfen, Versionen fest (Paket Schritt 1) | neue Datenbank (58 Spalten) auf dem Server ✅ | ✅ eingespielt 31.10.2026 (Git `ffec276`) |
-| B – Spielplan und Datenqualität | Spielplan einlesen, aktueller Spieltag, Tabs, Bereich Datenqualität | Spielplan auf dem Server ✅ | 📦 Paket bereit (31.10.2026) |
-| C – Liga-Tabellen mit KPIs | KPI 01–04 gemäss Regelwerk, JSON-Blöcke der Testfälle als automatische Tests | Gameday ✅, Testfälle ✅ | offen, startklar nach Etappe B |
+| B – Spielplan und Datenqualität | Spielplan einlesen, aktueller Spieltag, Tabs, Bereich Datenqualität | Spielplan auf dem Server ✅ | ✅ eingespielt 31.10.2026 (Git `ff4fbe8`) |
+| C – Liga-Tabellen mit KPIs | KPI 01–04 gemäss Regelwerk, JSON-Blöcke der Testfälle als automatische Tests, Häufigkeit der Anomalien | Gameday ✅, Testfälle ✅ | 📦 Paket bereit (31.10.2026) |
 | D – Top Anomalien | Auswahl-Logik gemäss Regelwerk, Abschnitt 2.6 | Etappe C | offen |
 | E – Dashboard-Zugang | Umzug nach `/dashboard`, Passwortschutz über Traefik, Platzhalterseite unter `/` | separate Freigabe (Traefik-Labels) | beschlossen, offen |
 | Öffentliche Website | eigener Architekturvorschlag (Mobile First) | – | später |

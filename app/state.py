@@ -14,7 +14,7 @@ from zoneinfo import ZoneInfo
 import streamlit as st
 
 from core import settings
-from core.config import League, Team, active_leagues, load_leagues, load_teams
+from core.config import League, Team, active_leagues, load_leagues, load_teams  # noqa: F401
 from core.fixtures import FixturesLoad, load_fixtures
 from core.issues import FEHLER, HINWEIS, WARNUNG
 from core.loader import DatabaseLoad, load_database
@@ -45,6 +45,34 @@ def _cached_load(path: str, mtime_ns: int, size: int) -> DatabaseLoad:  # noqa: 
 def get_database() -> DatabaseLoad:
     path = settings.DATABASE_FILE
     return _cached_load(str(path), *_file_key(path))
+
+
+@st.cache_data(show_spinner=False, max_entries=2)
+def _cached_prepared(path: str, mtime_ns: int, size: int) -> dict:  # noqa: ARG001
+    from core.kpis import prepare_league
+    db = _cached_load(path, mtime_ns, size)
+    return {name: prepare_league(df) for name, df in db.leagues.items()}
+
+
+def get_prepared() -> dict:
+    """Aufbereitete Ligen für die KPI-Berechnung (einmal je Datenbankstand)."""
+    path = settings.DATABASE_FILE
+    return _cached_prepared(str(path), *_file_key(path))
+
+
+@st.cache_data(show_spinner="Häufigkeit der Anomalien wird berechnet (einmal je Datenbankstand) …", max_entries=4)
+def _cached_frequency(path: str, mtime_ns: int, size: int, league_name: str, teams: int):  # noqa: ARG001
+    from core.config import League
+    from core.frequency import anomaly_frequency
+    prepared = _cached_prepared(path, mtime_ns, size).get(league_name)
+    if prepared is None:
+        return None, None
+    return anomaly_frequency(prepared, League(league_name, "x", teams, True))
+
+
+def get_frequency(league: League):
+    path = settings.DATABASE_FILE
+    return _cached_frequency(str(path), *_file_key(path), league.name, league.teams)
 
 
 # --- Konfiguration -------------------------------------------------------------

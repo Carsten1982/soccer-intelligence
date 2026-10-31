@@ -325,3 +325,5 @@ Diese Punkte sollten vor der Umsetzung im Code geklärt werden:
 10. **KPI-Karte bei Aufsteiger-Spielen (KPI 02–04):** Die Testfälle nehmen an: Teamwert des Gegners und Ligareferenz werden angezeigt, Hauptwert, Abweichung und Anomalie als „–“. Bitte bestätigen.
 
 Für die Umsetzung blockierend ist keiner dieser Punkte: Die Testfälle legen für 2, 6, 9 und 10 jeweils eine Annahme fest. Wird eine Annahme geändert, sind die betroffenen Testfälle anzupassen.
+
+**Umsetzung (Etappe C, 31.10.2026):** so wie in den Testfällen angenommen. Punkt 2: Bei genau 0,0 % zeigt KPI 03 nur die Überschrift „Keine statistische Besonderheit“, ohne Satz, bis ein Text festgelegt ist. Punkte 6 und 9: eine Nachkommastelle. Punkt 10: Gegnerwert und Ligareferenz sichtbar, Hauptwert, Abweichung und Anomalie „–“.

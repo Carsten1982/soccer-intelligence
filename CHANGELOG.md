@@ -5,6 +5,16 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 31.10.2026 – Etappe C (Paket vorbereitet)
+
+- **Carsten** · Etappe B abgenommen („Darstellung passt“), eingespielt als Git `ff4fbe8`.
+- **Claude** · KPI 01–04 berechnet gemäss `03_KPI_Regelwerk.md` (`app/core/kpis.py`). Exakte Rechnung mit Brüchen, Rundung erst für die Anzeige (kaufmännisch, 4,35 → 4,4). Stichtag = „Datum von“ aus dem Spielplan.
+- **Claude** · Alle JSON-Testfälle aus `docs/tests/` laufen als automatische Tests (32 Testfälle, dazu Kontrolle der verwendeten Spiel-IDs, Nachholspiel id 14680, fehlende Karten id 14421, 2-Tage-Regel, Grenzwerte ±20/±35 %): alle bestanden.
+- **Claude** · Liga-Tabellen mit KPI-Spalten gemäss Briefing Kapitel 7–9: Formkurve als farbige Punkte, Anomalie-Punkte grau/gelb/rot, Datenbasis mit „V“ für vorläufig, Beschreibung gemäss Regelwerk, Legende unter der Tabelle.
+- **Claude** · Datenqualität → Häufigkeit der Anomalien (Briefing 6.3) für die letzte abgeschlossene Saison. Ergebnis 2025/26: KPI 03 Bundesliga 59,5 % Anomalien (Premier League 19,9 %), KPI 02 und 04 zwischen 8,5 % und 27,1 %.
+- **Carsten** · Problem gemeldet: Tabelle liess sich nicht nach rechts scrollen. **Claude** · Ursache: Die Scrollbar lag am unteren Tabellenende ausserhalb des sichtbaren Bereichs. Lösung: Tabelle in eigenem Rahmen (max. 72 % der Fensterhöhe) mit immer sichtbarer, breiterer Scrollbar; Kopfzeilen bleiben oben, # und Spiel links fixiert.
+- **Claude** · Offene KPI-Punkte umgesetzt wie in den Testfällen angenommen (Regelwerk 8): KPI 03 bei genau 0,0 % nur Überschrift ohne Satz (Punkt 2); Teamabweichungen und Hauptwert mit einer Nachkommastelle (Punkte 6, 9); Aufsteiger-Spiele zeigen Gegnerwert und Ligareferenz, Hauptwert/Abweichung/Anomalie als „–“ (Punkt 10).
+
 ## 31.10.2026 – Etappe B (Paket vorbereitet)
 
 - **Claude** · Spielplan einlesen und prüfen (`app/core/fixtures.py`), aktueller Spieltag je Liga (`app/core/matchday.py`), Konfiguration der Ligen und Teamliste (`app/config/ligen.toml`, `app/config/teams.toml`).
