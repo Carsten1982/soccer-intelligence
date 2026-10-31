@@ -15,6 +15,12 @@ from core import schema  # noqa: E402
 
 REAL_DATA_DIR = Path(os.environ.get("SI_DATA_DIR", ROOT / "data"))
 REAL_DATABASE = REAL_DATA_DIR / "Database-Soccer-Intelligence.xlsx"
+REAL_FIXTURES = REAL_DATA_DIR / "Spielplan.xlsx"
+
+# Stand der Dateien, für den die genauen Erwartungswerte gelten (siehe docs/02_Datenbasis.md, 04_Spielplan.md).
+# Bei einer neueren Datei prüfen die Tests mit echten Daten nur noch, dass keine Fehler auftreten.
+KNOWN_DB_SHA = "6d68583c2e66616e92c1bf3e8a8611b4b517bcf4c0a7a91c68101ea26a2284e2"
+KNOWN_FIXTURES_SHA = "5261e91646d0de697da145e77d85cf874681ccdd562187feb5395bb8c0eb4877"
 
 
 def make_match(mid, home, away, date, ft=(1, 0), ht=(1, 0), league="Bundesliga", gameday=1):

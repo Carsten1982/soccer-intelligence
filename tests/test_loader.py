@@ -3,7 +3,7 @@
 import numpy as np
 import pandas as pd
 import pytest
-from conftest import REAL_DATABASE, notes_for, write_workbook
+from conftest import KNOWN_DB_SHA, REAL_DATABASE, notes_for, write_workbook
 
 from core import schema
 from core.issues import FEHLER, HINWEIS, WARNUNG
@@ -192,6 +192,8 @@ def test_reload_after_file_replaced(tmp_path, valid_sheets):
 def test_real_database():
     db = load_database(REAL_DATABASE)
     assert not db.has_errors, [i for i in db.issues if i.level == FEHLER]
+    if db.sha256 != KNOWN_DB_SHA:
+        pytest.skip("neuere Datenbank: genaue Erwartungswerte gelten nur für den bekannten Stand")
     assert len(db.leagues["Bundesliga"]) == 1836
     assert len(db.leagues["Premier League"]) == 2280
     bl = db.leagues["Bundesliga"]

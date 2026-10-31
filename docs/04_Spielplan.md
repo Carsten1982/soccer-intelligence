@@ -1,6 +1,6 @@
 # Soccer Intelligence – Spielplan
 
-**Stand:** 30.10.2026 · **Status:** Aufbau beschlossen. Die Datei liegt im korrekten Format vor (geprüft 30.10.2026), ist aber noch nicht auf dem Server.
+**Stand:** 31.10.2026 · **Status:** Datei seit 31.10.2026 auf dem Server (`data/Spielplan.xlsx`). Einlesen und Prüfen ab Etappe B.
 **Datei:** `/docker/football-dashboard/data/Spielplan.xlsx`
 
 ---
@@ -70,7 +70,8 @@ So rechnet das Programm damit:
 - **Aufsteiger** ohne Spiele in der Datenbank sind erlaubt. Ihre KPIs erscheinen gemäss KPI-Regelwerk als „--“.
 - Ein Name, der in der Datenbank nicht vorkommt, kann ein Aufsteiger oder ein Schreibfehler sein. Das Programm kann das nicht unterscheiden. Deshalb gilt:
   - Unbekannte Namen werden zunächst als **Warnung** angezeigt.
-  - Wird der Verein als bekannter Aufsteiger in der Teamliste (`config/teams.toml`, ab Schritt 2) eingetragen, wird daraus ein **Hinweis**.
+  - Wird der Verein als bekannter Aufsteiger in der Teamliste (`app/config/teams.toml`, ab Etappe B) eingetragen, wird daraus ein **Hinweis**. Eingetragen sind derzeit Elversberg und Paderborn.
+  - Die Teamliste ist Teil des Codes: Nach einer Änderung wird der Container neu gebaut (Ablauf wie eine Code-Änderung).
 - Anzeigenamen (z. B. „1. FC Köln“ statt „FC Koln“) werden später zentral in der Teamliste gepflegt, nicht im Spielplan.
 
 ---
@@ -84,7 +85,7 @@ Der aktuelle Spieltag wird **für jede Liga separat** bestimmt:
 1. Ein Spieltag gilt als beendet, sobald das späteste `Datum bis` seiner Spiele vor dem heutigen Datum liegt (Zeitzone Europe/Zurich). Die Anzeige wechselt am Tag nach dem letzten Spiel.
 2. Angezeigt wird der Spieltag mit der niedrigsten Nummer, der noch nicht beendet ist.
 3. Sind alle Spieltage der Datei beendet, wird der letzte Spieltag der Datei angezeigt.
-4. Spiele mit Status `verschoben` oder `abgesagt` zählen nicht für die Frage, ob ein Spieltag beendet ist. Sie werden mit ihrem Status, aber ohne KPI-Werte angezeigt.
+4. Spiele mit Status `verschoben` oder `abgesagt` zählen nicht für die Frage, ob ein Spieltag beendet ist. Sie werden mit ihrem Status, aber ohne KPI-Werte angezeigt. *Ergänzt 31.10.2026:* Sind **alle** Spiele eines Spieltags verschoben oder abgesagt, gilt der Spieltag als beendet, damit er die Anzeige nicht dauerhaft blockiert.
 5. Die KPIs jeder Begegnung werden immer so berechnet, als wäre das Spiel noch nicht gespielt. Stichtag ist `Datum von` der Begegnung.
 6. Sortierung innerhalb eines Spieltags: nach `Datum von`, danach in der Reihenfolge der Datei.
 
@@ -99,6 +100,7 @@ Die Ergebnisse erscheinen auf der Seite **Datenqualität**, getrennt von den Pr�
 ### Fehler – Spielplan wird nicht verwendet, das Dashboard zeigt einen Hinweis statt der Tabelle
 
 - Datei fehlt oder ist nicht lesbar
+- Tabellenblatt einer aktiven Liga fehlt (*ergänzt 31.10.2026*)
 - Pflichtspalte fehlt oder ist falsch geschrieben
 - Pflichtfeld leer
 - `Datum von` oder `Datum bis` ist kein gültiges Datum (z. B. Zeitraum als Text)
@@ -112,12 +114,14 @@ Die Ergebnisse erscheinen auf der Seite **Datenqualität**, getrennt von den Pr�
 - Teamname unbekannt (Aufsteiger oder Schreibfehler, siehe Abschnitt 3)
 - Ein Team kommt im selben Spieltag mehrfach vor
 - Heim- und Gastmannschaft identisch
-- Weniger Spiele in einem Spieltag als erwartet (Anzahl Teams der Liga / 2, gemäss Konfiguration: Bundesliga 18 Teams → 9 Spiele, Premier League 20 Teams → 10 Spiele)
+- Weniger Spiele in einem Spieltag als erwartet (Anzahl Teams der Liga / 2, gemäss Konfiguration `app/config/ligen.toml`: Bundesliga 18 Teams → 9 Spiele, Premier League 20 Teams → 10 Spiele)
 - Dieselbe Paarung kommt in einer Saison mehrfach vor
+- Tabellenblatt einer aktiven Liga ist leer (*ergänzt 31.10.2026*)
 
 ### Hinweis – kein Handlungsbedarf
 
 - Bekannter Aufsteiger ohne Daten in der Datenbank
+- Team ohne Ligaspiele in der Saison des Spiels und der Vorsaison, z. B. Schalke (*ergänzt 31.10.2026*); KPIs erscheinen als „–“
 - Begegnung ist bereits als gespieltes Spiel in der Datenbank vorhanden
 - Leeres Tabellenblatt einer noch nicht aktiven Liga
 
@@ -153,4 +157,4 @@ Alle Datumswerte sind echte Excel-Datumswerte, die Spalte `Saison` ist vorhanden
 | Premier League | leere siebte Spalte (Formatierung) | unproblematisch, wird ignoriert |
 | beide | Spieltag 1 ist beendet, kein neuerer Spieltag eingetragen | Dashboard zeigt Spieltag 1 (Regel 3) |
 
-**Nächster Schritt:** Datei wie die Datenbank unter `data/Spielplan.xlsx` auf den Server laden (Ablauf siehe `01_Technisches_Setup.md`, Abschnitt 6). Damit ist die Voraussetzung für Etappe B erfüllt.
+**Erledigt am 31.10.2026:** Datei liegt unter `data/Spielplan.xlsx` auf dem Server (SHA-256 `5261e916…`).

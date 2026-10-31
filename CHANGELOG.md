@@ -5,6 +5,17 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 31.10.2026 – Etappe B (Paket vorbereitet)
+
+- **Claude** · Spielplan einlesen und prüfen (`app/core/fixtures.py`), aktueller Spieltag je Liga (`app/core/matchday.py`), Konfiguration der Ligen und Teamliste (`app/config/ligen.toml`, `app/config/teams.toml`).
+- **Claude** · Navigation als Tabs oben: Top Anomalien (Startbereich, Inhalt folgt in Etappe D) · Bundesliga · Premier League · Datenqualität. Die Seite „Übersicht“ entfällt, ihr Inhalt steht jetzt unter Datenqualität → Datenbank.
+- **Claude** · Liga-Bereiche zeigen die Begegnungen des aktuellen Spieltags in der Tabelle mit fixierten Spalten # und Spiel (KPI-Spalten folgen in Etappe C). Kopfbereich gemäss Briefing 3.2.
+- **Claude** · Datenqualität mit drei Reitern: Datenbank, Spielplan und Spieltage (Übersicht mit Status beendet/aktuell/kommend), Häufigkeit der Anomalien (folgt).
+- **Claude** · Zeitzone für „heute“ auf Europe/Zurich korrigiert (vorher Europe/Berlin).
+- **Claude** · Tests: 72 (davon 4 Seiten-Tests, die nur auf dem Server mit Streamlit laufen). Tests mit echten Dateien prüfen genaue Werte nur für den bekannten Dateistand (SHA-256), bei neueren Dateien nur noch „keine Fehler“.
+- **Claude** · Ergänzte Spielplan-Regeln (bitte bestätigen, Details `04_Spielplan.md`): fehlendes Blatt einer aktiven Liga = Fehler; leeres Blatt einer aktiven Liga = Warnung; Team ohne Ligaspiele in Saison und Vorsaison = Hinweis; Spieltag, dessen Spiele alle verschoben/abgesagt sind, gilt als beendet.
+- **Claude** · Doku: `01_Technisches_Setup.md`, `02_Datenbasis.md`, `04_Spielplan.md` auf den Stand nach Etappe A gebracht.
+
 ## 31.10.2026 – Etappe A eingespielt
 
 - **Carsten** · Neue Datenbank (58 Spalten, SHA-256 6d68583c…) und Spielplan.xlsx nach data/ übernommen; alte Datenbank gesichert in backup/…_alt_57Spalten.xlsx.

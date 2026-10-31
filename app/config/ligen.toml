@@ -1,0 +1,33 @@
+# Soccer Intelligence – Ligen
+#
+# Jede Liga mit aktiv = true erhält einen eigenen Bereich im Dashboard.
+# Die Reihenfolge hier = Reihenfolge der Tabs.
+#
+#   name   = Blattname in Datenbank UND Spielplan (exakt gleich geschrieben)
+#   url    = Adresse des Bereichs, z. B. "bundesliga" -> /bundesliga
+#   teams  = Anzahl Teams der Liga (erwartete Spiele je Spieltag = teams / 2)
+#   aktiv  = true: wird angezeigt · false: vorbereitet, aber ausgeblendet
+
+[[liga]]
+name = "Bundesliga"
+url = "bundesliga"
+teams = 18
+aktiv = true
+
+[[liga]]
+name = "Premier League"
+url = "premier-league"
+teams = 20
+aktiv = true
+
+[[liga]]
+name = "Seria A"
+url = "serie-a"
+teams = 20
+aktiv = false
+
+[[liga]]
+name = "LaLiga"
+url = "laliga"
+teams = 20
+aktiv = false

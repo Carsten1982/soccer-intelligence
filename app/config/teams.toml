@@ -1,0 +1,21 @@
+# Soccer Intelligence – Teamliste
+#
+# Hier stehen Teams, deren Name im Spielplan vorkommt, aber (noch) nicht in der
+# Datenbank, z. B. Aufsteiger. Ein eingetragenes Team gilt als bekannt:
+# Die Datenqualität zeigt dann einen Hinweis statt einer Warnung.
+#
+#   team_id      = eindeutige Kennung (klein, ohne Leerzeichen)
+#   team_name    = Schreibweise EXAKT wie im Spielplan
+#   display_name = Anzeigename für später (z. B. "SV Elversberg"); leer = team_name
+#
+# Die Ligazugehörigkeit wird hier bewusst nicht gespeichert (Auf- und Abstieg).
+
+[[team]]
+team_id = "elversberg"
+team_name = "Elversberg"
+display_name = ""
+
+[[team]]
+team_id = "paderborn"
+team_name = "Paderborn"
+display_name = ""

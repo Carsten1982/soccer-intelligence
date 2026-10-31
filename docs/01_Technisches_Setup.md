@@ -1,6 +1,6 @@
 # Soccer Intelligence – Technisches Setup
 
-**Stand:** 30.10.2026 (abends) · **Status:** Systemprüfung abgeschlossen, Spezifikation und Testfälle fertig, Schritt 1 vorbereitet (noch nicht eingespielt), Passwortschutz beschlossen (noch nicht umgesetzt)
+**Stand:** 31.10.2026 · **Status:** Etappe A in Betrieb, Etappe B als Paket bereit, Passwortschutz beschlossen (noch nicht umgesetzt)
 **Verantwortlich:** Carsten Thiele · **Mitwirkende:** ChatGPT (Server-Setup, Review), Claude (Daten, Architektur, Code)
 
 ---
@@ -11,16 +11,18 @@
 |---|---|---|
 | Server, Container, Traefik-Routing | ✅ in Betrieb | geprüft am 25.10.2026 |
 | Excel-Datei in `data/`, read-only im Container | ✅ in Betrieb | Lesen mit openpyxl im Container getestet |
-| Neue Datenbank mit Spalte `Gameday` (58 Spalten) | 📦 bereit | geprüft und korrigiert am 30.10.2026, **noch nicht auf dem Server**, siehe `02_Datenbasis.md` |
-| `Spielplan.xlsx` (Spieltag 1, 2026/27) | 📦 bereit | geprüft am 30.10.2026, **noch nicht auf dem Server** |
+| Neue Datenbank mit Spalte `Gameday` (58 Spalten) | ✅ in Betrieb | seit 31.10.2026 in `data/`, SHA-256 `6d68583c…`, siehe `02_Datenbasis.md` |
+| `Spielplan.xlsx` (Spieltag 1, 2026/27) | ✅ auf dem Server | seit 31.10.2026 in `data/`, wird ab Etappe B gelesen |
 | KPI-Regelwerk und Testfälle KPI 01–04 | ✅ fertig | `03_KPI_Regelwerk.md` v1.1, `docs/tests/` (bestätigt 28./29.10.2026, nachgerechnet 30.10.2026) |
-| openpyxl / pandas im Container | ✅ installiert | Versionen noch nicht in `requirements.txt` festgelegt |
+| openpyxl / pandas im Container | ✅ installiert | Versionen in `requirements.txt` festgelegt |
 | Website soccer-intelligence.com | ✅ erreichbar | zeigt **noch die Platzhalterseite** |
 | Dashboard unter `/dashboard` mit Passwortschutz, Platzhalter bleibt unter `/` | 📦 beschlossen 30.10.2026 | **noch nicht umgesetzt**, benötigt separate Freigabe (siehe Abschnitt 7) |
-| Datenladen, Prüfregeln, Seite „Datenqualität“ | 📦 geplant | Code als Paket Schritt 1 vorbereitet (an 58 Spalten angepasst, 26 Tests), **nicht eingespielt** |
-| Automatisches Neuladen bei neuer Excel-Datei | 📦 geplant | Teil von Schritt 1, erst nach Einspielen und Test gültig |
-| Versionen festgelegt | 📦 geplant | Teil von Schritt 1 |
-| Spielplan einlesen, KPIs, Top Anomalien, öffentliche Website | ⏳ offen | siehe Abschnitt 7 |
+| Datenladen, Prüfregeln, Seite „Datenqualität“ | ✅ in Betrieb | Etappe A, eingespielt am 31.10.2026 (26 Tests bestanden) |
+| Automatisches Neuladen bei neuer Excel-Datei | ✅ in Betrieb | seit Etappe A |
+| Versionen festgelegt | ✅ in Betrieb | streamlit 1.66.1, pandas 3.1.0, openpyxl 3.1.5 |
+| Versionierung (Git + GitHub) | ✅ in Betrieb | seit 30.10.2026, privates Repository `Carsten1982/soccer-intelligence` |
+| Spielplan einlesen, aktueller Spieltag, Tabs | 📦 Paket bereit | Etappe B, siehe Abschnitt 7 |
+| KPIs, Top Anomalien, öffentliche Website | ⏳ offen | siehe Abschnitt 7 |
 
 ---
 
@@ -112,15 +114,18 @@ Besucher → https://soccer-intelligence.com/dashboard…  → Passwortabfrage (
 /docker/football-dashboard/
 ├── Dockerfile                  Bauplan des Containers (Python 3.12, Streamlit)
 ├── docker-compose.yml          Container-Konfiguration inkl. Traefik-Labels
-├── requirements.txt            Python-Pakete
-├── app/
-│   └── app.py                  Anwendung (aktuell: Platzhalterseite)
-├── config/                     leer, für spätere Einstellungen
-├── data/
-│   └── Database-Soccer-Intelligence.xlsx   ← GÜLTIGE Datenbank
-├── backup/                     Sicherungen
-├── Database-Soccer-Intelligence.xlsx       ← alte Kopie, wird später nach backup/ verschoben
-└── Database-Soccer-Intelligence_backup_2026-10-25.xlsx
+├── requirements.txt            Python-Pakete (Versionen fest)
+├── requirements-dev.txt        zusätzlich pytest (nur für Tests)
+├── app/                        Anwendung (Aufbau siehe Abschnitt 7)
+├── tests/                      automatische Tests
+├── config/                     leer (Konfiguration liegt in app/config/, siehe Abschnitt 7)
+├── data/                       nicht in Git
+│   ├── Database-Soccer-Intelligence.xlsx   ← GÜLTIGE Datenbank
+│   └── Spielplan.xlsx                      ← GÜLTIGER Spielplan
+├── backup/                     Sicherungen, nicht in Git
+├── docs/, word/                Dokumentation
+├── CLAUDE.md, CHANGELOG.md
+└── .git/, .gitignore           Versionsverlauf (seit 30.10.2026)
 ```
 
 ### docker-compose.yml (Stand 25.10.2026)
@@ -155,7 +160,7 @@ services:
 | pandas | 3.1.0 |
 | openpyxl | 3.1.5 |
 
-Hinweis: `requirements.txt` enthält aktuell noch keine Versionsnummern. Mit Schritt 1 werden genau diese geprüften Versionen festgelegt (`streamlit==1.66.1`, `pandas==3.1.0`, `openpyxl==3.1.5`).
+Seit Etappe A (31.10.2026) legt `requirements.txt` genau diese Versionen fest (`streamlit==1.66.1`, `pandas==3.1.0`, `openpyxl==3.1.5`).
 
 Kontrolle nach jedem Neubau:
 
@@ -276,28 +281,32 @@ sha256sum data/Database-Soccer-Intelligence.xlsx
 app/
 ├── app.py                Navigation
 ├── state.py              Laden mit Cache (neu laden bei geänderter Datei)
+├── config/               Konfiguration, mit dem Code versioniert (Änderung -> Container neu bauen)
+│   ├── ligen.toml        aktive Ligen, Adresse, Anzahl Teams (Etappe B)
+│   └── teams.toml        Teamliste: bekannte Teams ohne Datenbankeinträge, z. B. Aufsteiger (Etappe B)
 ├── core/                 Kernlogik ohne Oberfläche (testbar)
 │   ├── schema.py         erwartete Struktur der Excel-Datei
 │   ├── loader.py         Einlesen + Strukturprüfung
 │   ├── validation.py     Plausibilitätsprüfungen
-│   └── fixtures.py       Spielplan (Schritt 2)
-└── views/                Bereiche: Top Anomalien, je Liga, Datenqualität
+│   ├── config.py         Einlesen der Konfiguration (Etappe B)
+│   ├── fixtures.py       Spielplan einlesen und prüfen (Etappe B)
+│   └── matchday.py       aktueller Spieltag, Spieltagsübersicht (Etappe B)
+└── views/                Bereiche: Top Anomalien, je Liga, Datenqualität; components.py = Kopfbereich, Tabelle
 tests/                    automatische Tests
-config/teams.toml         bekannte Teamnamen (Schritt 2)
-data/Spielplan.xlsx       anstehende Partien (Schritt 2)
+data/Spielplan.xlsx       anstehende Partien
 docs/                     Dokumentation (01–05, tests/)
 CLAUDE.md                 Projektübersicht für Claude Code
 CHANGELOG.md              Änderungsprotokoll
 ```
 
-### Umsetzungsplan (Stand 30.10.2026, Etappen gemäss Dashboard-Briefing v4.2)
+### Umsetzungsplan (Stand 31.10.2026, Etappen gemäss Dashboard-Briefing v4.2)
 
 | Etappe | Inhalt | Voraussetzung | Status |
 |---|---|---|---|
 | Systemprüfung | Ist-Zustand des Servers geprüft | – | ✅ 25.10.2026 |
 | Spezifikation | Dashboard-Briefing v4.2 (`05_Dashboard.md`), `03_KPI_Regelwerk.md` v1.1, `04_Spielplan.md`, Testfälle KPI 01–04 | – | ✅ fertig; offene KPI-Punkte nicht blockierend (Regelwerk, Abschnitt 8) |
-| A – Fundament | Datenbank einlesen und prüfen, Versionen fest (Paket Schritt 1) | neue Datenbank (58 Spalten) auf dem Server, Freigabe | 📦 Paket bereit (Stand 30.10.2026), nicht eingespielt |
-| B – Spielplan und Datenqualität | Spielplan einlesen, aktueller Spieltag, Bereich Datenqualität | Spielplan im neuen Format ✅ (30.10.2026), auf dem Server | offen, startklar nach Etappe A |
+| A – Fundament | Datenbank einlesen und prüfen, Versionen fest (Paket Schritt 1) | neue Datenbank (58 Spalten) auf dem Server ✅ | ✅ eingespielt 31.10.2026 (Git `ffec276`) |
+| B – Spielplan und Datenqualität | Spielplan einlesen, aktueller Spieltag, Tabs, Bereich Datenqualität | Spielplan auf dem Server ✅ | 📦 Paket bereit (31.10.2026) |
 | C – Liga-Tabellen mit KPIs | KPI 01–04 gemäss Regelwerk, JSON-Blöcke der Testfälle als automatische Tests | Gameday ✅, Testfälle ✅ | offen, startklar nach Etappe B |
 | D – Top Anomalien | Auswahl-Logik gemäss Regelwerk, Abschnitt 2.6 | Etappe C | offen |
 | E – Dashboard-Zugang | Umzug nach `/dashboard`, Passwortschutz über Traefik, Platzhalterseite unter `/` | separate Freigabe (Traefik-Labels) | beschlossen, offen |
@@ -308,11 +317,22 @@ CHANGELOG.md              Änderungsprotokoll
 ## 8. Offene Punkte
 
 - [ ] Wo läuft der Chatbot? (nur zur Dokumentation)
-- [ ] Alte Excel-Kopie im Hauptverzeichnis nach `backup/` verschieben (nach Freigabe)
+- [x] ~~Alte Excel-Kopie im Hauptverzeichnis nach `backup/` verschieben~~ erledigt 31.10.2026
 - [ ] Warnung zu Spiel-ID 11344 (Schusssumme): Wert korrigieren oder als Hinweis herabstufen?
 - [ ] Server-Updates (57 ausstehend): getrennt und bewusst einplanen, betrifft alle Anwendungen. Kein Upgrade auf Ubuntu 26.04 vorerst.
-- [ ] Optional: Git-Repository im Projektordner für Versionsverlauf
-- [ ] Neue Datenbank (58 Spalten, SHA-256 `6d68583c…`) und `Spielplan.xlsx` auf den Server laden (Ablauf Abschnitt 6, Voraussetzung für Etappe A und B)
+- [x] ~~Git-Repository im Projektordner~~ eingerichtet 30.10.2026 (GitHub, privat)
+- [x] ~~Neue Datenbank und `Spielplan.xlsx` auf den Server laden~~ erledigt 31.10.2026
+- [ ] Ergänzte Spielplan-Regeln aus Etappe B bestätigen (`04_Spielplan.md`, Abschnitte 4 und 5, markiert mit „ergänzt 31.10.2026“)
+- [ ] Aufräumen in `backup/` nach einigen Wochen stabilen Betriebs
 - [ ] Offene KPI-Punkte 2, 6, 7, 9, 10 im Regelwerk, Abschnitt 8 (nicht blockierend)
 - [x] ~~Spalte „Gameday“ für die Ligareferenz~~ ergänzt (28.10.2026), geprüft (30.10.2026)
 - [x] ~~Doppelte KPI-Datei~~ entschieden am 30.10.2026: gültig ist `03_KPI_Regelwerk.md`, `03_KPI_Grundregeln.md` und `kpis/` gelöscht
+
+---
+
+## 9. Ideen für später (erst nach stabiler erster Version)
+
+| Idee | Notiz |
+|---|---|
+| Spieltage im Dashboard vor- und zurückblättern | eigene kleine Spezifikation (Bedienung, Adressen, Verhalten der Top Anomalien) |
+| Internes Test-Datum (`testdatum` in der Konfiguration) | Dashboard verhält sich wie an einem anderen Tag; praktisch zum Durchspielen vergangener Spieltage |

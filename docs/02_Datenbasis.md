@@ -6,7 +6,7 @@
 
 Diese Prüfsumme steht auch in den Testfällen (`docs/tests/`). Nach jeder Änderung an der Datei ändert sie sich. Dann hier und in den Testfällen nachtragen und die Testfälle erneut laufen lassen.
 
-**Server:** Dort liegt vermutlich noch eine ältere Fassung mit 57 Spalten (zuletzt bekannt: SHA-256 `510886ed…`). Vor Etappe A die neue Fassung hochladen, Ablauf gemäss `01_Technisches_Setup.md`, Abschnitt 6. Kontrolle: `sha256sum` muss den Wert oben ergeben.
+**Server:** Diese Fassung ist seit 31.10.2026 in `data/` aktiv (Prüfsumme auf dem Server kontrolliert). Die alte Fassung mit 57 Spalten (`510886ed…`) liegt in `backup/`.
 
 ---
 
