@@ -5,7 +5,16 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
-## 31.10.2026 (nachts) – Etappe D: Top Anomalien (Paket vorbereitet)
+## 31.10.2026 (nachts) – Etappe E: Dashboard-Zugang (Paket vorbereitet)
+
+- **Carsten** · Freigabe Etappe E: Platzhalterseite unter `/` (Variante b), Dashboard unter `/dashboard` mit Passwortschutz, Ziel vor allem: keine Aufnahme in Suchmaschinen. Ein gemeinsamer Zugang (Benutzername und Passwort nur in `.env`).
+- **Claude** · `docker-compose.yml`: Dashboard-Router nur noch für `/dashboard`, Passwortabfrage (Traefik BasicAuth, Hash aus `.env`, Variable `SOCCER_DASHBOARD_AUTH`), Kopfzeile `X-Robots-Tag: noindex, nofollow`; Streamlit unter `/dashboard` (`STREAMLIT_SERVER_BASE_URL_PATH`). Fehlt der Eintrag in `.env`, startet Compose nicht.
+- **Claude** · Neuer Container `soccer-placeholder` (nginx 1.27, nur lesend) mit `placeholder/index.html` und `robots.txt` (sperrt `/dashboard`). Keine externen Schriften oder Skripte.
+- **Claude** · 6 neue Tests (`tests/test_deploy.py`): Pfad, Passwort-Middleware, noindex, keine Zugangsdaten in Git, Daten nur lesbar, Platzhalter vorhanden. Skript `tools/dashboard_passwort.sh` (Zugang setzen/ändern, Passwort verdeckt, nur Hash in `.env`, Abbruch ohne Änderung bei Fehlern). Doku: Architektur, Ordner, Compose, Ablauf „Dashboard-Zugang setzen“. Version 0.7.
+
+## 31.10.2026 (nachts) – Etappe D: Top Anomalien
+
+- **Carsten** · Etappe D eingespielt und abgenommen (145 Tests bestanden, 4 Karten wie erwartet), Git `1a1c527`.
 
 - **Carsten** · Anpassungen nach Abnahme C eingespielt (Git `4c3be5c`). Die vier ergänzten Spielplan-Regeln (`04_Spielplan.md`) bestätigt.
 - **ChatGPT** (mit Carsten) · Server-Update: Ubuntu-Pakete und Docker aktualisiert, Neustart erfolgreich, alle vier Anwendungen laufen.

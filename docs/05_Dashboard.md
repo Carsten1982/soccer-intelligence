@@ -94,6 +94,10 @@ Das gesamte Dashboard, also alle Adressen unter /dashboard, ist passwortgeschüt
 
 - Die Änderung betrifft nur den eigenen Container football-dashboard und eine neue, kleine Komponente für die Platzhalterseite. Traefik selbst, n8n und alle anderen Anwendungen bleiben unverändert. Die Umsetzung erfolgt erst nach separater Freigabe gemäss den Schutzregeln.
 
+- Suchmaschinen: Alle Antworten unter /dashboard tragen zusätzlich den Hinweis „noindex, nofollow“.
+
+*Umgesetzt in Etappe E (31.10.2026), freigegeben von Carsten. Technische Details: `docs/01_Technisches_Setup.md`, Abschnitte 3 und 4.*
+
 ## 3. Dashboard-Navigation und Design
 
 Das Dashboard soll sich an den bereitgestellten Design-Screenshots orientieren.

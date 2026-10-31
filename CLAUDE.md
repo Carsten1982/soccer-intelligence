@@ -15,8 +15,8 @@ kommentiert und schrittweise aufgebaut sein. Nach jedem Schritt kurz erklären, 
 - Excel-Dateien liegen in `data/` und sind im Container nur lesbar (`/data`, read-only).
 - Python 3.12, streamlit 1.66.1, pandas 3.1.0, openpyxl 3.1.5.
 
-## Zugang (beschlossen 30.10.2026, Umsetzung in Etappe E)
-- `https://soccer-intelligence.com/` zeigt weiterhin die öffentliche Platzhalterseite.
+## Zugang (beschlossen 30.10.2026, umgesetzt in Etappe E am 31.10.2026)
+- `https://soccer-intelligence.com/` zeigt die öffentliche Platzhalterseite (Container `soccer-placeholder`, Ordner `placeholder/`).
 - Das Dashboard liegt unter `/dashboard` und ist **passwortgeschützt** (Traefik, BasicAuth).
   Zugangsdaten nur als Hash in `.env` auf dem Server, nie im Code oder in Git.
 - Bereiche: `/dashboard` (Top Anomalien), `/dashboard/bundesliga`, `/dashboard/premier-league`,

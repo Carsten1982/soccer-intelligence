@@ -15,8 +15,8 @@
 | `Spielplan.xlsx` (Spieltag 1, 2026/27) | ✅ in Betrieb | seit 31.10.2026 in `data/`, gelesen seit Etappe B |
 | KPI-Regelwerk und Testfälle KPI 01–04 | ✅ fertig | `03_KPI_Regelwerk.md` v1.1, `docs/tests/` (bestätigt 28./29.10.2026, nachgerechnet 30.10.2026) |
 | openpyxl / pandas im Container | ✅ installiert | Versionen in `requirements.txt` festgelegt |
-| Website soccer-intelligence.com | ✅ erreichbar | zeigt **noch die Platzhalterseite** |
-| Dashboard unter `/dashboard` mit Passwortschutz, Platzhalter bleibt unter `/` | 📦 beschlossen 30.10.2026 | **noch nicht umgesetzt**, benötigt separate Freigabe (siehe Abschnitt 7) |
+| Website soccer-intelligence.com | ✅ erreichbar | ab Etappe E: `/` öffentliche Platzhalterseite, `/dashboard` mit Passwort |
+| Dashboard unter `/dashboard` mit Passwortschutz, Platzhalter unter `/` | 📦 Paket bereit | Etappe E, freigegeben von Carsten am 31.10.2026 (Traefik-Labels des eigenen Containers, neuer Container `soccer-placeholder`) |
 | Datenladen, Prüfregeln, Seite „Datenqualität“ | ✅ in Betrieb | Etappe A, eingespielt am 31.10.2026 (26 Tests bestanden) |
 | Automatisches Neuladen bei neuer Excel-Datei | ✅ in Betrieb | seit Etappe A |
 | Versionen festgelegt | ✅ in Betrieb | streamlit 1.66.1, pandas 3.1.0, openpyxl 3.1.5 |
@@ -24,7 +24,7 @@
 | Spielplan einlesen, aktueller Spieltag, Tabs | ✅ in Betrieb | Etappe B, eingespielt 31.10.2026 (Git `ff4fbe8`) |
 | KPI 01–04 in den Liga-Tabellen, Häufigkeit der Anomalien | ✅ in Betrieb | Etappe C, eingespielt 31.10.2026 (Git `8cb5f0f`) |
 | Spieltag-Pfeile, Navigation dunkelgrau, kleinerer Abstand | ✅ in Betrieb | Anpassungen nach Abnahme Etappe C, eingespielt 31.10.2026 (Git `4c3be5c`) |
-| Top Anomalien (Startseite) | 📦 Paket bereit | Etappe D, Auswahl gemäss Regelwerk 2.6 (`app/core/top.py`) |
+| Top Anomalien (Startseite) | ✅ in Betrieb | Etappe D, eingespielt 31.10.2026 (Git `1a1c527`, 145 Tests bestanden) |
 | KPIs, Top Anomalien, öffentliche Website | ⏳ offen | siehe Abschnitt 7 |
 
 ---
@@ -81,7 +81,8 @@ Ausbaustufen:
 
 | Container | Zweck | Gehört zu uns? |
 |---|---|---|
-| `football-dashboard` | Soccer Intelligence (Streamlit) | **ja** |
+| `football-dashboard` | Soccer Intelligence (Streamlit), unter `/dashboard` | **ja** |
+| `soccer-placeholder` | Platzhalterseite unter `/` (nginx, statisch), seit Etappe E | **ja** |
 | `article-generator` | Artikeltext-Generator | nein – nicht anfassen |
 | `n8n-wxit-n8n-1` | n8n Automatisierung | nein – nicht anfassen |
 | `traefik-traefik-1` | Webserver / HTTPS für alle Anwendungen | nein – nicht anfassen |
@@ -90,25 +91,25 @@ Ausbaustufen:
 ### So kommt die Website ins Internet
 
 ```
-Besucher → https://soccer-intelligence.com
-        → Traefik (läuft im Host-Netzwerk, erledigt HTTPS/Zertifikat)
-        → findet den Container football-dashboard automatisch über die Docker-Labels
-        → Streamlit auf Port 8501
+Besucher → https://soccer-intelligence.com/            → Traefik → soccer-placeholder (nginx, öffentlich)
+Besucher → https://soccer-intelligence.com/dashboard…  → Traefik → Passwortabfrage (BasicAuth)
+                                                                  → football-dashboard (Streamlit, Port 8501)
 ```
+
+- Traefik läuft im Host-Netzwerk, erledigt HTTPS/Zertifikat und findet beide Container automatisch über ihre Docker-Labels.
+- Bei gleicher Domain gewinnt die längere Regel: Alles unter `/dashboard` geht zum Dashboard, alles andere zur Platzhalterseite.
+- Antworten des Dashboards tragen den Hinweis `X-Robots-Tag: noindex, nofollow` (Suchmaschinen sollen nichts aufnehmen). `robots.txt` der Platzhalterseite sperrt `/dashboard` zusätzlich.
 
 - Port 8501 ist nur lokal gebunden (`127.0.0.1`), also von aussen nicht direkt erreichbar.
 - Traefik liest die Container-Adresse selbständig aus Docker. Ein Neubau des Containers bricht das Routing nicht.
 
-### Geplant (beschlossen 30.10.2026, noch nicht umgesetzt)
+### Zugang (beschlossen 30.10.2026, umgesetzt in Etappe E am 31.10.2026)
 
-```
-Besucher → https://soccer-intelligence.com/            → Platzhalterseite (kleiner statischer Webserver, öffentlich)
-Besucher → https://soccer-intelligence.com/dashboard…  → Passwortabfrage (Traefik) → Streamlit-Dashboard
-```
-
-- Streamlit läuft dann unter dem Pfad `/dashboard` (Einstellung `baseUrlPath`).
+- Streamlit läuft unter dem Pfad `/dashboard` (Umgebungsvariable `STREAMLIT_SERVER_BASE_URL_PATH=dashboard` in `docker-compose.yml`).
 - Der Passwortschutz schützt alle Unterseiten und die Datenverbindung der App.
 - Betroffen sind nur die Labels des eigenen Containers `football-dashboard` und ein neuer, kleiner Container für die Platzhalterseite. Die Traefik-Grundkonfiguration, n8n und alle anderen Anwendungen bleiben unverändert.
+- Ein gemeinsamer Zugang (Benutzername und Passwort). Beides steht nur in `.env` auf dem Server: Benutzername im Klartext, Passwort als bcrypt-Hash. Nicht in Git, nicht in der Dokumentation.
+- Fehlt die Zeile in `.env`, startet `docker compose` gar nicht erst (Fehlermeldung „SOCCER_DASHBOARD_AUTH fehlt in .env“), statt das Dashboard ungeschützt zu veröffentlichen.
 - Einschränkung: Es gibt keinen „Abmelden“-Knopf. Man meldet sich durch Schliessen des Browsers ab.
 
 ---
@@ -118,7 +119,10 @@ Besucher → https://soccer-intelligence.com/dashboard…  → Passwortabfrage (
 ```
 /docker/football-dashboard/
 ├── Dockerfile                  Bauplan des Containers (Python 3.12, Streamlit)
-├── docker-compose.yml          Container-Konfiguration inkl. Traefik-Labels
+├── docker-compose.yml          Container-Konfiguration inkl. Traefik-Labels (Dashboard + Platzhalter)
+├── .env                        Zugang zum Dashboard (Benutzername + Passwort-Hash), nicht in Git
+├── placeholder/                Platzhalterseite unter / (index.html, robots.txt), seit Etappe E
+├── tools/                      Hilfsskripte (dashboard_passwort.sh: Zugang setzen/ändern)
 ├── requirements.txt            Python-Pakete (Versionen fest)
 ├── requirements-dev.txt        zusätzlich pytest (nur für Tests)
 ├── app/                        Anwendung (Aufbau siehe Abschnitt 7)
@@ -134,9 +138,18 @@ Besucher → https://soccer-intelligence.com/dashboard…  → Passwortabfrage (
 └── .git/, .gitignore           Versionsverlauf (seit 30.10.2026)
 ```
 
-### docker-compose.yml (Stand 25.10.2026)
+### docker-compose.yml (Stand 31.10.2026, Etappe E)
 
 ```yaml
+# Soccer Intelligence – Container-Konfiguration (Stand 31.10.2026, Etappe E)
+#
+#   https://soccer-intelligence.com/             -> Platzhalterseite, öffentlich (Container soccer-placeholder)
+#   https://soccer-intelligence.com/dashboard…   -> Passwortabfrage (Traefik BasicAuth) -> Streamlit-Dashboard
+#
+# Zugangsdaten: NUR als Hash in .env auf dem Server (Variable SOCCER_DASHBOARD_AUTH), nie in Git.
+# Fehlt die Variable, bricht "docker compose" mit einer Fehlermeldung ab (statt ohne Passwortschutz zu starten).
+# Betroffen sind nur die Labels dieser beiden Container. Die Traefik-Grundkonfiguration bleibt unverändert.
+
 services:
   football-dashboard:
     build:
@@ -147,12 +160,31 @@ services:
       - "127.0.0.1:8501:8501"
     volumes:
       - ./data:/data:ro
+    environment:
+      # Streamlit läuft unter dem Pfad /dashboard (Seiten: /dashboard/bundesliga usw.)
+      - STREAMLIT_SERVER_BASE_URL_PATH=dashboard
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.soccer.rule=Host(`soccer-intelligence.com`)"
+      - "traefik.http.routers.soccer.rule=Host(`soccer-intelligence.com`) && PathPrefix(`/dashboard`)"
       - "traefik.http.routers.soccer.entrypoints=websecure"
       - "traefik.http.routers.soccer.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.soccer.middlewares=soccerintel-auth,soccerintel-noindex"
+      - "traefik.http.middlewares.soccerintel-auth.basicauth.users=${SOCCER_DASHBOARD_AUTH:?SOCCER_DASHBOARD_AUTH fehlt in .env}"
+      - "traefik.http.middlewares.soccerintel-noindex.headers.customresponseheaders.X-Robots-Tag=noindex, nofollow"
       - "traefik.http.services.soccer.loadbalancer.server.port=8501"
+
+  soccer-placeholder:
+    image: nginx:1.27-alpine
+    container_name: soccer-placeholder
+    restart: unless-stopped
+    volumes:
+      - ./placeholder:/usr/share/nginx/html:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.soccer-placeholder.rule=Host(`soccer-intelligence.com`)"
+      - "traefik.http.routers.soccer-placeholder.entrypoints=websecure"
+      - "traefik.http.routers.soccer-placeholder.tls.certresolver=letsencrypt"
+      - "traefik.http.services.soccer-placeholder.loadbalancer.server.port=80"
 ```
 
 - `./data:/data:ro` → Der Ordner `data/` ist im Container unter `/data` **nur lesbar**. Die App kann die Excel-Datei technisch nicht verändern.
@@ -183,9 +215,9 @@ Erwartet: genau die drei Versionen oben. Weicht etwas ab → Ursache klären, be
 1. Nur im Ordner `/docker/football-dashboard/` arbeiten.
 2. `article-generator`, Chatbot, n8n und Traefik nicht verändern oder neu starten.
 3. Kein `docker compose down`, keine globalen Docker-Befehle, keine Änderungen an gemeinsamen Netzwerken.
-4. Traefik-Labels und Ports nicht ändern (nur mit eigener Freigabe).
+4. Traefik-Labels und Ports nicht ändern (nur mit eigener Freigabe). Letzte Freigabe: Etappe E, 31.10.2026.
 5. Vor jeder Änderung: Backup der betroffenen Dateien.
-6. Neu bauen nur den eigenen Service: `docker compose up -d --build football-dashboard`
+6. Neu bauen nur den eigenen Service: `docker compose up -d --build football-dashboard` (die Platzhalterseite `soccer-placeholder` gehört ebenfalls zu uns und muss bei Code-Änderungen nicht neu gestartet werden)
 7. Danach immer prüfen: `docker ps` → alle Container laufen weiter.
 8. Keine Passwörter, Tokens oder Schlüssel in Code oder Dokumentation. Die Zugangsdaten für den Dashboard-Passwortschutz liegen nur als Hash in einer Konfigurationsdatei auf dem Server (z. B. `.env`, nicht in Git).
 9. Fehlende Statistikwerte nie durch 0 oder Schätzungen ersetzen.
@@ -266,8 +298,21 @@ docker compose config -q                              # Konfiguration prüfen
 docker compose up -d --build football-dashboard       # nur unseren Container neu bauen
 docker ps --format "table {{.Names}}\t{{.Status}}"    # alle Container laufen?
 docker logs football-dashboard --tail 30              # Fehler im Log?
-curl -s -o /dev/null -w "%{http_code}\n" https://soccer-intelligence.com   # erwartet: 200
+curl -s -o /dev/null -w "%{http_code}\n" https://soccer-intelligence.com/            # Platzhalter, erwartet: 200
+curl -s -o /dev/null -w "%{http_code}\n" https://soccer-intelligence.com/dashboard/   # ohne Passwort, erwartet: 401
 ```
+
+### Dashboard-Zugang setzen oder Passwort ändern
+
+```bash
+cd /docker/football-dashboard
+bash tools/dashboard_passwort.sh                 # fragt Benutzername und Passwort (verdeckt, zweimal)
+docker compose up -d football-dashboard          # Zugang neu einlesen (kein Neubau nötig)
+```
+
+- Gespeichert wird nur der bcrypt-Hash in `.env` (Zeile `SOCCER_DASHBOARD_AUTH`). Das Passwort erscheint weder auf dem Bildschirm noch im Befehlsverlauf.
+- Die alte `.env` wird vorher nach `backup/env_<Datum>` gesichert. Andere Zeilen in `.env` bleiben unverändert.
+- Bei verschiedenen Eingaben oder einem Fehler bricht das Skript ab und ändert nichts.
 
 ### Zustand prüfen (nur lesend)
 
@@ -317,8 +362,8 @@ CHANGELOG.md              Änderungsprotokoll
 | A – Fundament | Datenbank einlesen und prüfen, Versionen fest (Paket Schritt 1) | neue Datenbank (58 Spalten) auf dem Server ✅ | ✅ eingespielt 31.10.2026 (Git `ffec276`) |
 | B – Spielplan und Datenqualität | Spielplan einlesen, aktueller Spieltag, Tabs, Bereich Datenqualität | Spielplan auf dem Server ✅ | ✅ eingespielt 31.10.2026 (Git `ff4fbe8`) |
 | C – Liga-Tabellen mit KPIs | KPI 01–04 gemäss Regelwerk, JSON-Blöcke der Testfälle als automatische Tests, Häufigkeit der Anomalien | Gameday ✅, Testfälle ✅ | ✅ eingespielt 31.10.2026 (Git `8cb5f0f`) |
-| D – Top Anomalien | Auswahl-Logik gemäss Regelwerk, Abschnitt 2.6, Karten auf der Startseite, 13 Tests | Etappe C ✅ | 📦 Paket bereit |
-| E – Dashboard-Zugang | Umzug nach `/dashboard`, Passwortschutz über Traefik, Platzhalterseite unter `/` | separate Freigabe (Traefik-Labels) | beschlossen, offen |
+| D – Top Anomalien | Auswahl-Logik gemäss Regelwerk, Abschnitt 2.6, Karten auf der Startseite, 13 Tests | Etappe C ✅ | ✅ eingespielt 31.10.2026 (Git `1a1c527`) |
+| E – Dashboard-Zugang | Umzug nach `/dashboard`, Passwortschutz über Traefik, `noindex`, Platzhalterseite unter `/` | Freigabe Carsten 31.10.2026 ✅ | 📦 Paket bereit |
 | Öffentliche Website | eigener Architekturvorschlag (Mobile First) | – | später |
 
 ---
@@ -332,6 +377,8 @@ CHANGELOG.md              Änderungsprotokoll
 - [x] ~~Git-Repository im Projektordner~~ eingerichtet 30.10.2026 (GitHub, privat)
 - [x] ~~Neue Datenbank und `Spielplan.xlsx` auf den Server laden~~ erledigt 31.10.2026
 - [x] ~~Ergänzte Spielplan-Regeln aus Etappe B bestätigen~~ bestätigt von Carsten am 31.10.2026
+- [ ] Server meldet „1 updates could not be installed automatically“ (unattended-upgrades, 31.10.2026): Log prüfen, betrifft nicht das Dashboard
+- [ ] Öffentliche Platzhalterseite: Braucht es ein Impressum bzw. einen Datenschutzhinweis? (vor dem Start der öffentlichen Website klären)
 - [ ] Aufräumen in `backup/` nach einigen Wochen stabilen Betriebs
 - [ ] Offene KPI-Punkte 2, 6, 7, 9, 10 im Regelwerk, Abschnitt 8 (nicht blockierend)
 - [x] ~~Spalte „Gameday“ für die Ligareferenz~~ ergänzt (28.10.2026), geprüft (30.10.2026)

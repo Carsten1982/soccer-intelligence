@@ -1,3 +1,12 @@
+# Soccer Intelligence – Container-Konfiguration (Stand 31.10.2026, Etappe E)
+#
+#   https://soccer-intelligence.com/             -> Platzhalterseite, öffentlich (Container soccer-placeholder)
+#   https://soccer-intelligence.com/dashboard…   -> Passwortabfrage (Traefik BasicAuth) -> Streamlit-Dashboard
+#
+# Zugangsdaten: NUR als Hash in .env auf dem Server (Variable SOCCER_DASHBOARD_AUTH), nie in Git.
+# Fehlt die Variable, bricht "docker compose" mit einer Fehlermeldung ab (statt ohne Passwortschutz zu starten).
+# Betroffen sind nur die Labels dieser beiden Container. Die Traefik-Grundkonfiguration bleibt unverändert.
+
 services:
   football-dashboard:
     build:
@@ -8,10 +17,28 @@ services:
       - "127.0.0.1:8501:8501"
     volumes:
       - ./data:/data:ro
+    environment:
+      # Streamlit läuft unter dem Pfad /dashboard (Seiten: /dashboard/bundesliga usw.)
+      - STREAMLIT_SERVER_BASE_URL_PATH=dashboard
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.soccer.rule=Host(`soccer-intelligence.com`)"
+      - "traefik.http.routers.soccer.rule=Host(`soccer-intelligence.com`) && PathPrefix(`/dashboard`)"
       - "traefik.http.routers.soccer.entrypoints=websecure"
       - "traefik.http.routers.soccer.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.soccer.middlewares=soccerintel-auth,soccerintel-noindex"
+      - "traefik.http.middlewares.soccerintel-auth.basicauth.users=${SOCCER_DASHBOARD_AUTH:?SOCCER_DASHBOARD_AUTH fehlt in .env}"
+      - "traefik.http.middlewares.soccerintel-noindex.headers.customresponseheaders.X-Robots-Tag=noindex, nofollow"
       - "traefik.http.services.soccer.loadbalancer.server.port=8501"
 
+  soccer-placeholder:
+    image: nginx:1.27-alpine
+    container_name: soccer-placeholder
+    restart: unless-stopped
+    volumes:
+      - ./placeholder:/usr/share/nginx/html:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.soccer-placeholder.rule=Host(`soccer-intelligence.com`)"
+      - "traefik.http.routers.soccer-placeholder.entrypoints=websecure"
+      - "traefik.http.routers.soccer-placeholder.tls.certresolver=letsencrypt"
+      - "traefik.http.services.soccer-placeholder.loadbalancer.server.port=80"
