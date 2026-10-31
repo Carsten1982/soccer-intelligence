@@ -1,0 +1,13 @@
+[browser]
+# Keine Nutzungsstatistik an Streamlit senden (öffentliche Seite)
+gatherUsageStats = false
+
+[server]
+headless = true
+
+[client]
+# Entwickler-Menü für Besucher ausblenden
+toolbarMode = "minimal"
+
+[theme]
+primaryColor = "#1f7a4d"

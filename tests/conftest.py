@@ -1,0 +1,81 @@
+"""Gemeinsame Test-Hilfen. Tests laufen ohne Streamlit (nur Kernlogik in app/core)."""
+
+import datetime as dt
+import os
+import sys
+from pathlib import Path
+
+import pandas as pd
+import pytest
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "app"))
+
+from core import schema  # noqa: E402
+
+REAL_DATA_DIR = Path(os.environ.get("SI_DATA_DIR", ROOT / "data"))
+REAL_DATABASE = REAL_DATA_DIR / "Database-Soccer-Intelligence.xlsx"
+
+
+def make_match(mid, home, away, date, ft=(1, 0), ht=(1, 0), league="Bundesliga", gameday=1):
+    """Ein in sich stimmiges Spiel mit allen 58 Spalten."""
+
+    def res(h, a):
+        return "H" if h > a else "A" if h < a else "D"
+
+    sh = (ft[0] - ht[0], ft[1] - ht[1])
+    row = {
+        "Date": pd.Timestamp(date), "Gameday": gameday, "id": mid, "matchDate": pd.Timestamp(date).strftime("%d-%m-%y 15:30"),
+        "Country": "Germany", "League": league, "Season": "2024/2025",
+        "homeTeam": home, "awayTeam": away, "referee": "Test Referee",
+        "FT Home Goals": ft[0], "FT Away Goals :": ft[1], "FT Result :": res(*ft),
+        "Full-Time Home Goals": ft[0], "Full-Time Away Goals": ft[1], "Full-Time Result": res(*ft),
+        "First-Half Home Goals": ht[0], "First-Half Away Goals": ht[1], "First-Half Result": res(*ht),
+        "Second-Half Home Goals": sh[0], "Second-Half Away Goals": sh[1], "Second-Half Result": res(*sh),
+    }
+    # Statistiken: HZ1 + HZ2 = Gesamt, Ballbesitz 55/45, Schüsse >= aufs Tor + daneben
+    for _, hp, ap in schema.SUMMABLE_STATS:
+        for prefix in (hp, ap):
+            row[f"{prefix} First Half"], row[f"{prefix} Second Half"] = 2, 3
+            row[f"{prefix} Full Time"] = 5
+    for p in ("Full Time", "First Half", "Second Half"):
+        row[f"Home Team Shots {p}"] = row[f"Away Team Shots {p}"] = {"Full Time": 12, "First Half": 6, "Second Half": 6}[p]
+        row[f"Home Ball Possession {p}"], row[f"Away Ball Possession {p}"] = 55, 45
+    return {c: row[c] for c in schema.EXPECTED_COLUMNS}
+
+
+def valid_league(league="Bundesliga"):
+    """Vollständige Mini-Saison: 2 Teams, Hin- und Rückspiel."""
+    return pd.DataFrame(
+        [
+            make_match(1, "Alpha", "Beta", "2024-08-24", league=league),
+            make_match(2, "Beta", "Alpha", "2025-01-18", ft=(2, 2), ht=(0, 1), league=league, gameday=2),
+        ],
+        columns=list(schema.EXPECTED_COLUMNS),
+    )
+
+
+def write_workbook(path, sheets: dict[str, pd.DataFrame], notes: pd.DataFrame | None = None):
+    with pd.ExcelWriter(path, engine="openpyxl") as xw:
+        for name, df in sheets.items():
+            df.to_excel(xw, sheet_name=name, index=False)
+        if notes is not None:
+            notes.to_excel(xw, sheet_name="Datenhinweise", index=False)
+    return path
+
+
+@pytest.fixture
+def valid_sheets():
+    return {
+        "Bundesliga": valid_league("Bundesliga"),
+        "Premier League": valid_league("Premier League"),
+        "Seria A": pd.DataFrame(),
+        "LaLiga": pd.DataFrame(),
+    }
+
+
+def notes_for(league, mid):
+    return pd.DataFrame([{
+        "Liga": league, "id": mid, "Datum": dt.datetime(2024, 12, 14), "Begegnung": "Test",
+        "Art": "Sonderfall", "Hinweis": "Statistiken fehlen", "Geändert am": dt.datetime(2026, 10, 25), "Quelle": "Test",
+    }])

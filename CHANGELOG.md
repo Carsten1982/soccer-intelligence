@@ -5,6 +5,12 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 31.10.2026 – Etappe A eingespielt
+
+- **Carsten** · Neue Datenbank (58 Spalten, SHA-256 6d68583c…) und Spielplan.xlsx nach data/ übernommen; alte Datenbank gesichert in backup/…_alt_57Spalten.xlsx.
+- **Carsten / Claude** · Git eingerichtet (30.10.2026), privates Repository Carsten1982/soccer-intelligence auf GitHub.
+- **Carsten / Claude** · Paket Schritt 1 eingespielt: 26 Tests bestanden, nur football-dashboard neu gebaut. App zeigt Übersicht und Datenqualität: 0 Fehler, 2 Warnungen (id 11344), 17 Hinweise.
+
 ## 30.10.2026 (abends) – Dokumentation bereinigt
 
 - **Claude** · Neue Datei `docs/05_Dashboard.md`, erzeugt aus dem Dashboard-Briefing v4.2 (Word). Damit liegen alle Vorgaben für Claude Code als md im Projekt. Massgeblich bleibt das Word-Dokument. Verweise in `CLAUDE.md` und `01_Technisches_Setup.md` angepasst.
