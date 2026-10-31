@@ -23,7 +23,8 @@
 | Versionierung (Git + GitHub) | ✅ in Betrieb | seit 30.10.2026, privates Repository `Carsten1982/soccer-intelligence` |
 | Spielplan einlesen, aktueller Spieltag, Tabs | ✅ in Betrieb | Etappe B, eingespielt 31.10.2026 (Git `ff4fbe8`) |
 | KPI 01–04 in den Liga-Tabellen, Häufigkeit der Anomalien | ✅ in Betrieb | Etappe C, eingespielt 31.10.2026 (Git `8cb5f0f`) |
-| Spieltag-Pfeile, Navigation dunkelgrau, kleinerer Abstand | 📦 Paket bereit | Anpassungen nach Abnahme Etappe C (31.10.2026) |
+| Spieltag-Pfeile, Navigation dunkelgrau, kleinerer Abstand | ✅ in Betrieb | Anpassungen nach Abnahme Etappe C, eingespielt 31.10.2026 (Git `4c3be5c`) |
+| Top Anomalien (Startseite) | 📦 Paket bereit | Etappe D, Auswahl gemäss Regelwerk 2.6 (`app/core/top.py`) |
 | KPIs, Top Anomalien, öffentliche Website | ⏳ offen | siehe Abschnitt 7 |
 
 ---
@@ -316,7 +317,7 @@ CHANGELOG.md              Änderungsprotokoll
 | A – Fundament | Datenbank einlesen und prüfen, Versionen fest (Paket Schritt 1) | neue Datenbank (58 Spalten) auf dem Server ✅ | ✅ eingespielt 31.10.2026 (Git `ffec276`) |
 | B – Spielplan und Datenqualität | Spielplan einlesen, aktueller Spieltag, Tabs, Bereich Datenqualität | Spielplan auf dem Server ✅ | ✅ eingespielt 31.10.2026 (Git `ff4fbe8`) |
 | C – Liga-Tabellen mit KPIs | KPI 01–04 gemäss Regelwerk, JSON-Blöcke der Testfälle als automatische Tests, Häufigkeit der Anomalien | Gameday ✅, Testfälle ✅ | ✅ eingespielt 31.10.2026 (Git `8cb5f0f`) |
-| D – Top Anomalien | Auswahl-Logik gemäss Regelwerk, Abschnitt 2.6 | Etappe C | offen |
+| D – Top Anomalien | Auswahl-Logik gemäss Regelwerk, Abschnitt 2.6, Karten auf der Startseite, 13 Tests | Etappe C ✅ | 📦 Paket bereit |
 | E – Dashboard-Zugang | Umzug nach `/dashboard`, Passwortschutz über Traefik, Platzhalterseite unter `/` | separate Freigabe (Traefik-Labels) | beschlossen, offen |
 | Öffentliche Website | eigener Architekturvorschlag (Mobile First) | – | später |
 
@@ -327,10 +328,10 @@ CHANGELOG.md              Änderungsprotokoll
 - [ ] Wo läuft der Chatbot? (nur zur Dokumentation)
 - [x] ~~Alte Excel-Kopie im Hauptverzeichnis nach `backup/` verschieben~~ erledigt 31.10.2026
 - [ ] Warnung zu Spiel-ID 11344 (Schusssumme): Wert korrigieren oder als Hinweis herabstufen?
-- [ ] Server-Updates (57 ausstehend): getrennt und bewusst einplanen, betrifft alle Anwendungen. Kein Upgrade auf Ubuntu 26.04 vorerst.
+- [x] ~~Server-Updates (57 ausstehend)~~ erledigt 31.10.2026 (Ubuntu-Pakete und Docker aktualisiert, Neustart, alle vier Anwendungen laufen). Weiterhin kein Upgrade auf Ubuntu 26.04 vorerst.
 - [x] ~~Git-Repository im Projektordner~~ eingerichtet 30.10.2026 (GitHub, privat)
 - [x] ~~Neue Datenbank und `Spielplan.xlsx` auf den Server laden~~ erledigt 31.10.2026
-- [ ] Ergänzte Spielplan-Regeln aus Etappe B bestätigen (`04_Spielplan.md`, Abschnitte 4 und 5, markiert mit „ergänzt 31.10.2026“)
+- [x] ~~Ergänzte Spielplan-Regeln aus Etappe B bestätigen~~ bestätigt von Carsten am 31.10.2026
 - [ ] Aufräumen in `backup/` nach einigen Wochen stabilen Betriebs
 - [ ] Offene KPI-Punkte 2, 6, 7, 9, 10 im Regelwerk, Abschnitt 8 (nicht blockierend)
 - [x] ~~Spalte „Gameday“ für die Ligareferenz~~ ergänzt (28.10.2026), geprüft (30.10.2026)

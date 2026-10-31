@@ -35,6 +35,8 @@ def _league_page(league):
 
 PAGES["top"] = st.Page(top_anomalien.render, title="Top Anomalien", url_path="top-anomalien", default=True)
 league_pages = [st.Page(_league_page(lg), title=lg.name, url_path=lg.url) for lg in leagues]
+for lg, page in zip(leagues, league_pages):
+    PAGES[f"liga_{lg.url}"] = page
 PAGES["datenqualitaet"] = st.Page(datenqualitaet.render, title="Datenqualität", url_path="datenqualitaet")
 
 nav = st.navigation([PAGES["top"], *league_pages, PAGES["datenqualitaet"]], position="top")

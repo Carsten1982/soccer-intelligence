@@ -72,6 +72,20 @@ CSS = f"""
 .si-legend {{color:{SLATE}; font-size:.8rem; margin:.25rem 0 1rem 0;}}
 .si-legend .si-dot {{margin-left:.6rem;}}
 .si-matchday-nav {{text-align:center; min-width:0;}}
+.si-matchday-nav .si-box {{white-space:nowrap;}}
+[class*="st-key-prev_"] button p, [class*="st-key-next_"] button p {{font-size:1.5rem !important; line-height:1 !important;}}
+[class*="st-key-prev_"] button, [class*="st-key-next_"] button {{min-height:2.6rem; padding:0 .7rem;}}
+
+/* Top Anomalien (Briefing 5.2) */
+.si-card {{border:1px solid {LINE}; border-radius:.6rem; padding:.9rem 1rem; background:#fff; color:{NAVY};}}
+.si-card-top {{display:flex; align-items:center; gap:.6rem; margin-bottom:.35rem;}}
+.si-rank {{display:inline-flex; align-items:center; justify-content:center; width:1.8rem; height:1.8rem; border-radius:50%;
+  background:{NAVY}; color:#fff; font-weight:700;}}
+.si-card-meta {{color:{SLATE}; font-size:.85rem;}}
+.si-card-match {{font-size:1.15rem; font-weight:700; margin:.1rem 0 .3rem 0;}}
+.si-card-kpi {{color:{SLATE}; font-size:.85rem;}}
+.si-card-value {{font-size:1rem; margin:.3rem 0 .5rem 0;}}
+.si-card .si-desc {{font-size:.85rem; line-height:1.35;}}
 
 /* Abstand oben verkleinert (Navigation -> Überschrift, Änderung 31.10.2026) */
 [data-testid="stMainBlockContainer"] {{padding-top:61px !important;}}

@@ -61,6 +61,9 @@ def test_app_start_page_top_anomalien():
     text = _texts(at)
     assert "Soccer Intelligence" in text
     assert "Bundesliga: Spieltag" in text and "Premier League: Spieltag" in text
+    assert "Top Anomalien" in text
+    from core.top import NO_ANOMALIES_TEXT
+    assert "si-card" in text or NO_ANOMALIES_TEXT in text + "\n".join(str(i.value) for i in at.info)
 
 
 def _liga_bundesliga():

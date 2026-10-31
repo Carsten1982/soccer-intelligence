@@ -100,7 +100,7 @@ Die Ergebnisse erscheinen auf der Seite **Datenqualität**, getrennt von den Pr�
 ### Fehler – Spielplan wird nicht verwendet, das Dashboard zeigt einen Hinweis statt der Tabelle
 
 - Datei fehlt oder ist nicht lesbar
-- Tabellenblatt einer aktiven Liga fehlt (*ergänzt 31.10.2026*)
+- Tabellenblatt einer aktiven Liga fehlt (*ergänzt und bestätigt 31.10.2026*)
 - Pflichtspalte fehlt oder ist falsch geschrieben
 - Pflichtfeld leer
 - `Datum von` oder `Datum bis` ist kein gültiges Datum (z. B. Zeitraum als Text)
@@ -116,12 +116,12 @@ Die Ergebnisse erscheinen auf der Seite **Datenqualität**, getrennt von den Pr�
 - Heim- und Gastmannschaft identisch
 - Weniger Spiele in einem Spieltag als erwartet (Anzahl Teams der Liga / 2, gemäss Konfiguration `app/config/ligen.toml`: Bundesliga 18 Teams → 9 Spiele, Premier League 20 Teams → 10 Spiele)
 - Dieselbe Paarung kommt in einer Saison mehrfach vor
-- Tabellenblatt einer aktiven Liga ist leer (*ergänzt 31.10.2026*)
+- Tabellenblatt einer aktiven Liga ist leer (*ergänzt und bestätigt 31.10.2026*)
 
 ### Hinweis – kein Handlungsbedarf
 
 - Bekannter Aufsteiger ohne Daten in der Datenbank
-- Team ohne Ligaspiele in der Saison des Spiels und der Vorsaison, z. B. Schalke (*ergänzt 31.10.2026*); KPIs erscheinen als „–“
+- Team ohne Ligaspiele in der Saison des Spiels und der Vorsaison, z. B. Schalke (*ergänzt und bestätigt 31.10.2026*); KPIs erscheinen als „–“
 - Begegnung ist bereits als gespieltes Spiel in der Datenbank vorhanden
 - Leeres Tabellenblatt einer noch nicht aktiven Liga
 

@@ -5,6 +5,14 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 31.10.2026 (nachts) – Etappe D: Top Anomalien (Paket vorbereitet)
+
+- **Carsten** · Anpassungen nach Abnahme C eingespielt (Git `4c3be5c`). Die vier ergänzten Spielplan-Regeln (`04_Spielplan.md`) bestätigt.
+- **ChatGPT** (mit Carsten) · Server-Update: Ubuntu-Pakete und Docker aktualisiert, Neustart erfolgreich, alle vier Anwendungen laufen.
+- **Claude** · Auswahl der Top-Anomalien gemäss Regelwerk 2.6 / Briefing 5.1 (`app/core/top.py`): nur KPI 02 und 04, nur leicht/stark, ohne vorläufige Werte und ohne verschobene/abgesagte Spiele; stark vor leicht, dann grösste Abweichung, dann Datum, dann Reihenfolge im Spielplan; höchstens ein Eintrag je Begegnung, höchstens vier, kein Auffüllen.
+- **Claude** · Startseite „Top Anomalien“ mit Karten (Rang, Liga, Spieltag, Begegnung, KPI, Hauptwert, Abweichung, Einstufung, Text) und Link zur Liga (`app/views/top_anomalien.py`). 13 neue Tests (`tests/test_top.py`).
+- **Claude** · Spieltag-Pfeile grösser, Spieltagsfeld ohne Zeilenumbruch. Version 0.6.
+
 ## 31.10.2026 (abends) – Anpassungen nach Abnahme Etappe C (Paket vorbereitet)
 
 - **Carsten** · Abnahme Etappe C: Zahlen FC Köln geprüft, „sieht gut aus“. Etappe C eingespielt als Git `8cb5f0f`.

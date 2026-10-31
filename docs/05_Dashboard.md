@@ -291,6 +291,8 @@ Jeder Eintrag zeigt:
 
 Ein Klick auf einen Eintrag öffnet den Bereich der jeweiligen Liga. Im Kopfbereich wird der Spieltag pro Liga angezeigt (siehe 3.2).
 
+*Umgesetzt in Etappe D (31.10.2026): Karten in zwei Spalten, darunter der Link „Zur Liga“ (`app/views/top_anomalien.py`); die Auswahl selbst steht in `app/core/top.py`. Die Spieltag-Pfeile der Liga-Bereiche wirken hier nicht: Top Anomalien zeigt immer den aktuellen Spieltag.*
+
 ## 6. Bereich Datenqualität
 
 Der Bereich Datenqualität (/dashboard/datenqualitaet) ist ein internes Kontrollblatt. Er wird als letzter Tab ganz rechts angezeigt und ist wie alle Bereiche passwortgeschützt. Er dient ausschliesslich der Anzeige. Daten können hier nicht bearbeitet werden.
