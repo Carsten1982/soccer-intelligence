@@ -1,6 +1,6 @@
 # Soccer Intelligence – Dashboard-Briefing
 
-**Version 4.3** · Stand 31.10.2026
+**Version 4.4** · Stand 07.11.2026
 
 > **Massgebliche Quelle seit 31.10.2026.** Änderungen werden nur noch in dieser Datei gemacht, mit Datum in der Änderungshistorie bzw. im `CHANGELOG.md`.
 > Das Word-Dokument *Dashboard-Briefing v4.2* liegt nur noch als Archiv im Ordner `word/` und wird nicht mehr gepflegt. Änderungen seit 31.10.2026 sind im Text als „Änderung“ mit Datum gekennzeichnet.
@@ -56,11 +56,13 @@ Das Dashboard ist eine einzige Anwendung mit mehreren Bereichen. Jeder Bereich h
 | Top Anomalien (Startbereich) | /dashboard                |
 | Bundesliga                   | /dashboard/bundesliga     |
 | Premier League               | /dashboard/premier-league |
+| Serie A *(ab Etappe F)*      | /dashboard/serie-a        |
+| LaLiga *(ab Etappe F)*       | /dashboard/laliga         |
 | Datenqualität                | /dashboard/datenqualitaet |
 
 Beim Aufruf von /dashboard wird direkt der Bereich Top Anomalien angezeigt. Eine eigene Adresse /dashboard/top und eine Weiterleitung sind nicht erforderlich.
 
-Zu Beginn gibt es diese vier Bereiche. Wird später eine weitere Liga aktiviert, erhält sie nach demselben Muster einen eigenen Bereich, zum Beispiel /dashboard/laliga. Welche Ligen aktiv sind, wird in der Konfiguration festgelegt und nicht im Programmcode.
+Zu Beginn gab es vier Bereiche. **Änderung 07.11.2026 (Carsten):** Mit Etappe F kommen Serie A und LaLiga dazu, insgesamt also sechs Bereiche. Jede weitere Liga erhält nach demselben Muster einen eigenen Bereich. Welche Ligen aktiv sind, wird in der Konfiguration festgelegt und nicht im Programmcode.
 
 ### 2.3 Verhalten der Navigation
 
@@ -128,7 +130,7 @@ Im oberen Bereich soll Folgendes angezeigt werden:
 
 **Untertitel:** KPI-Übersicht pro Spiel – alle Begegnungen eines Spieltags
 
-Rechts im Kopfbereich werden in den Liga-Bereichen Saison und aktueller Spieltag der jeweiligen Liga angezeigt (Regeln siehe 4.4), beispielsweise: «Saison 2026/27 · Spieltag 1». Im Bereich Top Anomalien wird der Spieltag pro Liga angezeigt, beispielsweise: «Bundesliga: Spieltag 1 · Premier League: Spieltag 1».
+Rechts im Kopfbereich werden in den Liga-Bereichen Saison und aktueller Spieltag der jeweiligen Liga angezeigt (Regeln siehe 4.4), beispielsweise: «Saison 2026/27 · Spieltag 1». Im Bereich Top Anomalien wird der Spieltag pro Liga angezeigt, beispielsweise: «Bundesliga: Spieltag 1 · Premier League: Spieltag 1». Mit vier Ligen (Etappe F) wird diese Anzeige kompakt gestaltet, damit sie nicht zu breit wird.
 
 ~~Es soll in der ersten Version keine zusätzliche Spieltagsnavigation mit Pfeilen oder weiteren Bedienelementen geben.~~
 
@@ -155,13 +157,13 @@ Die Navigation besteht aus einem Tab pro Bereich. Zu Beginn sind das vier Tabs:
 
 - Datenqualität (ganz rechts)
 
-Weitere aktivierte Ligen erhalten automatisch einen eigenen Tab. Dieser wird vor dem Tab Datenqualität eingefügt.
+Weitere aktivierte Ligen erhalten automatisch einen eigenen Tab. Dieser wird vor dem Tab Datenqualität eingefügt. Ab Etappe F (Änderung 07.11.2026): Top Anomalien · Bundesliga · Premier League · Serie A · LaLiga · Datenqualität.
 
 Der aktive Tab muss visuell klar erkennbar sein.
 
 Die Tabs müssen mit der oben definierten URL-Struktur verknüpft sein.
 
-## 4. Bereich Bundesliga und Premier League
+## 4. Liga-Bereiche (Bundesliga, Premier League, ab Etappe F auch Serie A und LaLiga)
 
 Die Liga-Bereiche zeigen jeweils alle Begegnungen des **aktuellen** Spieltags (siehe 4.4).
 
@@ -239,7 +241,7 @@ Der aktuelle Spieltag wird **für jede Liga separat** bestimmt:
 
 3.  Sind alle Spieltage der Datei beendet, wird der letzte Spieltag der Datei angezeigt.
 
-4.  Spiele mit Status „verschoben“ oder „abgesagt“ zählen nicht für die Frage, ob ein Spieltag beendet ist. Sie werden mit ihrem Status, aber ohne KPI-Werte angezeigt. Nachholspiele werden in Version 1 nicht separat angezeigt.
+4.  Spiele mit Status „verschoben“ oder „abgesagt“ zählen nicht für die Frage, ob ein Spieltag beendet ist. Sie werden mit ihrem Status, aber ohne KPI-Werte angezeigt. Nachholspiele werden in Version 1 nicht separat angezeigt. *Ergänzt 07.11.2026:* Spiele, die mehr als 3 Tage ausserhalb des Hauptzeitraums ihres Spieltags liegen, werden im Spielplan bewusst als „verschoben“ gepflegt (Pflegeregel in `04_Spielplan.md`, Abschnitt 6). Die bestehende Logik bleibt unverändert.
 
 5.  Die KPIs jeder Begegnung werden immer so berechnet, als wäre das Spiel noch nicht gespielt. Stichtag ist „Datum von“ der Begegnung im Spielplan (KPI-Regelwerk, Abschnitt 1). Das gilt auch, wenn der angezeigte Spieltag bereits gespielt ist.
 
@@ -603,7 +605,7 @@ Die Architektur soll spätere Erweiterungen jedoch ermöglichen.
 
 Die Umsetzung gilt als erfolgreich, wenn folgende Punkte erfüllt sind:
 
-1.  Das Dashboard besitzt die Bereiche Top Anomalien, Bundesliga, Premier League und Datenqualität. Weitere Ligen lassen sich über die Konfiguration ergänzen.
+1.  Das Dashboard besitzt die Bereiche Top Anomalien, Bundesliga, Premier League und Datenqualität, ab Etappe F zusätzlich Serie A und LaLiga. Weitere Ligen lassen sich über die Konfiguration ergänzen.
 
 2.  Alle Bereiche sind über die definierten URLs direkt erreichbar.
 

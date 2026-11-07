@@ -5,7 +5,27 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
-## 31.10.2026 (nachts) – Etappe E: Dashboard-Zugang (Paket vorbereitet)
+## 07.11.2026 – Vier Ligen beschlossen, Daten Serie A und LaLiga, Regel für verlegte Spiele
+
+- **Carsten** · Gespräch mit Footiqo: fester Download-Link, kumulative Excel-Datei (alle Spiele ab 2020/21), Updates dienstags und donnerstags, dauerhafte Spiel-IDs. Offen u. a.: Spielplan, Spalte `Gameday`, Nutzungsrechte. Konzept `06_Datenlieferung.md` überarbeitet (Etappe G).
+- **Carsten / Claude** · Daten Serie A und LaLiga aufbereitet (04.11.): Datum aus `matchDate`, Spieltage berechnet (Methode an Bundesliga/Premier League geprüft), leere Zusatzspalten entfernt; Serie A 2019/20 (10 Spiele) und Entscheidungsspiel Spezia – Verona gelöscht; Verona – Roma (id 9198) nachgetragen und in *Datenhinweise* dokumentiert. Details: `02_Datenbasis.md`, Abschnitt 4c.
+- **Carsten** · LaLiga 2026/27 Spieltage 1–2 und Teil von 3 eingetragen; Blatt `Seria A` in `Serie A` umbenannt; Spielplan mit vier Blättern (`LaLiga` ohne Leerzeichen).
+- **Carsten / Claude** · Auswertung verzerrter Spieltage 2022/23–2025/26 (ohne Corona): 2+ verlegte Spiele je Saison Bundesliga 0–1, Serie A 0–1, LaLiga 1–3, Premier League 1–5 (meist Supercup bzw. Pokal), unter 2 % der Spiele. **Entscheidung:** bestehende Logik bleibt; Pflegeregel „mehr als 3 Tage ausserhalb des Hauptzeitraums → Status `verschoben`“ (`04_Spielplan.md`, Abschnitt 6). Mehrheitsregel als Idee für später abgelegt.
+- **Carsten** · Entscheidung: Dashboard wird auf vier Ligen erweitert (Etappe F), vor der Datenlieferung (Etappe G).
+- **Claude** · Doku nachgeführt: `01` (Status, Entscheidungen, Etappen F/G, offene Punkte, Ideen), `02` (vier Ligen, Abschnitt 4c), `03` v1.3 (Ligareferenz für 38 Spieltage, offener Punkt 11 Schwellen), `04` (Blattnamen, Pflegeregel), `05` v4.4 (Bereiche Serie A und LaLiga, Navigation, Regel 4), `06` (Footiqo), `CLAUDE.md` v1.4.
+- **Offen** · LaLiga 17.05.2026 korrigieren; *Datenhinweise* id 9198 `Liga` → `Serie A`; Spielplan LaLiga Spieltag 1 nach Pflegeregel anpassen.
+
+## 02.11.2026 – Dokumentation nach Phase 1, Datenlieferung in Klärung *(Paket nicht eingespielt; Inhalt geht im Eintrag vom 07.11.2026 auf)*
+
+- **Carsten** · Angebot eines Datenlieferanten erhalten (Excel per E-Mail dienstags und freitags, vier Ligen ab 2015/16, keine API; 49.99 € inkl. 4 Wochen, danach 9.99 € je 4 Wochen oder 99.99 € pro Jahr). Noch keine Entscheidung.
+- **Carsten / Claude** · Reihenfolge festgehalten: zuerst Datenquelle klären (Etappe F), neue KPIs parallel möglich, danach öffentliche Website.
+- **Claude** · Neu `docs/06_Datenlieferung.md` (Entwurf): Rückfragen an den Lieferanten, Grundsatz „wir holen ab“, Prüfschranke, Zusammenführen bei Teil- oder Volllieferung, Ergänzung von `Gameday` aus dem Spielplan, Vorgehen in Stufen.
+- **Claude** · `01_Technisches_Setup.md` (Status, Entscheidungen, Umsetzungsplan, offene Punkte), `02_Datenbasis.md` (Saison 2026/27 wird ergänzt, Herkunft der Daten), `03_KPI_Regelwerk.md` (Punkt 8.7), `CLAUDE.md` v1.3 nachgeführt.
+- **Offen** · Anmeldung im Browser unter `/dashboard` noch zu bestätigen; Name des bisherigen Datenanbieters ermitteln.
+
+## 31.10.2026 (nachts) – Etappe E: Dashboard-Zugang
+
+- **Carsten** · Etappe E eingespielt (152 Tests bestanden; `/` 200, `/robots.txt` 200, `/dashboard/` 401 ohne Passwort), Git `64a684b`.
 
 - **Carsten** · Freigabe Etappe E: Platzhalterseite unter `/` (Variante b), Dashboard unter `/dashboard` mit Passwortschutz, Ziel vor allem: keine Aufnahme in Suchmaschinen. Ein gemeinsamer Zugang (Benutzername und Passwort nur in `.env`).
 - **Claude** · `docker-compose.yml`: Dashboard-Router nur noch für `/dashboard`, Passwortabfrage (Traefik BasicAuth, Hash aus `.env`, Variable `SOCCER_DASHBOARD_AUTH`), Kopfzeile `X-Robots-Tag: noindex, nofollow`; Streamlit unter `/dashboard` (`STREAMLIT_SERVER_BASE_URL_PATH`). Fehlt der Eintrag in `.env`, startet Compose nicht.

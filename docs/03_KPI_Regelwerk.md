@@ -1,6 +1,6 @@
 # Soccer Intelligence – KPI-Regelwerk
 
-**Spezifikation v1.2** · Stand 31.10.2026
+**Spezifikation v1.3** · Stand 07.11.2026
 
 > **Massgebliche Quelle seit 31.10.2026.** Änderungen werden nur noch in dieser Datei gemacht, mit Datum in der Änderungshistorie bzw. im `CHANGELOG.md`.
 > Das Word-Dokument „Definition der Dashboard-KPIs (final)“ (Arbeitsstand 30.10.2026) liegt nur noch als Archiv im Ordner `word/` und wird nicht mehr gepflegt.
@@ -17,6 +17,7 @@ Abschnitt 8 sammelt offene Punkte.
 | 28.10.2026 | Ligareferenz über Spalte `Gameday` (letzte 20 Spieltage), Regel für Nachholspiele, fehlende Kartenwerte in Referenzspielen; offener Punkt 5 erledigt | 1.1, 6 |
 | 30.10.2026 | Zeitlicher Abstand von 3 auf 2 Kalendertage reduziert, gilt nur für Teamwerte; offener Punkt 4 erledigt | 1 |
 | 31.10.2026 | v1.2: Diese Datei ist die massgebliche Quelle, Word nur noch Archiv | Kopf |
+| 07.11.2026 | v1.3: Regeln gelten unverändert für vier Ligen (Serie A, LaLiga ergänzt); Ligareferenz-Tabelle erweitert; Schwellen nach dem Einschalten pro Liga mit „Häufigkeit der Anomalien“ prüfen | 1.1, 8 |
 | 30.10.2026 | v1.1: Stichtag = „Datum von“ aus dem Spielplan; Reihenfolge bei fehlenden Werten und Sortierung festgehalten; Rundung mit Dezimalarithmetik; Vorzeichen im Text „Keine Anomalie“; Auswahl der Top-Anomalien übernommen (bisher nur in `03_KPI_Grundregeln.md`); Spalten AC/AD für KPI 04; offene Punkte 1, 3 und 8 erledigt, neue Punkte 9 und 10 | 1, 2.3, 2.4, 2.6, 4, 5, 6, 8 |
 
 Weitere KPIs werden im Projektverlauf ergänzt. Beispielrechnungen und Testfälle stehen in `docs/tests/test_kpi01_formkurve.md` bis `test_kpi04_gelbe_karten.md` (je zwei bestätigte Durchgänge: 1. Spieltag 2026/27 und 3. Spieltag 2025/26). Sie sind die verbindliche Referenz für die technische Umsetzung.
@@ -46,14 +47,14 @@ Weitere KPIs werden im Projektverlauf ergänzt. Beispielrechnungen und Testfäll
 - Massgeblich ist die Spieltagsnummer in der Spalte **`Gameday`**, nicht das Spieldatum.
 - Die Referenz reicht **über das Saisonende hinweg**:
 
-| Analysiertes Spiel | Bundesliga | Premier League |
+| Analysiertes Spiel | Bundesliga | Premier League, Serie A, LaLiga (je 38 Spieltage) |
 |---|---|---|
 | 1. Spieltag 2026/27 | Spieltage 15–34 (2025/26) | Spieltage 19–38 (2025/26) |
 | 3. Spieltag 2026/27 | Spieltage 1–2 (2026/27) + 17–34 (2025/26) | Spieltage 1–2 (2026/27) + 21–38 (2025/26) |
 
 - Berücksichtigt werden nur **abgeschlossene** Spiele, also Spiele, die mit Ergebnis in der Datenbank stehen und vor dem Stichtag stattfanden.
 - Ein **Nachholspiel** zählt zu seinem ursprünglichen Spieltag. Ist es zum Zeitpunkt der Analyse noch nicht gespielt, fehlt es in der Referenz und wird **nicht ersetzt**.
-- Geteilt wird durch die **tatsächliche Anzahl** berücksichtigter Partien (im Normalfall 20 × Teams / 2, also 180 in der Bundesliga und 200 in der Premier League).
+- Geteilt wird durch die **tatsächliche Anzahl** berücksichtigter Partien (im Normalfall 20 × Teams / 2, also 180 in der Bundesliga und 200 in Premier League, Serie A und LaLiga).
 - Ist die Ligareferenz nicht vorhanden oder = 0 → **keine relative Abweichung, keine Anomalie-Einstufung**.
 
 ---
@@ -322,10 +323,11 @@ Diese Punkte sollten vor der Umsetzung im Code geklärt werden:
 4. ~~**3-Tage-Regel:** Ligaspiele unter der Woche, Geltung für die Ligareferenz.~~ **Erledigt am 30.10.2026:** auf 2 Kalendertage reduziert (Spiele unter der Woche und dichte Spielpläne, z. B. Premier League über Weihnachten, zählen mit); gilt nur für Teamwerte, nicht für die Ligareferenz. Siehe Abschnitt 1.
 5. ~~**Ligareferenz in KPI 04:** Definition der letzten 20 Spieltage.~~ **Erledigt am 28.10.2026:** einheitlich über Spalte `Gameday` geregelt, siehe Abschnitt 1.1.
 6. **Rundung der Teamabweichungen (KPI 03):** Werden auch diese auf eine Nachkommastelle gerundet angezeigt? Vermutlich ja, sollte aber explizit stehen.
-7. **Datenquelle KPI 04:** Der Name der Datenquelle (im Word-Archiv als Platzhalter „[Name der Quelle]“) ist noch nicht dokumentiert. Bei Bedarf in Abschnitt 6 ergänzen. Für die Berechnung nicht relevant.
+7. **Datenquelle KPI 04:** Der Name der Datenquelle (im Word-Archiv als Platzhalter „[Name der Quelle]“) ist noch nicht dokumentiert. Bei Bedarf in Abschnitt 6 ergänzen. Für die Berechnung nicht relevant. *(02.11.2026: Bei einem Wechsel des Lieferanten muss die Zählweise der Gelben Karten vorab verglichen werden, siehe `06_Datenlieferung.md`, Abschnitt 8.)*
 8. ~~**Überschrift KPI 03 negativ:** „Unter 2.5 Goals“ statt „2,5“.~~ **Erledigt am 30.10.2026:** „2,5“ gilt, im Word als Änderung markiert.
 9. **KPI 03 Nachkommastellen Hauptwert:** Das Beispiel „3,10“ hat zwei Nachkommastellen, die allgemeine Regel eine. Die Testfälle verwenden eine (z. B. 4,4). Bitte bestätigen. Abweichung und Einstufung ändern sich dadurch nicht.
 10. **KPI-Karte bei Aufsteiger-Spielen (KPI 02–04):** Die Testfälle nehmen an: Teamwert des Gegners und Ligareferenz werden angezeigt, Hauptwert, Abweichung und Anomalie als „–“. Bitte bestätigen.
+11. **Schwellenwerte für Serie A und LaLiga** (07.11.2026): Nach dem Einschalten (Etappe F) mit „Häufigkeit der Anomalien“ prüfen, ob die Schwellen ±20 % / ±35 % ähnlich oft anschlagen wie in Bundesliga und Premier League (v. a. KPI 03). Bis dahin gelten die Schwellen unverändert.
 
 Für die Umsetzung blockierend ist keiner dieser Punkte: Die Testfälle legen für 2, 6, 9 und 10 jeweils eine Annahme fest. Wird eine Annahme geändert, sind die betroffenen Testfälle anzupassen.
 

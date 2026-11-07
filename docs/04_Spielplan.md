@@ -1,6 +1,6 @@
 # Soccer Intelligence – Spielplan
 
-**Stand:** 31.10.2026 · **Status:** Datei seit 31.10.2026 auf dem Server (`data/Spielplan.xlsx`). Einlesen und Prüfen ab Etappe B.
+**Stand:** 07.11.2026 · **Status:** Datei seit 31.10.2026 auf dem Server (`data/Spielplan.xlsx`). Seit 07.11.2026 mit vier Blättern (Bundesliga, Premier League, Serie A, LaLiga).
 **Datei:** `/docker/football-dashboard/data/Spielplan.xlsx`
 
 ---
@@ -23,7 +23,7 @@
 ### Tabellenblätter
 
 - Ein Tabellenblatt pro Liga.
-- Der Blattname muss **exakt** dem Blattnamen in der Datenbank entsprechen: `Bundesliga`, `Premier League`, später z. B. `LaLiga`.
+- Der Blattname muss **exakt** dem Blattnamen in der Datenbank entsprechen: `Bundesliga`, `Premier League`, `Serie A`, `LaLiga` (ohne Leerzeichen). Ein abweichender Name (z. B. `La Liga`) führt dazu, dass alle Teams als unbekannt gemeldet werden.
 - Leere Blätter für noch nicht aktive Ligen sind erlaubt.
 
 ### Spalten (erste Zeile = Spaltenüberschriften, genau so geschrieben)
@@ -114,7 +114,7 @@ Die Ergebnisse erscheinen auf der Seite **Datenqualität**, getrennt von den Pr�
 - Teamname unbekannt (Aufsteiger oder Schreibfehler, siehe Abschnitt 3)
 - Ein Team kommt im selben Spieltag mehrfach vor
 - Heim- und Gastmannschaft identisch
-- Weniger Spiele in einem Spieltag als erwartet (Anzahl Teams der Liga / 2, gemäss Konfiguration `app/config/ligen.toml`: Bundesliga 18 Teams → 9 Spiele, Premier League 20 Teams → 10 Spiele)
+- Weniger Spiele in einem Spieltag als erwartet (Anzahl Teams der Liga / 2, gemäss Konfiguration `app/config/ligen.toml`: Bundesliga 18 Teams → 9 Spiele, Premier League, Serie A und LaLiga je 20 Teams → 10 Spiele)
 - Dieselbe Paarung kommt in einer Saison mehrfach vor
 - Tabellenblatt einer aktiven Liga ist leer (*ergänzt und bestätigt 31.10.2026*)
 
@@ -130,9 +130,24 @@ Die Ergebnisse erscheinen auf der Seite **Datenqualität**, getrennt von den Pr�
 ## 6. Pflege und Aktualisierung
 
 - Einen neuen Spieltag spätestens am Tag nach dem Ende des vorherigen Spieltags eintragen. Sonst bleibt der alte Spieltag stehen (Regel 3).
-- Verschiebungen: Status auf `verschoben` setzen. Steht der neue Termin fest, `Datum von` und `Datum bis` anpassen und den Status leeren.
+- Verschiebungen: siehe **Pflegeregel für verlegte Spiele** unten.
 - Hochladen auf den Server wie bei der Datenbank: zuerst unter einem Zwischennamen hochladen, prüfen, dann mit `mv` austauschen und vorher sichern. Der Ablauf ist in `01_Technisches_Setup.md`, Abschnitt 6, beschrieben, mit dem Dateinamen `Spielplan.xlsx`.
 - Die App liest die Datei nur. Sie wird im Container schreibgeschützt eingebunden, wie die Datenbank.
+
+---
+
+### Pflegeregel für verlegte Spiele (beschlossen 07.11.2026)
+
+`Datum von` / `Datum bis` beschreiben den **Hauptzeitraum** eines Spieltags (z. B. Freitag bis Montag). Spiele, die **mehr als 3 Tage ausserhalb** dieses Zeitraums stattfinden (vorgezogen oder nachgeholt), erhalten den Status **`verschoben`** und behalten den Zeitraum des Spieltags.
+
+- Folge: Sie zählen nicht für die Frage, ob der Spieltag beendet ist (Abschnitt 4, Regel 4). Der nächste Spieltag erscheint pünktlich.
+- Sie stehen mit Status, aber **ohne KPI-Werte** in der Tabelle und fliessen nicht in die Top Anomalien ein. Diese wenigen Spiele werden bewusst nicht prognostiziert.
+- Ein einzelnes leicht verschobenes Spiel innerhalb von 3 Tagen bleibt einfach im Zeitraum (kein Status nötig).
+- Es ist **keine** Pflege auf Tagesebene nötig. Ist der genaue Tag bekannt, darf er wie bisher eingetragen werden.
+
+**Beispiel LaLiga 2026/27, Spieltag 1:** Hauptzeitraum 15.–19.08.2026. Valencia – Betis (25.08.), Real Madrid – Real Sociedad (26.08.), Celta Vigo – Osasuna (27.08.) und Barcelona – Ath Bilbao (27.08.) erhalten `verschoben`. So wird vom 20. bis 24.08. Spieltag 2 angezeigt.
+
+**Grundlage der Entscheidung** (Auswertung 07.11.2026, Saisons 2022/23–2025/26, Corona-Saisons ausgeklammert): Spieltage mit 2 oder mehr verlegten Spielen kommen pro Saison vor: Bundesliga 0–1, Serie A 0–1, LaLiga 1–3, Premier League 1–5. Ursachen meist Supercup im Januar (Serie A, LaLiga) bzw. Pokalwettbewerbe (Premier League). Betroffen sind rund 2–6 Spiele pro Liga und Saison, also unter 2 %. Eine Pflege auf Tagesebene und eine neue Regel für den aktuellen Spieltag lohnen sich dafür nicht. Die Idee „Mehrheitsregel mit Bereich Nachholspiele“ ist in `01_Technisches_Setup.md`, Abschnitt 9, als Idee für später abgelegt.
 
 ---
 

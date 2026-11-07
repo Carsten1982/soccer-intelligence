@@ -1,11 +1,13 @@
 # Soccer Intelligence – Projektübersicht
 
-**Spezifikation v1.2** · Stand 31.10.2026
+**Spezifikation v1.4** · Stand 07.11.2026
 
 ## Worum es geht
 Soccer Intelligence ist eine Fussball-Analyseplattform. Sie berechnet statistische Auffälligkeiten
 (Anomalien) anstehender Ligaspiele und stellt sie verständlich dar. Datenbasis ist eine Excel-Datei
-mit historischen Spieldaten der Bundesliga und der Premier League, Saisons 2020/21–2025/26.
+mit historischen Spieldaten von Bundesliga, Premier League, Serie A und LaLiga, Saisons 2020/21–2025/26, dazu
+spieltagweise die laufende Saison 2026/27. Im Dashboard aktiv: Bundesliga und Premier League; Serie A und
+LaLiga ab Etappe F.
 Das Projekt ist zugleich ein Lernprojekt und nicht kommerziell. Code soll nachvollziehbar, gut
 kommentiert und schrittweise aufgebaut sein. Nach jedem Schritt kurz erklären, was gemacht wurde.
 
@@ -22,7 +24,7 @@ kommentiert und schrittweise aufgebaut sein. Nach jedem Schritt kurz erklären, 
 - Bereiche: `/dashboard` (Top Anomalien), `/dashboard/bundesliga`, `/dashboard/premier-league`,
   `/dashboard/datenqualitaet`. Jede weitere Liga erhält automatisch einen eigenen Bereich.
 
-## Ziel der ersten Phase
+## Ziel der ersten Phase (abgeschlossen 31.10.2026)
 Ein internes Dashboard, das für den aktuellen Spieltag jeder Liga alle Begegnungen mit den
 KPIs 01–04 zeigt, dazu die Top Anomalien und die Datenqualität. Aufbau und Darstellung:
 `docs/05_Dashboard.md` (Dashboard-Briefing).
@@ -40,6 +42,14 @@ Nicht Teil dieser Phase:
 - Externe Fussball-APIs, Bearbeiten oder Importieren von Daten in der App
 - **Vereinslogos** (nicht erlaubt, rechtliche Gründe)
 
+## Nach Phase 1 (Stand 07.11.2026)
+Reihenfolge: **Etappe F – Vier Ligen** (Serie A unter `/dashboard/serie-a`, LaLiga unter `/dashboard/laliga`;
+Blattnamen `Serie A` und `LaLiga`), danach **Etappe G – Datenlieferung** (Footiqo, Konzept
+`docs/06_Datenlieferung.md`, noch nicht freigegeben), dann die **neuen KPIs** (Definition durch Carsten →
+Testfälle → Code) und die **öffentliche Website**. Die Logik für den aktuellen Spieltag bleibt; verlegte Spiele
+werden im Spielplan als `verschoben` gepflegt (`docs/04_Spielplan.md`, Abschnitt 6). Ein Import ändert die Datenbank nur kontrolliert (Prüfschranke,
+Backup, Korrekturen an alten Spielen nie still übernehmen); das Dashboard bleibt nur lesend.
+
 ## Quellen (verbindlich)
 | Datei | Inhalt |
 |---|---|
@@ -47,7 +57,8 @@ Nicht Teil dieser Phase:
 | docs/02_Datenbasis.md | Aufbau der Excel-Datei (58 Spalten inkl. `Gameday`), Formate, Prüfregeln |
 | docs/03_KPI_Regelwerk.md | Berechnungsregeln, Anomalie-Logik, Top-Anomalien, Dashboard-Texte |
 | docs/04_Spielplan.md | Aufbau des Spielplans (`Datum von` / `Datum bis`), aktueller Spieltag, Prüfregeln |
-| docs/05_Dashboard.md | Dashboard-Briefing (v4.3): Aufbau, Navigation, Darstellung, Abnahmekriterien |
+| docs/05_Dashboard.md | Dashboard-Briefing (v4.4): Aufbau, Navigation, Darstellung, Abnahmekriterien |
+| docs/06_Datenlieferung.md | Konzept regelmässige Datenlieferung / Import, Footiqo (Entwurf, nicht freigegeben) |
 | docs/tests/test_kpi01_formkurve.md … test_kpi04_gelbe_karten.md | Bestätigte Testfälle mit erwarteten Ergebnissen (JSON) |
 | data/Database-Soccer-Intelligence.xlsx | Einzige gültige Datenquelle für gespielte Spiele |
 | data/Spielplan.xlsx | Angesetzte Begegnungen |

@@ -1,6 +1,6 @@
 # Soccer Intelligence – Technisches Setup
 
-**Stand:** 31.10.2026 · **Status:** Etappen A–C in Betrieb, Anpassungen nach der Abnahme (Spieltag-Pfeile, Navigation) als Paket bereit, Passwortschutz beschlossen (noch nicht umgesetzt)
+**Stand:** 07.11.2026 · **Status:** Phase 1 (Etappen A–E) in Betrieb. Nächster Schritt: Etappe F – Erweiterung auf vier Ligen (Serie A, LaLiga). Datenlieferung (Etappe G) in Klärung.
 **Verantwortlich:** Carsten Thiele · **Mitwirkende:** ChatGPT (Server-Setup, Review), Claude (Daten, Architektur, Code)
 
 ---
@@ -16,7 +16,7 @@
 | KPI-Regelwerk und Testfälle KPI 01–04 | ✅ fertig | `03_KPI_Regelwerk.md` v1.1, `docs/tests/` (bestätigt 28./29.10.2026, nachgerechnet 30.10.2026) |
 | openpyxl / pandas im Container | ✅ installiert | Versionen in `requirements.txt` festgelegt |
 | Website soccer-intelligence.com | ✅ erreichbar | ab Etappe E: `/` öffentliche Platzhalterseite, `/dashboard` mit Passwort |
-| Dashboard unter `/dashboard` mit Passwortschutz, Platzhalter unter `/` | 📦 Paket bereit | Etappe E, freigegeben von Carsten am 31.10.2026 (Traefik-Labels des eigenen Containers, neuer Container `soccer-placeholder`) |
+| Dashboard unter `/dashboard` mit Passwortschutz, Platzhalter unter `/` | ✅ in Betrieb | Etappe E, eingespielt 31.10.2026 (Git `64a684b`), freigegeben von Carsten am 31.10.2026 (Traefik-Labels des eigenen Containers, neuer Container `soccer-placeholder`) |
 | Datenladen, Prüfregeln, Seite „Datenqualität“ | ✅ in Betrieb | Etappe A, eingespielt am 31.10.2026 (26 Tests bestanden) |
 | Automatisches Neuladen bei neuer Excel-Datei | ✅ in Betrieb | seit Etappe A |
 | Versionen festgelegt | ✅ in Betrieb | streamlit 1.66.1, pandas 3.1.0, openpyxl 3.1.5 |
@@ -25,7 +25,13 @@
 | KPI 01–04 in den Liga-Tabellen, Häufigkeit der Anomalien | ✅ in Betrieb | Etappe C, eingespielt 31.10.2026 (Git `8cb5f0f`) |
 | Spieltag-Pfeile, Navigation dunkelgrau, kleinerer Abstand | ✅ in Betrieb | Anpassungen nach Abnahme Etappe C, eingespielt 31.10.2026 (Git `4c3be5c`) |
 | Top Anomalien (Startseite) | ✅ in Betrieb | Etappe D, eingespielt 31.10.2026 (Git `1a1c527`, 145 Tests bestanden) |
-| KPIs, Top Anomalien, öffentliche Website | ⏳ offen | siehe Abschnitt 7 |
+| KPIs, Top Anomalien | ✅ in Betrieb | Etappen C und D |
+| Phase 1 (Etappen A–E) | ✅ abgeschlossen 31.10.2026 | Browser-Anmeldung unter `/dashboard` noch von Carsten zu bestätigen |
+| Daten Serie A und LaLiga | ✅ aufbereitet 04.–07.11.2026 | Datum und Spieltag ergänzt, bereinigt (`02_Datenbasis.md`, Abschnitt 4c); Datenbank und Spielplan mit vier Blättern auf dem Server |
+| Erweiterung auf vier Ligen (Etappe F) | ⏳ nächster Schritt | beschlossen 06./07.11.2026, Programmierung nach Freigabe |
+| Regelmässige Datenlieferung (Etappe G) | 🔎 in Klärung | Footiqo: fester Download-Link, kumulative Excel-Datei, Di/Do; Konzept: `06_Datenlieferung.md` |
+| 4 neue KPIs | ⏳ geplant | Definition durch Carsten, dann Testfälle, dann Code |
+| Öffentliche Website | ⏳ später | nach Etappe F und Klärung der Datenquelle |
 
 ---
 
@@ -56,13 +62,18 @@ Ausbaustufen:
 | 25.10.2026 | Daten werden **nur über die Datei auf dem Server** geändert, nie über die App. |
 | 25.10.2026 | **Einzige gültige Datenquelle:** `data/Database-Soccer-Intelligence.xlsx` |
 | 31.10.2026 | **Die md-Dateien in `docs/` sind die einzige massgebliche Quelle.** Die Word-Dokumente (`word/`) sind Archiv und werden nicht mehr gepflegt. Änderungen nur noch in den md-Dateien, mit Eintrag im CHANGELOG. |
+| 07.11.2026 | **Spieltage mit verlegten Spielen:** Die bestehende Logik für den aktuellen Spieltag bleibt. Spiele, die mehr als 3 Tage ausserhalb des Hauptzeitraums ihres Spieltags liegen, werden im Spielplan als `verschoben` gepflegt (keine KPIs, keine Top Anomalie). Keine Pflege auf Tagesebene, keine Mehrheitsregel. Grundlage: Auswertung 2022/23–2025/26, betroffen unter 2 % der Spiele (`04_Spielplan.md`, Abschnitt 6). |
+| 07.11.2026 | Blatt für Italien heisst in Datenbank und Spielplan **`Serie A`** (bisher `Seria A`); der Code wird in Etappe F angepasst. Blattnamen ohne Leerzeichen: `LaLiga`. |
+| 06.11.2026 | **Erweiterung auf vier Ligen** (Serie A, LaLiga) als nächster Schritt (Etappe F), vor der Datenlieferung (Etappe G). Reihenfolge: Daten auf den Server → Sicherung in GitHub → Etappe F → Etappe G → neue KPIs → öffentliche Website. |
+| 02.11.2026 | **Reihenfolge nach Phase 1:** zuerst die Datenquelle klären, die neuen KPIs können parallel laufen, danach die öffentliche Website. Grund: Teamnamen, IDs, Nutzungsrechte und Spielplan-Pflege beeinflussen die Website. *(Präzisiert am 06.11.2026, siehe oben.)* |
+| 31.10.2026 | **Etappe E:** öffentliche Platzhalterseite unter `/` (Variante b), ein gemeinsamer Zugang zum Dashboard (Benutzername und Passwort nur in `.env`), Hinweis `noindex` für Suchmaschinen. |
 | 31.10.2026 | Spieltag-Pfeile in den Liga-Bereichen (je Liga, nicht in die Zukunft, Auswahl in der Adresse); Top Anomalien immer aktueller Spieltag. |
 | 30.10.2026 | **Ein KPI-Regelwerk:** gültig ist nur `docs/03_KPI_Regelwerk.md`. `03_KPI_Grundregeln.md` und `docs/kpis/` sind gelöscht. ~~Massgebliche Quelle bleibt das Word-Dokument „Definition der Dashboard-KPIs“.~~ (ersetzt am 31.10.2026, siehe oben) |
 | 30.10.2026 | Im Text „Keine Anomalie“ (KPI 02 und 04) steht die Abweichung immer mit Vorzeichen, bei 0,0 % ohne. |
 | 28.10.2026 | Ligareferenz über die Spalte `Gameday` (letzte 20 Spieltage). Spalte in der Datenbank ergänzt. |
 | 25.10.2026 | Spielplan (anstehende Partien) kommt als **eigene Datei** `data/Spielplan.xlsx`, getrennt von den historischen Daten. Aufbau: `04_Spielplan.md` (Datum von / Datum bis, beschlossen 30.10.2026). |
 | 25.10.2026 | Start mit abgeschlossenen Saisons 2020/21–2025/26. Die laufende Saison 2026/27 wird nach dem Prototyp ergänzt. |
-| 25.10.2026 | Keine externe Fussball-API vorerst. |
+| 25.10.2026 | Keine externe Fussball-API vorerst. *(Stand 02.11.2026: Eine regelmässige Datenlieferung wird geprüft, siehe `06_Datenlieferung.md`. Noch keine Entscheidung.)* |
 | 25.10.2026 | KPIs werden von Carsten definiert, bevor Analysen gebaut werden. Keine KPIs ohne Abstimmung. |
 
 ---
@@ -247,7 +258,7 @@ for n in ('Bundesliga', 'Premier League'):
 "
 ```
 
-Erwartet: Blätter `Bundesliga`, `Premier League`, `Seria A`, `LaLiga`, `Datenhinweise`; je 58 Spalten; Zeilenzahl gleich oder höher als vorher.
+Erwartet: Blätter `Bundesliga`, `Premier League`, `Serie A`, `LaLiga`, `Datenhinweise` (bis 06.11.2026 hiess das Blatt `Seria A`); je 58 Spalten; Zeilenzahl gleich oder höher als vorher.
 
 *Ab Schritt 1* (vollständige Prüfung mit allen Prüfregeln aus 02_Datenbasis.md):
 
@@ -353,7 +364,7 @@ CLAUDE.md                 Projektübersicht für Claude Code
 CHANGELOG.md              Änderungsprotokoll
 ```
 
-### Umsetzungsplan (Stand 31.10.2026, Etappen gemäss Dashboard-Briefing v4.2)
+### Umsetzungsplan (Stand 02.11.2026, Etappen gemäss Dashboard-Briefing v4.2)
 
 | Etappe | Inhalt | Voraussetzung | Status |
 |---|---|---|---|
@@ -363,8 +374,12 @@ CHANGELOG.md              Änderungsprotokoll
 | B – Spielplan und Datenqualität | Spielplan einlesen, aktueller Spieltag, Tabs, Bereich Datenqualität | Spielplan auf dem Server ✅ | ✅ eingespielt 31.10.2026 (Git `ff4fbe8`) |
 | C – Liga-Tabellen mit KPIs | KPI 01–04 gemäss Regelwerk, JSON-Blöcke der Testfälle als automatische Tests, Häufigkeit der Anomalien | Gameday ✅, Testfälle ✅ | ✅ eingespielt 31.10.2026 (Git `8cb5f0f`) |
 | D – Top Anomalien | Auswahl-Logik gemäss Regelwerk, Abschnitt 2.6, Karten auf der Startseite, 13 Tests | Etappe C ✅ | ✅ eingespielt 31.10.2026 (Git `1a1c527`) |
-| E – Dashboard-Zugang | Umzug nach `/dashboard`, Passwortschutz über Traefik, `noindex`, Platzhalterseite unter `/` | Freigabe Carsten 31.10.2026 ✅ | 📦 Paket bereit |
-| Öffentliche Website | eigener Architekturvorschlag (Mobile First) | – | später |
+| E – Dashboard-Zugang | Umzug nach `/dashboard`, Passwortschutz über Traefik, `noindex`, Platzhalterseite unter `/` | Freigabe Carsten 31.10.2026 ✅ | ✅ eingespielt 31.10.2026 (Git `64a684b`) |
+| **Phase 1 abgeschlossen** | Etappen A–E in Betrieb | – | ✅ 31.10.2026 |
+| F – Vier Ligen | Serie A (`/dashboard/serie-a`) und LaLiga (`/dashboard/laliga`): Konfiguration, Blattname `Serie A` im Code, Aufsteiger in der Teamliste, kompakter Kopfbereich, Top Anomalien und Datenqualität über vier Ligen, Tests, Doku | Daten auf dem Server ✅, LaLiga 17.05.2026 korrigiert, Freigabe („Bitte Programmieren“) | ⏳ nächster Schritt |
+| G – Datenlieferung | regelmässiger Import mit Prüfschranke (Footiqo, Download-Link), Konzept `06_Datenlieferung.md` | Antworten von Footiqo, Testkauf, Freigabe | 🔎 in Klärung |
+| Neue KPIs | 4 weitere KPIs: Definition → Testfälle → Code | Definition durch Carsten | ⏳ geplant |
+| Öffentliche Website | eigener Architekturvorschlag (Mobile First), eigener Ordner und eigenes Repository empfohlen | Etappe F, Datenquelle geklärt (G) | später |
 
 ---
 
@@ -379,6 +394,13 @@ CHANGELOG.md              Änderungsprotokoll
 - [x] ~~Ergänzte Spielplan-Regeln aus Etappe B bestätigen~~ bestätigt von Carsten am 31.10.2026
 - [ ] Server meldet „1 updates could not be installed automatically“ (unattended-upgrades, 31.10.2026): Log prüfen, betrifft nicht das Dashboard
 - [ ] Öffentliche Platzhalterseite: Braucht es ein Impressum bzw. einen Datenschutzhinweis? (vor dem Start der öffentlichen Website klären)
+- [ ] Anmeldung im Browser unter `/dashboard` bestätigen (Server-Prüfung ok: `/` 200, `/dashboard/` 401)
+- [ ] Name des bisherigen Datenanbieters ermitteln und dokumentieren (`02_Datenbasis.md`, Regelwerk Abschnitt 8, Punkt 7)
+- [ ] Offene Fragen an Footiqo, u. a. Spielplan und Spalte `Gameday` (`06_Datenlieferung.md`, Abschnitt 3); Carsten klärt ab
+- [ ] LaLiga 17.05.2026: 7 Spiele mit unstimmigen Ergebnissen korrigieren (vor dem Einschalten von LaLiga)
+- [ ] Blatt *Datenhinweise*: bei id 9198 `Liga` von `Seria A` auf `Serie A` ändern
+- [ ] Spielplan LaLiga 2026/27, Spieltag 1: Hauptzeitraum 15.–19.08., die 4 späten Spiele mit Status `verschoben` (Pflegeregel `04_Spielplan.md`)
+- [ ] Optional: Arbeitsweise umstellen auf Cowork-Projekt bzw. Claude Code mit lokaler Kopie des GitHub-Projekts (weniger Zip/WinSCP)
 - [ ] Aufräumen in `backup/` nach einigen Wochen stabilen Betriebs
 - [ ] Offene KPI-Punkte 2, 6, 7, 9, 10 im Regelwerk, Abschnitt 8 (nicht blockierend)
 - [x] ~~Spalte „Gameday“ für die Ligareferenz~~ ergänzt (28.10.2026), geprüft (30.10.2026)
@@ -391,4 +413,5 @@ CHANGELOG.md              Änderungsprotokoll
 | Idee | Notiz |
 |---|---|
 | ~~Spieltage im Dashboard vor- und zurückblättern~~ | umgesetzt am 31.10.2026 (Briefing 3.2) |
+| Mehrheitsregel für den aktuellen Spieltag (07.11.2026 zurückgestellt) | Aktuell = Spieltag mit den meisten Spielen der nächsten 7 Tage; offene Spiele früherer Spieltage in einem Bereich „Nachholspiele“ mit KPIs. Nur nötig, falls verzerrte Spieltage deutlich häufiger werden als heute. |
 | Internes Test-Datum (`testdatum` in der Konfiguration) | Dashboard verhält sich wie an einem anderen Tag; praktisch zum Durchspielen vergangener Spieltage |

@@ -1,6 +1,6 @@
 # Soccer Intelligence – Datenbasis
 
-**Stand:** 31.10.2026 (Datenbank mit Spalte `Gameday`, 58 Spalten, inkl. Spieltag 1 der Saison 2026/27)
+**Stand:** 07.11.2026 (vier Ligen: Bundesliga, Premier League, Serie A, LaLiga; je 58 Spalten inkl. `Gameday`; Saisons 2020/21–2025/26 plus laufende Saison 2026/27)
 **Datei:** `/docker/football-dashboard/data/Database-Soccer-Intelligence.xlsx`
 **SHA-256 (aktiv seit 31.10.2026):** `6b84d8d230f61b02166bead571a72ce599ec8d230cdda8c90f9b258dc8a46014`
 
@@ -8,7 +8,9 @@
 
 Diese Prüfsumme steht auch in den Testfällen (`docs/tests/`). Nach jeder Änderung an der Datei ändert sie sich. Dann hier und in den Testfällen nachtragen und die Testfälle erneut laufen lassen.
 
-**Server:** Die Fassung `6b84d8d2…` ist seit 31.10.2026 in `data/` aktiv. Gegenüber dem Referenzstand neu: die 19 Spiele des 1. Spieltags 2026/27 (Bundesliga 9, Premier League 10). Beim Prüfen korrigiert: id 119365 (FC Koln – Heidenheim) `Home Yellow Cards Full Time` enthielt Leerzeichen statt 2. Ältere Fassungen liegen in `backup/`.
+**Neue Fassung (07.11.2026):** Serie A und LaLiga befüllt (siehe Abschnitt 4c). SHA-256 der hochgeladenen Datei: `c0454c7ff876890da9b7fb3a34ef438d222c990e84c97a21feb865ae95bc5440` (bei einer korrigierten Fassung hier nachtragen). Bundesliga und Premier League sind gegenüber `6b84d8d2…` unverändert.
+
+**Bisher:** Die Fassung `6b84d8d2…` war seit 31.10.2026 in `data/` aktiv. Gegenüber dem Referenzstand neu: die 19 Spiele des 1. Spieltags 2026/27 (Bundesliga 9, Premier League 10). Beim Prüfen korrigiert: id 119365 (FC Koln – Heidenheim) `Home Yellow Cards Full Time` enthielt Leerzeichen statt 2. Ältere Fassungen liegen in `backup/`.
 
 ---
 
@@ -16,15 +18,23 @@ Diese Prüfsumme steht auch in den Testfällen (`docs/tests/`). Nach jeder Ände
 
 | Tabellenblatt | Spiele | Saisons | Teams | Zeitraum |
 |---|---|---|---|---|
-| Bundesliga | 1.836 | 2020/21 – 2025/26 (je 306) | 25 | 18.09.2020 – 16.05.2026 |
-| Premier League | 2.280 | 2020/21 – 2025/26 (je 380) | 28 | 12.09.2020 – 24.05.2026 |
-| Seria A | leer | – | – | vorgesehen |
-| LaLiga | leer | – | – | vorgesehen |
-| Datenhinweise | 1 Eintrag | – | – | dokumentierte Sonderfälle |
+Stand 07.11.2026 (Saisons 2020/21–2025/26 vollständig, dazu die bisher gespielten Spiele 2026/27):
 
-**Leere Liga-Tabellen:** `Seria A` und `LaLiga` sind bewusst leer angelegt und für spätere Ligen vorgesehen. Ein leeres optionales Ligablatt ist **kein Fehler**, es wird nur als Hinweis angezeigt. Ein Fehler liegt nur vor, wenn ein Pflichtblatt (`Bundesliga`, `Premier League`) fehlt oder leer ist.
+| Tabellenblatt | Spiele | davon 2026/27 | Saisons | Teams | Zeitraum |
+|---|---|---|---|---|---|
+| Bundesliga | 1.845 | 9 (Spieltag 1) | 2020/21 – 2025/26 je 306 | 27 | 18.09.2020 – 30.08.2026 |
+| Premier League | 2.290 | 10 (Spieltag 1) | 2020/21 – 2025/26 je 380 | 30 | 12.09.2020 – 24.08.2026 |
+| Serie A | 2.290 | 10 (Spieltag 1) | 2020/21 – 2025/26 je 380 | 29 | 19.09.2020 – 24.08.2026 |
+| LaLiga | 2.305 | 25 (Spieltage 1–2, Teil von 3) | 2020/21 – 2025/26 je 380 | 31 | 12.09.2020 – 29.08.2026 |
+| Datenhinweise | 2 Einträge | – | – | – | dokumentierte Sonderfälle |
 
-Die laufende Saison 2026/27 ist noch nicht enthalten (bewusste Entscheidung, siehe 01_Technisches_Setup.md).
+**Vier Ligen (Entscheidung 06./07.11.2026):** Das Dashboard wird auf alle vier Ligen erweitert (Etappe F, siehe `01_Technisches_Setup.md`). Bis dahin liest der Code Serie A und LaLiga nur mit, zeigt sie aber nicht an.
+
+**Pflicht- und optionale Blätter:** Pflicht sind `Bundesliga` und `Premier League`. `Serie A` und `LaLiga` sind optional: Fehlen sie oder sind sie leer, ist das **kein Fehler**, nur ein Hinweis. Mit Etappe F werden sie aktive Ligen; ab dann gilt für sie dasselbe wie für die Pflichtblätter.
+
+Die laufende Saison 2026/27 wird spieltagweise ergänzt (seit 31.10.2026, zuerst Spieltag 1).
+
+**Herkunft der Daten:** Der Name des bisherigen Anbieters ist noch nicht dokumentiert (wird ermittelt). Eine regelmässige Lieferung durch einen Datenlieferanten wird geprüft: `06_Datenlieferung.md`.
 
 ---
 
@@ -60,7 +70,7 @@ Die laufende Saison 2026/27 ist noch nicht enthalten (bewusste Entscheidung, sie
 ### Bekannte Eigenheiten
 
 - **Doppelte Torspalten sind beabsichtigt:** Die Spalten K–M (`FT Home Goals`, `FT Away Goals :`, `FT Result :`) und N–P (`Full-Time Home Goals`, `Full-Time Away Goals`, `Full-Time Result`) bilden dasselbe reguläre Endergebnis ab. Das ist kein Datenfehler, an der Excel-Datei ist nichts zu ändern. Die Datenvalidierung darf beide Gruppen miteinander vergleichen (so wurde der Fehler vom 18.10.2025 gefunden). Sie entfernt oder verändert aber nie automatisch Spalten oder Werte.
-- Das Blatt heisst `Seria A` (statt „Serie A“), bewusst unverändert gelassen.
+- Das Blatt für Italien hiess bis 06.11.2026 `Seria A`. Carsten hat es in Datenbank und Spielplan in **`Serie A`** umbenannt (07.11.2026). Der Code erwartet bis zur Etappe F noch `Seria A`; bis dahin meldet der Bereich Datenqualität dazu nur Hinweise. Die Spalte `League` enthält `Serie A` bzw. `LaLiga` und passt damit zum Blattnamen.
 
 ---
 
@@ -139,6 +149,27 @@ In der hochgeladenen Fassung stand in zwei Zellen Text statt einer Zahl, vermutl
 - Beide Fehler hätte die Prüfung ab Schritt 1 als **Fehler** gemeldet („Text statt Zahl“) und die Datenbank gesperrt.
 - id 99466 (Spieltag 29 der Saison 2025/26) liegt in der Ligareferenz der Testfälle für den 1. Spieltag 2026/27 und gehört zu den letzten 10 Spielen von Newcastle (Testfall PL-1) und Manchester Utd (PL-2). Mit dem Text in der Zelle hätten KPI 02 und 03 dort nicht gerechnet werden können. Die Testfälle wurden mit dem korrekten Wert 2 berechnet.
 - Lehre: Notizen nie in Datenzellen schreiben, sondern als Excel-Kommentar oder im Blatt Datenhinweise.
+
+---
+
+## 4c. Serie A und LaLiga befüllt (04.–07.11.2026)
+
+Carsten hat die Spiele von Serie A und LaLiga in die Datei übernommen. Claude hat ergänzt bzw. bereinigt (Protokoll: `Spieltage_pruefen.xlsx`, Blatt *Änderungsprotokoll*, bei Carsten):
+
+- **Spalte A `Date`:** aus Spalte D `matchDate` übernommen (nur das Datum), Format `DD.MM.YYYY`.
+- **Spalte B `Gameday`:** berechnet, weil die Quelle keine Spieltage enthält (Ausnahme: 2026/27, von Carsten eingetragen). Methode: Jedes Team spielt genau einmal pro Spieltag; jedes Spiel kommt in den Spieltag, dessen typisches Datum am nächsten liegt (Optimierung über die ganze Saison). Verlegte Spiele landen so in ihrem ursprünglichen Spieltag.
+  - Test an Carstens eigenen Spieltagen: Bundesliga 100 %, Premier League in normalen Saisons 100 %, in gestörten Saisons (Corona, ganze Spieltage verlegt) deutlich schlechter.
+  - Serie A und LaLiga: alle Spieltage mit genau 10 Spielen, jedes Team einmal; keine Anzeichen für ganze verlegte Spieltage. Geschätzte Genauigkeit 98–99 %, **nicht** gegen eine offizielle Quelle geprüft. Offizielle Werte (z. B. vom Datenlieferanten) ersetzen die berechneten.
+  - Für die KPIs ist die Wirkung gering: Ein falsch zugeordnetes, verlegtes Spiel verschiebt die Ligareferenz um höchstens ein Spiel.
+- **Leere Zusatzspalten** rechts von Spalte 58 entfernt (Serie A 2, LaLiga 1).
+- **Gelöscht:** Serie A, 10 Spiele der Saison 2019/20 (ids 9200–9209, nur letzter Spieltag vorhanden) und das Entscheidungsspiel um den Klassenerhalt Spezia – Verona vom 11.06.2023 (id 8059, kein Ligaspieltag). Entscheidung Carsten.
+- **Nachgetragen:** Serie A, Verona – AS Roma, 19.09.2020, Spieltag 1, id 9198 (freie Nummer im 1. Spieltag). Ergebnis auf dem Platz 0:0 (HZ 0:0), gewertet 3:0 für Verona (Fall Diawara). Schiedsrichter und Statistiken leer; dokumentiert im Blatt *Datenhinweise*.
+
+**Offen:**
+
+- **LaLiga, 17.05.2026:** Bei 7 Spielen passen `FT …` und `Full-Time …` nicht zusammen (vermutlich verrutschte Zeilen; ids 120661–120669). Vor dem Einschalten von LaLiga korrigieren, weil der letzte Spieltag der Vorsaison in Formkurve und Ligareferenz einfliesst.
+- **Blatt *Datenhinweise*:** Bei id 9198 steht in der Spalte `Liga` noch `Seria A`; muss `Serie A` heissen (sonst Warnung „Hinweis ohne Spiel“).
+- Weitere Warnungen ohne Eile: „Schüsse < aufs Tor + daneben“ (Serie A 2, LaLiga 1).
 
 ---
 
