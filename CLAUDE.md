@@ -6,8 +6,7 @@
 Soccer Intelligence ist eine Fussball-Analyseplattform. Sie berechnet statistische Auffälligkeiten
 (Anomalien) anstehender Ligaspiele und stellt sie verständlich dar. Datenbasis ist eine Excel-Datei
 mit historischen Spieldaten von Bundesliga, Premier League, Serie A und LaLiga, Saisons 2020/21–2025/26, dazu
-spieltagweise die laufende Saison 2026/27. Im Dashboard aktiv: Bundesliga und Premier League; Serie A und
-LaLiga ab Etappe F.
+spieltagweise die laufende Saison 2026/27. Im Dashboard aktiv seit Etappe F (Version 0.8): alle vier Ligen.
 Das Projekt ist zugleich ein Lernprojekt und nicht kommerziell. Code soll nachvollziehbar, gut
 kommentiert und schrittweise aufgebaut sein. Nach jedem Schritt kurz erklären, was gemacht wurde.
 
@@ -22,7 +21,7 @@ kommentiert und schrittweise aufgebaut sein. Nach jedem Schritt kurz erklären, 
 - Das Dashboard liegt unter `/dashboard` und ist **passwortgeschützt** (Traefik, BasicAuth).
   Zugangsdaten nur als Hash in `.env` auf dem Server, nie im Code oder in Git.
 - Bereiche: `/dashboard` (Top Anomalien), `/dashboard/bundesliga`, `/dashboard/premier-league`,
-  `/dashboard/datenqualitaet`. Jede weitere Liga erhält automatisch einen eigenen Bereich.
+  `/dashboard/serie-a`, `/dashboard/laliga`, `/dashboard/datenqualitaet`. Jede weitere Liga erhält automatisch einen eigenen Bereich.
 
 ## Ziel der ersten Phase (abgeschlossen 31.10.2026)
 Ein internes Dashboard, das für den aktuellen Spieltag jeder Liga alle Begegnungen mit den
@@ -60,6 +59,7 @@ Backup, Korrekturen an alten Spielen nie still übernehmen); das Dashboard bleib
 | docs/05_Dashboard.md | Dashboard-Briefing (v4.4): Aufbau, Navigation, Darstellung, Abnahmekriterien |
 | docs/06_Datenlieferung.md | Konzept regelmässige Datenlieferung / Import, Footiqo (Entwurf, nicht freigegeben) |
 | docs/tests/test_kpi01_formkurve.md … test_kpi04_gelbe_karten.md | Bestätigte Testfälle mit erwarteten Ergebnissen (JSON) |
+| docs/tests/pruefprotokoll_etappe_f.md | Prüfung der vier Ligen: Gegenrechnung, Plausibilität, Häufigkeit (07.11.2026) |
 | data/Database-Soccer-Intelligence.xlsx | Einzige gültige Datenquelle für gespielte Spiele |
 | data/Spielplan.xlsx | Angesetzte Begegnungen |
 | CHANGELOG.md | Änderungsprotokoll, jede Änderung wird dort eingetragen |

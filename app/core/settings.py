@@ -15,10 +15,12 @@ CONFIG_DIR = Path(os.environ.get("SI_CONFIG_DIR", Path(__file__).resolve().paren
 LEAGUES_FILE = CONFIG_DIR / "ligen.toml"
 TEAMS_FILE = CONFIG_DIR / "teams.toml"
 
-# Pflicht-Ligablätter (müssen vorhanden und gefüllt sein)
-REQUIRED_LEAGUE_SHEETS = ("Bundesliga", "Premier League")
-# Optionale Ligablätter (dürfen leer sein)
-OPTIONAL_LEAGUE_SHEETS = ("Seria A", "LaLiga")
+# Pflicht-Ligablätter (müssen vorhanden und gefüllt sein). Seit Etappe F (07.11.2026) alle vier Ligen,
+# weil alle vier im Dashboard aktiv sind. Das Blatt für Italien heisst seit 07.11.2026 „Serie A“ (vorher „Seria A“).
+REQUIRED_LEAGUE_SHEETS = ("Bundesliga", "Premier League", "Serie A", "LaLiga")
+# Optionale Ligablätter (dürfen fehlen oder leer sein) – derzeit keine. Eine neue Liga kann hier
+# vorbereitet werden, bevor sie in app/config/ligen.toml aktiv geschaltet wird.
+OPTIONAL_LEAGUE_SHEETS: tuple[str, ...] = ()
 NOTES_SHEET = "Datenhinweise"
 
 LEAGUE_SHEETS = REQUIRED_LEAGUE_SHEETS + OPTIONAL_LEAGUE_SHEETS
@@ -26,4 +28,4 @@ LEAGUE_SHEETS = REQUIRED_LEAGUE_SHEETS + OPTIONAL_LEAGUE_SHEETS
 # Anzeige-Zeitzone
 TIMEZONE = "Europe/Zurich"  # massgeblich für „heute“ (aktueller Spieltag)
 
-APP_VERSION = "0.7 – Etappe E: Dashboard-Zugang"
+APP_VERSION = "0.8 – Etappe F: Vier Ligen"

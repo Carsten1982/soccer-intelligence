@@ -16,7 +16,7 @@ from views import components as ui
 DB_RULES = """
 **Fehler** – Datenbank wird nicht verwendet, es werden keine Auswertungen angezeigt:
 - Datei fehlt oder ist nicht lesbar (z. B. Upload unvollständig)
-- Pflichtblatt *Bundesliga* oder *Premier League* fehlt oder ist leer
+- Pflichtblatt *Bundesliga*, *Premier League*, *Serie A* oder *LaLiga* fehlt oder ist leer
 - Spaltenanzahl, Spaltennamen oder Reihenfolge weichen von den 58 erwarteten Spalten ab
 - Pflichtfelder leer (Datum, Spieltag *Gameday*, id, Liga, Saison, Teams, Tore, Ergebnisse)
 - Text statt Zahl, ungültiges Ergebnis (nur H/D/A), ungültiges Datum oder Saisonformat
@@ -33,7 +33,7 @@ DB_RULES = """
 **Hinweise** – kein Handlungsbedarf:
 - mehr Tore als Schüsse aufs Tor (meist Eigentore)
 - dokumentierte Sonderfälle mit leeren Statistikwerten (werden nie als 0 gerechnet)
-- leere optionale Blätter (*Seria A*, *LaLiga*), neueste Saison noch laufend
+- unbekannte zusätzliche Blätter (werden ignoriert), neueste Saison noch laufend
 """
 
 FIXTURE_RULES = """

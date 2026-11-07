@@ -20,15 +20,30 @@ def test_valid_file_has_no_errors_or_warnings(tmp_path, valid_sheets):
     db = load_database(write_workbook(tmp_path / "db.xlsx", valid_sheets))
     assert not db.has_errors, db.issues
     assert checks(db, WARNUNG) == []
-    assert set(db.leagues) == {"Bundesliga", "Premier League"}
+    assert set(db.leagues) == {"Bundesliga", "Premier League", "Serie A", "LaLiga"}
     assert len(db.leagues["Bundesliga"]) == 2
 
 
-def test_empty_optional_sheets_are_only_hints(tmp_path, valid_sheets):
+def test_all_four_league_sheets_are_required(tmp_path, valid_sheets):
+    """Seit Etappe F sind Serie A und LaLiga aktiv und damit Pflicht (leer oder fehlend = Fehler)."""
+    valid_sheets["LaLiga"] = pd.DataFrame()
     db = load_database(write_workbook(tmp_path / "db.xlsx", valid_sheets))
-    empty = [i for i in db.issues if i.check == "Blatt leer"]
-    assert {i.sheet for i in empty} == {"Seria A", "LaLiga"}
-    assert all(i.level == HINWEIS for i in empty)
+    assert ("LaLiga", "Blatt leer") in {(i.sheet, i.check) for i in db.issues if i.level == FEHLER}
+
+
+def test_old_sheet_name_seria_a(tmp_path, valid_sheets):
+    """Altes Blatt „Seria A“: wird ignoriert (Hinweis), „Serie A“ fehlt dann (Fehler)."""
+    valid_sheets["Seria A"] = valid_sheets.pop("Serie A")
+    db = load_database(write_workbook(tmp_path / "db.xlsx", valid_sheets))
+    assert ("Serie A", "Blatt fehlt") in {(i.sheet, i.check) for i in db.issues if i.level == FEHLER}
+    assert ("Seria A", "Unbekanntes Blatt") in {(i.sheet, i.check) for i in db.issues if i.level == HINWEIS}
+
+
+def test_league_column_must_match_sheet(tmp_path, valid_sheets):
+    """Spalte League passt nicht zum Blattnamen -> Warnung (gilt jetzt auch für Serie A)."""
+    valid_sheets["Serie A"]["League"] = "Seria A"
+    db = load_database(write_workbook(tmp_path / "db.xlsx", valid_sheets))
+    assert ("Serie A", "Liga ≠ Blattname") in {(i.sheet, i.check) for i in db.issues if i.level == WARNUNG}
 
 
 # --- Harte Fehler --------------------------------------------------------
@@ -200,7 +215,10 @@ def test_real_database():
     """Genaue Erwartungswerte für den Referenzstand (SHA-256 6d68583c…)."""
     db = load_database(REFERENCE_DATABASE)
     assert db.sha256 == KNOWN_DB_SHA
-    assert not db.has_errors, [i for i in db.issues if i.level == FEHLER]
+    # Der Referenzstand stammt vom 31.10.2026, also vor Etappe F: Blatt „Seria A“ (alter Name) und leeres
+    # Blatt „LaLiga“. Seit Etappe F sind beide Ligen Pflicht; andere Fehler darf es nicht geben.
+    errors = {(i.sheet, i.check) for i in db.issues if i.level == FEHLER}
+    assert errors == {("Serie A", "Blatt fehlt"), ("LaLiga", "Blatt leer")}, errors
     assert len(db.leagues["Bundesliga"]) == 1836
     assert len(db.leagues["Premier League"]) == 2280
     bl = db.leagues["Bundesliga"]

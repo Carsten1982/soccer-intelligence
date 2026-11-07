@@ -147,6 +147,8 @@ Die Ergebnisse erscheinen auf der Seite **Datenqualität**, getrennt von den Pr�
 
 **Beispiel LaLiga 2026/27, Spieltag 1:** Hauptzeitraum 15.–19.08.2026. Valencia – Betis (25.08.), Real Madrid – Real Sociedad (26.08.), Celta Vigo – Osasuna (27.08.) und Barcelona – Ath Bilbao (27.08.) erhalten `verschoben`. So wird vom 20. bis 24.08. Spieltag 2 angezeigt.
 
+**Folge für den Stichtag:** Weil `Datum von` der Stichtag ist, zählen für Spiele im späteren Teil eines Zeitraums nur Teamspiele bis 2 Tage vor dem *Beginn* des Zeitraums. Beispiel LaLiga 2026/27, Spieltag 2 (20.–24.08.): Malagas Spiel vom 19.08. zählt für Malaga – Dep. A Coruna (24.08.) noch nicht. Das ist gewollt einfach und betrifft nur wenige Spiele; wer es genauer will, trägt den genauen Tag ein.
+
 **Grundlage der Entscheidung** (Auswertung 07.11.2026, Saisons 2022/23–2025/26, Corona-Saisons ausgeklammert): Spieltage mit 2 oder mehr verlegten Spielen kommen pro Saison vor: Bundesliga 0–1, Serie A 0–1, LaLiga 1–3, Premier League 1–5. Ursachen meist Supercup im Januar (Serie A, LaLiga) bzw. Pokalwettbewerbe (Premier League). Betroffen sind rund 2–6 Spiele pro Liga und Saison, also unter 2 %. Eine Pflege auf Tagesebene und eine neue Regel für den aktuellen Spieltag lohnen sich dafür nicht. Die Idee „Mehrheitsregel mit Bereich Nachholspiele“ ist in `01_Technisches_Setup.md`, Abschnitt 9, als Idee für später abgelegt.
 
 ---

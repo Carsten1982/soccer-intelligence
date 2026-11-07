@@ -37,6 +37,8 @@ def test_header():
     html = header_html("Aktueller Spieltag", "Saison 2026/27 · Spieltag 1")
     assert "Soccer Intelligence" in html and "KPI-Übersicht pro Spiel" in html and "Spieltag 1" in html
     assert "si-matchday" not in header_html("", "")
+    grid = header_html("Aktueller Spieltag", ["Bundesliga: Spieltag 2", "Serie A: Spieltag 1", "<x>"])
+    assert grid.count('class="si-grid-item"') == 3 and "si-grid" in grid and "&lt;x&gt;" in grid
 
 
 # --- Seiten (Streamlit AppTest) ---------------------------------------------------
@@ -60,7 +62,9 @@ def test_app_start_page_top_anomalien():
     assert not at.exception, at.exception
     text = _texts(at)
     assert "Soccer Intelligence" in text
-    assert "Bundesliga: Spieltag" in text and "Premier League: Spieltag" in text
+    for name in ("Bundesliga", "Premier League", "Serie A", "LaLiga"):     # Kopf: Spieltag je Liga (Etappe F)
+        assert f"{name}: Spieltag" in text, name
+    assert "si-grid" in text
     assert "Top Anomalien" in text
     from core.top import NO_ANOMALIES_TEXT
     assert "si-card" in text or NO_ANOMALIES_TEXT in text + "\n".join(str(i.value) for i in at.info)
@@ -78,13 +82,25 @@ def _liga_premier_league():
     liga.render(active_leagues(load_leagues())[1])
 
 
+def _liga_serie_a():
+    from core.config import active_leagues, load_leagues
+    from views import liga
+    liga.render(active_leagues(load_leagues())[2])
+
+
+def _liga_laliga():
+    from core.config import active_leagues, load_leagues
+    from views import liga
+    liga.render(active_leagues(load_leagues())[3])
+
+
 def _datenqualitaet():
     from views import datenqualitaet
     datenqualitaet.render()
 
 
 @needs_files
-@pytest.mark.parametrize("script", [_liga_bundesliga, _liga_premier_league])
+@pytest.mark.parametrize("script", [_liga_bundesliga, _liga_premier_league, _liga_serie_a, _liga_laliga])
 def test_league_pages(script):
     at = AppTest.from_function(script, default_timeout=TIMEOUT).run()
     assert not at.exception, at.exception

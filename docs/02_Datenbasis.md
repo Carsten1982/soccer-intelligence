@@ -8,7 +8,7 @@
 
 Diese Prüfsumme steht auch in den Testfällen (`docs/tests/`). Nach jeder Änderung an der Datei ändert sie sich. Dann hier und in den Testfällen nachtragen und die Testfälle erneut laufen lassen.
 
-**Neue Fassung (07.11.2026):** Serie A und LaLiga befüllt (siehe Abschnitt 4c). SHA-256 der hochgeladenen Datei: `c0454c7ff876890da9b7fb3a34ef438d222c990e84c97a21feb865ae95bc5440` (bei einer korrigierten Fassung hier nachtragen). Bundesliga und Premier League sind gegenüber `6b84d8d2…` unverändert.
+**Neue Fassung (07.11.2026):** Serie A und LaLiga befüllt (siehe Abschnitt 4c). Aktive Fassung seit 07.11.2026: SHA-256 `f37e36d301767321575aeadf908c39e288b9a655d02d85d5bcfde0507effdc34` (LaLiga 17.05.2026 korrigiert, *Datenhinweise* ergänzt). Vorstufe `c0454c7f…` liegt in `backup/`. Bundesliga und Premier League sind gegenüber `6b84d8d2…` unverändert.
 
 **Bisher:** Die Fassung `6b84d8d2…` war seit 31.10.2026 in `data/` aktiv. Gegenüber dem Referenzstand neu: die 19 Spiele des 1. Spieltags 2026/27 (Bundesliga 9, Premier League 10). Beim Prüfen korrigiert: id 119365 (FC Koln – Heidenheim) `Home Yellow Cards Full Time` enthielt Leerzeichen statt 2. Ältere Fassungen liegen in `backup/`.
 
@@ -28,9 +28,9 @@ Stand 07.11.2026 (Saisons 2020/21–2025/26 vollständig, dazu die bisher gespie
 | LaLiga | 2.305 | 25 (Spieltage 1–2, Teil von 3) | 2020/21 – 2025/26 je 380 | 31 | 12.09.2020 – 29.08.2026 |
 | Datenhinweise | 2 Einträge | – | – | – | dokumentierte Sonderfälle |
 
-**Vier Ligen (Entscheidung 06./07.11.2026):** Das Dashboard wird auf alle vier Ligen erweitert (Etappe F, siehe `01_Technisches_Setup.md`). Bis dahin liest der Code Serie A und LaLiga nur mit, zeigt sie aber nicht an.
+**Vier Ligen (Entscheidung 06./07.11.2026):** Das Dashboard zeigt seit Etappe F (Version 0.8) alle vier Ligen (`01_Technisches_Setup.md`).
 
-**Pflicht- und optionale Blätter:** Pflicht sind `Bundesliga` und `Premier League`. `Serie A` und `LaLiga` sind optional: Fehlen sie oder sind sie leer, ist das **kein Fehler**, nur ein Hinweis. Mit Etappe F werden sie aktive Ligen; ab dann gilt für sie dasselbe wie für die Pflichtblätter.
+**Pflichtblätter (seit Etappe F):** `Bundesliga`, `Premier League`, `Serie A` und `LaLiga`. Fehlt eines oder ist es leer, ist das ein **Fehler** (Datenbank wird nicht verwendet). Weitere Blätter werden ignoriert (Hinweis). Eine neue Liga kann im Code als optionales Blatt vorbereitet werden, bevor sie aktiv geschaltet wird.
 
 Die laufende Saison 2026/27 wird spieltagweise ergänzt (seit 31.10.2026, zuerst Spieltag 1).
 
@@ -70,7 +70,7 @@ Die laufende Saison 2026/27 wird spieltagweise ergänzt (seit 31.10.2026, zuerst
 ### Bekannte Eigenheiten
 
 - **Doppelte Torspalten sind beabsichtigt:** Die Spalten K–M (`FT Home Goals`, `FT Away Goals :`, `FT Result :`) und N–P (`Full-Time Home Goals`, `Full-Time Away Goals`, `Full-Time Result`) bilden dasselbe reguläre Endergebnis ab. Das ist kein Datenfehler, an der Excel-Datei ist nichts zu ändern. Die Datenvalidierung darf beide Gruppen miteinander vergleichen (so wurde der Fehler vom 18.10.2025 gefunden). Sie entfernt oder verändert aber nie automatisch Spalten oder Werte.
-- Das Blatt für Italien hiess bis 06.11.2026 `Seria A`. Carsten hat es in Datenbank und Spielplan in **`Serie A`** umbenannt (07.11.2026). Der Code erwartet bis zur Etappe F noch `Seria A`; bis dahin meldet der Bereich Datenqualität dazu nur Hinweise. Die Spalte `League` enthält `Serie A` bzw. `LaLiga` und passt damit zum Blattnamen.
+- Das Blatt für Italien hiess bis 06.11.2026 `Seria A`. Carsten hat es in Datenbank und Spielplan in **`Serie A`** umbenannt (07.11.2026). Der Code erwartet seit Etappe F `Serie A`; ein Blatt `Seria A` wird ignoriert und `Serie A` gilt dann als fehlend (Fehler). Die Spalte `League` enthält `Serie A` bzw. `LaLiga` und passt damit zum Blattnamen.
 
 ---
 
@@ -167,8 +167,8 @@ Carsten hat die Spiele von Serie A und LaLiga in die Datei übernommen. Claude h
 
 **Offen:**
 
-- **LaLiga, 17.05.2026:** Bei 7 Spielen passen `FT …` und `Full-Time …` nicht zusammen (vermutlich verrutschte Zeilen; ids 120661–120669). Vor dem Einschalten von LaLiga korrigieren, weil der letzte Spieltag der Vorsaison in Formkurve und Ligareferenz einfliesst.
-- **Blatt *Datenhinweise*:** Bei id 9198 steht in der Spalte `Liga` noch `Seria A`; muss `Serie A` heissen (sonst Warnung „Hinweis ohne Spiel“).
+- ~~LaLiga, 17.05.2026: 7 Spiele mit vertauschten Werten in K–M~~ **korrigiert 07.11.2026:** K–M aus N–P übernommen (stimmt mit den Halbzeiten überein), je Spiel im Blatt *Datenhinweise* dokumentiert. Prüfung aller 8'730 Spiele: sonst keine Abweichung zwischen K–M und N–P. Vermutlich Fehler der ursprünglichen Quelle.
+- ~~*Datenhinweise* id 9198 `Seria A`~~ **korrigiert 07.11.2026** (`Serie A`).
 - Weitere Warnungen ohne Eile: „Schüsse < aufs Tor + daneben“ (Serie A 2, LaLiga 1).
 
 ---
@@ -178,7 +178,7 @@ Carsten hat die Spiele von Serie A und LaLiga in die Datei übernommen. Claude h
 ### Fehler – Datenbank wird nicht verwendet
 
 - Datei fehlt oder ist nicht lesbar (z. B. Upload unvollständig)
-- Pflichtblatt `Bundesliga` oder `Premier League` fehlt oder ist leer
+- Pflichtblatt `Bundesliga`, `Premier League`, `Serie A` oder `LaLiga` fehlt oder ist leer (seit Etappe F alle vier)
 - Spaltenanzahl, Spaltennamen oder Reihenfolge weichen von den 58 Spalten ab
 - Pflichtfeld leer (Datum, Gameday, id, Liga, Saison, Teams, Tore, Ergebnisse)
 - Text statt Zahl, Ergebnis nicht H/D/A, ungültiges Datum oder Saisonformat

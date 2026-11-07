@@ -59,7 +59,7 @@ def render() -> None:
     db = get_database()
     fx = get_fixtures()
     candidates, header_parts = collect_candidates()
-    ui.header("Aktueller Spieltag", " · ".join(header_parts))
+    ui.header("Aktueller Spieltag", header_parts)          # eine Zeile je Liga, kompakt (Etappe F)
 
     if db.has_errors or fx.has_errors:
         ui.blocked_notice(db.has_errors, fx.has_errors, PAGES.get("datenqualitaet"))

@@ -33,6 +33,11 @@ CSS = f"""
 .si-matchday .si-label {{color:{SLATE}; font-size:.8rem;}}
 .si-matchday .si-box {{border:1px solid {LINE}; border-radius:.5rem; padding:.35rem .8rem; color:{NAVY};
   font-weight:600; background:#fff; display:inline-block; margin-top:.2rem;}}
+/* Kopfbereich Top Anomalien mit mehreren Ligen (Etappe F): kompakt in zwei Spalten */
+.si-matchday .si-box.si-grid {{display:inline-grid; grid-template-columns:auto auto; column-gap:1.4rem; row-gap:.1rem;
+  text-align:left; font-size:.92rem;}}
+.si-grid .si-grid-item {{white-space:nowrap;}}
+@media (max-width: 640px) {{ .si-matchday .si-box.si-grid {{grid-template-columns:auto;}} }}
 /* Tabelle scrollt in einem eigenen Rahmen: max. 72 % der Fensterhöhe, damit die horizontale Scrollbar
    immer sichtbar ist (Briefing 4.3). Kopfzeilen bleiben oben, # und Spiel links stehen. */
 .si-tablewrap {{overflow:auto; max-height:72vh; border:1px solid {LINE}; border-radius:.5rem; margin-bottom:.5rem;
@@ -113,9 +118,15 @@ TITLE = "Soccer Intelligence"
 SUBTITLE = "KPI-Übersicht pro Spiel – alle Begegnungen eines Spieltags"
 
 
-def header_html(right_label: str, right_value: str) -> str:
+def header_html(right_label: str, right_value: str | list[str]) -> str:
+    """Kopfbereich. right_value: ein Text (Liga-Bereich) oder eine Liste (Top Anomalien: eine Zeile je Liga,
+    kompakt in zwei Spalten, damit der Kopf bei vier Ligen nicht zu breit wird)."""
     right = ""
-    if right_value:
+    if isinstance(right_value, list) and right_value:
+        items = "".join(f'<div class="si-grid-item">{escape(v)}</div>' for v in right_value)
+        right = (f'<div class="si-matchday"><div class="si-label">{escape(right_label)}</div>'
+                 f'<div class="si-box si-grid">{items}</div></div>')
+    elif right_value:
         right = (f'<div class="si-matchday"><div class="si-label">{escape(right_label)}</div>'
                  f'<div class="si-box">{escape(right_value)}</div></div>')
     return (f'<div class="si-header"><div><h1>{TITLE}</h1><div class="si-sub">{escape(SUBTITLE)}</div></div>'
@@ -131,7 +142,7 @@ def matchday_box_html(label: str, value: str) -> str:
             f'<div class="si-box">{escape(value)}</div></div>')
 
 
-def header(right_label: str = "", right_value: str = "") -> None:
+def header(right_label: str = "", right_value: str | list[str] = "") -> None:
     st.markdown(header_html(right_label, right_value), unsafe_allow_html=True)
 
 

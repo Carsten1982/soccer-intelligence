@@ -56,8 +56,8 @@ Das Dashboard ist eine einzige Anwendung mit mehreren Bereichen. Jeder Bereich h
 | Top Anomalien (Startbereich) | /dashboard                |
 | Bundesliga                   | /dashboard/bundesliga     |
 | Premier League               | /dashboard/premier-league |
-| Serie A *(ab Etappe F)*      | /dashboard/serie-a        |
-| LaLiga *(ab Etappe F)*       | /dashboard/laliga         |
+| Serie A *(seit Etappe F)*    | /dashboard/serie-a        |
+| LaLiga *(seit Etappe F)*     | /dashboard/laliga         |
 | Datenqualität                | /dashboard/datenqualitaet |
 
 Beim Aufruf von /dashboard wird direkt der Bereich Top Anomalien angezeigt. Eine eigene Adresse /dashboard/top und eine Weiterleitung sind nicht erforderlich.
@@ -130,7 +130,7 @@ Im oberen Bereich soll Folgendes angezeigt werden:
 
 **Untertitel:** KPI-Übersicht pro Spiel – alle Begegnungen eines Spieltags
 
-Rechts im Kopfbereich werden in den Liga-Bereichen Saison und aktueller Spieltag der jeweiligen Liga angezeigt (Regeln siehe 4.4), beispielsweise: «Saison 2026/27 · Spieltag 1». Im Bereich Top Anomalien wird der Spieltag pro Liga angezeigt, beispielsweise: «Bundesliga: Spieltag 1 · Premier League: Spieltag 1». Mit vier Ligen (Etappe F) wird diese Anzeige kompakt gestaltet, damit sie nicht zu breit wird.
+Rechts im Kopfbereich werden in den Liga-Bereichen Saison und aktueller Spieltag der jeweiligen Liga angezeigt (Regeln siehe 4.4), beispielsweise: «Saison 2026/27 · Spieltag 1». Im Bereich Top Anomalien wird der Spieltag pro Liga angezeigt, beispielsweise: «Bundesliga: Spieltag 1 · Premier League: Spieltag 1». Mit vier Ligen (Etappe F) steht diese Anzeige kompakt in zwei Spalten («Bundesliga: Spieltag 2» · «Premier League: Spieltag 2» / «Serie A: Spieltag 2» · «LaLiga: Spieltag 2»), auf schmalen Bildschirmen untereinander.
 
 ~~Es soll in der ersten Version keine zusätzliche Spieltagsnavigation mit Pfeilen oder weiteren Bedienelementen geben.~~
 
@@ -157,13 +157,13 @@ Die Navigation besteht aus einem Tab pro Bereich. Zu Beginn sind das vier Tabs:
 
 - Datenqualität (ganz rechts)
 
-Weitere aktivierte Ligen erhalten automatisch einen eigenen Tab. Dieser wird vor dem Tab Datenqualität eingefügt. Ab Etappe F (Änderung 07.11.2026): Top Anomalien · Bundesliga · Premier League · Serie A · LaLiga · Datenqualität.
+Weitere aktivierte Ligen erhalten automatisch einen eigenen Tab. Dieser wird vor dem Tab Datenqualität eingefügt. Seit Etappe F (Änderung 07.11.2026): Top Anomalien · Bundesliga · Premier League · Serie A · LaLiga · Datenqualität.
 
 Der aktive Tab muss visuell klar erkennbar sein.
 
 Die Tabs müssen mit der oben definierten URL-Struktur verknüpft sein.
 
-## 4. Liga-Bereiche (Bundesliga, Premier League, ab Etappe F auch Serie A und LaLiga)
+## 4. Liga-Bereiche (Bundesliga, Premier League, Serie A, LaLiga)
 
 Die Liga-Bereiche zeigen jeweils alle Begegnungen des **aktuellen** Spieltags (siehe 4.4).
 
@@ -605,7 +605,7 @@ Die Architektur soll spätere Erweiterungen jedoch ermöglichen.
 
 Die Umsetzung gilt als erfolgreich, wenn folgende Punkte erfüllt sind:
 
-1.  Das Dashboard besitzt die Bereiche Top Anomalien, Bundesliga, Premier League und Datenqualität, ab Etappe F zusätzlich Serie A und LaLiga. Weitere Ligen lassen sich über die Konfiguration ergänzen.
+1.  Das Dashboard besitzt die Bereiche Top Anomalien, Bundesliga, Premier League und Datenqualität, seit Etappe F zusätzlich Serie A und LaLiga. Weitere Ligen lassen sich über die Konfiguration ergänzen.
 
 2.  Alle Bereiche sind über die definierten URLs direkt erreichbar.
 

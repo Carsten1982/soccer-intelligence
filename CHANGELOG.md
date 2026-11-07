@@ -5,6 +5,14 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 07.11.2026 – Etappe F: Vier Ligen (Paket vorbereitet)
+
+- **Carsten** · Korrigierte Datenbank eingespielt (`f37e36d3…`): LaLiga 17.05.2026 (7 Spiele, K–M aus N–P), *Datenhinweise* ergänzt, id 9198 `Serie A`. Freigabe Etappe F („Bitte programmieren“).
+- **Claude** · Serie A (`/dashboard/serie-a`) und LaLiga (`/dashboard/laliga`) aktiv (`app/config/ligen.toml`); Blattname `Serie A` im Code; alle vier Ligablätter sind Pflicht; Ausnahme für „Seria A“ bei der Prüfung „Liga ≠ Blattname“ entfernt; Kopfbereich der Top Anomalien kompakt in zwei Spalten (auf dem Handy untereinander). Version 0.8.
+- **Claude** · Prüfung: unabhängige zweite KPI-Berechnung (`tests/gegenrechnung.py`), bestätigt an den Testfällen; Vergleich mit der App für alle 8'808 Begegnungen (alle Spiele der Datenbank + Spielplan, vier Ligen): **0 Abweichungen**. Plausibilität (Tore, Karten, Over 2,5 je Saison) und Häufigkeit der Anomalien geprüft. Protokoll: `docs/tests/pruefprotokoll_etappe_f.md`.
+- **Claude** · Tests: `tests/test_gegenrechnung.py` (Gegenrechnung gegen Testfälle; App gegen Gegenrechnung für alle aktiven Ligen), Loader- und Konfigurationstests auf vier Ligen umgestellt, Seitentests für Serie A und LaLiga. 158 Tests lokal grün (ohne Oberflächentests).
+- **Claude** · Doku: `01`, `02` (Pflichtblätter), `03` (offener Punkt 11 mit Ergebnis), `04` (Folge des Stichtags bei Zeiträumen), `05` (Kopfbereich), `CLAUDE.md`.
+
 ## 07.11.2026 – Vier Ligen beschlossen, Daten Serie A und LaLiga, Regel für verlegte Spiele
 
 - **Carsten** · Gespräch mit Footiqo: fester Download-Link, kumulative Excel-Datei (alle Spiele ab 2020/21), Updates dienstags und donnerstags, dauerhafte Spiel-IDs. Offen u. a.: Spielplan, Spalte `Gameday`, Nutzungsrechte. Konzept `06_Datenlieferung.md` überarbeitet (Etappe G).

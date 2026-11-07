@@ -4,7 +4,7 @@
 # Die Reihenfolge hier = Reihenfolge der Tabs.
 #
 #   name   = Blattname in Datenbank UND Spielplan (exakt gleich geschrieben)
-#   url    = Adresse des Bereichs, z. B. "bundesliga" -> /bundesliga
+#   url    = Adresse des Bereichs, z. B. "bundesliga" -> /dashboard/bundesliga
 #   teams  = Anzahl Teams der Liga (erwartete Spiele je Spieltag = teams / 2)
 #   aktiv  = true: wird angezeigt · false: vorbereitet, aber ausgeblendet
 
@@ -20,14 +20,15 @@ url = "premier-league"
 teams = 20
 aktiv = true
 
+# Serie A und LaLiga aktiv seit Etappe F (07.11.2026)
 [[liga]]
-name = "Seria A"
+name = "Serie A"
 url = "serie-a"
 teams = 20
-aktiv = false
+aktiv = true
 
 [[liga]]
 name = "LaLiga"
 url = "laliga"
 teams = 20
-aktiv = false
+aktiv = true

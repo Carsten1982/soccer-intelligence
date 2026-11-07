@@ -283,8 +283,10 @@ def test_labels():
 
 def test_real_config():
     leagues = load_leagues()
-    assert [lg.name for lg in active_leagues(leagues)] == ["Bundesliga", "Premier League"]
-    assert {lg.name: lg.games_per_matchday for lg in leagues}["Bundesliga"] == 9
+    assert [lg.name for lg in active_leagues(leagues)] == ["Bundesliga", "Premier League", "Serie A", "LaLiga"]
+    assert [lg.url for lg in active_leagues(leagues)] == ["bundesliga", "premier-league", "serie-a", "laliga"]
+    assert {lg.name: lg.games_per_matchday for lg in leagues} == {
+        "Bundesliga": 9, "Premier League": 10, "Serie A": 10, "LaLiga": 10}
     assert {t.team_name for t in load_teams()} >= {"Elversberg", "Paderborn"}
 
 

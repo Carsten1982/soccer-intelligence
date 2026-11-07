@@ -1,6 +1,6 @@
 # Soccer Intelligence – Technisches Setup
 
-**Stand:** 07.11.2026 · **Status:** Phase 1 (Etappen A–E) in Betrieb. Nächster Schritt: Etappe F – Erweiterung auf vier Ligen (Serie A, LaLiga). Datenlieferung (Etappe G) in Klärung.
+**Stand:** 07.11.2026 · **Status:** Phase 1 (Etappen A–E) in Betrieb. Etappe F (vier Ligen, Version 0.8) als Paket bereit. Datenlieferung (Etappe G) in Klärung.
 **Verantwortlich:** Carsten Thiele · **Mitwirkende:** ChatGPT (Server-Setup, Review), Claude (Daten, Architektur, Code)
 
 ---
@@ -28,7 +28,7 @@
 | KPIs, Top Anomalien | ✅ in Betrieb | Etappen C und D |
 | Phase 1 (Etappen A–E) | ✅ abgeschlossen 31.10.2026 | Browser-Anmeldung unter `/dashboard` noch von Carsten zu bestätigen |
 | Daten Serie A und LaLiga | ✅ aufbereitet 04.–07.11.2026 | Datum und Spieltag ergänzt, bereinigt (`02_Datenbasis.md`, Abschnitt 4c); Datenbank und Spielplan mit vier Blättern auf dem Server |
-| Erweiterung auf vier Ligen (Etappe F) | ⏳ nächster Schritt | beschlossen 06./07.11.2026, Programmierung nach Freigabe |
+| Erweiterung auf vier Ligen (Etappe F) | 📦 Paket bereit | Version 0.8; Gegenrechnung aller 8'808 Begegnungen ohne Abweichung (`docs/tests/pruefprotokoll_etappe_f.md`) |
 | Regelmässige Datenlieferung (Etappe G) | 🔎 in Klärung | Footiqo: fester Download-Link, kumulative Excel-Datei, Di/Do; Konzept: `06_Datenlieferung.md` |
 | 4 neue KPIs | ⏳ geplant | Definition durch Carsten, dann Testfälle, dann Code |
 | Öffentliche Website | ⏳ später | nach Etappe F und Klärung der Datenquelle |
@@ -357,7 +357,7 @@ app/
 │   └── frequency.py      Häufigkeit der Anomalien (Etappe C)
 └── views/                Bereiche: Top Anomalien, je Liga, Datenqualität; components.py = Kopfbereich, Tabelle;
                           kpi_table.py = KPI-Zellen der Liga-Tabelle
-tests/                    automatische Tests
+tests/                    automatische Tests; gegenrechnung.py = unabhängige zweite KPI-Berechnung (Etappe F)
 data/Spielplan.xlsx       anstehende Partien
 docs/                     Dokumentation (01–05, tests/)
 CLAUDE.md                 Projektübersicht für Claude Code
@@ -376,7 +376,7 @@ CHANGELOG.md              Änderungsprotokoll
 | D – Top Anomalien | Auswahl-Logik gemäss Regelwerk, Abschnitt 2.6, Karten auf der Startseite, 13 Tests | Etappe C ✅ | ✅ eingespielt 31.10.2026 (Git `1a1c527`) |
 | E – Dashboard-Zugang | Umzug nach `/dashboard`, Passwortschutz über Traefik, `noindex`, Platzhalterseite unter `/` | Freigabe Carsten 31.10.2026 ✅ | ✅ eingespielt 31.10.2026 (Git `64a684b`) |
 | **Phase 1 abgeschlossen** | Etappen A–E in Betrieb | – | ✅ 31.10.2026 |
-| F – Vier Ligen | Serie A (`/dashboard/serie-a`) und LaLiga (`/dashboard/laliga`): Konfiguration, Blattname `Serie A` im Code, Aufsteiger in der Teamliste, kompakter Kopfbereich, Top Anomalien und Datenqualität über vier Ligen, Tests, Doku | Daten auf dem Server ✅, LaLiga 17.05.2026 korrigiert, Freigabe („Bitte Programmieren“) | ⏳ nächster Schritt |
+| F – Vier Ligen | Serie A (`/dashboard/serie-a`) und LaLiga (`/dashboard/laliga`): Konfiguration, Blattname `Serie A` im Code, Aufsteiger in der Teamliste, kompakter Kopfbereich, Top Anomalien und Datenqualität über vier Ligen, Tests, Doku | Daten auf dem Server ✅, LaLiga 17.05.2026 korrigiert ✅, Freigabe 07.11.2026 ✅ | 📦 Paket bereit |
 | G – Datenlieferung | regelmässiger Import mit Prüfschranke (Footiqo, Download-Link), Konzept `06_Datenlieferung.md` | Antworten von Footiqo, Testkauf, Freigabe | 🔎 in Klärung |
 | Neue KPIs | 4 weitere KPIs: Definition → Testfälle → Code | Definition durch Carsten | ⏳ geplant |
 | Öffentliche Website | eigener Architekturvorschlag (Mobile First), eigener Ordner und eigenes Repository empfohlen | Etappe F, Datenquelle geklärt (G) | später |

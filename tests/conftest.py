@@ -78,8 +78,8 @@ def valid_sheets():
     return {
         "Bundesliga": valid_league("Bundesliga"),
         "Premier League": valid_league("Premier League"),
-        "Seria A": pd.DataFrame(),
-        "LaLiga": pd.DataFrame(),
+        "Serie A": valid_league("Serie A"),
+        "LaLiga": valid_league("LaLiga"),
     }
 
 

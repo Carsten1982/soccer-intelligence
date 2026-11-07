@@ -157,7 +157,7 @@ def _prepare_league(sheet: str, raw: pd.DataFrame) -> tuple[pd.DataFrame, list[I
 
     # Liga-Spalte passt zum Blattnamen?
     wrong_league = df[df["League"].notna() & (df["League"] != sheet)]
-    if len(wrong_league) and sheet != "Seria A":
+    if len(wrong_league):
         issues += row_issues(WARNUNG, sheet, "Liga ≠ Blattname", wrong_league,
                              lambda r: f"League = '{r['League']}'")
 
