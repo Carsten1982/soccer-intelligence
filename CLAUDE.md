@@ -21,7 +21,7 @@ kommentiert und schrittweise aufgebaut sein. Nach jedem Schritt kurz erklären, 
 - Das Dashboard liegt unter `/dashboard` und ist **passwortgeschützt** (Traefik, BasicAuth).
   Zugangsdaten nur als Hash in `.env` auf dem Server, nie im Code oder in Git.
 - Bereiche: `/dashboard` (Top Anomalien), `/dashboard/bundesliga`, `/dashboard/premier-league`,
-  `/dashboard/serie-a`, `/dashboard/laliga`, `/dashboard/datenqualitaet`. Jede weitere Liga erhält automatisch einen eigenen Bereich.
+  `/dashboard/serie-a`, `/dashboard/laliga`, `/dashboard/datenqualitaet`, `/dashboard/simulation` (intern, seit Etappe I.1). Jede weitere Liga erhält automatisch einen eigenen Bereich.
 
 ## Ziel der ersten Phase (abgeschlossen 31.10.2026)
 Ein internes Dashboard, das für den aktuellen Spieltag jeder Liga alle Begegnungen mit den
@@ -43,7 +43,7 @@ Nicht Teil dieser Phase:
 
 ## Nach Phase 1 (Stand 08.11.2026)
 Erledigt: **Etappe F – Vier Ligen** (07.11.2026) und **Etappe H – KPI 05–09** (Version 0.9, eingespielt 08.11.2026, Git `51e595b`).
-Als Paket bereit: **H.2 – Stabilität** (Version 0.9.2, Befunde der zweiten Code-Prüfung). Eingespielt: **H.1 – Aufräumen und Tempo** (Version 0.9.1, Git `b5a7ea8`, Funde der Code-Prüfung vom 08.11.2026, Ergebnisse unverändert,
+Als Paket bereit: **Etappe I.1 – Simulation** (Version 0.10, Bereich „Simulation – Spielwiese“, Regelwerk 11, Briefing 6.4). Eingespielt: **H.2 – Stabilität** (Version 0.9.2, Git `291eeac`, Befunde der zweiten Code-Prüfung). Eingespielt: **H.1 – Aufräumen und Tempo** (Version 0.9.1, Git `b5a7ea8`, Funde der Code-Prüfung vom 08.11.2026, Ergebnisse unverändert,
 `docs/tests/pruefprotokoll_h1.md`). Zu Etappe H (Frontend; KPI-Regelwerk v2.2,
 Abschnitt 9; Testfälle `docs/tests/test_kpi05…09…` **bestätigt am 08.11.2026**). Mit Etappe H gilt ausserdem:
 **alle KPIs mit zwei Nachkommastellen** (auch die Abweichung; Einstufung nach dem auf zwei Stellen gerundeten Wert, Regelwerk 2.3),
@@ -62,7 +62,7 @@ Backup, Korrekturen an alten Spielen nie still übernehmen); das Dashboard bleib
 | docs/02_Datenbasis.md | Aufbau der Excel-Datei (58 Spalten inkl. `Gameday`), Formate, Prüfregeln |
 | docs/03_KPI_Regelwerk.md | Berechnungsregeln, Anomalie-Logik, Top-Anomalien, Dashboard-Texte |
 | docs/04_Spielplan.md | Aufbau des Spielplans (`Datum von` / `Datum bis`), aktueller Spieltag, Prüfregeln |
-| docs/05_Dashboard.md | Dashboard-Briefing (v4.7): Aufbau, Navigation, Darstellung, Abnahmekriterien |
+| docs/05_Dashboard.md | Dashboard-Briefing (v4.8): Aufbau, Navigation, Darstellung, Abnahmekriterien |
 | docs/06_Datenlieferung.md | Konzept regelmässige Datenlieferung / Import, Footiqo (Entwurf, nicht freigegeben) |
 | docs/tests/test_kpi01_formkurve.md … test_kpi04_gelbe_karten.md | Bestätigte Testfälle mit erwarteten Ergebnissen (JSON) |
 | docs/tests/test_kpi05_ecken.md … test_kpi09_schuesse_aufs_tor.md | Bestätigte Testfälle KPI 05–09 (08.11.2026), Nachprüfung `Testfaelle_KPI05-09_Nachpruefung.xlsx` |

@@ -1,6 +1,6 @@
 # Soccer Intelligence – KPI-Regelwerk
 
-**Spezifikation v2.2** · Stand 08.11.2026 · KPI 01–09 gültig und umgesetzt (KPI 05–09, zwei Nachkommastellen und Top-Anomalien über KPI 02–09 seit Etappe H, eingespielt 08.11.2026) · KPI 10–13 Entwurf (Abschnitt 10)
+**Spezifikation v2.3** · Stand 08.11.2026 · KPI 01–09 gültig und umgesetzt (KPI 05–09, zwei Nachkommastellen und Top-Anomalien über KPI 02–09 seit Etappe H, eingespielt 08.11.2026) · KPI 10–13 Entwurf (Abschnitt 10)
 
 > **Massgebliche Quelle seit 31.10.2026.** Änderungen werden nur noch in dieser Datei gemacht, mit Datum in der Änderungshistorie bzw. im `CHANGELOG.md`.
 > Das Word-Dokument „Definition der Dashboard-KPIs (final)“ (Arbeitsstand 30.10.2026) liegt nur noch als Archiv im Ordner `word/` und wird nicht mehr gepflegt.
@@ -14,6 +14,7 @@ Abschnitt 8 sammelt offene Punkte.
 | Datum | Änderung | Abschnitt |
 |---|---|---|
 | 27.10.2026 | Erstfassung KPIs 01–04 | alle |
+| 08.11.2026 | **v2.3** (Etappe I.1): Ergebniskontrolle und Simulation festgelegt; offener Punkt 13 erledigt | 8, 11 |
 | 08.11.2026 | **v2.2** (H.1): Ein Statistikwert mit Kommastellen (z. B. 4,5 Ecken) gilt als **fehlend** und wird nie abgeschnitten; die Datenprüfung meldet ihn als Warnung. Keine Änderung an Formeln oder Testfällen | 1 |
 | 28.10.2026 | Ligareferenz über Spalte `Gameday` (letzte 20 Spieltage), Regel für Nachholspiele, fehlende Kartenwerte in Referenzspielen; offener Punkt 5 erledigt | 1.1, 6 |
 | 30.10.2026 | Zeitlicher Abstand von 3 auf 2 Kalendertage reduziert, gilt nur für Teamwerte; offener Punkt 4 erledigt | 1 |
@@ -354,7 +355,7 @@ Diese Punkte sollten vor der Umsetzung im Code geklärt werden:
     | LaLiga | 1 % | 41 % | 23 % | 38 % | 2 % | 15 % |
 
     KPI 06–08 schlagen deutlich häufiger an als KPI 02; bei BTTS und den Halbzeit-Toren eher zu oft. **KPI 05 und 09 seit der Umstellung vom 08.11.2026 (eigene + gegnerische) dagegen sehr selten**, starke Anomalien praktisch nie (vorher mit nur eigenen Werten: KPI 05 14–27 %, KPI 09 22–32 %). Grund: Die Gesamtzahl der Ecken bzw. Schüsse aufs Tor pro Spiel schwankt viel weniger als die Tore, der Mittelwert zweier Teams glättet zusätzlich. Für eine ähnliche Häufigkeit wie KPI 02 lägen die Schwellen bei KPI 05 und 09 etwa bei ±12 % / ±18 %. **Entscheidung Carsten 08.11.2026:** Schwellen werden später bearbeitet; bis dahin gelten ±20 % / ±35 %. Klärung im Simulations-Tab (Etappe I), danach ggf. eigene Schwellen je KPI/Liga.
-13. **Ergebniskontrolle** (08.11.2026): Für den Simulations-Tab wird je KPI festgelegt, wann eine Anomalie „eingetroffen“ ist (z. B. KPI 02 positiv: im Spiel fallen mehr Tore als die Ligareferenz). Claude legt Varianten vor, Carsten entscheidet. Nicht blockierend für KPI 05–09.
+13. ~~**Ergebniskontrolle**~~ **erledigt 08.11.2026:** festgelegt in Abschnitt 11 (Entscheidungen Carsten).
 14. **Schüsse aufs Tor (KPI 09, 12, 13):** Zählweise der Datenquelle (gehaltene, geblockte Schüsse, Tore) bei einem Lieferantenwechsel (Footiqo) vorab vergleichen, wie bei den Gelben Karten.
 15. **Nachkommastellen auf der öffentlichen Website** (08.11.2026): Im Dashboard haben alle KPIs zwei Nachkommastellen (2.3). Für Frontend/Website entscheidet Carsten später (z. B. zwei Nachkommastellen oder eine einfachere Darstellung).
 16. **KPI 08 „Angriff gegen Abwehr“ und Aussagekraft** (08.11.2026): Carsten fragt, ob KPI 08 einen Mehrwert für die Prognose bietet. Auswertung Claude (6'182 Spiele 2021/22–2025/26, vier Ligen, beide Teams mit 10 Spielen; BTTS im Schnitt 55 %): Im Fünftel mit dem niedrigsten KPI-08-Wert trafen beide in 48 % der Spiele, im höchsten Fünftel in 63 %. Varianten (Trefferquote des einen gegen Kassierquote des anderen Teams, Heim-/Auswärtsspiele getrennt, Tore statt ja/nein) trennen nicht besser. Teams mit 10 von 10 Spielen mit Tor treffen im nächsten Spiel zu 84 % (bei 5 oder weniger von 10: 66 %); gegen einen Gegner, der höchstens in 5 von 10 Spielen kassiert, nur zu 73 %. **Entscheidung Carsten:** KPI 08 bleibt wie definiert (Stimmungsbild, keine Prognose). „Heim trifft / Gast trifft“ und die Stärke des Gegners werden in Etappe I mit der Ergebniskontrolle (Punkt 13) geprüft; Ergebnisse sind zugleich Stoff für spätere Blog-Beiträge.
@@ -543,3 +544,55 @@ Vergleich               = (Begegnungswert − Liga-Effizienz) / Liga-Effizienz �
 
 Freigabekriterien: Berechnung auf historischen Begegnungen aller vier Ligen · Prüfung von Vollständigkeit, Ausreissern, Nullwerten und Nennern · Vergleich mit einer einfachen Baseline und den bestehenden KPIs · Verständlichkeit und Fan-Relevanz · Dokumentation von Beispielen und Grenzen · separate Freigabe von Formel, Anzeige, Schwellen und Top-Anomalie-Eignung.
 
+---
+
+## 11. Ergebniskontrolle und Simulation (Etappe I.1, Entscheidungen Carsten 08.11.2026)
+
+Nur im internen Bereich „Simulation – Spielwiese“. Ändert keine Live-Werte und keine gültigen Schwellen.
+
+### 11.1 Wann ist eine Anomalie eingetroffen?
+
+Verglichen wird der **tatsächliche Wert im Spiel** mit der **Ligareferenz, die vor dem Spiel galt** (Abschnitt 1.1; nie mit dem Saisondurchschnitt, sonst flössen Zukunftsdaten ein). Positive Anomalie: eingetroffen, wenn der Wert **über** der Referenz liegt; negative: wenn er **darunter** liegt. Gleichstand zählt in keiner Richtung.
+
+| KPI | Wert im Spiel | Vergleich |
+|---|---|---|
+| 02 | Tore beider Teams | Ligareferenz Tore |
+| 03 | Tore beider Teams | feste Marke 2,5 (positiv: mindestens 3, negativ: höchstens 2) |
+| 04 | gelbe Karten beider Teams | Ligareferenz Karten |
+| 05 | Ecken beider Teams | Ligareferenz Ecken |
+| 06 / 07 | Tore der 1. bzw. 2. Halbzeit | Ligareferenz der Halbzeit |
+| 08 | beide treffen (100 %) oder nicht (0 %) | Ligareferenz BTTS-Quote, also: positiv = beide treffen, negativ = nicht beide |
+| 09 | Schüsse aufs Tor beider Teams | Ligareferenz Schüsse aufs Tor |
+
+Fehlt der Wert im Spiel oder ist er keine ganze Zahl, zählt das Spiel für diesen KPI nicht (Abschnitt 1). Hinweis: Weil die Werte ganze Zahlen sind, ist „über der Referenz“ unterschiedlich leicht zu erreichen (bei 3,07 Toren braucht es mindestens 4). Darum wird immer mit Spielen ohne Anomalie verglichen (11.2).
+
+### 11.2 Kennzahlen
+
+- **Grundlage:** alle Spiele der gewählten Saisons, je so berechnet, als wären sie noch nicht gespielt (Stichtag = Spieldatum, Spieltag = `Gameday`). Nicht verwendet: die erste Saison der Datenbank (ohne Vorsaison, d. h. 2020/21), vorläufige Werte (z. B. Aufsteiger) und nicht berechenbare Werte.
+- **Fälle:** Spiele mit Anomalie in dieser Richtung und bekanntem Ergebnis. Positiv und negativ werden getrennt ausgewertet; leicht und stark wahlweise gemeinsam oder getrennt.
+- **Trefferquote:** Anteil der Fälle, in denen die Anomalie eingetroffen ist (aus den aufsummierten Fällen, nicht als Durchschnitt von Saisonquoten).
+- **Ohne Anomalie:** dasselbe Ereignis in den Spielen ohne Anomalie (mit den eingestellten Schwellen).
+- **Mehrwert** (Hauptkennzahl): Trefferquote minus Quote ohne Anomalie, in Prozentpunkten.
+- **Schwankung:** ±1,96 · √(p · (100 − p) / n) Prozentpunkte (95 %).
+- Alle Zahlen mit zwei Nachkommastellen, kaufmännisch gerundet.
+
+### 11.3 Urteil
+
+Verglichen wird der Mehrwert nachher (eingestellte Schwellen) mit vorher (gültige Schwellen aus `schwellen.toml`):
+
+- **unverändert:** gleiche Schwellen;
+- **zu wenige Fälle:** vorher oder nachher weniger als 100 Fälle (Zeile grau, wenn nachher unter 100);
+- **besser / schlechter:** der Mehrwert verändert sich um mehr als die Schwankung nachher;
+- sonst **kein klarer Unterschied**.
+
+### 11.4 Saisons
+
+„Alle abgeschlossenen“ (2021/22–2025/26), „Einstellen“ (alle ausser den letzten zwei) und „Prüfen“ (die letzten zwei), damit eine Schwelle nicht nur auf denselben Daten gut aussieht. Die laufende Saison kann zugeschaltet werden und gilt als vorläufig.
+
+### 11.5 Änderungen an den Definitionen
+
+Werden Anomalien später neu definiert, wird das hier mit Datum festgehalten und im Bereich „Definitionen und Änderungen“ des Tabs angezeigt (`app/core/simulation.py`, `DEFINITION_CHANGES`).
+
+| Datum | Änderung |
+|---|---|
+| 08.11.2026 | Erste Fassung (Etappe I.1) |

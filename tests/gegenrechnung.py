@@ -221,3 +221,58 @@ def analyse(lg: League, season: str, matchday: int, stichtag: dt.date, home: str
                    liga=r2(avg(rpair, scale)))
         out[key] = res
     return out
+
+
+# --- Ergebniskontrolle der Simulation (Etappe I.1, Regelwerk 11), unabhängig von app/core/simulation.py ----------
+
+def sim_events(lg: League, game: Game) -> dict:
+    """Je KPI 02–09: (Abweichung, vorläufig, mehr, weniger) für ein Spiel, berechnet wie vor dem Spiel.
+    mehr/weniger: tatsächlicher Wert im Spiel über/unter der Ligareferenz (KPI 03: Marke 2,5); None = Wert fehlt."""
+    res = analyse(lg, game.season, game.gameday, game.date, game.home, game.away)
+    refs = {"kpi02": res["ref_tore"], "kpi04": res["ref_karten"]}
+    actual = {"kpi02": game.hg + game.ag, "kpi03": game.hg + game.ag,
+              "kpi04": None if game.hy is None or game.ay is None else game.hy + game.ay}
+    for key, (value, _) in STAT_VALUES.items():
+        refs[key] = res[key]["ref"]
+        actual[key] = value(game)
+    out = {}
+    for key in ("kpi02", "kpi03", "kpi04", "kpi05", "kpi06", "kpi07", "kpi08", "kpi09"):
+        scale = 100 if key == "kpi08" else 1
+        if key == "kpi03":
+            ref = OVER
+        else:
+            n, total = refs[key]
+            ref = Fraction(total * scale, n) if n else None
+        a = actual[key]
+        more = None if a is None or ref is None else a * scale > ref
+        less = None if a is None or ref is None else a * scale < ref
+        out[key] = (res[key]["abweichung"], res[key]["vorlaeufig"], more, less)
+    return out
+
+
+def sim_summary(events: list[dict], light: Decimal, strong: Decimal) -> dict:
+    """Je KPI: Anzahl leicht/stark und je Richtung (Fälle, Treffer, Spiele ohne Anomalie, davon Ereignis).
+    Nur Spiele ohne vorläufigen Wert; leicht und stark zusammen (Regelwerk 11.2)."""
+    out = {}
+    for key in ("kpi02", "kpi03", "kpi04", "kpi05", "kpi06", "kpi07", "kpi08", "kpi09"):
+        c = {"leicht": 0, "stark": 0, "positiv": [0, 0], "negativ": [0, 0], "ohne_positiv": [0, 0],
+             "ohne_negativ": [0, 0]}
+        for ev in events:
+            dev, provisional, more, less = ev[key]
+            if dev is None or provisional:
+                continue
+            size = abs(dev)
+            level = "keine" if size <= light else "leicht" if size <= strong else "stark"
+            if level != "keine":
+                c[level] += 1
+            for direction, happened, sign in (("positiv", more, dev > 0), ("negativ", less, dev < 0)):
+                if happened is None:
+                    continue
+                if level == "keine":
+                    c["ohne_" + direction][0] += 1
+                    c["ohne_" + direction][1] += int(happened)
+                elif sign:
+                    c[direction][0] += 1
+                    c[direction][1] += int(happened)
+        out[key] = c
+    return out

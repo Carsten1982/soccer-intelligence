@@ -5,12 +5,20 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
-## 08.11.2026 – H.2: Stabilität (Version 0.9.2, Paket bereit)
+## 08.11.2026 – Etappe I.1: Simulation – Spielwiese (Version 0.10, Paket bereit)
+
+- **Carsten** · Mini-Briefing „Saison-Kalibrator und Ergebniskontrolle“. **Claude** · kritische Prüfung mit Probelauf (Saisons 2021/22–2025/26): Trefferquote allein täuscht (z. B. KPI 06 positiv 38,5 % gegen 36,7 % ohne Anomalie), darum Mehrwert als Hauptkennzahl; globale Schwellen allein reichen nicht (KPI 05/09 nur 22–80 Fälle); erste Saison ohne Vorsaison ungeeignet.
+- **Carsten** · Entscheidungen: Mehrwert als Hauptzahl mit Info-Texten; eingetroffen = tatsächlicher Wert gegen die Ligareferenz vor dem Spiel (KPI 03: 2,5-Marke, KPI 08: beide treffen); Urteil besser/schlechter nur über der Schwankung, unter 100 Fällen grau; Saisons ohne 2020/21, Einstellen 2021/22–2023/24 / Prüfen 2024/25–2025/26; ein Tab mit Ligaauswahl; Aufsteiger/vorläufig raus; leicht und stark getrennt in der Häufigkeit, zwei Tabellen; Schwellen global und je KPI; Überschrift „Spielwiese“; Design **Variante B** (Einstellungen links).
+- **Claude** · Umsetzung: `app/core/simulation.py` (Fälle einmal je Datenbankstand, rund 30 s; neu einstufen in 0,2 s), `app/views/simulation.py`, Zwischenspeicher in `state.py`, Navigation, `simulation` als reservierte Adresse. Regelwerk v2.3 Abschnitt 11 (Punkt 13 erledigt), Briefing v4.8 Abschnitt 6.4.
+- **Claude** · Prüfung: 26 neue Tests (`tests/test_simulation.py`, Seitentest), lokal 336 bestanden. Unabhängige Gegenrechnung (`tests/gegenrechnung.py`, `sim_events`/`sim_summary`): „eingetroffen“ je Spiel für alle 306 Spiele der Bundesliga 2025/26 sowie alle Tabellenwerte (Anzahl leicht/stark, Fälle, Trefferquote, ohne Anomalie, Mehrwert) für alle vier Ligen 2025/26 bei vier Schwellenpaaren – automatisch bei jedem Einspielen. Einmaliger Vollvergleich 2021/22–2025/26 (7'230 Spiele, je Liga und alle Ligen, fünf Schwellenpaare): 2'000 Vergleichswerte, 0 Abweichungen. Bestehende KPIs, Schwellen und Seiten unverändert.
+- **Offen** · Einspielen (`ANLEITUNG_ETAPPE_I1.md`), Abnahme im Browser, Commit.
+
+## 08.11.2026 – H.2: Stabilität (Version 0.9.2, eingespielt)
 
 - **Carsten** · Zweite Code-Prüfung durch ChatGPT: 6 Stabilitätsbefunde S1–S6. **Claude** · alle 6 am Code nachvollzogen (S1–S4 selbst nachgestellt), keiner betrifft die KPI-Berechnung mit den echten Daten. **Carsten** · Freigabe zur Umsetzung.
 - **Claude** · S1: `ligen.toml`, `teams.toml`, `schwellen.toml` mit falscher Struktur (z. B. `liga = 1`, `standard = 35`) oder als Ordner → Meldung „Konfiguration ungültig“ statt Absturz (`config.table_list`). S2: Zahl in der Spalte `Date` (z. B. 45800) → Fehler „Ungültiges Datum“, statt still als 01.01.1970 gelesen zu werden. S3: id `inf`, `-inf`, NaN, Text → kein Absturz mehr beim Erstellen der Meldungen (`rows.valid_id`). S4: Datenhinweis mit id 1,5 gilt für kein Spiel (vorher für Spiel 1). S5: Zwischenspeicher erkennt eine ersetzte Datei auch bei gleicher Grösse und Änderungszeit (Schlüssel zusätzlich mit ctime und Dateinummer, `files.file_key`; betrifft Datenbank, aufbereitete Ligen, Häufigkeit, Spieltags-KPIs, Schwellen, Spielplan). S6: Datenbank und Spielplan werden nur einmal gelesen; Prüfsumme und Inhalt stammen sicher vom selben Stand, eine verschwundene Datei ergibt „Datei nicht lesbar“ (`files.read_file`). Zudem: `tests/test_ui.py` lässt sich ohne Streamlit laden.
 - **Claude** · Prüfung: 32 neue Tests (`tests/test_h2.py`), lokal 311 bestanden; alle 8'808 Begegnungen, Häufigkeit und Prüfmeldungen vor/nach identisch. Formeln, Schwellen, Testfälle und Darstellung unverändert. `02_Datenbasis.md`: Prüfregeln (Zahl statt Datum, Datenhinweis-id).
-- **Offen** · Einspielen (`ANLEITUNG_ETAPPE_H2.md`), Commit.
+- **Carsten** · H.2 eingespielt: Backup `backup/2026-11-08_1122_vor_H2` (Git `b5a7ea8`), 319 Tests bestanden, 1 übersprungen; `/` 200, `/dashboard/` 401; Git `291eeac`.
 
 ## 08.11.2026 – H.1: Aufräumen und Tempo (Version 0.9.1, eingespielt)
 

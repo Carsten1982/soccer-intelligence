@@ -1,7 +1,7 @@
 """Soccer Intelligence – Einstiegspunkt und Navigation (Dashboard-Briefing, Kapitel 2 und 3).
 
 Bereiche (Tabs oben):
-  Top Anomalien (Startbereich)  ·  je aktive Liga ein Bereich  ·  Datenqualität (ganz rechts)
+  Top Anomalien (Startbereich)  ·  je aktive Liga ein Bereich  ·  Datenqualität  ·  Simulation (intern, ganz rechts)
 
 Welche Ligen aktiv sind, steht in config/ligen.toml, nicht im Programmcode. Ist eine der Konfigurationsdateien
 (ligen.toml, teams.toml, schwellen.toml) ungültig, zeigt die App nur eine klare Meldung.
@@ -12,7 +12,7 @@ import streamlit as st
 from core.config import ConfigError
 from state import get_active_leagues, get_teams, get_thresholds
 from views import components as ui
-from views import datenqualitaet, liga, top_anomalien
+from views import datenqualitaet, liga, simulation, top_anomalien
 from views.registry import PAGES
 
 st.set_page_config(page_title="Soccer Intelligence", page_icon="⚽", layout="wide")
@@ -41,6 +41,7 @@ league_pages = [st.Page(_league_page(lg), title=lg.name, url_path=lg.url) for lg
 for lg, page in zip(leagues, league_pages):
     PAGES[f"liga_{lg.url}"] = page
 PAGES["datenqualitaet"] = st.Page(datenqualitaet.render, title="Datenqualität", url_path="datenqualitaet")
+PAGES["simulation"] = st.Page(simulation.render, title="Simulation", url_path="simulation")   # intern, Etappe I.1
 
-nav = st.navigation([PAGES["top"], *league_pages, PAGES["datenqualitaet"]], position="top")
+nav = st.navigation([PAGES["top"], *league_pages, PAGES["datenqualitaet"], PAGES["simulation"]], position="top")
 nav.run()

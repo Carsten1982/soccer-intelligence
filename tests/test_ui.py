@@ -94,6 +94,22 @@ def test_league_pages(script):
     assert "KPI 09" in text and "Schüsse aufs Tor" in text and "<details" in text    # KPI 05–09 und Details
 
 
+def _simulation():
+    from views import simulation
+    simulation.render()
+
+
+@needs_files
+def test_simulation_page():
+    """Etappe I.1: Spielwiese mit zwei Tabellen, Hinweis „wirkt nicht auf das Dashboard“."""
+    at = AppTest.from_function(_simulation, default_timeout=TIMEOUT).run()
+    assert not at.exception, at.exception
+    text = _texts(at)
+    assert "Simulation – Spielwiese" in text and "wirken nicht auf das Dashboard" in text
+    assert "Häufigkeit der Anomalien" in text and "Ergebnisqualität" in text and "Mehrwert" in text
+    assert len(at.number_input) == 2 + 2 * 8                       # alle KPIs + je KPI leicht/stark
+
+
 @needs_files
 def test_datenqualitaet_page():
     at = AppTest.from_function(_datenqualitaet, default_timeout=TIMEOUT).run()

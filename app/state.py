@@ -10,6 +10,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
+import pandas as pd
 import streamlit as st
 
 from core import settings
@@ -22,6 +23,7 @@ from core.kpis import MatchKpis, prepare_league
 from core.loader import DatabaseLoad, load_database
 from core.matchday import matchday_games
 from core.results import matchday_kpis
+from core.simulation import build_cases
 from core.thresholds import ThresholdConfig, load_thresholds
 
 TZ = ZoneInfo(settings.TIMEZONE)
@@ -69,6 +71,22 @@ def get_frequency(league: League):
     path = settings.DATABASE_FILE
     return _cached_frequency(str(path), _file_key(path), league.name,
                              _file_key(settings.THRESHOLDS_FILE), _file_key(settings.LEAGUES_FILE))
+
+
+# --- Simulation (Etappe I.1) ----------------------------------------------------------------
+
+@st.cache_data(show_spinner="Simulation wird vorbereitet: alle Spiele werden berechnet (einmal je Datenbankstand, "
+                            "rund 30 Sekunden) …", max_entries=2)
+def _cached_simulation(path: str, key: tuple, leagues_key: tuple) -> pd.DataFrame:  # noqa: ARG001
+    prepared = _cached_prepared(path, key)
+    frames = [build_cases(prepared[lg.name], lg) for lg in get_active_leagues() if lg.name in prepared]
+    return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+
+
+def get_simulation_cases() -> pd.DataFrame:
+    """Alle Fälle der Simulation (je Spiel und KPI), unabhängig von den Schwellen. Siehe core/simulation.py."""
+    path = settings.DATABASE_FILE
+    return _cached_simulation(str(path), _file_key(path), _file_key(settings.LEAGUES_FILE))
 
 
 # --- KPI-Ergebnisse eines Spieltags (seit H.1) ------------------------------------------

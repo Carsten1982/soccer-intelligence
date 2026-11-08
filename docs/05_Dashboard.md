@@ -1,6 +1,6 @@
 # Soccer Intelligence – Dashboard-Briefing
 
-**Version 4.7** · Stand 08.11.2026 (H.1: Anteile kaufmännisch gerundet, Architektur-Hinweis)
+**Version 4.8** · Stand 08.11.2026 (Etappe I.1: Bereich Simulation, 6.4)
 
 > **Massgebliche Quelle seit 31.10.2026.** Änderungen werden nur noch in dieser Datei gemacht, mit Datum in der Änderungshistorie bzw. im `CHANGELOG.md`.
 > Das Word-Dokument *Dashboard-Briefing v4.2* liegt nur noch als Archiv im Ordner `word/` und wird nicht mehr gepflegt. Änderungen seit 31.10.2026 sind im Text als „Änderung“ mit Datum gekennzeichnet.
@@ -339,11 +339,21 @@ Für jede Liga und jeden KPI (ausser KPI01) wird angezeigt, wie oft keine, leich
 
 **Ergänzung 08.11.2026 (H.1):** Die Anteile „leicht“ und „stark“ werden wie alle Werte im Dashboard mit zwei Nachkommastellen **kaufmännisch** gerundet (0,125 % → 0,13 %). Die Berechnung für alle vier Ligen dauert beim ersten Aufruf je Datenbankstand rund 6 Sekunden (vorher rund 30).
 
-### 6.4 Simulation (geplant, Etappe I)
+### 6.4 Simulation – Spielwiese (Etappe I.1, freigegeben 08.11.2026, Design Variante B)
 
-Ein zusätzlicher Bereich „Simulation“ (nur intern) rechnet mit historischen Spielen: Simulations-KPIs 10–13 (KPI-Regelwerk, Abschnitt 10), Ergebniskontrolle (wie oft eine Anomalie im Spiel eingetroffen ist) und alternative Schwellen je Liga und KPI. Die Simulation verändert keine Live-Werte; übernommene Schwellen werden bewusst in `schwellen.toml` eingetragen. Spezifikation folgt vor Etappe I.
+Siebter Bereich (ganz rechts, nur intern): `/dashboard/simulation`. Frage: Wie gut funktionieren die Anomalien und ihre Schwellen? Rechenregeln: KPI-Regelwerk, Abschnitt 11.
 
-**Vorgehen (Carsten, 08.11.2026):** Nach Etappe H wird zuerst dieser interne Tab zur **Analyse der Schwellen je KPI und Liga** gebaut, danach folgt das Feintuning je KPI und Liga. Im selben Schritt wird die **Gewichtung der Top Anomalien** erarbeitet (5.1, Punkt 3).
+- **Überschrift** „Simulation – Spielwiese (intern)“ und ein gelber Hinweis: Nur zum Ausprobieren, hier veränderte Schwellen wirken nicht auf das Dashboard; übernommen wird bewusst über `schwellen.toml`.
+- **Links Einstellungen** (bleiben beim Scrollen stehen): Liga (Alle Ligen oder eine Liga), Saisons (alle abgeschlossenen / Einstellen / Prüfen), laufende Saison zuschalten (vorläufig), Schwellen leicht/stark für alle KPIs, darunter je KPI eigene Werte (leer = Wert für alle), Knopf „Auf gültige Schwellen zurücksetzen“, Stufe für die Ergebnisqualität (leicht + stark / nur leicht / nur stark).
+- **Rechts zwei Tabellen**, darunter je ein bis zwei Sätze, wofür sie da sind:
+  1. **Häufigkeit der Anomalien:** je KPI 02–09 Schwellen vorher/nachher, Anzahl leicht und stark vorher/nachher, gesamt mit Anteil der Spiele, Veränderung in %.
+  2. **Ergebnisqualität:** je KPI und Richtung (positiv/negativ) Fälle, eingetroffen, ohne Anomalie, Mehrwert (mit Schwankung), Urteil. Unter 100 Fällen grau.
+- **Info-Symbole ⓘ** mit 3–5 einfachen Sätzen an Fällen, eingetroffen, ohne Anomalie, Mehrwert, positiv, negativ, Urteil und Schwellen.
+- **Aufklappbar „Definitionen und Änderungen“:** wann eine Anomalie als eingetroffen gilt, Grundlage, Änderungen mit Datum.
+- KPI 01 hat keine Anomalie und erscheint nicht. Keine Einzelspielansicht, keine Diagramme, keine Übernahme in die gültigen Schwellen.
+- Die KPIs aller Spiele werden einmal je Datenbankstand berechnet (rund 30 Sekunden beim ersten Aufruf), jede Änderung der Schwellen danach sofort.
+
+Später (eigene Schritte): Gewichtung der Top Anomalien (Regelwerk, Punkt 17), Simulations-KPIs 10–13, Liga-Vergleich nebeneinander.
 
 ## 7. Verbindliche KPI-Spaltenstruktur
 
