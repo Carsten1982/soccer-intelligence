@@ -5,10 +5,16 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
-## 09.11.2026 – Etappe I.1, Nachtrag (Version 0.10.1, Paket bereit)
+## 09.11.2026 – Dokumentation zusammengeführt (nur Doku)
+
+- **Carsten** · Auftrag: Anleitungen und Dokumentation zusammenführen, weil vieles mehrfach beschrieben ist.
+- **Claude** · Projektstand nur noch in `docs/01_Technisches_Setup.md`, Abschnitt 0 (Kurzstand, nächste Schritte, Versionstabelle mit Git-Nummern und Tests). Ein einheitlicher Release-Ablauf in `01`, Abschnitt 6.1; jedes Paket heisst künftig `release.zip` und bringt eine neue `RELEASE.md` mit (ersetzt die 12 Dateien `ANLEITUNG_*.md`, im Git-Verlauf erhalten). `CLAUDE.md` v1.8 gestrafft (Einstieg, Quellen, Arbeitsweise, Regeln). `01` gestrafft: Kopie von `docker-compose.yml` durch Kurzbeschreibung ersetzt, veraltete Abläufe entfernt, Entscheidungen nach Datum sortiert, erledigte offene Punkte entfernt.
+
+## 09.11.2026 – Etappe I.1, Nachtrag (Version 0.10.1, eingespielt)
 
 - **Carsten** · Rückmeldungen nach dem ersten Ausprobieren: Info-Felder ohne Text, KPI-Spalte zu breit, Schwellen fehlen in „Ergebnisqualität“, Saisonauswahl, Stufe nach oben, linker Bereich schmaler und dunkler.
 - **Claude** · Info-Felder: eigenes Fenster beim Darüberfahren statt Browser-Tooltip (der in Streamlit nicht erschien; Fehler von Claude). KPI-Spalte zweizeilig, neue Spalte „Schwellen“ in der Ergebnisqualität (eigene Werte blau, darunter die gültigen), Urteil schmaler. Saisons: alle abgeschlossenen, letzte 4/3/2, letzte Saison, aktuelle Saison (ersetzt Einstellen/Prüfen und das Kästchen „laufende Saison“; Regelwerk 11.4). Stufe über „Je KPI“ mit ⓘ. Einstellungen 10 % schmaler und grau hinterlegt. Rechnung unverändert, Gegenrechnung läuft weiter; lokal 336 Tests bestanden.
+- **Carsten** · Nachtrag eingespielt: Backup `backup/2026-11-08_1751_vor_I1b` (Git `dbd90c5`), 345 Tests bestanden, 1 übersprungen; `/` 200, `/dashboard/` 401; Git `9684edb`.
 
 ## 08.11.2026 – Etappe I.1: Simulation – Spielwiese (Version 0.10, eingespielt)
 
