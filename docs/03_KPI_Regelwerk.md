@@ -587,7 +587,7 @@ Verglichen wird der Mehrwert nachher (eingestellte Schwellen) mit vorher (gülti
 
 ### 11.4 Saisons
 
-„Alle abgeschlossenen“ (2021/22–2025/26), „Einstellen“ (alle ausser den letzten zwei) und „Prüfen“ (die letzten zwei), damit eine Schwelle nicht nur auf denselben Daten gut aussieht. Die laufende Saison kann zugeschaltet werden und gilt als vorläufig.
+Auswahl (Wunsch Carsten 09.11.2026): alle abgeschlossenen Saisons (2021/22–2025/26), die letzten 4, 3 oder 2 Saisons, die letzte Saison und die aktuelle Saison (2026/27, vorläufig, noch nicht abgeschlossen). Ob eine Schwelle robust ist, zeigt der Vergleich „alle abgeschlossenen“ gegen „letzte 2 Saisons“: Hält der Mehrwert in beiden, ist die Schwelle nicht nur zufällig gut.
 
 ### 11.5 Änderungen an den Definitionen
 

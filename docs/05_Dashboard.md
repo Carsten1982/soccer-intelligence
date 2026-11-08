@@ -344,11 +344,12 @@ Für jede Liga und jeden KPI (ausser KPI01) wird angezeigt, wie oft keine, leich
 Siebter Bereich (ganz rechts, nur intern): `/dashboard/simulation`. Frage: Wie gut funktionieren die Anomalien und ihre Schwellen? Rechenregeln: KPI-Regelwerk, Abschnitt 11.
 
 - **Überschrift** „Simulation – Spielwiese (intern)“ und ein gelber Hinweis: Nur zum Ausprobieren, hier veränderte Schwellen wirken nicht auf das Dashboard; übernommen wird bewusst über `schwellen.toml`.
-- **Links Einstellungen** (bleiben beim Scrollen stehen): Liga (Alle Ligen oder eine Liga), Saisons (alle abgeschlossenen / Einstellen / Prüfen), laufende Saison zuschalten (vorläufig), Schwellen leicht/stark für alle KPIs, darunter je KPI eigene Werte (leer = Wert für alle), Knopf „Auf gültige Schwellen zurücksetzen“, Stufe für die Ergebnisqualität (leicht + stark / nur leicht / nur stark).
+- **Links Einstellungen** (bleiben beim Scrollen stehen, grau hinterlegt): Liga (Alle Ligen oder eine Liga), Saisons (alle abgeschlossenen / letzte 4, 3, 2 / letzte Saison / aktuelle Saison, vorläufig), Schwellen leicht/stark für alle KPIs, Stufe für die Ergebnisqualität (leicht + stark / nur leicht / nur stark, mit ⓘ), darunter je KPI eigene Werte (leer = Wert für alle), Knopf „Auf gültige Schwellen zurücksetzen“.
 - **Rechts zwei Tabellen**, darunter je ein bis zwei Sätze, wofür sie da sind:
   1. **Häufigkeit der Anomalien:** je KPI 02–09 Schwellen vorher/nachher, Anzahl leicht und stark vorher/nachher, gesamt mit Anteil der Spiele, Veränderung in %.
-  2. **Ergebnisqualität:** je KPI und Richtung (positiv/negativ) Fälle, eingetroffen, ohne Anomalie, Mehrwert (mit Schwankung), Urteil. Unter 100 Fällen grau.
-- **Info-Symbole ⓘ** mit 3–5 einfachen Sätzen an Fällen, eingetroffen, ohne Anomalie, Mehrwert, positiv, negativ, Urteil und Schwellen.
+  2. **Ergebnisqualität:** je KPI die eingestellten Schwellen (eigene blau, darunter die gültigen) und je Richtung (positiv/negativ) Fälle, eingetroffen, ohne Anomalie, Mehrwert (mit Schwankung), Urteil. Unter 100 Fällen grau.
+  - KPI-Spalte zweizeilig und schmal (Nummer, darunter Name).
+- **Info-Symbole ⓘ** mit 3–5 einfachen Sätzen an Fällen, eingetroffen, ohne Anomalie, Mehrwert, positiv, negativ, Urteil, Schwellen und Stufe. Die Erklärung erscheint beim Darüberfahren in einem eigenen Fenster.
 - **Aufklappbar „Definitionen und Änderungen“:** wann eine Anomalie als eingetroffen gilt, Grundlage, Änderungen mit Datum.
 - KPI 01 hat keine Anomalie und erscheint nicht. Keine Einzelspielansicht, keine Diagramme, keine Übernahme in die gültigen Schwellen.
 - Die KPIs aller Spiele werden einmal je Datenbankstand berechnet (rund 30 Sekunden beim ersten Aufruf), jede Änderung der Schwellen danach sofort.

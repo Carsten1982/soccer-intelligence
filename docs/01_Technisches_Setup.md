@@ -1,6 +1,6 @@
 # Soccer Intelligence – Technisches Setup
 
-**Stand:** 08.11.2026 · **Status:** Etappen A–F und H in Betrieb (Version 0.9, vier Ligen, KPI 01–09; Etappe H eingespielt 08.11.2026, Git `51e595b`). H.1 (Aufräumen und Tempo, Version 0.9.1) eingespielt 08.11.2026, Git `b5a7ea8`. H.2 (Stabilität, Version 0.9.2) eingespielt 08.11.2026, Git `291eeac`. Etappe I.1 (Simulation, Version 0.10) als Paket bereit. Datenlieferung (Etappe G) in Klärung.
+**Stand:** 08.11.2026 · **Status:** Etappen A–F und H in Betrieb (Version 0.9, vier Ligen, KPI 01–09; Etappe H eingespielt 08.11.2026, Git `51e595b`). H.1 (Aufräumen und Tempo, Version 0.9.1) eingespielt 08.11.2026, Git `b5a7ea8`. H.2 (Stabilität, Version 0.9.2) eingespielt 08.11.2026, Git `291eeac`. Etappe I.1 (Simulation, Version 0.10) eingespielt 08.11.2026, Git `dbd90c5`. Datenlieferung (Etappe G) in Klärung.
 **Verantwortlich:** Carsten Thiele · **Mitwirkende:** ChatGPT (Server-Setup, Review), Claude (Daten, Architektur, Code)
 
 ---
@@ -399,7 +399,7 @@ CHANGELOG.md              Änderungsprotokoll
 | G – Datenlieferung | regelmässiger Import mit Prüfschranke (Footiqo, Download-Link), Konzept `06_Datenlieferung.md` | Antworten von Footiqo, Testkauf, Freigabe | 🔎 in Klärung |
 | H – KPI 05–09 | Frontend-KPIs 05–09 gemäss Regelwerk 9, zwei Nachkommastellen für alle KPIs, Schwellen-Konfiguration (`schwellen.toml`), kompakte Tabelle mit Aufklappen, Top Anomalien über KPI 02–09, Anzeige der Schwellen in Datenqualität, Tests aus den Testfällen + Gegenrechnung | Testfälle bestätigt ✅, Design abgenommen ✅, Backup ✅ (08.11.2026) | ✅ eingespielt 08.11.2026 (Git `51e595b`, 260 Tests bestanden) |
 | H.1 – Aufräumen und Tempo | Funde der Code-Prüfung: 3 mögliche Abstürze behoben, KPI-Berechnung etwa 4× schneller (Häufigkeit 30 → 6 s), Zwischenspeicher für die KPIs eines Spieltags, Kommazahlen nie abschneiden, alte Tabelle entfernt; Ergebnisse unverändert | Etappe H ✅, Freigabe Carsten 08.11.2026 ✅ | ✅ eingespielt 08.11.2026 (Git `b5a7ea8`, 287 Tests bestanden) |
-| I.1 – Simulation | Bereich „Simulation – Spielwiese“ (intern): Häufigkeit und Ergebnisqualität je KPI mit eigenen Schwellen, Mehrwert gegenüber Spielen ohne Anomalie (Regelwerk 11, Briefing 6.4) | Freigabe und Design Variante B 08.11.2026 ✅ | 📦 Paket bereit (Version 0.10, `ANLEITUNG_ETAPPE_I1.md`) |
+| I.1 – Simulation | Bereich „Simulation – Spielwiese“ (intern): Häufigkeit und Ergebnisqualität je KPI mit eigenen Schwellen, Mehrwert gegenüber Spielen ohne Anomalie (Regelwerk 11, Briefing 6.4) | Freigabe und Design Variante B 08.11.2026 ✅ | ✅ eingespielt 08.11.2026 (Git `dbd90c5`, 345 Tests bestanden) |
 | I – weitere Schritte | Feintuning der Schwellen je KPI und Liga, Gewichtung der Top Anomalien (Punkt 17), KPI 10–13 | Etappe I.1 | ⏳ geplant |
 | Öffentliche Website | eigener Architekturvorschlag (Mobile First), eigener Ordner und eigenes Repository empfohlen | Etappe F, Datenquelle geklärt (G) | später |
 

@@ -106,17 +106,24 @@ def build_cases(prepared: pd.DataFrame, league: League) -> pd.DataFrame:
 
 # --- 2. Neu einstufen (schnell) ------------------------------------------------------------------
 
+def _short(season: str) -> str:
+    return f"{season[:4]}/{season[-2:]}"
+
+
 def season_choices(cases: pd.DataFrame) -> dict[str, list[str]]:
-    """Auswahl der Saisons (Entscheidung 08.11.2026): alle abgeschlossenen; „Einstellen“ = alle ausser den letzten
-    zwei, „Prüfen“ = die letzten zwei. So zeigt sich, ob eine Schwelle auch in neueren Saisons hält."""
+    """Auswahl der Saisons (Wunsch Carsten 09.11.2026): alle abgeschlossenen, die letzten 4, 3, 2 Saisons,
+    die letzte Saison und die aktuelle (laufende) Saison. Die aktuelle Saison gilt als vorläufig."""
     done = sorted(cases.loc[cases["complete"], "season"].unique())
-    short = [f"{s[:4]}/{s[-2:]}" for s in done]
-    if not done:
-        return {}
-    choices = {f"Alle abgeschlossenen ({short[0]}–{short[-1]})": done}
-    if len(done) >= 3:
-        choices[f"Einstellen ({short[0]}–{short[-3]})"] = done[:-2]
-        choices[f"Prüfen ({short[-2]}–{short[-1]})"] = done[-2:]
+    running = running_seasons(cases)
+    choices: dict[str, list[str]] = {}
+    if done:
+        choices[f"Alle abgeschlossenen ({_short(done[0])}–{_short(done[-1])})"] = done
+        for n in (4, 3, 2):
+            if len(done) > n:
+                choices[f"Letzte {n} Saisons ({_short(done[-n])}–{_short(done[-1])})"] = done[-n:]
+        choices[f"Letzte Saison ({_short(done[-1])})"] = done[-1:]
+    if running:
+        choices[f"Aktuelle Saison ({_short(running[-1])}, vorläufig)"] = running[-1:]
     return choices
 
 

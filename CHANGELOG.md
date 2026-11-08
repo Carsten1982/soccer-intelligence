@@ -5,13 +5,18 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
-## 08.11.2026 – Etappe I.1: Simulation – Spielwiese (Version 0.10, Paket bereit)
+## 09.11.2026 – Etappe I.1, Nachtrag (Version 0.10.1, Paket bereit)
+
+- **Carsten** · Rückmeldungen nach dem ersten Ausprobieren: Info-Felder ohne Text, KPI-Spalte zu breit, Schwellen fehlen in „Ergebnisqualität“, Saisonauswahl, Stufe nach oben, linker Bereich schmaler und dunkler.
+- **Claude** · Info-Felder: eigenes Fenster beim Darüberfahren statt Browser-Tooltip (der in Streamlit nicht erschien; Fehler von Claude). KPI-Spalte zweizeilig, neue Spalte „Schwellen“ in der Ergebnisqualität (eigene Werte blau, darunter die gültigen), Urteil schmaler. Saisons: alle abgeschlossenen, letzte 4/3/2, letzte Saison, aktuelle Saison (ersetzt Einstellen/Prüfen und das Kästchen „laufende Saison“; Regelwerk 11.4). Stufe über „Je KPI“ mit ⓘ. Einstellungen 10 % schmaler und grau hinterlegt. Rechnung unverändert, Gegenrechnung läuft weiter; lokal 336 Tests bestanden.
+
+## 08.11.2026 – Etappe I.1: Simulation – Spielwiese (Version 0.10, eingespielt)
 
 - **Carsten** · Mini-Briefing „Saison-Kalibrator und Ergebniskontrolle“. **Claude** · kritische Prüfung mit Probelauf (Saisons 2021/22–2025/26): Trefferquote allein täuscht (z. B. KPI 06 positiv 38,5 % gegen 36,7 % ohne Anomalie), darum Mehrwert als Hauptkennzahl; globale Schwellen allein reichen nicht (KPI 05/09 nur 22–80 Fälle); erste Saison ohne Vorsaison ungeeignet.
 - **Carsten** · Entscheidungen: Mehrwert als Hauptzahl mit Info-Texten; eingetroffen = tatsächlicher Wert gegen die Ligareferenz vor dem Spiel (KPI 03: 2,5-Marke, KPI 08: beide treffen); Urteil besser/schlechter nur über der Schwankung, unter 100 Fällen grau; Saisons ohne 2020/21, Einstellen 2021/22–2023/24 / Prüfen 2024/25–2025/26; ein Tab mit Ligaauswahl; Aufsteiger/vorläufig raus; leicht und stark getrennt in der Häufigkeit, zwei Tabellen; Schwellen global und je KPI; Überschrift „Spielwiese“; Design **Variante B** (Einstellungen links).
 - **Claude** · Umsetzung: `app/core/simulation.py` (Fälle einmal je Datenbankstand, rund 30 s; neu einstufen in 0,2 s), `app/views/simulation.py`, Zwischenspeicher in `state.py`, Navigation, `simulation` als reservierte Adresse. Regelwerk v2.3 Abschnitt 11 (Punkt 13 erledigt), Briefing v4.8 Abschnitt 6.4.
 - **Claude** · Prüfung: 26 neue Tests (`tests/test_simulation.py`, Seitentest), lokal 336 bestanden. Unabhängige Gegenrechnung (`tests/gegenrechnung.py`, `sim_events`/`sim_summary`): „eingetroffen“ je Spiel für alle 306 Spiele der Bundesliga 2025/26 sowie alle Tabellenwerte (Anzahl leicht/stark, Fälle, Trefferquote, ohne Anomalie, Mehrwert) für alle vier Ligen 2025/26 bei vier Schwellenpaaren – automatisch bei jedem Einspielen. Einmaliger Vollvergleich 2021/22–2025/26 (7'230 Spiele, je Liga und alle Ligen, fünf Schwellenpaare): 2'000 Vergleichswerte, 0 Abweichungen. Bestehende KPIs, Schwellen und Seiten unverändert.
-- **Offen** · Einspielen (`ANLEITUNG_ETAPPE_I1.md`), Abnahme im Browser, Commit.
+- **Carsten** · Etappe I.1 eingespielt: Backup `backup/2026-11-08_1626_vor_I1` (Git `291eeac`), 345 Tests bestanden, 1 übersprungen; `/` 200, `/dashboard/` 401; Git `dbd90c5`.
 
 ## 08.11.2026 – H.2: Stabilität (Version 0.9.2, eingespielt)
 

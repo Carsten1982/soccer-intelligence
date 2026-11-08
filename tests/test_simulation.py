@@ -191,9 +191,12 @@ def test_season_choices():
     cases = pd.DataFrame({"season": ["2021/2022", "2022/2023", "2023/2024", "2024/2025", "2025/2026", "2026/2027"],
                           "complete": [True] * 5 + [False]})
     choices = season_choices(cases)
-    assert list(choices) == ["Alle abgeschlossenen (2021/22–2025/26)", "Einstellen (2021/22–2023/24)",
-                             "Prüfen (2024/25–2025/26)"]
-    assert choices["Prüfen (2024/25–2025/26)"] == ["2024/2025", "2025/2026"]
+    assert list(choices) == ["Alle abgeschlossenen (2021/22–2025/26)", "Letzte 4 Saisons (2022/23–2025/26)",
+                             "Letzte 3 Saisons (2023/24–2025/26)", "Letzte 2 Saisons (2024/25–2025/26)",
+                             "Letzte Saison (2025/26)", "Aktuelle Saison (2026/27, vorläufig)"]
+    assert choices["Letzte 2 Saisons (2024/25–2025/26)"] == ["2024/2025", "2025/2026"]
+    assert choices["Aktuelle Saison (2026/27, vorläufig)"] == ["2026/2027"]
+    assert len(choices["Alle abgeschlossenen (2021/22–2025/26)"]) == 5
     assert running_seasons(cases) == ["2026/2027"]
 
 
