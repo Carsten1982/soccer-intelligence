@@ -3,7 +3,9 @@
 import numpy as np
 import pandas as pd
 import pytest
-from conftest import KNOWN_DB_SHA, REAL_DATABASE, REFERENCE_DATABASE, notes_for, write_workbook
+from conftest import (
+    KNOWN_DB_SHA, REAL_DATABASE, REFERENCE_DATABASE, break_xml, make_match, notes_for, write_workbook,
+)
 
 from core import schema
 from core.issues import FEHLER, HINWEIS, WARNUNG
@@ -60,6 +62,12 @@ def test_corrupt_or_incomplete_file(tmp_path):
     assert db.has_errors and "Datei nicht lesbar" in checks(db, FEHLER)
 
 
+def test_broken_xml_inside_file(tmp_path, valid_sheets):
+    """Gültiges ZIP, aber kaputtes XML: klare Meldung statt Absturz (H.1, Punkt R2)."""
+    db = load_database(break_xml(write_workbook(tmp_path / "db.xlsx", valid_sheets)))
+    assert db.has_errors and "Datei nicht lesbar" in checks(db, FEHLER)
+
+
 def test_missing_required_sheet(tmp_path, valid_sheets):
     del valid_sheets["Premier League"]
     db = load_database(write_workbook(tmp_path / "db.xlsx", valid_sheets))
@@ -100,6 +108,41 @@ def test_text_instead_of_number(tmp_path, valid_sheets):
     df.loc[0, "Home Corners Full Time"] = "fünf"
     db = load_database(write_workbook(tmp_path / "db.xlsx", valid_sheets))
     assert "Keine Zahl" in checks(db, FEHLER)
+
+
+@pytest.mark.parametrize("col", ["FT Home Goals", "Gameday", "id"])
+def test_decimal_in_goals_gameday_id_is_error(tmp_path, valid_sheets, col):
+    """Kommazahl bei Toren, Spieltag oder id: Fehler, nie abschneiden (H.1, Punkt R4)."""
+    df = valid_sheets["Bundesliga"]
+    df[col] = df[col].astype(float)
+    df.loc[0, col] = 1.5
+    db = load_database(write_workbook(tmp_path / "db.xlsx", valid_sheets))
+    assert "Keine ganze Zahl" in checks(db, FEHLER)
+    assert "Bundesliga" not in db.leagues
+
+
+def test_decimal_in_count_stat_is_warning_and_missing(tmp_path, valid_sheets):
+    """Kommazahl bei Ecken/Karten/Schüssen: Warnung, der Wert gilt als fehlend (nie abgeschnitten, nie 0)."""
+    df = valid_sheets["Bundesliga"]
+    df["Home Corners Full Time"] = df["Home Corners Full Time"].astype(float)
+    df.loc[0, "Home Corners Full Time"] = 4.5
+    db = load_database(write_workbook(tmp_path / "db.xlsx", valid_sheets))
+    assert not db.has_errors
+    msgs = [i.message for i in db.issues if i.level == WARNUNG and i.check == "Keine ganze Zahl"]
+    assert len(msgs) == 1 and "Home Corners Full Time" in msgs[0] and "4.5" in msgs[0]
+    bl = db.leagues["Bundesliga"].set_index("id")
+    assert pd.isna(bl.loc[1, "Home Corners Full Time"]) and bl.loc[2, "Home Corners Full Time"] == 5
+
+
+def test_decimal_possession_is_allowed(tmp_path, valid_sheets):
+    """Ballbesitz in Prozent darf Kommastellen haben."""
+    df = valid_sheets["Bundesliga"]
+    for side, value in (("Home", 55.5), ("Away", 44.5)):
+        df[f"{side} Ball Possession Full Time"] = df[f"{side} Ball Possession Full Time"].astype(float)
+        df.loc[0, f"{side} Ball Possession Full Time"] = value
+    db = load_database(write_workbook(tmp_path / "db.xlsx", valid_sheets))
+    assert "Keine ganze Zahl" not in checks(db, WARNUNG) + checks(db, FEHLER)
+    assert db.leagues["Bundesliga"].iloc[0]["Home Ball Possession Full Time"] == 55.5
 
 
 def test_required_field_empty(tmp_path, valid_sheets):
@@ -182,6 +225,29 @@ def test_documented_missing_stats_are_hint(tmp_path, valid_sheets):
     db = load_database(path)
     assert "Statistik fehlt" in checks(db, HINWEIS)
     assert "Statistik fehlt" not in checks(db, WARNUNG)
+
+
+def test_notes_without_liga_column_do_not_crash(tmp_path, valid_sheets):
+    """Blatt Datenhinweise ohne Spalte Liga: Warnung zur Spaltenstruktur, kein Absturz (H.1, Punkt R1)."""
+    notes = notes_for("Bundesliga", 1).drop(columns=["Liga"])
+    db = load_database(write_workbook(tmp_path / "db.xlsx", _blank_stats(valid_sheets), notes))
+    assert ("Datenhinweise", "Spaltenstruktur") in {(i.sheet, i.check) for i in db.issues if i.level == WARNUNG}
+    assert "Statistik fehlt" in checks(db, WARNUNG)          # nichts gilt als dokumentiert
+
+
+def test_missing_stats_messages_are_limited(tmp_path, valid_sheets):
+    """Viele Spiele ohne Statistik: je Stufe höchstens 50 Einzelmeldungen plus eine Sammelzeile (H.1, Punkt R8)."""
+    games = [make_match(i, f"T{i}", f"U{i}", "2024-08-24") for i in range(1, 62)]   # 61 Spiele
+    df = pd.DataFrame(games, columns=list(schema.EXPECTED_COLUMNS))
+    for c in schema.STAT_COLUMNS:
+        df[c] = np.nan
+    valid_sheets["Bundesliga"] = df
+    notes = pd.concat([notes_for("Bundesliga", i) for i in (1, 2, 3)], ignore_index=True)   # 3 dokumentiert
+    db = load_database(write_workbook(tmp_path / "db.xlsx", valid_sheets, notes))
+    warn = [i.message for i in db.issues if i.level == WARNUNG and i.check == "Statistik fehlt"]
+    hint = [i.message for i in db.issues if i.level == HINWEIS and i.check == "Statistik fehlt"]
+    assert len(warn) == 51 and warn[-1] == "… und 8 weitere Zeilen"
+    assert len(hint) == 3 and all("dokumentiert im Blatt Datenhinweise" in m for m in hint)
 
 
 def test_note_for_unknown_match_warns(tmp_path, valid_sheets):

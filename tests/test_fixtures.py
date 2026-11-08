@@ -8,7 +8,7 @@ from datetime import date, datetime
 import openpyxl
 import pandas as pd
 import pytest
-from conftest import KNOWN_FIXTURES_SHA, REAL_DATABASE, REAL_FIXTURES
+from conftest import KNOWN_FIXTURES_SHA, REAL_DATABASE, REAL_FIXTURES, break_xml
 
 from core.config import ConfigError, League, Team, active_leagues, load_leagues, load_teams
 from core.fixtures import load_fixtures
@@ -99,6 +99,12 @@ def test_unreadable_file(tmp_path):
     path = tmp_path / "s.xlsx"
     path.write_bytes(b"PK\x03\x04 halb hochgeladen")
     assert "Datei nicht lesbar" in checks(load(path), FEHLER)
+
+
+def test_broken_xml_inside_file(tmp_path):
+    """Gültiges ZIP, aber kaputtes XML: klare Meldung statt Absturz (H.1, Punkt R2)."""
+    path = write_plan(tmp_path / "s.xlsx", {"Bundesliga": plan_rows(), "Premier League": plan_rows()})
+    assert "Datei nicht lesbar" in checks(load(break_xml(path)), FEHLER)
 
 
 def test_missing_sheet_of_active_league(tmp_path):

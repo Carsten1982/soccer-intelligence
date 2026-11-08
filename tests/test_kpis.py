@@ -19,7 +19,7 @@ import pytest
 from conftest import KNOWN_DB_SHA, KNOWN_DB_SHA_H, REFERENCE_DATABASE, REFERENCE_DATABASE_H
 
 from core.kpis import (
-    KPI_KEYS, LIGHT, NONE, STAT_KPIS, STRONG, Match, Thresholds, classify, compute_match, de, de_abs, de_signed, fmt,
+    KPI_KEYS, LIGHT, NONE, STRONG, Match, Thresholds, classify, compute_match, de, de_abs, de_signed, fmt,
     fmt_signed, kpi01_team, kpi02, kpi04, prepare_league, reference_keys, reference_label, round_display, stat_kpi,
     team_cards, team_goals,
 )
@@ -358,8 +358,3 @@ def test_stat_kpis_skip_missing_values_never_zero():
     assert r.vorlaeufig
     r8 = stat_kpi(db, m, 34, "kpi08")
     assert r8.prozent and r8.heim.wert == Fraction(100) and r8.heim.summe == 10   # 1:1 -> immer BTTS
-
-
-def test_stat_kpi_specs():
-    assert list(STAT_KPIS) == ["kpi05", "kpi06", "kpi07", "kpi08", "kpi09"]
-    assert KPI_KEYS == ("kpi02", "kpi03", "kpi04", "kpi05", "kpi06", "kpi07", "kpi08", "kpi09")

@@ -21,13 +21,17 @@ DB_RULES = """
 - Spaltenanzahl, Spaltennamen oder Reihenfolge weichen von den 58 erwarteten Spalten ab
 - Pflichtfelder leer (Datum, Spieltag *Gameday*, id, Liga, Saison, Teams, Tore, Ergebnisse)
 - Text statt Zahl, ungültiges Ergebnis (nur H/D/A), ungültiges Datum oder Saisonformat
+- Kommazahl bei Toren, Spieltag *Gameday* oder id (dort sind nur ganze Zahlen erlaubt)
 - doppelte Spiel-id innerhalb eines Blatts
 
 **Warnungen** – wahrscheinlich ein Datenfehler, die App läuft weiter:
 - *FT* ≠ *Full-Time*, Halbzeiten ergeben nicht den Endstand, Ergebnisbuchstabe passt nicht
 - Halbzeitwerte ergeben nicht den Gesamtwert (Ecken, Karten, Schüsse)
 - Ballbesitz ergibt nicht 100 %, Schüsse gesamt kleiner als aufs Tor + daneben
-- fehlende Statistikwerte, die nicht im Blatt *Datenhinweise* dokumentiert sind
+- Kommazahl bei Ecken, Karten oder Schüssen: Der Wert gilt als fehlend (nie abgeschnitten, nie 0); Ballbesitz darf
+  Kommastellen haben
+- fehlende Statistikwerte, die nicht im Blatt *Datenhinweise* dokumentiert sind (höchstens 50 Einzelzeilen je Stufe,
+  danach eine Sammelzeile)
 - Saison unvollständig, doppelte Paarung, Datum passt nicht zu *matchDate*
 - *Gameday* ausserhalb des möglichen Bereichs, Spieltag mit falscher Anzahl Spiele, Team mehrfach im selben Spieltag
 

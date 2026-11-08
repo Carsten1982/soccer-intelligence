@@ -32,6 +32,11 @@ class League:
     def games_per_matchday(self) -> int:
         return self.teams // 2
 
+    @property
+    def matchdays(self) -> int:
+        """Spieltage je Saison (Hin- und Rückrunde): 2 × (Teams − 1), z. B. 34 in der Bundesliga."""
+        return 2 * (self.teams - 1)
+
 
 @dataclass(frozen=True)
 class Team:

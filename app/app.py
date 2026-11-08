@@ -3,13 +3,14 @@
 Bereiche (Tabs oben):
   Top Anomalien (Startbereich)  ·  je aktive Liga ein Bereich  ·  Datenqualität (ganz rechts)
 
-Welche Ligen aktiv sind, steht in config/ligen.toml, nicht im Programmcode.
+Welche Ligen aktiv sind, steht in config/ligen.toml, nicht im Programmcode. Ist eine der Konfigurationsdateien
+(ligen.toml, teams.toml, schwellen.toml) ungültig, zeigt die App nur eine klare Meldung.
 """
 
 import streamlit as st
 
 from core.config import ConfigError
-from state import get_active_leagues
+from state import get_active_leagues, get_teams, get_thresholds
 from views import components as ui
 from views import datenqualitaet, liga, top_anomalien
 from views.registry import PAGES
@@ -17,8 +18,10 @@ from views.registry import PAGES
 st.set_page_config(page_title="Soccer Intelligence", page_icon="⚽", layout="wide")
 ui.inject_css()
 
-try:
-    leagues = get_active_leagues()
+try:                                   # alle drei Konfigurationsdateien vorab prüfen (H.1)
+    leagues = get_active_leagues()     # ligen.toml
+    get_teams()                        # teams.toml
+    get_thresholds()                   # schwellen.toml
 except ConfigError as exc:
     ui.header()
     st.error(f"**Konfiguration ungültig:** {exc}", icon="⛔")

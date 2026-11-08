@@ -101,20 +101,22 @@ def check_stat_consistency(sheet: str, df: pd.DataFrame) -> list[Issue]:
 
 
 def check_missing_stats(sheet: str, df: pd.DataFrame, noted_ids: set[tuple[str, int]]) -> list[Issue]:
+    """Leere Statistikwerte: nicht dokumentiert -> Warnung, im Blatt Datenhinweise dokumentiert -> Hinweis.
+    Je Stufe höchstens MAX_ROWS_PER_CHECK Einzelmeldungen, danach eine Sammelzeile (seit H.1)."""
     stats = list(schema.STAT_COLUMNS)
     missing_count = df[stats].isna().sum(axis=1)
     affected = df[missing_count > 0]
+    documented = affected["id"].map(lambda i: (sheet, int(i)) in noted_ids).astype(bool)
 
-    def msg(r):
-        n = int(missing_count[r.name])
-        doc = "dokumentiert im Blatt Datenhinweise" if (sheet, int(r["id"])) in noted_ids else "nicht dokumentiert"
-        return f"{n} von {len(stats)} Statistikwerten leer (= keine Daten, wird nicht als 0 gerechnet); {doc}"
+    def msg(doc: str):
+        def text(r):
+            return (f"{int(missing_count[r.name])} von {len(stats)} Statistikwerten leer "
+                    f"(= keine Daten, wird nicht als 0 gerechnet); {doc}")
+        return text
 
-    issues = []
-    for _, r in affected.iterrows():
-        level = HINWEIS if (sheet, int(r["id"])) in noted_ids else WARNUNG
-        issues += row_issues(level, sheet, "Statistik fehlt", affected.loc[[r.name]], msg)
-    return issues
+    return (row_issues(WARNUNG, sheet, "Statistik fehlt", affected[~documented], msg("nicht dokumentiert"))
+            + row_issues(HINWEIS, sheet, "Statistik fehlt", affected[documented],
+                         msg("dokumentiert im Blatt Datenhinweise")))
 
 
 def check_referee(sheet: str, df: pd.DataFrame) -> list[Issue]:

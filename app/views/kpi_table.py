@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from html import escape
 
 from core.kpis import (
-    LIGHT, NONE, PLACEHOLDER, SAMPLE, STRONG, FormTeam, KpiResult, MatchKpis, de, de_signed, round_display,
+    FORM_SAMPLE, LIGHT, NONE, PLACEHOLDER, SAMPLE, STRONG, FormTeam, KpiResult, MatchKpis, de, de_signed, round_display,
 )
 from core.top import TOP_KPIS
 
@@ -53,10 +53,7 @@ def form_marks(ft: FormTeam) -> str:
             marks.append('<span class="si-form si-form-none" title="kein Spiel">–</span>')
         else:
             marks.append(f'<span class="si-dot si-form-{f}" title="{FORM_TITLES[f]}"></span>')
-    return f'<span class="si-formrow" title="{ft.anzahl} von 5 Spielen">{"".join(marks)}</span>'
-
-
-form_cell = form_marks          # bisheriger Name
+    return f'<span class="si-formrow" title="{ft.anzahl} von {FORM_SAMPLE} Spielen">{"".join(marks)}</span>'
 
 
 def anomaly_cell(anomaly: str | None) -> str:
@@ -103,7 +100,7 @@ def _team_lines(k: MatchKpis, left: str, right: str) -> str:
 
 
 def form_card(k: MatchKpis) -> str:
-    return ('<div class="si-kc"><div class="si-kc-h"><b>KPI 01</b>&nbsp;Formkurve (letzte 5 Spiele)</div>'
+    return (f'<div class="si-kc"><div class="si-kc-h"><b>KPI 01</b>&nbsp;Formkurve (letzte {FORM_SAMPLE} Spiele)</div>'
             + _team_lines(k, form_marks(k.form_home), form_marks(k.form_away)) + "</div>")
 
 

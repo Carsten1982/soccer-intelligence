@@ -1,12 +1,12 @@
 # Soccer Intelligence – Projektübersicht
 
-**Spezifikation v1.6** · Stand 08.11.2026
+**Spezifikation v1.7** · Stand 08.11.2026
 
 ## Worum es geht
 Soccer Intelligence ist eine Fussball-Analyseplattform. Sie berechnet statistische Auffälligkeiten
 (Anomalien) anstehender Ligaspiele und stellt sie verständlich dar. Datenbasis ist eine Excel-Datei
 mit historischen Spieldaten von Bundesliga, Premier League, Serie A und LaLiga, Saisons 2020/21–2025/26, dazu
-spieltagweise die laufende Saison 2026/27. Im Dashboard aktiv seit Etappe F (Version 0.8): alle vier Ligen.
+spieltagweise die laufende Saison 2026/27. Im Dashboard aktiv: alle vier Ligen (seit Etappe F) mit KPI 01–09 (seit Etappe H, Version 0.9).
 Das Projekt ist zugleich ein Lernprojekt und nicht kommerziell. Code soll nachvollziehbar, gut
 kommentiert und schrittweise aufgebaut sein. Nach jedem Schritt kurz erklären, was gemacht wurde.
 
@@ -42,7 +42,9 @@ Nicht Teil dieser Phase:
 - **Vereinslogos** (nicht erlaubt, rechtliche Gründe)
 
 ## Nach Phase 1 (Stand 08.11.2026)
-Erledigt: **Etappe F – Vier Ligen** (07.11.2026). Als Paket bereit: **Etappe H – KPI 05–09** (Version 0.9) (Frontend; KPI-Regelwerk v2.1,
+Erledigt: **Etappe F – Vier Ligen** (07.11.2026) und **Etappe H – KPI 05–09** (Version 0.9, eingespielt 08.11.2026, Git `51e595b`).
+Als Paket bereit: **H.1 – Aufräumen und Tempo** (Version 0.9.1, Funde der Code-Prüfung vom 08.11.2026, Ergebnisse unverändert,
+`docs/tests/pruefprotokoll_h1.md`). Zu Etappe H (Frontend; KPI-Regelwerk v2.2,
 Abschnitt 9; Testfälle `docs/tests/test_kpi05…09…` **bestätigt am 08.11.2026**). Mit Etappe H gilt ausserdem:
 **alle KPIs mit zwei Nachkommastellen** (auch die Abweichung; Einstufung nach dem auf zwei Stellen gerundeten Wert, Regelwerk 2.3),
 **Top Anomalien über KPI 02–09** (bisherige Rangfolge, Regelwerk 2.6), kompaktere Liga-Tabelle mit Details per Aufklappen,
@@ -60,12 +62,13 @@ Backup, Korrekturen an alten Spielen nie still übernehmen); das Dashboard bleib
 | docs/02_Datenbasis.md | Aufbau der Excel-Datei (58 Spalten inkl. `Gameday`), Formate, Prüfregeln |
 | docs/03_KPI_Regelwerk.md | Berechnungsregeln, Anomalie-Logik, Top-Anomalien, Dashboard-Texte |
 | docs/04_Spielplan.md | Aufbau des Spielplans (`Datum von` / `Datum bis`), aktueller Spieltag, Prüfregeln |
-| docs/05_Dashboard.md | Dashboard-Briefing (v4.6): Aufbau, Navigation, Darstellung, Abnahmekriterien |
+| docs/05_Dashboard.md | Dashboard-Briefing (v4.7): Aufbau, Navigation, Darstellung, Abnahmekriterien |
 | docs/06_Datenlieferung.md | Konzept regelmässige Datenlieferung / Import, Footiqo (Entwurf, nicht freigegeben) |
 | docs/tests/test_kpi01_formkurve.md … test_kpi04_gelbe_karten.md | Bestätigte Testfälle mit erwarteten Ergebnissen (JSON) |
 | docs/tests/test_kpi05_ecken.md … test_kpi09_schuesse_aufs_tor.md | Bestätigte Testfälle KPI 05–09 (08.11.2026), Nachprüfung `Testfaelle_KPI05-09_Nachpruefung.xlsx` |
 | docs/tests/pruefprotokoll_etappe_f.md | Prüfung der vier Ligen: Gegenrechnung, Plausibilität, Häufigkeit (07.11.2026) |
 | docs/tests/pruefprotokoll_etappe_h.md | Prüfung KPI 05–09 und zwei Nachkommastellen: Testfälle, Gegenrechnung, Vollvergleich (08.11.2026) |
+| docs/tests/pruefprotokoll_h1.md | Prüfung H.1: alle Ergebnisse vor/nach dem Umbau identisch, Zeitmessung (08.11.2026) |
 | data/Database-Soccer-Intelligence.xlsx | Einzige gültige Datenquelle für gespielte Spiele |
 | data/Spielplan.xlsx | Angesetzte Begegnungen |
 | CHANGELOG.md | Änderungsprotokoll, jede Änderung wird dort eingetragen |

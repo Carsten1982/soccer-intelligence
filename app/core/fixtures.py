@@ -11,7 +11,6 @@ Grundsätze:
 
 from __future__ import annotations
 
-import hashlib
 import math
 import numbers
 import re
@@ -23,6 +22,7 @@ from pathlib import Path
 import pandas as pd
 
 from .config import League, Team
+from .files import sha256_of
 from .issues import FEHLER, HINWEIS, WARNUNG, Issue
 
 # --- Aufbau der Datei ------------------------------------------------------
@@ -115,14 +115,6 @@ def _as_matchday(value) -> int | None:
 def previous_season(season: str) -> str:
     start, end = season.split("/")
     return f"{int(start) - 1}/{int(end) - 1}"
-
-
-def _sha256(path: Path) -> str:
-    h = hashlib.sha256()
-    with path.open("rb") as fh:
-        for chunk in iter(lambda: fh.read(1 << 20), b""):
-            h.update(chunk)
-    return h.hexdigest()
 
 
 def _label(home, away, matchday) -> str:
@@ -318,9 +310,10 @@ def load_fixtures(
         return result
     result.file_modified = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
     try:
-        result.sha256 = _sha256(path)
+        result.sha256 = sha256_of(path)
         sheets = pd.read_excel(path, sheet_name=None, engine="openpyxl", dtype=object)
-    except (zipfile.BadZipFile, ValueError, OSError, KeyError) as exc:
+    # SyntaxError: kaputtes XML in der Datei (xml ParseError und lxml XMLSyntaxError sind beide SyntaxError)
+    except (zipfile.BadZipFile, SyntaxError, ValueError, OSError, KeyError) as exc:
         result.issues.append(Issue(
             FEHLER, sheet, "Datei nicht lesbar",
             f"Der Spielplan konnte nicht gelesen werden ({type(exc).__name__}: {exc}). "

@@ -45,11 +45,10 @@ class ThresholdConfig:
     overrides: tuple[Override, ...] = field(default_factory=tuple)
 
     def get(self, league: str, kpi: str) -> Thresholds:
+        """Schwellen für Liga und KPI. config.get wird als Nachschlage-Funktion an compute_match übergeben."""
         matching = [o for o in self.overrides
                     if (o.liga is None or o.liga == league) and (o.kpi is None or o.kpi == kpi)]
         return max(matching, key=lambda o: o.rank).thresholds if matching else self.standard
-
-    __call__ = get          # passt direkt als Nachschlage-Funktion für compute_match
 
 
 def _number(value, where: str) -> Decimal:

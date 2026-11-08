@@ -54,7 +54,6 @@ stark = 16
     assert cfg.get("Serie A", "kpi02") == Thresholds(Decimal(18), Decimal(30))
     assert cfg.get("Bundesliga", "kpi05") == Thresholds(Decimal(12), Decimal(18))
     assert cfg.get("Serie A", "kpi05") == Thresholds(Decimal("10.5"), Decimal(16))     # 10.5 bleibt genau 10,5
-    assert cfg("Serie A", "kpi05") == cfg.get("Serie A", "kpi05")                      # als Nachschlage-Funktion
     rows = describe(cfg)
     assert rows[1] == {"Gilt für": "Serie A · KPI 05",
                        "Schwellen": "keine bis ±10,50 % · leicht bis ±16,00 % · stark darüber"}

@@ -8,7 +8,6 @@ Grundsätze:
 
 from __future__ import annotations
 
-import hashlib
 import zipfile
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -17,9 +16,11 @@ from pathlib import Path
 import pandas as pd
 
 from . import schema, settings
+from .files import sha256_of
 from .issues import FEHLER, HINWEIS, WARNUNG, Issue
 from .rows import row_issues
 from .validation import run_plausibility_checks
+
 
 @dataclass
 class DatabaseLoad:
@@ -45,22 +46,6 @@ class DatabaseLoad:
         for c in ("id", "Excel-Zeile"):
             frame[c] = pd.array(frame[c], dtype="Int64")
         return frame
-
-
-def _sha256(path: Path) -> str:
-    h = hashlib.sha256()
-    with path.open("rb") as fh:
-        for chunk in iter(lambda: fh.read(1 << 20), b""):
-            h.update(chunk)
-    return h.hexdigest()
-
-
-def _is_empty_sheet(df: pd.DataFrame) -> bool:
-    if df.shape[1] == 0:
-        return True
-    if df.empty and all(str(c).startswith("Unnamed") for c in df.columns):
-        return True
-    return df.dropna(how="all").empty and df.shape[1] <= 1
 
 
 # --- Strukturprüfung eines Ligablatts --------------------------------------
@@ -106,6 +91,19 @@ def _prepare_league(sheet: str, raw: pd.DataFrame) -> tuple[pd.DataFrame, list[I
                 FEHLER, sheet, "Keine Zahl", bad,
                 lambda r, c=col: f"Spalte '{c}' enthält '{r[c]}' statt einer Zahl",
             )
+        # Kommazahl, wo eine ganze Zahl stehen muss (seit H.1). Es wird nie abgeschnitten:
+        # Gameday, id, Tore -> Fehler. Ecken, Karten, Schüsse -> Warnung, der Wert gilt als fehlend (nie als 0).
+        if col in schema.INTEGER_REQUIRED or col in schema.COUNT_COLUMNS:
+            fraction = converted.notna() & (converted % 1 != 0)
+            if fraction.any():
+                required = col in schema.INTEGER_REQUIRED
+                issues += row_issues(
+                    FEHLER if required else WARNUNG, sheet, "Keine ganze Zahl", df[fraction],
+                    lambda r, c=col, req=required: f"Spalte '{c}' enthält {r[c]} statt einer ganzen Zahl"
+                    + ("" if req else " (wird als fehlender Wert behandelt)"),
+                )
+                if not required:
+                    converted = converted.mask(fraction)
         df[col] = converted
         neg = df[df[col] < 0]
         if len(neg):
@@ -185,6 +183,19 @@ def _read_notes(raw: pd.DataFrame, leagues: dict[str, pd.DataFrame]) -> tuple[pd
     return notes, issues
 
 
+def _noted_ids(notes: pd.DataFrame | None) -> set[tuple[str, int]]:
+    """(Liga, id) aller Spiele, die im Blatt Datenhinweise dokumentiert sind.
+    Fehlt dort die Spalte Liga oder id, gibt es keine dokumentierten Spiele (die Warnung kommt aus _read_notes)."""
+    if notes is None or not {"Liga", "id"} <= set(notes.columns):
+        return set()
+    ids = set()
+    for _, r in notes.iterrows():
+        mid = pd.to_numeric(r["id"], errors="coerce")
+        if pd.notna(mid):
+            ids.add((str(r["Liga"]), int(mid)))
+    return ids
+
+
 # --- Hauptfunktion -------------------------------------------------------
 
 def load_database(path: Path | str | None = None) -> DatabaseLoad:
@@ -200,9 +211,10 @@ def load_database(path: Path | str | None = None) -> DatabaseLoad:
     result.file_modified = datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc)
 
     try:
-        result.sha256 = _sha256(path)
+        result.sha256 = sha256_of(path)
         sheets = pd.read_excel(path, sheet_name=None, engine="openpyxl")
-    except (zipfile.BadZipFile, ValueError, OSError, KeyError) as exc:
+    # SyntaxError: kaputtes XML in der Datei (xml ParseError und lxml XMLSyntaxError sind beide SyntaxError)
+    except (zipfile.BadZipFile, SyntaxError, ValueError, OSError, KeyError) as exc:
         result.issues.append(Issue(
             FEHLER, "-", "Datei nicht lesbar",
             f"Die Excel-Datei konnte nicht gelesen werden ({type(exc).__name__}: {exc}). "
@@ -227,7 +239,7 @@ def load_database(path: Path | str | None = None) -> DatabaseLoad:
         raw = sheets.get(name)
         if raw is None:
             continue
-        if _is_empty_sheet(raw) or raw.dropna(how="all").empty:
+        if raw.dropna(how="all").empty:
             level = FEHLER if name in settings.REQUIRED_LEAGUE_SHEETS else HINWEIS
             result.issues.append(Issue(level, name, "Blatt leer", f"Blatt '{name}' enthält keine Spiele"))
             continue
@@ -245,11 +257,7 @@ def load_database(path: Path | str | None = None) -> DatabaseLoad:
     if settings.NOTES_SHEET in sheets:
         result.notes, issues = _read_notes(sheets[settings.NOTES_SHEET], result.leagues)
         result.issues += issues
-    noted_ids = {
-        (str(r["Liga"]), int(r["id"]))
-        for _, r in (result.notes if result.notes is not None else pd.DataFrame()).iterrows()
-        if "id" in r and pd.notna(pd.to_numeric(r["id"], errors="coerce"))
-    }
+    noted_ids = _noted_ids(result.notes)
 
     # Plausibilität (nur für fehlerfreie Blätter)
     for name, df in result.leagues.items():

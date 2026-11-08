@@ -1,8 +1,10 @@
-"""Gemeinsame Test-Hilfen. Tests laufen ohne Streamlit (nur Kernlogik in app/core)."""
+"""Gemeinsame Test-Hilfen. Fast alle Tests laufen ohne Streamlit; nur die Seitentests in test_ui.py
+brauchen Streamlit und laufen darum nur im Test-Container auf dem Server."""
 
 import datetime as dt
 import os
 import sys
+import zipfile
 from pathlib import Path
 
 import pandas as pd
@@ -37,7 +39,8 @@ def make_match(mid, home, away, date, ft=(1, 0), ht=(1, 0), league="Bundesliga",
 
     sh = (ft[0] - ht[0], ft[1] - ht[1])
     row = {
-        "Date": pd.Timestamp(date), "Gameday": gameday, "id": mid, "matchDate": pd.Timestamp(date).strftime("%d-%m-%y 15:30"),
+        "Date": pd.Timestamp(date), "Gameday": gameday, "id": mid,
+        "matchDate": pd.Timestamp(date).strftime("%d-%m-%y 15:30"),
         "Country": "Germany", "League": league, "Season": "2024/2025",
         "homeTeam": home, "awayTeam": away, "referee": "Test Referee",
         "FT Home Goals": ft[0], "FT Away Goals :": ft[1], "FT Result :": res(*ft),
@@ -91,3 +94,14 @@ def notes_for(league, mid):
         "Liga": league, "id": mid, "Datum": dt.datetime(2024, 12, 14), "Begegnung": "Test",
         "Art": "Sonderfall", "Hinweis": "Statistiken fehlen", "Geändert am": dt.datetime(2026, 10, 25), "Quelle": "Test",
     }])
+
+
+def break_xml(path, member="xl/worksheets/sheet1.xml"):
+    """Gültige ZIP-Datei mit kaputtem XML im ersten Tabellenblatt (z. B. beschädigte Datei, H.1)."""
+    path = Path(path)
+    with zipfile.ZipFile(path) as zin:
+        parts = [(item, zin.read(item.filename)) for item in zin.infolist()]
+    with zipfile.ZipFile(path, "w") as zout:
+        for item, data in parts:
+            zout.writestr(item, b"<worksheet><row>kaputt" if item.filename == member else data)
+    return path

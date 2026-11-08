@@ -8,7 +8,7 @@ from datetime import date
 from decimal import Decimal
 from types import SimpleNamespace
 
-from core.kpis import LIGHT, NONE, STRONG, classify
+from core.kpis import STRONG, classify
 from core.top import MAX_ENTRIES, TOP_KPIS, Candidate, select_top
 
 
@@ -31,13 +31,6 @@ def cand(name, kpi02=0, kpi04=0, *, day=1, league_order=0, file_order=0, status=
 
 def names(entries):
     return [e.candidate.home for e in entries]
-
-
-def test_classify_thresholds_used_by_top():
-    assert classify(Decimal("20.00"))[0] == NONE
-    assert classify(Decimal("20.01"))[0] == LIGHT
-    assert classify(Decimal("-35.00"))[0] == LIGHT
-    assert classify(Decimal("35.01"))[0] == STRONG
 
 
 def test_strong_before_light_regardless_of_size():

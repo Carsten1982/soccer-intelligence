@@ -1,6 +1,6 @@
-"""Laden von Datenbank, Spielplan und Konfiguration mit Cache.
+"""Laden von Datenbank, Spielplan und Konfiguration mit Cache, dazu die zwischengespeicherten KPI-Ergebnisse.
 
-Der Cache-Schlüssel enthält Änderungszeit und Grösse der Dateien. Wird eine Excel-Datei
+Der Cache-Schlüssel enthält Änderungszeit und Grösse der Dateien. Wird eine Excel- oder Konfigurationsdatei
 auf dem Server ersetzt, liest die App sie beim nächsten Seitenaufruf automatisch neu ein –
 ohne Neustart des Containers.
 """
@@ -14,10 +14,15 @@ from zoneinfo import ZoneInfo
 import streamlit as st
 
 from core import settings
-from core.config import League, Team, active_leagues, load_leagues, load_teams  # noqa: F401
+from core.config import League, Team, active_leagues, load_leagues, load_teams
 from core.fixtures import FixturesLoad, load_fixtures
+from core.frequency import anomaly_frequency
 from core.issues import FEHLER, HINWEIS, WARNUNG
+from core.kpis import MatchKpis, prepare_league
 from core.loader import DatabaseLoad, load_database
+from core.matchday import matchday_games
+from core.results import matchday_kpis
+from core.thresholds import ThresholdConfig, load_thresholds
 
 TZ = ZoneInfo(settings.TIMEZONE)
 
@@ -49,7 +54,6 @@ def get_database() -> DatabaseLoad:
 
 @st.cache_data(show_spinner=False, max_entries=2)
 def _cached_prepared(path: str, mtime_ns: int, size: int) -> dict:  # noqa: ARG001
-    from core.kpis import prepare_league
     db = _cached_load(path, mtime_ns, size)
     return {name: prepare_league(df) for name, df in db.leagues.items()}
 
@@ -61,31 +65,52 @@ def get_prepared() -> dict:
 
 
 @st.cache_data(show_spinner="Häufigkeit der Anomalien wird berechnet (einmal je Datenbankstand) …", max_entries=8)
-def _cached_frequency(path: str, mtime_ns: int, size: int, league_name: str, teams: int,
-                      thresholds_key: tuple):  # noqa: ARG001 - Teil des Cache-Schlüssels
-    from core.config import League
-    from core.frequency import anomaly_frequency
+def _cached_frequency(path: str, mtime_ns: int, size: int, league_name: str,
+                      thresholds_key: tuple, leagues_key: tuple):  # noqa: ARG001 - Teil des Cache-Schlüssels
     prepared = _cached_prepared(path, mtime_ns, size).get(league_name)
     if prepared is None:
         return None, None
-    return anomaly_frequency(prepared, League(league_name, "x", teams, True), get_thresholds())
+    return anomaly_frequency(prepared, _league(league_name), get_thresholds().get)
 
 
 def get_frequency(league: League):
     path = settings.DATABASE_FILE
-    return _cached_frequency(str(path), *_file_key(path), league.name, league.teams,
-                             _file_key(settings.THRESHOLDS_FILE))
+    return _cached_frequency(str(path), *_file_key(path), league.name,
+                             _file_key(settings.THRESHOLDS_FILE), _file_key(settings.LEAGUES_FILE))
+
+
+# --- KPI-Ergebnisse eines Spieltags (seit H.1) ------------------------------------------
+
+@st.cache_data(show_spinner="KPIs werden berechnet …", max_entries=64)
+def _cached_matchday_kpis(league_name: str, season: str, matchday: int,
+                          files_key: tuple) -> list[MatchKpis | None]:  # noqa: ARG001 - Teil des Cache-Schlüssels
+    fixtures = get_fixtures().leagues.get(league_name)
+    if fixtures is None:
+        return []
+    games = matchday_games(fixtures, season, matchday)
+    return matchday_kpis(get_prepared().get(league_name), _league(league_name), season, matchday, games,
+                         get_thresholds().get)
+
+
+def get_matchday_kpis(league: League, season: str, matchday: int) -> list[MatchKpis | None]:
+    """KPI-Ergebnisse je Begegnung des Spieltags, in der Reihenfolge von matchday_games (None = verschoben/abgesagt).
+
+    Einmal berechnet und dann aus dem Zwischenspeicher, bis sich eine der Dateien ändert, von denen die Werte
+    abhängen: Datenbank, Spielplan (Stichtag, Teams, Status), Schwellen, Ligen und Teamliste. „Heute“ gehört nicht
+    in den Schlüssel: Die Werte eines Spieltags hängen nicht vom heutigen Datum ab."""
+    files_key = tuple(_file_key(f) for f in (settings.DATABASE_FILE, settings.FIXTURES_FILE, settings.THRESHOLDS_FILE,
+                                             settings.LEAGUES_FILE, settings.TEAMS_FILE))
+    return _cached_matchday_kpis(league.name, season, matchday, files_key)
 
 
 # --- Schwellenwerte (app/config/schwellen.toml) ------------------------------------------
 
 @st.cache_data(show_spinner=False, max_entries=2)
-def _cached_thresholds(path: str, key: tuple, leagues_key: tuple):  # noqa: ARG001 - Teil des Cache-Schlüssels
-    from core.thresholds import load_thresholds
+def _cached_thresholds(path: str, key: tuple, leagues_key: tuple) -> ThresholdConfig:  # noqa: ARG001
     return load_thresholds(path, [lg.name for lg in get_leagues()])
 
 
-def get_thresholds():
+def get_thresholds() -> ThresholdConfig:
     """Schwellen je Liga und KPI (wirft ConfigError bei ungültiger Datei)."""
     path = settings.THRESHOLDS_FILE
     return _cached_thresholds(str(path), _file_key(path), _file_key(settings.LEAGUES_FILE))
@@ -103,7 +128,13 @@ def get_active_leagues() -> list[League]:
 
 
 def get_teams() -> list[Team]:
+    """Teamliste aus config/teams.toml (wirft ConfigError bei ungültiger Datei)."""
     return load_teams(settings.TEAMS_FILE)
+
+
+def _league(name: str) -> League:
+    """Liga aus der Konfiguration (für die Zwischenspeicher, die nur den Namen im Schlüssel haben)."""
+    return {lg.name: lg for lg in get_leagues()}[name]
 
 
 # --- Spielplan -----------------------------------------------------------------

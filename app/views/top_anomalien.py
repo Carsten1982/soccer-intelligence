@@ -9,13 +9,13 @@ from html import escape
 
 import streamlit as st
 
+from core.config import League
 from core.kpis import de_signed
-from core.matchday import current_matchday, matchday_games
+from core.matchday import Matchday, current_matchday, matchday_games
 from core.top import NO_ANOMALIES_TEXT, TOP_KPIS, Candidate, TopEntry, select_top
-from state import get_active_leagues, get_database, get_fixtures, today
+from state import get_active_leagues, get_database, get_fixtures, get_matchday_kpis, today
 from views import components as ui
 from views.kpi_table import ANOMALY_LABEL, anomaly_cell, value_text
-from views.liga import matchday_kpis
 from views.registry import PAGES
 
 
@@ -35,37 +35,45 @@ def card_html(e: TopEntry) -> str:
     )
 
 
-def collect_candidates() -> tuple[list[Candidate], list[str]]:
-    """Begegnungen des aktuellen Spieltags je aktiver Liga, mit KPI-Ergebnissen."""
+def current_matchdays() -> list[tuple[League, Matchday | None]]:
+    """Aktueller Spieltag je aktiver Liga (None: kein Spieltag im Spielplan)."""
     fx = get_fixtures()
     heute = today()
-    candidates, header_parts = [], []
-    for order, league in enumerate(get_active_leagues()):
+    out = []
+    for league in get_active_leagues():
         fixtures = fx.leagues.get(league.name)
-        md = current_matchday(fixtures, heute) if fixtures is not None else None
-        header_parts.append(f"{league.name}: Spieltag {md.spieltag}" if md else f"{league.name}: –")
+        out.append((league, current_matchday(fixtures, heute) if fixtures is not None else None))
+    return out
+
+
+def collect_candidates(current: list[tuple[League, Matchday | None]]) -> list[Candidate]:
+    """Begegnungen des aktuellen Spieltags je aktiver Liga, mit KPI-Ergebnissen (aus dem Zwischenspeicher)."""
+    fx = get_fixtures()
+    candidates = []
+    for order, (league, md) in enumerate(current):
         if md is None:
             continue
-        games = matchday_games(fixtures, md.saison, md.spieltag)
-        for g, k in zip(games.itertuples(), matchday_kpis(league, md.saison, md.spieltag, games)):
+        games = matchday_games(fx.leagues[league.name], md.saison, md.spieltag)
+        for g, k in zip(games.itertuples(), get_matchday_kpis(league, md.saison, md.spieltag)):
             candidates.append(Candidate(league.name, order, md.saison, md.spieltag, g.datum_von, int(g.reihenfolge),
                                         g.heim, g.gast, g.status, k))
-    return candidates, header_parts
+    return candidates
 
 
 def render() -> None:
     db = get_database()
     fx = get_fixtures()
-    candidates, header_parts = collect_candidates()
+    current = current_matchdays()
+    header_parts = [f"{lg.name}: Spieltag {md.spieltag}" if md else f"{lg.name}: –" for lg, md in current]
     ui.header("Aktueller Spieltag", header_parts)          # eine Zeile je Liga, kompakt (Etappe F)
 
-    if db.has_errors or fx.has_errors:
+    if db.has_errors or fx.has_errors:                     # erst danach rechnen (H.1)
         ui.blocked_notice(db.has_errors, fx.has_errors, PAGES.get("datenqualitaet"))
         ui.footer()
         return
 
     st.markdown("### Top Anomalien")
-    entries = select_top(candidates)
+    entries = select_top(collect_candidates(current))
     if not entries:
         st.info(NO_ANOMALIES_TEXT, icon="ℹ️")
     else:

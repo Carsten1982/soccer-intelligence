@@ -6,11 +6,15 @@ Grundsätze (Regelwerk, Abschnitte 1, 2 und 9):
   Zuerst die letzten 10 Spiele bestimmen, danach Spiele ohne Wert auslassen (kein älteres Spiel nachziehen).
 - Ligareferenz: letzte 20 Spieltage laut `Gameday`, über das Saisonende hinweg, nur Spiele vor dem Stichtag.
 - Fehlende Werte nie als 0; echte Nullen zählen mit.
-- Gerechnet wird exakt mit Brüchen (fractions.Fraction) aus den ganzzahligen Werten.
+- Gerechnet wird exakt mit Brüchen (fractions.Fraction) aus den ganzzahligen Werten. Ein Wert mit Kommastellen
+  (z. B. 4,5 Ecken) gilt als fehlend; er wird nie abgeschnitten (seit H.1).
   Gerundet wird erst für die Anzeige: **zwei Nachkommastellen** (seit Etappe H, 08.11.2026), kaufmännisch
   (ab 5 weg von null), mit Dezimalarithmetik. So entstehen keine Gleitkomma-Fehler wie round(2.675, 2) = 2.67.
 - Die Anomalie-Einstufung verwendet die auf zwei Stellen gerundete Abweichung und die Schwellen aus
   app/config/schwellen.toml (Standard ±20 % / ±35 %, Regelwerk 2.2).
+
+Tempo (seit H.1): Die Spiele eines Teams und die Referenzspiele werden je Begegnung nur einmal bestimmt und nur
+einmal in eine Liste von Zeilen umgewandelt (rows_of). Alle Werte werden dann aus diesen Listen gelesen.
 
 Die Testfälle in docs/tests/ sind die verbindliche Referenz (tests/test_kpis.py).
 """
@@ -96,10 +100,6 @@ def de_abs(value: Decimal | None) -> str:
     return PLACEHOLDER if value is None else f"{abs(value):.{DECIMALS}f}".replace(".", ",")
 
 
-def as_float(value: Fraction | None) -> float | None:
-    return None if value is None else float(value)
-
-
 # --- Einstufung (Regelwerk 2.2) ---------------------------------------------------
 
 @dataclass(frozen=True)
@@ -157,6 +157,14 @@ def prepare_league(df: pd.DataFrame) -> pd.DataFrame:
     out = out[out["hg"].notna() & out["ag"].notna()]          # nur abgeschlossene Spiele
     out["key"] = out["season"] + "#" + out["gameday"].astype(str)   # Saison + Spieltag (für die Ligareferenz)
     return out.sort_values(["date", "time", "id"], kind="stable").reset_index(drop=True)
+
+
+Rows = list          # Liste von Spielzeilen (benannte Tupel mit g.id, g.hg, g.home …), siehe rows_of
+
+
+def rows_of(games: pd.DataFrame) -> Rows:
+    """Spiele als Liste von Zeilen. Einmal je Begegnung aufgerufen; das spart die meiste Rechenzeit (H.1)."""
+    return list(games.itertuples(index=False))
 
 
 def team_games(prepared: pd.DataFrame, team: str, season: str, stichtag: date, n: int) -> pd.DataFrame:
@@ -272,10 +280,13 @@ class KpiResult:
 # --- Werte je Spiel ---------------------------------------------------------------
 
 def _int_or_none(*values) -> list[int] | None:
-    """Alle Werte vorhanden -> als ganze Zahlen; sonst None (fehlender Wert, nie 0)."""
-    if any(pd.isna(v) for v in values):
-        return None
-    return [int(v) for v in values]
+    """Alle Werte vorhanden und ganzzahlig -> als ganze Zahlen; sonst None (fehlender Wert, nie 0, nie abgeschnitten)."""
+    out = []
+    for v in values:
+        if pd.isna(v) or not float(v).is_integer():
+            return None
+        out.append(int(v))
+    return out
 
 
 def _goals(g) -> int | None:
@@ -295,17 +306,18 @@ def _own_cards(team: str) -> Callable:
     return value
 
 
-def team_value(team: str, games: pd.DataFrame, per_game: Callable, scale: int = 1) -> TeamValue:
+def team_value(team: str, rows: Rows, per_game: Callable, scale: int = 1) -> TeamValue:
     """Teamwert aus den bereits bestimmten (höchstens 10) Spielen: Spiele ohne Wert fallen weg."""
-    kept = [(int(g.id), v) for g in games.itertuples() if (v := per_game(g)) is not None]
+    kept = [(int(g.id), v) for g in rows if (v := per_game(g)) is not None]
     if not kept:
         return TeamValue(team, 0, None, None)
     total = sum(v for _, v in kept)
     return TeamValue(team, len(kept), total, Fraction(total * scale, len(kept)), [gid for gid, _ in kept])
 
 
-def reference_value(label: str, games: pd.DataFrame, per_game: Callable, scale: int = 1) -> Reference:
-    values = [v for g in games.itertuples() if (v := per_game(g)) is not None]
+def reference_value(label: str, rows: Rows, per_game: Callable, scale: int = 1) -> Reference:
+    """Ligareferenz aus den Referenzspielen: Spiele ohne Wert fallen weg."""
+    values = [v for g in rows if (v := per_game(g)) is not None]
     n, total = len(values), sum(values)
     return Reference(label, n, total, Fraction(total * scale, n) if n else None)
 
@@ -320,35 +332,35 @@ def reference_games(prepared: pd.DataFrame, match: Match, matchdays_per_season: 
 
 # --- KPI 01: Formkurve -----------------------------------------------------------
 
-def _form(team: str, games: pd.DataFrame) -> FormTeam:
+def _form(team: str, rows: Rows) -> FormTeam:
     form = []
-    for g in games.itertuples():
+    for g in rows:
         own, other = (g.hg, g.ag) if g.home == team else (g.ag, g.hg)
         form.append("S" if own > other else "U" if own == other else "N")
     padded = [PLACEHOLDER] * (FORM_SAMPLE - len(form)) + form
-    return FormTeam(team=team, form=padded, anzahl=len(form), ids=[int(i) for i in games["id"]])
+    return FormTeam(team=team, form=padded, anzahl=len(form), ids=[int(g.id) for g in rows])
 
 
 def kpi01_team(prepared: pd.DataFrame, team: str, season: str, stichtag: date) -> FormTeam:
-    return _form(team, team_games(prepared, team, season, stichtag, FORM_SAMPLE))
+    return _form(team, rows_of(team_games(prepared, team, season, stichtag, FORM_SAMPLE)))
 
 
 # --- Teamwerte KPI 02/03 (Tore) und KPI 04 (Karten) ----------------------------------
 
 def team_goals(prepared: pd.DataFrame, team: str, season: str, stichtag: date) -> TeamValue:
-    return team_value(team, team_games(prepared, team, season, stichtag, SAMPLE), _goals)
+    return team_value(team, rows_of(team_games(prepared, team, season, stichtag, SAMPLE)), _goals)
 
 
 def team_cards(prepared: pd.DataFrame, team: str, season: str, stichtag: date) -> TeamValue:
     # zuerst die letzten 10 Spiele, dann leere Werte weg (kein älteres Spiel nachziehen)
-    return team_value(team, team_games(prepared, team, season, stichtag, SAMPLE), _own_cards(team))
+    return team_value(team, rows_of(team_games(prepared, team, season, stichtag, SAMPLE)), _own_cards(team))
 
 
 # --- Ligareferenz -------------------------------------------------------------------
 
 def league_reference(prepared: pd.DataFrame, match: Match, matchdays_per_season: int, cards: bool) -> Reference:
     label, games = reference_games(prepared, match, matchdays_per_season)
-    return reference_value(label, games, _both_cards if cards else _goals)
+    return reference_value(label, rows_of(games), _both_cards if cards else _goals)
 
 
 # --- Texte (Regelwerk, Abschnitte 4–6 und 9) ------------------------------------------
@@ -416,6 +428,11 @@ class StatKpi:
     titles: tuple[str, str]      # Überschrift positiv / negativ
     texts: tuple[str, str, str]  # Text keine / positiv / negativ
     percent: bool = False        # KPI 08: Quote in %
+
+    @property
+    def scale(self) -> int:
+        """KPI 08 rechnet die Quote in Prozent (×100), alle anderen mit dem Wert selbst."""
+        return 100 if self.percent else 1
 
 
 def _pair_sum(a: str, b: str) -> Callable:
@@ -549,11 +566,10 @@ def stat_kpi(prepared: pd.DataFrame, match: Match, matchdays_per_season: int, ke
              thresholds: Thresholds = STANDARD_THRESHOLDS) -> KpiResult:
     """Ein einzelner KPI 05–09 (für Tests und Auswertungen; compute_match rechnet alle auf einmal)."""
     spec = STAT_KPIS[key]
-    scale = 100 if spec.percent else 1
-    teams = [team_value(t, team_games(prepared, t, match.season, match.stichtag, SAMPLE), spec.per_game, scale)
-             for t in (match.home, match.away)]
+    teams = [team_value(t, rows_of(team_games(prepared, t, match.season, match.stichtag, SAMPLE)), spec.per_game,
+                        spec.scale) for t in (match.home, match.away)]
     label, games = reference_games(prepared, match, matchdays_per_season)
-    return kpi_stat(spec, *teams, reference_value(label, games, spec.per_game, scale), thresholds)
+    return kpi_stat(spec, *teams, reference_value(label, rows_of(games), spec.per_game, spec.scale), thresholds)
 
 
 # --- Alle KPIs einer Begegnung ---------------------------------------------------------
@@ -579,32 +595,46 @@ class MatchKpis:
         return [(key, getattr(self, key)) for key in KPI_KEYS]
 
 
-ThresholdLookup = Callable[[str, str], Thresholds]   # (Liga, KPI-Schlüssel) -> Schwellen
+ThresholdLookup = Callable[[str, str], Thresholds]   # (Liga, KPI-Schlüssel) -> Schwellen, z. B. ThresholdConfig.get
+References = dict[str, Reference]                    # Ligareferenz je KPI ("kpi02", "kpi04", "kpi05" … "kpi09")
+
+
+def league_references(prepared: pd.DataFrame, match: Match, matchdays_per_season: int) -> References:
+    """Alle Ligareferenzen einer Begegnung (KPI 02, 04 und 05–09; KPI 03 hat die feste Marke 2,5).
+
+    Sie hängen nur von Saison, Spieltag und Stichtag ab. Die Häufigkeit nutzt sie darum für alle Spiele mit
+    gleichem (Saison, Spieltag, Stichtag) gemeinsam. Der Stichtag gehört dazu: Wegen Nachholspielen kann sich die
+    Referenz innerhalb eines Spieltags unterscheiden (Code-Prüfung 08.11.2026, Punkt L2)."""
+    label, games = reference_games(prepared, match, matchdays_per_season)
+    rows = rows_of(games)
+    refs = {"kpi02": reference_value(label, rows, _goals), "kpi04": reference_value(label, rows, _both_cards)}
+    for key, spec in STAT_KPIS.items():
+        refs[key] = reference_value(label, rows, spec.per_game, spec.scale)
+    return refs
 
 
 def compute_match(prepared: pd.DataFrame, match: Match, matchdays_per_season: int,
-                  thresholds: ThresholdLookup | None = None) -> MatchKpis:
-    """Alle KPIs einer Begegnung. Die Spiele der Teams und die Referenzspiele werden nur einmal bestimmt."""
+                  thresholds: ThresholdLookup | None = None, references: References | None = None) -> MatchKpis:
+    """Alle KPIs einer Begegnung. Die Spiele der Teams und die Referenzspiele werden nur einmal bestimmt.
+    references: fertige Ligareferenzen (league_references), sonst werden sie hier berechnet."""
     def th(key: str) -> Thresholds:
         return thresholds(match.league, key) if thresholds else STANDARD_THRESHOLDS
 
-    games = {t: team_games(prepared, t, match.season, match.stichtag, SAMPLE) for t in (match.home, match.away)}
-    label, ref_games = reference_games(prepared, match, matchdays_per_season)
-    goals = tuple(team_value(t, games[t], _goals) for t in (match.home, match.away))
-    cards = tuple(team_value(t, games[t], _own_cards(t)) for t in (match.home, match.away))
+    teams = (match.home, match.away)
+    rows = {t: rows_of(team_games(prepared, t, match.season, match.stichtag, SAMPLE)) for t in teams}
+    refs = references if references is not None else league_references(prepared, match, matchdays_per_season)
+    goals = tuple(team_value(t, rows[t], _goals) for t in teams)
+    cards = tuple(team_value(t, rows[t], _own_cards(t)) for t in teams)
     stats = {}
     for key, spec in STAT_KPIS.items():
-        scale = 100 if spec.percent else 1
-        home, away = (team_value(t, games[t], spec.per_game, scale) for t in (match.home, match.away))
-        stats[key] = kpi_stat(spec, home, away, reference_value(label, ref_games, spec.per_game, scale), th(key))
+        home, away = (team_value(t, rows[t], spec.per_game, spec.scale) for t in teams)
+        stats[key] = kpi_stat(spec, home, away, refs[key], th(key))
     return MatchKpis(
         match=match,
-        form_home=_form(match.home, games[match.home].tail(FORM_SAMPLE)),   # die letzten 5 der letzten 10
-        form_away=_form(match.away, games[match.away].tail(FORM_SAMPLE)),
-        kpi02=kpi02(prepared, match, matchdays_per_season, goals,
-                    reference_value(label, ref_games, _goals), th("kpi02")),
+        form_home=_form(match.home, rows[match.home][-FORM_SAMPLE:]),   # die letzten 5 der letzten 10
+        form_away=_form(match.away, rows[match.away][-FORM_SAMPLE:]),
+        kpi02=kpi02(prepared, match, matchdays_per_season, goals, refs["kpi02"], th("kpi02")),
         kpi03=kpi03(prepared, match, goals, th("kpi03")),
-        kpi04=kpi04(prepared, match, matchdays_per_season, cards,
-                    reference_value(label, ref_games, _both_cards), th("kpi04")),
+        kpi04=kpi04(prepared, match, matchdays_per_season, cards, refs["kpi04"], th("kpi04")),
         **stats,
     )

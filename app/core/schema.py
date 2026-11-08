@@ -82,6 +82,10 @@ REQUIRED_COLUMNS = ID_COLUMNS + GOAL_BLOCK
 INTEGER_REQUIRED = ("Gameday", "id") + GOAL_COLUMNS
 NUMERIC_OPTIONAL = STAT_COLUMNS
 
+# Ganze Zahlen erwartet (seit H.1): alle Anzahlen. Nur der Ballbesitz (in %) darf Kommastellen haben.
+POSSESSION_COLUMNS = tuple(c for c in STAT_COLUMNS if "Ball Possession" in c)
+COUNT_COLUMNS = tuple(c for c in STAT_COLUMNS if c not in POSSESSION_COLUMNS)
+
 VALID_RESULTS = frozenset({"H", "D", "A"})
 
 # Zusammengehörige Tor-Spalten: (Heim, Auswärts, Ergebnis)

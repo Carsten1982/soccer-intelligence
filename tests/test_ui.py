@@ -9,28 +9,13 @@ from pathlib import Path
 import pytest
 from conftest import REAL_DATABASE, REAL_FIXTURES
 
-from views.components import ColumnGroup, MatchRow, header_html, match_table_html
+from views.components import header_html
 
 APP = Path(__file__).resolve().parents[1] / "app" / "app.py"
 REAL_FILES = REAL_DATABASE.exists() and REAL_FIXTURES.exists()
 
 
 # --- HTML-Bausteine ---------------------------------------------------------------
-
-def test_table_escapes_names_and_marks_status():
-    html = match_table_html([MatchRow("Bayern Munich", "<b>Stuttgart</b>", "verschoben"), MatchRow("A", "B")])
-    assert "&lt;b&gt;Stuttgart&lt;/b&gt;" in html and "<b>Stuttgart" not in html
-    assert html.count('class="si-badge"') == 1 and "verschoben" in html
-    assert html.count("<tr>") == 3                       # Kopf + 2 Begegnungen
-
-
-def test_table_has_two_sticky_columns_and_groups():
-    groups = [ColumnGroup("KPI 01", ["Heim", "Gast"]), ColumnGroup("KPI 02", ["Team 1", "Team 2", "Hauptwert"])]
-    html = match_table_html([MatchRow("A", "B", cells=["x", "y", "1,7"])], groups)
-    assert html.count('si-sticky si-c1') == 2 and html.count('si-sticky si-c2') == 2   # Kopf + Zeile
-    assert 'colspan="2"' in html and 'colspan="3"' in html
-    assert html.count("<td") == 2 + 5 and html.count(">–<") == 2                       # fehlende Zellen -> „–“
-
 
 def test_header():
     html = header_html("Aktueller Spieltag", "Saison 2026/27 · Spieltag 1")

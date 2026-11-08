@@ -5,6 +5,22 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 08.11.2026 – H.1: Aufräumen und Tempo (Version 0.9.1, Paket bereit)
+
+- **Carsten** · Code-Prüfung durch einen zweiten Claude (Opus) beauftragt. Bericht: keine Rechenfehler; 3 mögliche Abstürze, Tempo, Aufräumen. **Freigabe H.1** mit Entscheidungen: (1) Kommazahl bei Toren, `Gameday` oder `id` = Fehler; bei Ecken, Karten, Schüssen = Warnung, der Wert gilt als fehlend, nie abschneiden. (2) Anteile in der Häufigkeit kaufmännisch runden wie alle anderen Werte.
+- **Claude** · Abstürze verhindert: Blatt *Datenhinweise* ohne Spalte `Liga` (R1); kaputtes XML in einer Excel-Datei → Meldung „Datei nicht lesbar“ statt Absturz, in Datenbank und Spielplan (R2); ungültige `teams.toml` oder `schwellen.toml` → Meldung „Konfiguration ungültig“ beim Start (R3).
+- **Claude** · Tempo: Spiele je Begegnung nur noch einmal in Zeilen umgewandelt (L1); Ligareferenzen in der Häufigkeit je Saison, Spieltag **und Stichtag** geteilt (L2). Häufigkeit vier Ligen 28,7 → 5,8 s, aktueller Spieltag (39 Begegnungen) 0,76 → 0,18 s. KPI-Ergebnisse eines Spieltags werden zwischengespeichert (L3), neu berechnet erst, wenn sich Datenbank, Spielplan, Schwellen, Ligen oder Teamliste ändern.
+- **Claude** · Aufbau: Berechnung der Spieltags-KPIs aus der Oberfläche nach `app/core/results.py` (A11, Top Anomalien ruft nicht mehr den Liga-Bereich auf); Top Anomalien rechnet erst nach der Fehlerprüfung (R7); `League.matchdays` statt mehrfach `2 × (Teams − 1)` (A5); gemeinsame Prüfsumme `app/core/files.py` (A4); Meldungen „Statistik fehlt“ je Stufe auf 50 begrenzt wie alle anderen (R8).
+- **Claude** · Aufräumen: alte Tabelle aus Etappe C/F samt CSS entfernt (A1), ungenutzte Funktionen und Doppelungen entfernt (A2, A3, A8), Importe in `state.py` (A7), veraltete Kommentare (A9), doppelte und veraltete Tests (A10), Formkurve nutzt die Konstante statt „5“ (A12). Nicht umgesetzt: R9 (`except Exception` um `st.page_link`), weil es sich ohne Streamlit nicht prüfen lässt.
+- **Claude** · Prüfung: alle 8'808 Begegnungen und die Häufigkeit vor und nach dem Umbau verglichen, **vollständig identisch** (alle Werte, Texte, ids); Gegenrechnung weiter 0 Abweichungen; Seiten-HTML identisch; 31 neue Tests (`tests/test_h1.py`, Loader, Spielplan), 4 entfernt, lokal 279 bestanden. Protokoll `docs/tests/pruefprotokoll_h1.md`.
+- **Claude** · Doku: `03_KPI_Regelwerk.md` v2.2 (Kommazahlen gelten als fehlend), `02_Datenbasis.md` (Prüfregeln), `05_Dashboard.md` v4.7 (6.3, 11), `01_Technisches_Setup.md` (Status, Architektur, Test-Befehl), `CLAUDE.md` v1.7.
+- **Offen** · Einspielen (Anleitung `ANLEITUNG_ETAPPE_H1.md`), Kurzprüfung im Browser, Commit.
+
+## 08.11.2026 – Etappe H eingespielt
+
+- **Carsten** · Etappe H eingespielt: 260 Tests bestanden, 1 übersprungen; `/` 200, `/dashboard/` 401; Git `51e595b`. Test-Befehl dabei korrigiert (`tests` am Ende, `SI_DATA_DIR=/src/data`).
+- **Claude** · Word-Dokument „KPI-Definitionen“ aus dem Regelwerk neu erzeugt (`Soccer_Intelligence_KPI-Definitionen_2026-11-08.docx` auf Carstens PC, nur Archiv; massgeblich bleibt die md-Datei).
+
 ## 08.11.2026 – Neue KPIs 05–13: Spezifikation, Rundgang, Testfälle bestätigt, Freigabe Etappe H
 
 - **Carsten** · Spezifikation „KPI-Regelwerk KPI 05–13, Entwurf“ (Word): 5 Frontend-KPIs (05 Ecken, 06 Tore 1. HZ, 07 Tore 2. HZ, 08 Beide Teams treffen, 09 Schüsse aufs Tor) und 4 Simulations-KPIs nur im Backend (10/11 Angriff gegen Abwehr, 12 Offensivdruck, 13 Abschluss-Effizienz). Ziel: später Schwellen je Liga/KPI schärfen und Ergebniskontrolle („trifft die Anomalie ein?“).

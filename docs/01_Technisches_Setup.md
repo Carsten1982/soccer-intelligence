@@ -1,6 +1,6 @@
 # Soccer Intelligence – Technisches Setup
 
-**Stand:** 08.11.2026 · **Status:** Etappen A–F in Betrieb (Version 0.8, vier Ligen). Etappe H (KPI 05–09, zwei Nachkommastellen, Top Anomalien über KPI 02–09, Version 0.9) als Paket bereit. Datenlieferung (Etappe G) in Klärung.
+**Stand:** 08.11.2026 · **Status:** Etappen A–F und H in Betrieb (Version 0.9, vier Ligen, KPI 01–09; Etappe H eingespielt 08.11.2026, Git `51e595b`). H.1 (Aufräumen und Tempo, Version 0.9.1) als Paket bereit. Datenlieferung (Etappe G) in Klärung.
 **Verantwortlich:** Carsten Thiele · **Mitwirkende:** ChatGPT (Server-Setup, Review), Claude (Daten, Architektur, Code)
 
 ---
@@ -30,7 +30,8 @@
 | Daten Serie A und LaLiga | ✅ aufbereitet 04.–07.11.2026 | Datum und Spieltag ergänzt, bereinigt (`02_Datenbasis.md`, Abschnitt 4c); Datenbank und Spielplan mit vier Blättern auf dem Server |
 | Erweiterung auf vier Ligen (Etappe F) | ✅ in Betrieb | eingespielt 07.11.2026 (Git `cc00dd9`, 171 Tests bestanden), Version 0.8; Gegenrechnung aller 8'808 Begegnungen ohne Abweichung (`docs/tests/pruefprotokoll_etappe_f.md`) |
 | Regelmässige Datenlieferung (Etappe G) | 🔎 in Klärung | Footiqo: fester Download-Link, kumulative Excel-Datei, Di/Do; Konzept: `06_Datenlieferung.md` |
-| Neue KPIs 05–09 (Frontend) und 10–13 (Simulation) | ✅ Testfälle KPI 05–09 bestätigt 08.11.2026 · 📦 Etappe H als Paket bereit (Vollvergleich 8'808 Begegnungen ohne Abweichung) | Regelwerk v2.1 Abschnitte 9–10; Testfälle `docs/tests/test_kpi05…09…` (61 Ergebnisse, Excel-Nachprüfung identisch); zwei Nachkommastellen für alle KPIs; KPI 10–13 weiter Entwurf (Etappe I) |
+| Neue KPIs 05–09 (Frontend) und 10–13 (Simulation) | ✅ KPI 05–09 in Betrieb (Etappe H, eingespielt 08.11.2026, Git `51e595b`, 260 Tests bestanden; Vollvergleich 8'808 Begegnungen ohne Abweichung) | Regelwerk v2.1 Abschnitte 9–10; Testfälle `docs/tests/test_kpi05…09…` (61 Ergebnisse, Excel-Nachprüfung identisch); zwei Nachkommastellen für alle KPIs; KPI 10–13 weiter Entwurf (Etappe I) |
+| Code-Prüfung und H.1 (Aufräumen und Tempo) | 📦 Paket bereit (Version 0.9.1) | Prüfung durch einen zweiten Claude (08.11.2026): keine Rechenfehler; 3 mögliche Abstürze, Tempo, Aufräumen. H.1 behebt die Funde ohne Änderung an den Ergebnissen (`docs/tests/pruefprotokoll_h1.md`) |
 | Öffentliche Website | ⏳ später | nach Etappe F und Klärung der Datenquelle |
 
 ---
@@ -315,6 +316,12 @@ curl -s -o /dev/null -w "%{http_code}\n" https://soccer-intelligence.com/       
 curl -s -o /dev/null -w "%{http_code}\n" https://soccer-intelligence.com/dashboard/   # ohne Passwort, erwartet: 401
 ```
 
+**Tests vor dem Neubau** (Wegwerf-Container, Projekt nur lesend eingebunden; bewährt seit Etappe H). Wichtig: `tests` am Ende (sonst sammelt pytest auch `backup/`) und `SI_DATA_DIR=/src/data` (sonst finden die Seitentests die Excel-Dateien nicht):
+
+```bash
+cd /docker/football-dashboard && docker run --rm -v "$PWD":/src:ro -e SI_DATA_DIR=/src/data -e PYTHONDONTWRITEBYTECODE=1 -w /src python:3.12-slim sh -c "pip install -q --root-user-action=ignore -r requirements-dev.txt && python -m pytest -q -p no:cacheprovider tests" 2>&1 | tail -15
+```
+
 ### Dashboard-Zugang setzen oder Passwort ändern
 
 ```bash
@@ -339,29 +346,37 @@ sha256sum data/Database-Soccer-Intelligence.xlsx
 
 ---
 
-## 7. Geplante Architektur (freigegeben am 25.10.2026)
+## 7. Architektur (freigegeben am 25.10.2026, Stand H.1)
 
 ```
 app/
-├── app.py                Navigation
-├── state.py              Laden mit Cache (neu laden bei geänderter Datei)
+├── app.py                Navigation; prüft beim Start ligen.toml, teams.toml und schwellen.toml
+├── state.py              Laden mit Cache (neu laden bei geänderter Datei), KPI-Ergebnisse je Spieltag (H.1)
 ├── config/               Konfiguration, mit dem Code versioniert (Änderung -> Container neu bauen)
 │   ├── ligen.toml        aktive Ligen, Adresse, Anzahl Teams (Etappe B)
-│   └── teams.toml        Teamliste: bekannte Teams ohne Datenbankeinträge, z. B. Aufsteiger (Etappe B)
+│   ├── teams.toml        Teamliste: bekannte Teams ohne Datenbankeinträge, z. B. Aufsteiger (Etappe B)
+│   └── schwellen.toml    Schwellen der Anomalie-Einstufung je Liga und KPI (Etappe H)
 ├── core/                 Kernlogik ohne Oberfläche (testbar)
+│   ├── settings.py       Pfade, Pflichtblätter, Version
 │   ├── schema.py         erwartete Struktur der Excel-Datei
+│   ├── files.py          Prüfsumme einer Datei (H.1)
 │   ├── loader.py         Einlesen + Strukturprüfung
 │   ├── validation.py     Plausibilitätsprüfungen
+│   ├── rows.py, issues.py  Prüfmeldungen (Fehler, Warnung, Hinweis)
 │   ├── config.py         Einlesen der Konfiguration (Etappe B)
 │   ├── fixtures.py       Spielplan einlesen und prüfen (Etappe B)
 │   ├── matchday.py       aktueller Spieltag, Spieltagsübersicht (Etappe B)
-│   ├── kpis.py           KPI 01–04 gemäss Regelwerk (Etappe C)
+│   ├── overview.py       Übersicht der Datenbank (Spiele je Saison)
+│   ├── kpis.py           KPI 01–09 gemäss Regelwerk (Etappen C und H)
+│   ├── thresholds.py     Schwellen aus schwellen.toml (Etappe H)
+│   ├── results.py        KPI-Ergebnisse aller Begegnungen eines Spieltags (H.1)
+│   ├── top.py            Auswahl der Top Anomalien (Etappe D, ab H über KPI 02–09)
 │   └── frequency.py      Häufigkeit der Anomalien (Etappe C)
-└── views/                Bereiche: Top Anomalien, je Liga, Datenqualität; components.py = Kopfbereich, Tabelle;
-                          kpi_table.py = KPI-Zellen der Liga-Tabelle
+└── views/                Bereiche: Top Anomalien, je Liga, Datenqualität; components.py = Stil, Kopfbereich,
+                          Sperrhinweis; kpi_table.py = kompakte Liga-Tabelle mit Aufklappen (Etappe H)
 tests/                    automatische Tests; gegenrechnung.py = unabhängige zweite KPI-Berechnung (Etappe F)
 data/Spielplan.xlsx       anstehende Partien
-docs/                     Dokumentation (01–05, tests/)
+docs/                     Dokumentation (01–06, tests/)
 CLAUDE.md                 Projektübersicht für Claude Code
 CHANGELOG.md              Änderungsprotokoll
 ```
@@ -380,7 +395,8 @@ CHANGELOG.md              Änderungsprotokoll
 | **Phase 1 abgeschlossen** | Etappen A–E in Betrieb | – | ✅ 31.10.2026 |
 | F – Vier Ligen | Serie A (`/dashboard/serie-a`) und LaLiga (`/dashboard/laliga`): Konfiguration, Blattname `Serie A` im Code, Aufsteiger in der Teamliste, kompakter Kopfbereich, Top Anomalien und Datenqualität über vier Ligen, Tests, Doku | Daten auf dem Server ✅, LaLiga 17.05.2026 korrigiert ✅, Freigabe 07.11.2026 ✅ | ✅ eingespielt 07.11.2026 (Git `cc00dd9`) |
 | G – Datenlieferung | regelmässiger Import mit Prüfschranke (Footiqo, Download-Link), Konzept `06_Datenlieferung.md` | Antworten von Footiqo, Testkauf, Freigabe | 🔎 in Klärung |
-| H – KPI 05–09 | Frontend-KPIs 05–09 gemäss Regelwerk 9, zwei Nachkommastellen für alle KPIs, Schwellen-Konfiguration (`schwellen.toml`), kompakte Tabelle mit Aufklappen, Top Anomalien über KPI 02–09, Anzeige der Schwellen in Datenqualität, Tests aus den Testfällen + Gegenrechnung | Testfälle bestätigt ✅, Design abgenommen ✅, Backup ✅ (08.11.2026) | 📦 Paket bereit (Version 0.9, `ANLEITUNG_ETAPPE_H.md`) |
+| H – KPI 05–09 | Frontend-KPIs 05–09 gemäss Regelwerk 9, zwei Nachkommastellen für alle KPIs, Schwellen-Konfiguration (`schwellen.toml`), kompakte Tabelle mit Aufklappen, Top Anomalien über KPI 02–09, Anzeige der Schwellen in Datenqualität, Tests aus den Testfällen + Gegenrechnung | Testfälle bestätigt ✅, Design abgenommen ✅, Backup ✅ (08.11.2026) | ✅ eingespielt 08.11.2026 (Git `51e595b`, 260 Tests bestanden) |
+| H.1 – Aufräumen und Tempo | Funde der Code-Prüfung: 3 mögliche Abstürze behoben, KPI-Berechnung etwa 4× schneller (Häufigkeit 30 → 6 s), Zwischenspeicher für die KPIs eines Spieltags, Kommazahlen nie abschneiden, alte Tabelle entfernt; Ergebnisse unverändert | Etappe H ✅, Freigabe Carsten 08.11.2026 ✅ | 📦 Paket bereit (Version 0.9.1, `ANLEITUNG_ETAPPE_H1.md`) |
 | I – Simulation | Bereich „Simulation“ (intern): zuerst Schwellen-Analyse je KPI und Liga mit anschliessendem Feintuning, Gewichtung der Top Anomalien; danach KPI 10–13 und Ergebniskontrolle | Etappe H, Spezifikation Ergebniskontrolle (Regelwerk 8.13) | ⏳ geplant |
 | Öffentliche Website | eigener Architekturvorschlag (Mobile First), eigener Ordner und eigenes Repository empfohlen | Etappe F, Datenquelle geklärt (G) | später |
 

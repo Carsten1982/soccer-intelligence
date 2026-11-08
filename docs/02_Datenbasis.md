@@ -1,6 +1,6 @@
 # Soccer Intelligence – Datenbasis
 
-**Stand:** 07.11.2026 (vier Ligen: Bundesliga, Premier League, Serie A, LaLiga; je 58 Spalten inkl. `Gameday`; Saisons 2020/21–2025/26 plus laufende Saison 2026/27)
+**Stand:** 08.11.2026 (Prüfregeln für Kommazahlen ergänzt, H.1; vier Ligen: Bundesliga, Premier League, Serie A, LaLiga; je 58 Spalten inkl. `Gameday`; Saisons 2020/21–2025/26 plus laufende Saison 2026/27)
 **Datei:** `/docker/football-dashboard/data/Database-Soccer-Intelligence.xlsx`
 **SHA-256 (aktiv seit 31.10.2026):** `6b84d8d230f61b02166bead571a72ce599ec8d230cdda8c90f9b258dc8a46014`
 
@@ -81,6 +81,7 @@ Die laufende Saison 2026/27 wird spieltagweise ergänzt (seit 31.10.2026, zuerst
 - Fehlende Statistikwerte bleiben leer.
 - Die App lässt leere Werte bei Durchschnitten weg und zeigt an, auf wie vielen Spielen ein Wert beruht.
 - Kein Text wie „n/a“ in Zahlenspalten.
+- Anzahlen (Tore, Ecken, Karten, Schüsse) sind ganze Zahlen. Steht bei Ecken, Karten oder Schüssen eine Kommazahl, behandelt die App den Wert wie eine leere Zelle und meldet eine Warnung (seit H.1).
 - Jeder Sonderfall wird im Blatt **Datenhinweise** dokumentiert.
 
 ### Blatt „Datenhinweise“
@@ -182,6 +183,7 @@ Carsten hat die Spiele von Serie A und LaLiga in die Datei übernommen. Claude h
 - Spaltenanzahl, Spaltennamen oder Reihenfolge weichen von den 58 Spalten ab
 - Pflichtfeld leer (Datum, Gameday, id, Liga, Saison, Teams, Tore, Ergebnisse)
 - Text statt Zahl, Ergebnis nicht H/D/A, ungültiges Datum oder Saisonformat
+- Kommazahl bei Toren, `Gameday` oder `id` (nur ganze Zahlen erlaubt; seit H.1, 08.11.2026)
 - doppelte id innerhalb eines Blatts
 
 ### Warnung – wahrscheinlich ein Datenfehler
@@ -192,7 +194,8 @@ Carsten hat die Spiele von Serie A und LaLiga in die Datei übernommen. Claude h
 - Halbzeitwerte ergeben nicht den Gesamtwert (Ecken, Karten, Schüsse)
 - Ballbesitz Heim + Auswärts ≠ 100 %
 - Schüsse gesamt < aufs Tor + daneben
-- fehlende Statistik, die nicht in Datenhinweise dokumentiert ist
+- Kommazahl bei Ecken, Karten oder Schüssen (seit H.1): Der Wert gilt als **fehlend** – er wird nie abgeschnitten und nie als 0 gerechnet. Der Ballbesitz (in %) darf Kommastellen haben.
+- fehlende Statistik, die nicht in Datenhinweise dokumentiert ist (je Stufe höchstens 50 Einzelmeldungen, danach eine Sammelzeile „… und n weitere Zeilen“)
 - Saison unvollständig (n Teams → n × (n−1) Spiele), doppelte Paarung
 - `Date` passt nicht zu `matchDate`, negativer Wert
 - `Gameday` ausserhalb 1 bis 2 × (Teams − 1), Spieltag mit falscher Anzahl Spiele, Team mehrfach im selben Spieltag

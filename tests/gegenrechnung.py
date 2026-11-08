@@ -1,5 +1,5 @@
 """Unabhängige Gegenrechnung der KPIs 01–09 (Etappe F, 07.11.2026; KPI 05–09 und zwei Nachkommastellen
-seit Etappe H, 08.11.2026).
+seit Etappe H, 08.11.2026; Kommazahlen gelten seit H.1 als fehlend).
 
 Zweck: die Berechnung der App (app/core/kpis.py) mit einer ZWEITEN, getrennt geschriebenen Umsetzung
 vergleichen – direkt aus dem Text von docs/03_KPI_Regelwerk.md, ohne Code der App wiederzuverwenden:
@@ -58,7 +58,11 @@ class Game:
 
 
 def _num(v):
-    return None if v is None or (isinstance(v, str) and not v.strip()) else int(v)
+    """Ganze Zahl oder None. Leer oder mit Kommastellen (z. B. 4,5 Ecken) gilt als fehlend, nie abschneiden (H.1)."""
+    if v is None or (isinstance(v, str) and not v.strip()):
+        return None
+    number = float(v)
+    return int(number) if number.is_integer() else None
 
 
 def read_league(path, sheet: str) -> list[Game]:

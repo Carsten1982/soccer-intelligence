@@ -1,6 +1,6 @@
 # Soccer Intelligence – Dashboard-Briefing
 
-**Version 4.6** · Stand 08.11.2026
+**Version 4.7** · Stand 08.11.2026 (H.1: Anteile kaufmännisch gerundet, Architektur-Hinweis)
 
 > **Massgebliche Quelle seit 31.10.2026.** Änderungen werden nur noch in dieser Datei gemacht, mit Datum in der Änderungshistorie bzw. im `CHANGELOG.md`.
 > Das Word-Dokument *Dashboard-Briefing v4.2* liegt nur noch als Archiv im Ordner `word/` und wird nicht mehr gepflegt. Änderungen seit 31.10.2026 sind im Text als „Änderung“ mit Datum gekennzeichnet.
@@ -337,6 +337,8 @@ Für jede Liga und jeden KPI (ausser KPI01) wird angezeigt, wie oft keine, leich
 
 **Ergänzung 08.11.2026 (ab Etappe H):** Unter der Häufigkeit werden die **gültigen Schwellenwerte** angezeigt (Standard ±20 % / ±35 % und allfällige Abweichungen je Liga und KPI aus `app/config/schwellen.toml`, KPI-Regelwerk 2.2). Nur Anzeige, keine Bearbeitung.
 
+**Ergänzung 08.11.2026 (H.1):** Die Anteile „leicht“ und „stark“ werden wie alle Werte im Dashboard mit zwei Nachkommastellen **kaufmännisch** gerundet (0,125 % → 0,13 %). Die Berechnung für alle vier Ligen dauert beim ersten Aufruf je Datenbankstand rund 6 Sekunden (vorher rund 30).
+
 ### 6.4 Simulation (geplant, Etappe I)
 
 Ein zusätzlicher Bereich „Simulation“ (nur intern) rechnet mit historischen Spielen: Simulations-KPIs 10–13 (KPI-Regelwerk, Abschnitt 10), Ergebniskontrolle (wie oft eine Anomalie im Spiel eingetroffen ist) und alternative Schwellen je Liga und KPI. Die Simulation verändert keine Live-Werte; übernommene Schwellen werden bewusst in `schwellen.toml` eingetragen. Spezifikation folgt vor Etappe I.
@@ -526,6 +528,8 @@ Die gleiche Daten- und Berechnungslogik soll später sowohl für das interne Das
 Das öffentliche Frontend und das interne Dashboard dürfen unterschiedliche Oberflächen haben, sollen aber auf derselben fachlichen Berechnungsgrundlage aufbauen.
 
 Die URL-Navigation muss ebenfalls sauber in die bestehende Architektur integriert werden.
+
+**Umsetzung (H.1, 08.11.2026):** Die KPI-Ergebnisse eines Spieltags berechnet `app/core/results.py` (ohne Oberfläche). Der Liga-Bereich und die Top Anomalien nutzen dieselbe Funktion und denselben Zwischenspeicher (`state.get_matchday_kpis`); ein Bereich ruft den anderen nicht mehr auf. Der Zwischenspeicher wird neu berechnet, sobald sich Datenbank, Spielplan, Schwellen, Ligen oder Teamliste ändern.
 
 ## 12. Responsive Darstellung
 

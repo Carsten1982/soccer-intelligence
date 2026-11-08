@@ -1,6 +1,6 @@
 # Soccer Intelligence – KPI-Regelwerk
 
-**Spezifikation v2.1** · Stand 08.11.2026 · KPI 01–09 gültig (01–04 umgesetzt; 05–09, zwei Nachkommastellen und Top-Anomalien über KPI 02–09 folgen mit Etappe H) · KPI 10–13 Entwurf (Abschnitt 10)
+**Spezifikation v2.2** · Stand 08.11.2026 · KPI 01–09 gültig und umgesetzt (KPI 05–09, zwei Nachkommastellen und Top-Anomalien über KPI 02–09 seit Etappe H, eingespielt 08.11.2026) · KPI 10–13 Entwurf (Abschnitt 10)
 
 > **Massgebliche Quelle seit 31.10.2026.** Änderungen werden nur noch in dieser Datei gemacht, mit Datum in der Änderungshistorie bzw. im `CHANGELOG.md`.
 > Das Word-Dokument „Definition der Dashboard-KPIs (final)“ (Arbeitsstand 30.10.2026) liegt nur noch als Archiv im Ordner `word/` und wird nicht mehr gepflegt.
@@ -14,6 +14,7 @@ Abschnitt 8 sammelt offene Punkte.
 | Datum | Änderung | Abschnitt |
 |---|---|---|
 | 27.10.2026 | Erstfassung KPIs 01–04 | alle |
+| 08.11.2026 | **v2.2** (H.1): Ein Statistikwert mit Kommastellen (z. B. 4,5 Ecken) gilt als **fehlend** und wird nie abgeschnitten; die Datenprüfung meldet ihn als Warnung. Keine Änderung an Formeln oder Testfällen | 1 |
 | 28.10.2026 | Ligareferenz über Spalte `Gameday` (letzte 20 Spieltage), Regel für Nachholspiele, fehlende Kartenwerte in Referenzspielen; offener Punkt 5 erledigt | 1.1, 6 |
 | 30.10.2026 | Zeitlicher Abstand von 3 auf 2 Kalendertage reduziert, gilt nur für Teamwerte; offener Punkt 4 erledigt | 1 |
 | 31.10.2026 | v1.2: Diese Datei ist die massgebliche Quelle, Word nur noch Archiv | Kopf |
@@ -40,7 +41,7 @@ Weitere KPIs werden im Projektverlauf ergänzt. Beispielrechnungen und Testfäll
 | Zeitlicher Abstand | Nur Spiele, die **mindestens 2 Kalendertage vor** dem Stichtag stattfanden. Beispiel: Spiel am Fr 30.10.2026 → Spiele bis einschliesslich Mi 28.10.2026. Spiele vom selben Tag oder vom Vortag zählen nie. Die Regel gilt für die **Teamwerte**, nicht für die Ligareferenz; diese wird ausschliesslich über die Spalte `Gameday` bestimmt (Abschnitt 1.1). |
 | Keine Zukunftsdaten | Das analysierte Spiel und alle späteren Spiele fliessen weder in Teamwerte noch in die Ligareferenz ein. |
 | Ergebnis | Massgeblich ist das **Ergebnis auf dem Platz**, nicht eine spätere Wertung am grünen Tisch (z. B. Union Berlin – Bochum, 14.12.2024: 1:1). |
-| Fehlende Werte | Darstellung als „–“. **Niemals automatisch als 0** interpretieren. |
+| Fehlende Werte | Darstellung als „–“. **Niemals automatisch als 0** interpretieren. Ein Wert mit Kommastellen in einer Spalte mit Anzahlen (Ecken, Karten, Schüsse) gilt ebenfalls als fehlend: Er wird **nie abgeschnitten** (aus 4,5 wird nicht 4); die Datenprüfung meldet eine Warnung (seit H.1, 08.11.2026). Bei Toren, `Gameday` und `id` ist eine Kommazahl ein Fehler und sperrt die Datenbank. |
 | Fehlender KPI-Wert in einem Spiel | Spiel wird für diesen KPI ausgelassen, **kein älteres Spiel nachgezogen**. Stichprobe sinkt (z. B. 9 statt 10) → „vorläufig“. Reihenfolge: **zuerst** die letzten 5 bzw. 10 Spiele bestimmen, **danach** Spiele ohne Wert entfernen. Ein Spiel ohne Ergebnis gilt nicht als abgeschlossen und zählt für keinen KPI. |
 | Sortierung | Spiele eines Teams aufsteigend nach `Date`, dann Uhrzeit aus `matchDate`, dann `id`. „Die letzten N Spiele“ sind die N neuesten nach dieser Sortierung. |
 | Standard-Stichprobe | KPI 01: 5 Spiele · KPI 02–04: 10 Spiele. |
