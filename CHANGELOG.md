@@ -5,7 +5,14 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
-## 08.11.2026 – H.1: Aufräumen und Tempo (Version 0.9.1, Paket bereit)
+## 08.11.2026 – H.2: Stabilität (Version 0.9.2, Paket bereit)
+
+- **Carsten** · Zweite Code-Prüfung durch ChatGPT: 6 Stabilitätsbefunde S1–S6. **Claude** · alle 6 am Code nachvollzogen (S1–S4 selbst nachgestellt), keiner betrifft die KPI-Berechnung mit den echten Daten. **Carsten** · Freigabe zur Umsetzung.
+- **Claude** · S1: `ligen.toml`, `teams.toml`, `schwellen.toml` mit falscher Struktur (z. B. `liga = 1`, `standard = 35`) oder als Ordner → Meldung „Konfiguration ungültig“ statt Absturz (`config.table_list`). S2: Zahl in der Spalte `Date` (z. B. 45800) → Fehler „Ungültiges Datum“, statt still als 01.01.1970 gelesen zu werden. S3: id `inf`, `-inf`, NaN, Text → kein Absturz mehr beim Erstellen der Meldungen (`rows.valid_id`). S4: Datenhinweis mit id 1,5 gilt für kein Spiel (vorher für Spiel 1). S5: Zwischenspeicher erkennt eine ersetzte Datei auch bei gleicher Grösse und Änderungszeit (Schlüssel zusätzlich mit ctime und Dateinummer, `files.file_key`; betrifft Datenbank, aufbereitete Ligen, Häufigkeit, Spieltags-KPIs, Schwellen, Spielplan). S6: Datenbank und Spielplan werden nur einmal gelesen; Prüfsumme und Inhalt stammen sicher vom selben Stand, eine verschwundene Datei ergibt „Datei nicht lesbar“ (`files.read_file`). Zudem: `tests/test_ui.py` lässt sich ohne Streamlit laden.
+- **Claude** · Prüfung: 32 neue Tests (`tests/test_h2.py`), lokal 311 bestanden; alle 8'808 Begegnungen, Häufigkeit und Prüfmeldungen vor/nach identisch. Formeln, Schwellen, Testfälle und Darstellung unverändert. `02_Datenbasis.md`: Prüfregeln (Zahl statt Datum, Datenhinweis-id).
+- **Offen** · Einspielen (`ANLEITUNG_ETAPPE_H2.md`), Commit.
+
+## 08.11.2026 – H.1: Aufräumen und Tempo (Version 0.9.1, eingespielt)
 
 - **Carsten** · Code-Prüfung durch einen zweiten Claude (Opus) beauftragt. Bericht: keine Rechenfehler; 3 mögliche Abstürze, Tempo, Aufräumen. **Freigabe H.1** mit Entscheidungen: (1) Kommazahl bei Toren, `Gameday` oder `id` = Fehler; bei Ecken, Karten, Schüssen = Warnung, der Wert gilt als fehlend, nie abschneiden. (2) Anteile in der Häufigkeit kaufmännisch runden wie alle anderen Werte.
 - **Claude** · Abstürze verhindert: Blatt *Datenhinweise* ohne Spalte `Liga` (R1); kaputtes XML in einer Excel-Datei → Meldung „Datei nicht lesbar“ statt Absturz, in Datenbank und Spielplan (R2); ungültige `teams.toml` oder `schwellen.toml` → Meldung „Konfiguration ungültig“ beim Start (R3).
@@ -14,7 +21,7 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 - **Claude** · Aufräumen: alte Tabelle aus Etappe C/F samt CSS entfernt (A1), ungenutzte Funktionen und Doppelungen entfernt (A2, A3, A8), Importe in `state.py` (A7), veraltete Kommentare (A9), doppelte und veraltete Tests (A10), Formkurve nutzt die Konstante statt „5“ (A12). Nicht umgesetzt: R9 (`except Exception` um `st.page_link`), weil es sich ohne Streamlit nicht prüfen lässt.
 - **Claude** · Prüfung: alle 8'808 Begegnungen und die Häufigkeit vor und nach dem Umbau verglichen, **vollständig identisch** (alle Werte, Texte, ids); Gegenrechnung weiter 0 Abweichungen; Seiten-HTML identisch; 31 neue Tests (`tests/test_h1.py`, Loader, Spielplan), 4 entfernt, lokal 279 bestanden. Protokoll `docs/tests/pruefprotokoll_h1.md`.
 - **Claude** · Doku: `03_KPI_Regelwerk.md` v2.2 (Kommazahlen gelten als fehlend), `02_Datenbasis.md` (Prüfregeln), `05_Dashboard.md` v4.7 (6.3, 11), `01_Technisches_Setup.md` (Status, Architektur, Test-Befehl), `CLAUDE.md` v1.7.
-- **Offen** · Einspielen (Anleitung `ANLEITUNG_ETAPPE_H1.md`), Kurzprüfung im Browser, Commit.
+- **Carsten** · H.1 eingespielt: Backup `backup/2026-11-08_1042_vor_H1` (Git `51e595b`), 287 Tests bestanden, 1 übersprungen; `/` 200, `/dashboard/` 401; Git `b5a7ea8`.
 
 ## 08.11.2026 – Etappe H eingespielt
 

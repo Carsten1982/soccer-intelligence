@@ -17,12 +17,13 @@ import re
 import zipfile
 from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
+from io import BytesIO
 from pathlib import Path
 
 import pandas as pd
 
 from .config import League, Team
-from .files import sha256_of
+from .files import read_file
 from .issues import FEHLER, HINWEIS, WARNUNG, Issue
 
 # --- Aufbau der Datei ------------------------------------------------------
@@ -308,10 +309,11 @@ def load_fixtures(
     if not path.exists():
         result.issues.append(Issue(FEHLER, sheet, "Datei fehlt", f"Datei nicht gefunden: {path}"))
         return result
-    result.file_modified = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
     try:
-        result.sha256 = sha256_of(path)
-        sheets = pd.read_excel(path, sheet_name=None, engine="openpyxl", dtype=object)
+        # Datei nur einmal lesen: Prüfsumme und Inhalt stammen so sicher vom selben Stand (H.2)
+        content = read_file(path)
+        result.sha256, result.file_modified = content.sha256, content.modified
+        sheets = pd.read_excel(BytesIO(content.data), sheet_name=None, engine="openpyxl", dtype=object)
     # SyntaxError: kaputtes XML in der Datei (xml ParseError und lxml XMLSyntaxError sind beide SyntaxError)
     except (zipfile.BadZipFile, SyntaxError, ValueError, OSError, KeyError) as exc:
         result.issues.append(Issue(

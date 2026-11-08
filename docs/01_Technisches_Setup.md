@@ -1,6 +1,6 @@
 # Soccer Intelligence – Technisches Setup
 
-**Stand:** 08.11.2026 · **Status:** Etappen A–F und H in Betrieb (Version 0.9, vier Ligen, KPI 01–09; Etappe H eingespielt 08.11.2026, Git `51e595b`). H.1 (Aufräumen und Tempo, Version 0.9.1) als Paket bereit. Datenlieferung (Etappe G) in Klärung.
+**Stand:** 08.11.2026 · **Status:** Etappen A–F und H in Betrieb (Version 0.9, vier Ligen, KPI 01–09; Etappe H eingespielt 08.11.2026, Git `51e595b`). H.1 (Aufräumen und Tempo, Version 0.9.1) eingespielt 08.11.2026, Git `b5a7ea8`. H.2 (Stabilität, Version 0.9.2) als Paket bereit. Datenlieferung (Etappe G) in Klärung.
 **Verantwortlich:** Carsten Thiele · **Mitwirkende:** ChatGPT (Server-Setup, Review), Claude (Daten, Architektur, Code)
 
 ---
@@ -31,7 +31,7 @@
 | Erweiterung auf vier Ligen (Etappe F) | ✅ in Betrieb | eingespielt 07.11.2026 (Git `cc00dd9`, 171 Tests bestanden), Version 0.8; Gegenrechnung aller 8'808 Begegnungen ohne Abweichung (`docs/tests/pruefprotokoll_etappe_f.md`) |
 | Regelmässige Datenlieferung (Etappe G) | 🔎 in Klärung | Footiqo: fester Download-Link, kumulative Excel-Datei, Di/Do; Konzept: `06_Datenlieferung.md` |
 | Neue KPIs 05–09 (Frontend) und 10–13 (Simulation) | ✅ KPI 05–09 in Betrieb (Etappe H, eingespielt 08.11.2026, Git `51e595b`, 260 Tests bestanden; Vollvergleich 8'808 Begegnungen ohne Abweichung) | Regelwerk v2.1 Abschnitte 9–10; Testfälle `docs/tests/test_kpi05…09…` (61 Ergebnisse, Excel-Nachprüfung identisch); zwei Nachkommastellen für alle KPIs; KPI 10–13 weiter Entwurf (Etappe I) |
-| Code-Prüfung und H.1 (Aufräumen und Tempo) | 📦 Paket bereit (Version 0.9.1) | Prüfung durch einen zweiten Claude (08.11.2026): keine Rechenfehler; 3 mögliche Abstürze, Tempo, Aufräumen. H.1 behebt die Funde ohne Änderung an den Ergebnissen (`docs/tests/pruefprotokoll_h1.md`) |
+| Code-Prüfung und H.1 (Aufräumen und Tempo) | ✅ in Betrieb (Version 0.9.1, Git `b5a7ea8`, 287 Tests bestanden) | Prüfung durch einen zweiten Claude (08.11.2026): keine Rechenfehler; 3 mögliche Abstürze, Tempo, Aufräumen. H.1 behebt die Funde ohne Änderung an den Ergebnissen (`docs/tests/pruefprotokoll_h1.md`) |
 | Öffentliche Website | ⏳ später | nach Etappe F und Klärung der Datenquelle |
 
 ---
@@ -396,7 +396,7 @@ CHANGELOG.md              Änderungsprotokoll
 | F – Vier Ligen | Serie A (`/dashboard/serie-a`) und LaLiga (`/dashboard/laliga`): Konfiguration, Blattname `Serie A` im Code, Aufsteiger in der Teamliste, kompakter Kopfbereich, Top Anomalien und Datenqualität über vier Ligen, Tests, Doku | Daten auf dem Server ✅, LaLiga 17.05.2026 korrigiert ✅, Freigabe 07.11.2026 ✅ | ✅ eingespielt 07.11.2026 (Git `cc00dd9`) |
 | G – Datenlieferung | regelmässiger Import mit Prüfschranke (Footiqo, Download-Link), Konzept `06_Datenlieferung.md` | Antworten von Footiqo, Testkauf, Freigabe | 🔎 in Klärung |
 | H – KPI 05–09 | Frontend-KPIs 05–09 gemäss Regelwerk 9, zwei Nachkommastellen für alle KPIs, Schwellen-Konfiguration (`schwellen.toml`), kompakte Tabelle mit Aufklappen, Top Anomalien über KPI 02–09, Anzeige der Schwellen in Datenqualität, Tests aus den Testfällen + Gegenrechnung | Testfälle bestätigt ✅, Design abgenommen ✅, Backup ✅ (08.11.2026) | ✅ eingespielt 08.11.2026 (Git `51e595b`, 260 Tests bestanden) |
-| H.1 – Aufräumen und Tempo | Funde der Code-Prüfung: 3 mögliche Abstürze behoben, KPI-Berechnung etwa 4× schneller (Häufigkeit 30 → 6 s), Zwischenspeicher für die KPIs eines Spieltags, Kommazahlen nie abschneiden, alte Tabelle entfernt; Ergebnisse unverändert | Etappe H ✅, Freigabe Carsten 08.11.2026 ✅ | 📦 Paket bereit (Version 0.9.1, `ANLEITUNG_ETAPPE_H1.md`) |
+| H.1 – Aufräumen und Tempo | Funde der Code-Prüfung: 3 mögliche Abstürze behoben, KPI-Berechnung etwa 4× schneller (Häufigkeit 30 → 6 s), Zwischenspeicher für die KPIs eines Spieltags, Kommazahlen nie abschneiden, alte Tabelle entfernt; Ergebnisse unverändert | Etappe H ✅, Freigabe Carsten 08.11.2026 ✅ | ✅ eingespielt 08.11.2026 (Git `b5a7ea8`, 287 Tests bestanden) |
 | I – Simulation | Bereich „Simulation“ (intern): zuerst Schwellen-Analyse je KPI und Liga mit anschliessendem Feintuning, Gewichtung der Top Anomalien; danach KPI 10–13 und Ergebniskontrolle | Etappe H, Spezifikation Ergebniskontrolle (Regelwerk 8.13) | ⏳ geplant |
 | Öffentliche Website | eigener Architekturvorschlag (Mobile First), eigener Ordner und eigenes Repository empfohlen | Etappe F, Datenquelle geklärt (G) | später |
 

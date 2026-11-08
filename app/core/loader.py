@@ -11,14 +11,16 @@ from __future__ import annotations
 import zipfile
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from io import BytesIO
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 from . import schema, settings
-from .files import sha256_of
+from .files import read_file
 from .issues import FEHLER, HINWEIS, WARNUNG, Issue
-from .rows import row_issues
+from .rows import id_text, row_issues, valid_id
 from .validation import run_plausibility_checks
 
 
@@ -119,8 +121,10 @@ def _prepare_league(sheet: str, raw: pd.DataFrame) -> tuple[pd.DataFrame, list[I
                                  lambda r, c=col: f"Spalte '{c}' = '{r[c]}' (erlaubt: H, D, A)")
         df[col] = s
 
-    # Datum
-    dates = pd.to_datetime(df["Date"], errors="coerce")
+    # Datum. Eine Zahl in der Spalte Date (z. B. 45800) ist kein Datum: pandas würde sie still als Zeitpunkt im
+    # Jahr 1970 lesen. Darum gilt sie wie Text als ungültiges Datum (Fehler, seit H.2).
+    is_number = df["Date"].map(lambda v: isinstance(v, (int, float, np.number)) and not isinstance(v, bool))
+    dates = pd.to_datetime(df["Date"].where(~is_number), errors="coerce")
     bad = df[df["Date"].notna() & dates.isna()]
     if len(bad):
         issues += row_issues(FEHLER, sheet, "Ungültiges Datum", bad, lambda r: f"Date = '{r['Date']}'")
@@ -151,7 +155,7 @@ def _prepare_league(sheet: str, raw: pd.DataFrame) -> tuple[pd.DataFrame, list[I
     # Doppelte IDs
     dup = df[df["id"].notna() & df["id"].duplicated(keep=False)]
     if len(dup):
-        issues += row_issues(FEHLER, sheet, "Doppelte id", dup, lambda r: f"id {int(r['id'])} kommt mehrfach vor")
+        issues += row_issues(FEHLER, sheet, "Doppelte id", dup, lambda r: f"id {id_text(r['id'])} kommt mehrfach vor")
 
     # Liga-Spalte passt zum Blattnamen?
     wrong_league = df[df["League"].notna() & (df["League"] != sheet)]
@@ -190,9 +194,9 @@ def _noted_ids(notes: pd.DataFrame | None) -> set[tuple[str, int]]:
         return set()
     ids = set()
     for _, r in notes.iterrows():
-        mid = pd.to_numeric(r["id"], errors="coerce")
-        if pd.notna(mid):
-            ids.add((str(r["Liga"]), int(mid)))
+        mid = valid_id(pd.to_numeric(r["id"], errors="coerce"))   # 123,5 gehört zu keinem Spiel (H.2)
+        if mid is not None:
+            ids.add((str(r["Liga"]), mid))
     return ids
 
 
@@ -206,13 +210,11 @@ def load_database(path: Path | str | None = None) -> DatabaseLoad:
         result.issues.append(Issue(FEHLER, "-", "Datei fehlt", f"Datei nicht gefunden: {path}"))
         return result
 
-    stat = path.stat()
-    result.file_size = stat.st_size
-    result.file_modified = datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc)
-
     try:
-        result.sha256 = sha256_of(path)
-        sheets = pd.read_excel(path, sheet_name=None, engine="openpyxl")
+        # Datei nur einmal lesen: Prüfsumme, Grösse und Excel-Inhalt stammen so sicher vom selben Stand (H.2)
+        content = read_file(path)
+        result.sha256, result.file_size, result.file_modified = content.sha256, len(content.data), content.modified
+        sheets = pd.read_excel(BytesIO(content.data), sheet_name=None, engine="openpyxl")
     # SyntaxError: kaputtes XML in der Datei (xml ParseError und lxml XMLSyntaxError sind beide SyntaxError)
     except (zipfile.BadZipFile, SyntaxError, ValueError, OSError, KeyError) as exc:
         result.issues.append(Issue(

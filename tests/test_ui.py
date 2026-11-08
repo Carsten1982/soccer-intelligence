@@ -9,8 +9,6 @@ from pathlib import Path
 import pytest
 from conftest import REAL_DATABASE, REAL_FIXTURES
 
-from views.components import header_html
-
 APP = Path(__file__).resolve().parents[1] / "app" / "app.py"
 REAL_FILES = REAL_DATABASE.exists() and REAL_FIXTURES.exists()
 
@@ -18,6 +16,8 @@ REAL_FILES = REAL_DATABASE.exists() and REAL_FIXTURES.exists()
 # --- HTML-Bausteine ---------------------------------------------------------------
 
 def test_header():
+    pytest.importorskip("streamlit")                      # components.py braucht Streamlit (H.2)
+    from views.components import header_html
     html = header_html("Aktueller Spieltag", "Saison 2026/27 · Spieltag 1")
     assert "Soccer Intelligence" in html and "KPI-Übersicht pro Spiel" in html and "Spieltag 1" in html
     assert "si-matchday" not in header_html("", "")

@@ -1,6 +1,6 @@
 # Soccer Intelligence – Datenbasis
 
-**Stand:** 08.11.2026 (Prüfregeln für Kommazahlen ergänzt, H.1; vier Ligen: Bundesliga, Premier League, Serie A, LaLiga; je 58 Spalten inkl. `Gameday`; Saisons 2020/21–2025/26 plus laufende Saison 2026/27)
+**Stand:** 08.11.2026 (Prüfregeln für Kommazahlen ergänzt, H.1; Zahl statt Datum, H.2; vier Ligen: Bundesliga, Premier League, Serie A, LaLiga; je 58 Spalten inkl. `Gameday`; Saisons 2020/21–2025/26 plus laufende Saison 2026/27)
 **Datei:** `/docker/football-dashboard/data/Database-Soccer-Intelligence.xlsx`
 **SHA-256 (aktiv seit 31.10.2026):** `6b84d8d230f61b02166bead571a72ce599ec8d230cdda8c90f9b258dc8a46014`
 
@@ -182,7 +182,7 @@ Carsten hat die Spiele von Serie A und LaLiga in die Datei übernommen. Claude h
 - Pflichtblatt `Bundesliga`, `Premier League`, `Serie A` oder `LaLiga` fehlt oder ist leer (seit Etappe F alle vier)
 - Spaltenanzahl, Spaltennamen oder Reihenfolge weichen von den 58 Spalten ab
 - Pflichtfeld leer (Datum, Gameday, id, Liga, Saison, Teams, Tore, Ergebnisse)
-- Text statt Zahl, Ergebnis nicht H/D/A, ungültiges Datum oder Saisonformat
+- Text statt Zahl, Ergebnis nicht H/D/A, ungültiges Datum oder Saisonformat. Auch eine **Zahl in der Spalte `Date`** (z. B. 45800, wenn die Zelle nicht als Datum formatiert ist) gilt als ungültiges Datum (seit H.2), statt still als 01.01.1970 gelesen zu werden.
 - Kommazahl bei Toren, `Gameday` oder `id` (nur ganze Zahlen erlaubt; seit H.1, 08.11.2026)
 - doppelte id innerhalb eines Blatts
 
@@ -195,6 +195,7 @@ Carsten hat die Spiele von Serie A und LaLiga in die Datei übernommen. Claude h
 - Ballbesitz Heim + Auswärts ≠ 100 %
 - Schüsse gesamt < aufs Tor + daneben
 - Kommazahl bei Ecken, Karten oder Schüssen (seit H.1): Der Wert gilt als **fehlend** – er wird nie abgeschnitten und nie als 0 gerechnet. Der Ballbesitz (in %) darf Kommastellen haben.
+- Datenhinweis mit einer id, die keine ganze Zahl ist (z. B. 123,5): Er gilt für **kein** Spiel, auch nicht für 123 (seit H.2).
 - fehlende Statistik, die nicht in Datenhinweise dokumentiert ist (je Stufe höchstens 50 Einzelmeldungen, danach eine Sammelzeile „… und n weitere Zeilen“)
 - Saison unvollständig (n Teams → n × (n−1) Spiele), doppelte Paarung
 - `Date` passt nicht zu `matchDate`, negativer Wert

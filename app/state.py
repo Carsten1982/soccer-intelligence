@@ -1,20 +1,20 @@
 """Laden von Datenbank, Spielplan und Konfiguration mit Cache, dazu die zwischengespeicherten KPI-Ergebnisse.
 
-Der Cache-Schlüssel enthält Änderungszeit und Grösse der Dateien. Wird eine Excel- oder Konfigurationsdatei
-auf dem Server ersetzt, liest die App sie beim nächsten Seitenaufruf automatisch neu ein –
-ohne Neustart des Containers.
+Der Cache-Schlüssel enthält je Datei Änderungszeit, Grösse, ctime und Dateinummer (core.files.file_key).
+Wird eine Excel- oder Konfigurationsdatei auf dem Server ersetzt, liest die App sie beim nächsten Seitenaufruf
+automatisch neu ein – ohne Neustart des Containers, auch bei gleicher Grösse und gleicher Änderungszeit (seit H.2).
 """
 
 from __future__ import annotations
 
 from datetime import date, datetime
-from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import streamlit as st
 
 from core import settings
 from core.config import League, Team, active_leagues, load_leagues, load_teams
+from core.files import file_key as _file_key
 from core.fixtures import FixturesLoad, load_fixtures
 from core.frequency import anomaly_frequency
 from core.issues import FEHLER, HINWEIS, WARNUNG
@@ -27,14 +27,6 @@ from core.thresholds import ThresholdConfig, load_thresholds
 TZ = ZoneInfo(settings.TIMEZONE)
 
 
-def _file_key(path: Path) -> tuple[int, int]:
-    try:
-        stat = path.stat()
-        return stat.st_mtime_ns, stat.st_size
-    except OSError:
-        return 0, 0
-
-
 def today() -> date:
     """Heutiges Datum in der Zeitzone Europe/Zurich (massgeblich für den aktuellen Spieltag)."""
     return datetime.now(TZ).date()
@@ -43,31 +35,31 @@ def today() -> date:
 # --- Datenbank ---------------------------------------------------------------
 
 @st.cache_data(show_spinner="Datenbank wird eingelesen …", max_entries=2)
-def _cached_load(path: str, mtime_ns: int, size: int) -> DatabaseLoad:  # noqa: ARG001 - Teil des Cache-Schlüssels
+def _cached_load(path: str, key: tuple) -> DatabaseLoad:  # noqa: ARG001 - key ist Teil des Cache-Schlüssels
     return load_database(path)
 
 
 def get_database() -> DatabaseLoad:
     path = settings.DATABASE_FILE
-    return _cached_load(str(path), *_file_key(path))
+    return _cached_load(str(path), _file_key(path))
 
 
 @st.cache_data(show_spinner=False, max_entries=2)
-def _cached_prepared(path: str, mtime_ns: int, size: int) -> dict:  # noqa: ARG001
-    db = _cached_load(path, mtime_ns, size)
+def _cached_prepared(path: str, key: tuple) -> dict:
+    db = _cached_load(path, key)
     return {name: prepare_league(df) for name, df in db.leagues.items()}
 
 
 def get_prepared() -> dict:
     """Aufbereitete Ligen für die KPI-Berechnung (einmal je Datenbankstand)."""
     path = settings.DATABASE_FILE
-    return _cached_prepared(str(path), *_file_key(path))
+    return _cached_prepared(str(path), _file_key(path))
 
 
 @st.cache_data(show_spinner="Häufigkeit der Anomalien wird berechnet (einmal je Datenbankstand) …", max_entries=8)
-def _cached_frequency(path: str, mtime_ns: int, size: int, league_name: str,
+def _cached_frequency(path: str, key: tuple, league_name: str,
                       thresholds_key: tuple, leagues_key: tuple):  # noqa: ARG001 - Teil des Cache-Schlüssels
-    prepared = _cached_prepared(path, mtime_ns, size).get(league_name)
+    prepared = _cached_prepared(path, key).get(league_name)
     if prepared is None:
         return None, None
     return anomaly_frequency(prepared, _league(league_name), get_thresholds().get)
@@ -75,7 +67,7 @@ def _cached_frequency(path: str, mtime_ns: int, size: int, league_name: str,
 
 def get_frequency(league: League):
     path = settings.DATABASE_FILE
-    return _cached_frequency(str(path), *_file_key(path), league.name,
+    return _cached_frequency(str(path), _file_key(path), league.name,
                              _file_key(settings.THRESHOLDS_FILE), _file_key(settings.LEAGUES_FILE))
 
 

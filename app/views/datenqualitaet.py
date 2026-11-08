@@ -20,7 +20,7 @@ DB_RULES = """
 - Pflichtblatt *Bundesliga*, *Premier League*, *Serie A* oder *LaLiga* fehlt oder ist leer
 - Spaltenanzahl, Spaltennamen oder Reihenfolge weichen von den 58 erwarteten Spalten ab
 - Pflichtfelder leer (Datum, Spieltag *Gameday*, id, Liga, Saison, Teams, Tore, Ergebnisse)
-- Text statt Zahl, ungültiges Ergebnis (nur H/D/A), ungültiges Datum oder Saisonformat
+- Text statt Zahl, ungültiges Ergebnis (nur H/D/A), ungültiges Datum (auch eine Zahl statt eines Datums) oder Saisonformat
 - Kommazahl bei Toren, Spieltag *Gameday* oder id (dort sind nur ganze Zahlen erlaubt)
 - doppelte Spiel-id innerhalb eines Blatts
 

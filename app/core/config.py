@@ -51,8 +51,19 @@ def _read_toml(path: Path) -> dict:
             return tomllib.load(fh)
     except FileNotFoundError as exc:
         raise ConfigError(f"Konfigurationsdatei fehlt: {path}") from exc
+    except OSError as exc:
+        raise ConfigError(f"Konfigurationsdatei {path.name} ist nicht lesbar: {exc}") from exc
     except tomllib.TOMLDecodeError as exc:
         raise ConfigError(f"Konfigurationsdatei {path.name} ist ungültig: {exc}") from exc
+
+
+def table_list(data: dict, key: str, path: Path) -> list[dict]:
+    """Die Abschnitte [[key]] einer TOML-Datei als Liste. Eine falsche Struktur, z. B. `liga = 1`, ergibt eine klare
+    Meldung statt eines Absturzes (seit H.2). Fehlt der Schlüssel, ist die Liste leer."""
+    value = data.get(key, [])
+    if not isinstance(value, list) or not all(isinstance(entry, dict) for entry in value):
+        raise ConfigError(f"{path.name}: '{key}' muss aus Abschnitten [[{key}]] bestehen")
+    return value
 
 
 def load_leagues(path: Path | str | None = None) -> list[League]:
@@ -60,7 +71,7 @@ def load_leagues(path: Path | str | None = None) -> list[League]:
     path = Path(path) if path else settings.LEAGUES_FILE
     data = _read_toml(path)
     leagues: list[League] = []
-    for i, entry in enumerate(data.get("liga", []), start=1):
+    for i, entry in enumerate(table_list(data, "liga", path), start=1):
         try:
             name = str(entry["name"]).strip()
             url = str(entry["url"]).strip()
@@ -97,7 +108,7 @@ def load_teams(path: Path | str | None = None) -> list[Team]:
         return []
     data = _read_toml(path)
     teams: list[Team] = []
-    for i, entry in enumerate(data.get("team", []), start=1):
+    for i, entry in enumerate(table_list(data, "team", path), start=1):
         name = str(entry.get("team_name", "")).strip()
         if not name:
             raise ConfigError(f"{path.name}, Team {i}: team_name fehlt")

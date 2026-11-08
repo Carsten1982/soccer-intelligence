@@ -7,6 +7,22 @@ from .issues import Issue
 MAX_ROWS_PER_CHECK = 50  # Begrenzung der Einzelmeldungen je Prüfung
 
 
+def valid_id(value) -> int | None:
+    """Spiel-id als ganze Zahl, aber nur wenn sie endlich und ganzzahlig ist; sonst None.
+    Nie abschneiden: 123,5 wird nicht zu 123. Text, leer, inf und NaN ergeben None (seit H.2)."""
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return int(number) if number.is_integer() else None
+
+
+def id_text(value) -> str:
+    """id für Meldungstexte: als ganze Zahl, wenn möglich, sonst so, wie sie in der Datei steht."""
+    mid = valid_id(value)
+    return str(mid) if mid is not None else str(value)
+
+
 def match_label(row) -> str:
     try:
         d = pd.Timestamp(row["Date"]).strftime("%d.%m.%Y")
@@ -19,10 +35,7 @@ def row_issues(level, sheet, check, frame, message, original_index=True) -> list
     """Erzeugt je betroffener Zeile eine Meldung (max. MAX_ROWS_PER_CHECK)."""
     out: list[Issue] = []
     for idx, row in frame.head(MAX_ROWS_PER_CHECK).iterrows():
-        try:
-            mid = int(float(row.get("id")))
-        except (TypeError, ValueError):
-            mid = None
+        mid = valid_id(row.get("id"))
         out.append(
             Issue(
                 level=level,

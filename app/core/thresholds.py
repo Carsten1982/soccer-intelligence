@@ -23,7 +23,7 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 from . import settings
-from .config import ConfigError, _read_toml
+from .config import ConfigError, _read_toml, table_list
 from .kpis import KPI_KEYS, STANDARD_THRESHOLDS, Thresholds
 
 
@@ -78,10 +78,12 @@ def load_thresholds(path: Path | str | None = None, league_names: list[str] | No
     data = _read_toml(path)
     if "standard" not in data:
         raise ConfigError(f"{path.name}: Abschnitt [standard] fehlt")
+    if not isinstance(data["standard"], dict):
+        raise ConfigError(f"{path.name}: [standard] muss ein Abschnitt mit leicht und stark sein")
     standard = _pair(data["standard"], "[standard]")
     overrides = []
     seen = set()
-    for i, entry in enumerate(data.get("abweichung", []), start=1):
+    for i, entry in enumerate(table_list(data, "abweichung", path), start=1):
         where = f"Abweichung {i}"
         liga = str(entry["liga"]).strip() if "liga" in entry else None
         kpi = str(entry["kpi"]).strip().lower() if "kpi" in entry else None

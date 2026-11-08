@@ -43,7 +43,7 @@ Nicht Teil dieser Phase:
 
 ## Nach Phase 1 (Stand 08.11.2026)
 Erledigt: **Etappe F – Vier Ligen** (07.11.2026) und **Etappe H – KPI 05–09** (Version 0.9, eingespielt 08.11.2026, Git `51e595b`).
-Als Paket bereit: **H.1 – Aufräumen und Tempo** (Version 0.9.1, Funde der Code-Prüfung vom 08.11.2026, Ergebnisse unverändert,
+Als Paket bereit: **H.2 – Stabilität** (Version 0.9.2, Befunde der zweiten Code-Prüfung). Eingespielt: **H.1 – Aufräumen und Tempo** (Version 0.9.1, Git `b5a7ea8`, Funde der Code-Prüfung vom 08.11.2026, Ergebnisse unverändert,
 `docs/tests/pruefprotokoll_h1.md`). Zu Etappe H (Frontend; KPI-Regelwerk v2.2,
 Abschnitt 9; Testfälle `docs/tests/test_kpi05…09…` **bestätigt am 08.11.2026**). Mit Etappe H gilt ausserdem:
 **alle KPIs mit zwei Nachkommastellen** (auch die Abweichung; Einstufung nach dem auf zwei Stellen gerundeten Wert, Regelwerk 2.3),
