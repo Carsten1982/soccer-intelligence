@@ -1,6 +1,6 @@
 # Soccer Intelligence – Dashboard-Briefing
 
-**Version 4.4** · Stand 07.11.2026
+**Version 4.6** · Stand 08.11.2026
 
 > **Massgebliche Quelle seit 31.10.2026.** Änderungen werden nur noch in dieser Datei gemacht, mit Datum in der Änderungshistorie bzw. im `CHANGELOG.md`.
 > Das Word-Dokument *Dashboard-Briefing v4.2* liegt nur noch als Archiv im Ordner `word/` und wird nicht mehr gepflegt. Änderungen seit 31.10.2026 sind im Text als „Änderung“ mit Datum gekennzeichnet.
@@ -191,6 +191,14 @@ Die Tabelle enthält folgende Bereiche:
 
 Die KPI-Bereiche sollen visuell voneinander getrennt sein.
 
+**Änderung 08.11.2026 (Carsten, beschlossen – gilt ab Etappe H):** Ziel ist eine **kompaktere Tabelle mit besserer Übersicht**. Mit KPI 05–09 (Ecken, Tore 1. HZ, Tore 2. HZ, Beide Teams treffen, Schüsse aufs Tor; Definitionen im KPI-Regelwerk, Abschnitt 9) wird die Tabelle **kompakt**:
+
+- Je Begegnung eine Zeile mit Laufnummer, Spielpaarung, Formkurve (KPI 01) und je KPI 02–09 **Hauptwert und Anomalie-Punkt** (grau/gelb/rot), Kennzeichnung „V“ bei vorläufigen Werten.
+- Alle Details einer Begegnung (je KPI: Teamwerte, Ligareferenz, Abweichung, Datenbasis inkl. Referenzspiele, Überschrift und Text) erscheinen **per Aufklappen** der Begegnung.
+- Fixierte Spalten (# und Spiel), Legende und die übrigen Regeln aus 4.2–4.4 bleiben.
+- Alle Zahlen mit **zwei Nachkommastellen** (KPI-Regelwerk 2.3, Entscheidung 08.11.2026).
+- Ein Design-Vorschlag (Desktop und Handy) wird **vor** der Umsetzung vorgelegt und von Carsten abgenommen. Er dient zugleich als Vorlage für die spätere Website.
+
 ### 4.2 Fixierte Spalten
 
 Die ersten beiden Spalten müssen beim horizontalen Scrollen dauerhaft sichtbar bleiben:
@@ -261,15 +269,15 @@ Der Bereich Top Anomalien (/dashboard) zeigt die auffälligsten Anomalien des ak
 
 1.  Grundlage sind die Begegnungen des aktuellen Spieltags jeder aktiven Liga gemäss 4.4.
 
-2.  Berücksichtigt werden KPI02 (Erwartete Tore) und KPI04 (Gelbe Karten) mit leichter oder starker Anomalie.
+2.  Berücksichtigt werden **KPI02 bis KPI09** mit leichter oder starker Anomalie (**Änderung 08.11.2026, Carsten – gilt ab Etappe H**; bis dahin nur KPI02 und KPI04).
 
-3.  KPI03 (Over 2.5 Goals) wird vorerst nicht berücksichtigt, weil seine Schwellenwerte noch überprüft werden. Er wird nach dieser Prüfung aufgenommen.
+3.  Die Rangfolge bleibt vorerst wie bisher (Punkt 5). Weil damit KPIs mit grossen relativen Ausschlägen (v. a. KPI03, 06, 08) bevorzugt werden, wird die Gewichtung zusammen mit der Schwellen-Analyse überarbeitet. Ziel: ein ausgewogener Mix je Spieltag (KPI-Regelwerk, offener Punkt 17).
 
 4.  Vorläufige Werte sowie Spiele mit Status «verschoben» oder «abgesagt» werden nicht berücksichtigt.
 
 5.  Rangfolge: Starke Anomalien kommen vor leichten. Bei gleicher Stärke entscheidet der Betrag der relativen Abweichung, der grösste zuerst. Bei Gleichstand entscheidet das frühere Spieldatum, danach die Reihenfolge im Spielplan.
 
-6.  Pro Begegnung wird höchstens ein Eintrag angezeigt, nämlich der KPI mit dem höchsten Rang.
+6.  Pro Begegnung wird höchstens ein Eintrag angezeigt, nämlich der KPI mit dem höchsten Rang (bei Gleichstand der KPI mit der kleineren Nummer).
 
 7.  Angezeigt werden höchstens vier Einträge. Gibt es weniger Anomalien, werden nur diese angezeigt. Es wird nicht aufgefüllt.
 
@@ -327,9 +335,19 @@ Der Bereich Datenqualität (/dashboard/datenqualitaet) ist ein internes Kontroll
 
 Für jede Liga und jeden KPI (ausser KPI01) wird angezeigt, wie oft keine, leichte und starke Anomalien auftreten. Grundlage sind alle Spiele der letzten abgeschlossenen Saison, jeweils so berechnet, als wären sie noch nicht gespielt. Die Übersicht dient der Überprüfung der Schwellenwerte, insbesondere bei KPI03.
 
+**Ergänzung 08.11.2026 (ab Etappe H):** Unter der Häufigkeit werden die **gültigen Schwellenwerte** angezeigt (Standard ±20 % / ±35 % und allfällige Abweichungen je Liga und KPI aus `app/config/schwellen.toml`, KPI-Regelwerk 2.2). Nur Anzeige, keine Bearbeitung.
+
+### 6.4 Simulation (geplant, Etappe I)
+
+Ein zusätzlicher Bereich „Simulation“ (nur intern) rechnet mit historischen Spielen: Simulations-KPIs 10–13 (KPI-Regelwerk, Abschnitt 10), Ergebniskontrolle (wie oft eine Anomalie im Spiel eingetroffen ist) und alternative Schwellen je Liga und KPI. Die Simulation verändert keine Live-Werte; übernommene Schwellen werden bewusst in `schwellen.toml` eingetragen. Spezifikation folgt vor Etappe I.
+
+**Vorgehen (Carsten, 08.11.2026):** Nach Etappe H wird zuerst dieser interne Tab zur **Analyse der Schwellen je KPI und Liga** gebaut, danach folgt das Feintuning je KPI und Liga. Im selben Schritt wird die **Gewichtung der Top Anomalien** erarbeitet (5.1, Punkt 3).
+
 ## 7. Verbindliche KPI-Spaltenstruktur
 
 Die folgenden Spalten sind für die ersten vier KPIs verbindlich.
+
+**Änderung 08.11.2026 (ab Etappe H):** In der Tabelle stehen nur noch Hauptwert und Anomalie-Punkt je KPI (4.1). Die hier beschriebenen Detailspalten erscheinen in der aufgeklappten Ansicht einer Begegnung, für KPI 05–09 sinngemäss gemäss KPI-Regelwerk, Abschnitt 9. Alle Zahlen mit zwei Nachkommastellen.
 
 Die Reihenfolge der Spalten in der Tabelle legt dieses Briefing fest. Der Kartenaufbau in Abschnitt 2.5 des KPI-Regelwerks gilt für spätere Detail- und Website-Ansichten.
 
@@ -437,9 +455,9 @@ Die Richtung der Abweichung wird separat dargestellt, beispielsweise über den P
 
 Beispiele:
 
-- +24,5 %
+- +24,50 %
 
-- −18,2 %
+- −18,20 %
 
 Die Farbcodierung zeigt die Stärke der Auffälligkeit. Die Richtung wird durch den Zahlenwert und die Beschreibung vermittelt.
 
@@ -636,6 +654,8 @@ Die Umsetzung gilt als erfolgreich, wenn folgende Punkte erfüllt sind:
 15. Der Bereich Top Anomalien zeigt höchstens vier Einträge gemäss der Auswahl-Logik in Kapitel 5.
 
 16. Der Bereich Datenqualität zeigt die Prüfergebnisse von Datenbank und Spielplan, die Spieltagsübersicht mit dem aktuellen Spieltag und die Häufigkeit der Anomalien.
+
+17. **Ab Etappe H:** Die Liga-Bereiche zeigen KPI 01–09 in der kompakten Tabelle mit Details per Aufklappen; alle Zahlen mit zwei Nachkommastellen; Top Anomalien über KPI 02–09; der Bereich Datenqualität zeigt die Häufigkeit für KPI 02–09 und die gültigen Schwellenwerte.
 
 ## 16. Abschliessende Anweisung
 

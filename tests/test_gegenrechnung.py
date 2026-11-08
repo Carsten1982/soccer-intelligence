@@ -1,13 +1,14 @@
-"""Etappe F: Gegenrechnung der KPIs mit einer zweiten, unabhängigen Umsetzung (tests/gegenrechnung.py).
+"""Etappe F/H: Gegenrechnung der KPIs mit einer zweiten, unabhängigen Umsetzung (tests/gegenrechnung.py).
 
-1. Die Gegenrechnung trifft die von Carsten bestätigten Testfälle (docs/tests, Referenz-Datenbank).
-   Damit ist sie selbst geprüft.
+1. Die Gegenrechnung trifft die von Carsten bestätigten Testfälle (docs/tests, Referenz-Datenbanken):
+   KPI 01–04 und seit Etappe H auch KPI 05–09. Damit ist sie selbst geprüft.
 2. App und Gegenrechnung liefern für die echte Datenbank in ALLEN aktiven Ligen dieselben Werte:
    alle Begegnungen des Spielplans und eine Stichprobe der letzten abgeschlossenen Saison
    (die letzten 5 Spieltage komplett, sonst je Spieltag eine Begegnung).
 
-Ein vollständiger Vergleich aller rund 8'800 Spiele wurde am 07.11.2026 einmalig durchgeführt
-(0 Abweichungen, siehe docs/tests/pruefprotokoll_etappe_f.md).
+Ein vollständiger Vergleich aller rund 8'800 Spiele wurde am 07.11.2026 (KPI 01–04) und am 08.11.2026
+(KPI 01–09, zwei Nachkommastellen) einmalig durchgeführt (0 Abweichungen, siehe docs/tests/pruefprotokoll_etappe_f.md
+und pruefprotokoll_etappe_h.md).
 """
 
 from __future__ import annotations
@@ -18,7 +19,7 @@ from decimal import Decimal
 import gegenrechnung as G
 import openpyxl
 import pytest
-from conftest import REAL_DATABASE, REAL_FIXTURES, REFERENCE_DATABASE
+from conftest import REAL_DATABASE, REAL_FIXTURES, REFERENCE_DATABASE, REFERENCE_DATABASE_H
 from test_kpis import json_cases
 
 from core.config import active_leagues, load_leagues
@@ -27,7 +28,7 @@ from core.loader import load_database
 
 
 def dec(text: str | None) -> Decimal | None:
-    """„+34,1“ / „−8,9“ / „4,4“ aus den Testfällen -> Decimal."""
+    """„+34.08“ / „−8,90“ / „4.35“ aus den Testfällen -> Decimal."""
     if text in (None, "–", "-"):
         return None
     return Decimal(text.replace("−", "-").replace("+", "").replace(",", ".").replace(" %", ""))
@@ -75,6 +76,35 @@ def test_counter_kpi02_to_04(reference_leagues, kpi, file, main, team_key, ref_k
         assert r[kpi]["vorlaeufig"] == case["vorlaeufig"], case["testfall"]
 
 
+# --- 1b. Gegenrechnung gegen die bestätigten Testfälle KPI 05–09 --------------------------
+
+@pytest.fixture(scope="module")
+def reference_leagues_h():
+    if not REFERENCE_DATABASE_H.exists():
+        pytest.skip("Referenz-Datenbank (Etappe H) nicht vorhanden")
+    return {name: G.League(G.read_league(REFERENCE_DATABASE_H, name), md)
+            for name, md in (("Bundesliga", 34), ("Premier League", 38), ("Serie A", 38), ("LaLiga", 38))}
+
+
+@pytest.mark.parametrize("kpi,file", [
+    ("kpi05", "test_kpi05_ecken.md"), ("kpi06", "test_kpi06_tore_hz1.md"), ("kpi07", "test_kpi07_tore_hz2.md"),
+    ("kpi08", "test_kpi08_btts.md"), ("kpi09", "test_kpi09_schuesse_aufs_tor.md"),
+])
+def test_counter_kpi05_to_09(reference_leagues_h, kpi, file):
+    cases = json_cases(file)
+    assert cases
+    for case in cases:
+        r = _analyse(reference_leagues_h, case)[kpi]
+        for side, exp in (("heim", case["heim"]), ("gast", case["auswaerts"])):
+            assert r[f"team_{side}"] == (exp["spiele"], exp["summe"]), (case["testfall"], side)
+            assert r[f"wert_{side}"] == dec(exp["teamwert"]), (case["testfall"], side)
+        ref = case["ligareferenz"]
+        assert r["ref"] == (ref["spiele"], ref["summe"]) and r["liga"] == dec(ref["wert"]), case["testfall"]
+        assert r["hauptwert"] == dec(case["hauptwert"]), case["testfall"]
+        assert r["abweichung"] == dec(case["abweichung"]), case["testfall"]
+        assert r["anomalie"] == case["anomalie"] and r["vorlaeufig"] == case["vorlaeufig"], case["testfall"]
+
+
 # --- 2. App gegen Gegenrechnung mit der echten Datenbank, alle aktiven Ligen ------------
 
 REAL = REAL_DATABASE.exists() and REAL_FIXTURES.exists()
@@ -92,6 +122,13 @@ def _app_values(k) -> dict:
         r = getattr(k, name)
         out[name] = {"hauptwert": r.hauptwert_rund, "abweichung": r.abweichung_rund,
                      "anomalie": r.anomalie, "vorlaeufig": r.vorlaeufig}
+    for name in ("kpi05", "kpi06", "kpi07", "kpi08", "kpi09"):
+        r = getattr(k, name)
+        out[name] = {"hauptwert": r.hauptwert_rund, "abweichung": r.abweichung_rund,
+                     "anomalie": r.anomalie, "vorlaeufig": r.vorlaeufig,
+                     "team_heim": (r.heim.spiele, r.heim.summe), "team_gast": (r.auswaerts.spiele, r.auswaerts.summe),
+                     "ref": (r.referenz.spiele, r.referenz.summe), "wert_heim": r.heim.wert_rund,
+                     "wert_gast": r.auswaerts.wert_rund, "liga": r.referenz.wert_rund}
     return out
 
 

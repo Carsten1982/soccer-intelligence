@@ -1,10 +1,12 @@
 # Testfall KPI 04 – Gelbe Karten
 
-**Spezifikation v1.1** · Stand 30.10.2026
+**Spezifikation v1.2** · Stand 08.11.2026
 
 **Regelwerk:** `03_KPI_Regelwerk.md`, Abschnitte 1, 1.1, 2 und 6
 **Datenbasis:** `Database-Soccer-Intelligence.xlsx`, SHA-256 `6d68583c2e66616e92c1bf3e8a8611b4b517bcf4c0a7a91c68101ea26a2284e2`
 **Status:** Stand Spieltag 1 (2026/27) bestätigt am 28.10.2026 · Stand Spieltag 3 (2025/26) bestätigt am 29.10.2026 · Zusatztest fehlende Werte vorgeschlagen
+
+**Änderung 08.11.2026 (Carsten, Etappe H): Anzeige mit zwei Nachkommastellen.** Alle angezeigten Werte (Teamwerte, Ligareferenz, Hauptwert, Abweichung) werden auf zwei Nachkommastellen gerundet; die Einstufung richtet sich nach der auf zwei Stellen gerundeten Abweichung (Regelwerk 2.3). Die JSON-Blöcke, Texte und Kontrollpunkte sind angepasst. **Keine Einstufung ändert sich** (24 von 24 geprüft). Exakte Rechenwerte in den Erläuterungen (z. B. „47 Tore / 10 Spiele = 4,7“) bleiben wie sie sind.
 
 **Datenbasis aktualisiert am 30.10.2026:** neue SHA-256 nach Korrektur von zwei versehentlich überschriebenen Zellen in der Premier League (id 5393 `Gameday` „bitte“ → 4; id 99466 `FT Home Goals` „Ergebnisse stimmen.“ → 2). Alle erwarteten Werte wurden mit der neuen Datei nachgerechnet: unverändert (144 Prüfwerte, 0 Abweichungen).
 
@@ -55,7 +57,7 @@ Dieser Testfall ist die verbindliche Referenz für die technische Umsetzung. Der
 3. Fehlt die Ligareferenz oder ist sie 0 → Abweichung und Anomalie nicht verfügbar.
 4. Abweichung = (Erwartungswert − Ligareferenz) / Ligareferenz × 100, mit ungerundeten Werten.
 5. Rundung erst am Ende auf eine Nachkommastelle, kaufmännisch, mit Dezimalarithmetik.
-6. Anomalie anhand der gerundeten Abweichung: |x| ≤ 20,0 keine · 20,0 < |x| ≤ 35,0 leicht · |x| > 35,0 stark.
+6. Anomalie anhand der gerundeten Abweichung (zwei Nachkommastellen): |x| ≤ 20,00 keine · 20,00 < |x| ≤ 35,00 leicht · |x| > 35,00 stark.
 
 ---
 
@@ -81,21 +83,21 @@ Analysedatum 2026-08-22 ist ein Platzhalter (siehe `test_kpi01_formkurve.md`).
   {
     "testfall": "BL-1",
     "liga": "Bundesliga", "saison": "2026/2027", "spieltag": 1, "analysedatum": "2026-08-22",
-    "heim":      {"team": "Bayern Munich",    "spiele": 10, "karten": 17, "teamwert_roh": 1.7, "teamwert": "1.7"},
-    "auswaerts": {"team": "Stuttgart",        "spiele": 10, "karten": 16, "teamwert_roh": 1.6, "teamwert": "1.6"},
-    "ligareferenz": {"saison_spieltage": "2025/2026: 15-34", "spiele": 180, "karten": 652, "wert_roh": 3.6222222222, "wert": "3.6"},
-    "erwartet_roh": 3.3, "erwartet": "3.3",
-    "abweichung_roh": -8.8957055215, "abweichung": "-8.9",
+    "heim":      {"team": "Bayern Munich",    "spiele": 10, "karten": 17, "teamwert_roh": 1.7, "teamwert": "1.70"},
+    "auswaerts": {"team": "Stuttgart",        "spiele": 10, "karten": 16, "teamwert_roh": 1.6, "teamwert": "1.60"},
+    "ligareferenz": {"saison_spieltage": "2025/2026: 15-34", "spiele": 180, "karten": 652, "wert_roh": 3.6222222222, "wert": "3.62"},
+    "erwartet_roh": 3.3, "erwartet": "3.30",
+    "abweichung_roh": -8.8957055215, "abweichung": "-8.90",
     "anomalie": "keine", "richtung": "negativ", "vorlaeufig": false,
     "ueberschrift": "Keine statistische Besonderheit",
-    "text": "Der Kartenindikator dieser Begegnung liegt bei 3,3 gelben Karten. Die Abweichung vom Liga-Durchschnitt beträgt −8,9 %."
+    "text": "Der Kartenindikator dieser Begegnung liegt bei 3,30 gelben Karten. Die Abweichung vom Liga-Durchschnitt beträgt −8,90 %."
   },
   {
     "testfall": "BL-2",
     "liga": "Bundesliga", "saison": "2026/2027", "spieltag": 1, "analysedatum": "2026-08-22",
     "heim":      {"team": "Elversberg",       "spiele": 0,  "karten": null, "teamwert_roh": null, "teamwert": null},
-    "auswaerts": {"team": "Bayer Leverkusen", "spiele": 10, "karten": 18,   "teamwert_roh": 1.8,  "teamwert": "1.8"},
-    "ligareferenz": {"saison_spieltage": "2025/2026: 15-34", "spiele": 180, "karten": 652, "wert_roh": 3.6222222222, "wert": "3.6"},
+    "auswaerts": {"team": "Bayer Leverkusen", "spiele": 10, "karten": 18,   "teamwert_roh": 1.8,  "teamwert": "1.80"},
+    "ligareferenz": {"saison_spieltage": "2025/2026: 15-34", "spiele": 180, "karten": 652, "wert_roh": 3.6222222222, "wert": "3.62"},
     "erwartet_roh": null, "erwartet": null,
     "abweichung_roh": null, "abweichung": null,
     "anomalie": null, "richtung": null, "vorlaeufig": true,
@@ -104,21 +106,21 @@ Analysedatum 2026-08-22 ist ein Platzhalter (siehe `test_kpi01_formkurve.md`).
   {
     "testfall": "PL-1",
     "liga": "Premier League", "saison": "2026/2027", "spieltag": 1, "analysedatum": "2026-08-22",
-    "heim":      {"team": "Newcastle",        "spiele": 10, "karten": 20, "teamwert_roh": 2.0, "teamwert": "2.0"},
-    "auswaerts": {"team": "Liverpool",        "spiele": 10, "karten": 14, "teamwert_roh": 1.4, "teamwert": "1.4"},
-    "ligareferenz": {"saison_spieltage": "2025/2026: 19-38", "spiele": 200, "karten": 781, "wert_roh": 3.905, "wert": "3.9"},
-    "erwartet_roh": 3.4, "erwartet": "3.4",
-    "abweichung_roh": -12.9321382843, "abweichung": "-12.9",
+    "heim":      {"team": "Newcastle",        "spiele": 10, "karten": 20, "teamwert_roh": 2.0, "teamwert": "2.00"},
+    "auswaerts": {"team": "Liverpool",        "spiele": 10, "karten": 14, "teamwert_roh": 1.4, "teamwert": "1.40"},
+    "ligareferenz": {"saison_spieltage": "2025/2026: 19-38", "spiele": 200, "karten": 781, "wert_roh": 3.905, "wert": "3.91"},
+    "erwartet_roh": 3.4, "erwartet": "3.40",
+    "abweichung_roh": -12.9321382843, "abweichung": "-12.93",
     "anomalie": "keine", "richtung": "negativ", "vorlaeufig": false,
     "ueberschrift": "Keine statistische Besonderheit",
-    "text": "Der Kartenindikator dieser Begegnung liegt bei 3,4 gelben Karten. Die Abweichung vom Liga-Durchschnitt beträgt −12,9 %."
+    "text": "Der Kartenindikator dieser Begegnung liegt bei 3,40 gelben Karten. Die Abweichung vom Liga-Durchschnitt beträgt −12,93 %."
   },
   {
     "testfall": "PL-2",
     "liga": "Premier League", "saison": "2026/2027", "spieltag": 1, "analysedatum": "2026-08-22",
     "heim":      {"team": "Hull",             "spiele": 0,  "karten": null, "teamwert_roh": null, "teamwert": null},
-    "auswaerts": {"team": "Manchester Utd",   "spiele": 10, "karten": 24,   "teamwert_roh": 2.4,  "teamwert": "2.4"},
-    "ligareferenz": {"saison_spieltage": "2025/2026: 19-38", "spiele": 200, "karten": 781, "wert_roh": 3.905, "wert": "3.9"},
+    "auswaerts": {"team": "Manchester Utd",   "spiele": 10, "karten": 24,   "teamwert_roh": 2.4,  "teamwert": "2.40"},
+    "ligareferenz": {"saison_spieltage": "2025/2026: 19-38", "spiele": 200, "karten": 781, "wert_roh": 3.905, "wert": "3.91"},
     "erwartet_roh": null, "erwartet": null,
     "abweichung_roh": null, "abweichung": null,
     "anomalie": null, "richtung": null, "vorlaeufig": true,
@@ -128,7 +130,7 @@ Analysedatum 2026-08-22 ist ein Platzhalter (siehe `test_kpi01_formkurve.md`).
 ```
 
 Hinweise zum JSON:
-- Gerundete Werte als Text mit Punkt; im Dashboard mit Komma. Im Kennzahlenfeld mit Vorzeichen („−8,9 %“), Minuszeichen U+2212 im Frontend-Text.
+- Gerundete Werte als Text mit Punkt; im Dashboard mit Komma. Im Kennzahlenfeld mit Vorzeichen („−8,90 %“), Minuszeichen U+2212 im Frontend-Text.
 - `_roh`-Werte mit Toleranz 1e-9 vergleichen, weil Gleitkomma-Rechnungen kleine Ungenauigkeiten erzeugen können.
 
 ### 3.3 Eingabedaten zum Nachvollziehen
@@ -271,18 +273,18 @@ Keine Spiele in der Datenbank (Aufsteiger).
 - Typischer Fehler: Spalte AC immer verwenden, egal ob Heim oder Auswärts.
 
 ### 4.2 Summe statt Durchschnitt
-- Erwartete gelbe Karten = **Summe** der Teamwerte (BL-1: 3,3), nicht deren Durchschnitt (1,65). Unterschied zu KPI 02 und 03.
+- Erwartete gelbe Karten = **Summe** der Teamwerte (BL-1: 3,30), nicht deren Durchschnitt (1,65). Unterschied zu KPI 02 und 03.
 
 ### 4.3 Ligareferenz
-- Ligareferenz = Karten **beider** Teams pro Spiel (Bundesliga 3,6, Premier League 3,9).
+- Ligareferenz = Karten **beider** Teams pro Spiel (Bundesliga 3,62, Premier League 3,91).
 - Bundesliga genau 180, Premier League genau 200 Spiele; kein fehlender Kartenwert.
 
 ### 4.4 Negative Abweichungen
-- BL-1 (−8,9 %) und PL-1 (−12,9 %) sind die ersten negativen Werte im Testset. `richtung` muss `negativ` sein, das Kennzahlenfeld zeigt das Vorzeichen.
+- BL-1 (−8,90 %) und PL-1 (−12,93 %) sind die ersten negativen Werte im Testset. `richtung` muss `negativ` sein, das Kennzahlenfeld zeigt das Vorzeichen.
 
 ### 4.5 Aufsteiger
 - Elversberg und Hull: Teamwert, Erwartungswert, Abweichung und Anomalie `null`, **keine Fehlermeldung**.
-- Teamwert des Gegners (Leverkusen 1,8 / Man Utd 2,4) und Ligareferenz werden trotzdem berechnet.
+- Teamwert des Gegners (Leverkusen 1,80 / Man Utd 2,40) und Ligareferenz werden trotzdem berechnet.
 
 ---
 
@@ -329,50 +331,50 @@ Keine Spiele in der Datenbank (Aufsteiger).
   {
     "testfall": "BL-3a",
     "liga": "Bundesliga", "saison": "2025/2026", "spieltag": 3, "analysedatum": "2025-09-13",
-    "heim":      {"team": "Bayern Munich",  "spiele": 10, "karten": 14, "teamwert_roh": 1.4, "teamwert": "1.4"},
-    "auswaerts": {"team": "Hamburger SV",   "spiele": 2,  "karten": 4,  "teamwert_roh": 2.0, "teamwert": "2.0"},
-    "ligareferenz": {"saison_spieltage": "2024/2025: 17-34 + 2025/2026: 1-2", "spiele": 180, "karten": 672, "wert_roh": 3.7333333333, "wert": "3.7"},
-    "erwartet_roh": 3.4, "erwartet": "3.4",
-    "abweichung_roh": -8.9285714286, "abweichung": "-8.9",
+    "heim":      {"team": "Bayern Munich",  "spiele": 10, "karten": 14, "teamwert_roh": 1.4, "teamwert": "1.40"},
+    "auswaerts": {"team": "Hamburger SV",   "spiele": 2,  "karten": 4,  "teamwert_roh": 2.0, "teamwert": "2.00"},
+    "ligareferenz": {"saison_spieltage": "2024/2025: 17-34 + 2025/2026: 1-2", "spiele": 180, "karten": 672, "wert_roh": 3.7333333333, "wert": "3.73"},
+    "erwartet_roh": 3.4, "erwartet": "3.40",
+    "abweichung_roh": -8.9285714286, "abweichung": "-8.93",
     "anomalie": "keine", "richtung": "negativ", "vorlaeufig": true,
     "ueberschrift": "Keine statistische Besonderheit",
-    "text": "Der Kartenindikator dieser Begegnung liegt bei 3,4 gelben Karten. Die Abweichung vom Liga-Durchschnitt beträgt −8,9 %."
+    "text": "Der Kartenindikator dieser Begegnung liegt bei 3,40 gelben Karten. Die Abweichung vom Liga-Durchschnitt beträgt −8,93 %."
   },
   {
     "testfall": "BL-3b",
     "liga": "Bundesliga", "saison": "2025/2026", "spieltag": 3, "analysedatum": "2025-09-13",
-    "heim":      {"team": "Wolfsburg",      "spiele": 10, "karten": 17, "teamwert_roh": 1.7, "teamwert": "1.7"},
-    "auswaerts": {"team": "FC Koln",        "spiele": 2,  "karten": 4,  "teamwert_roh": 2.0, "teamwert": "2.0"},
-    "ligareferenz": {"saison_spieltage": "2024/2025: 17-34 + 2025/2026: 1-2", "spiele": 180, "karten": 672, "wert_roh": 3.7333333333, "wert": "3.7"},
-    "erwartet_roh": 3.7, "erwartet": "3.7",
-    "abweichung_roh": -0.8928571429, "abweichung": "-0.9",
+    "heim":      {"team": "Wolfsburg",      "spiele": 10, "karten": 17, "teamwert_roh": 1.7, "teamwert": "1.70"},
+    "auswaerts": {"team": "FC Koln",        "spiele": 2,  "karten": 4,  "teamwert_roh": 2.0, "teamwert": "2.00"},
+    "ligareferenz": {"saison_spieltage": "2024/2025: 17-34 + 2025/2026: 1-2", "spiele": 180, "karten": 672, "wert_roh": 3.7333333333, "wert": "3.73"},
+    "erwartet_roh": 3.7, "erwartet": "3.70",
+    "abweichung_roh": -0.8928571429, "abweichung": "-0.89",
     "anomalie": "keine", "richtung": "negativ", "vorlaeufig": true,
     "ueberschrift": "Keine statistische Besonderheit",
-    "text": "Der Kartenindikator dieser Begegnung liegt bei 3,7 gelben Karten. Die Abweichung vom Liga-Durchschnitt beträgt −0,9 %."
+    "text": "Der Kartenindikator dieser Begegnung liegt bei 3,70 gelben Karten. Die Abweichung vom Liga-Durchschnitt beträgt −0,89 %."
   },
   {
     "testfall": "PL-3a",
     "liga": "Premier League", "saison": "2025/2026", "spieltag": 3, "analysedatum": "2025-08-30",
-    "heim":      {"team": "Manchester Utd", "spiele": 10, "karten": 21, "teamwert_roh": 2.1, "teamwert": "2.1"},
-    "auswaerts": {"team": "Burnley",        "spiele": 2,  "karten": 0,  "teamwert_roh": 0.0, "teamwert": "0.0"},
-    "ligareferenz": {"saison_spieltage": "2024/2025: 21-38 + 2025/2026: 1-2", "spiele": 200, "karten": 692, "wert_roh": 3.46, "wert": "3.5"},
-    "erwartet_roh": 2.1, "erwartet": "2.1",
-    "abweichung_roh": -39.3063583815, "abweichung": "-39.3",
+    "heim":      {"team": "Manchester Utd", "spiele": 10, "karten": 21, "teamwert_roh": 2.1, "teamwert": "2.10"},
+    "auswaerts": {"team": "Burnley",        "spiele": 2,  "karten": 0,  "teamwert_roh": 0.0, "teamwert": "0.00"},
+    "ligareferenz": {"saison_spieltage": "2024/2025: 21-38 + 2025/2026: 1-2", "spiele": 200, "karten": 692, "wert_roh": 3.46, "wert": "3.46"},
+    "erwartet_roh": 2.1, "erwartet": "2.10",
+    "abweichung_roh": -39.3063583815, "abweichung": "-39.31",
     "anomalie": "stark", "richtung": "negativ", "vorlaeufig": true,
     "ueberschrift": "Unterdurchschnittlich viele gelbe Karten",
-    "text": "In dieser Partie werden 2,1 gelbe Karten erwartet. Das liegt 39,3 % unter dem Liga-Durchschnitt."
+    "text": "In dieser Partie werden 2,10 gelbe Karten erwartet. Das liegt 39,31 % unter dem Liga-Durchschnitt."
   },
   {
     "testfall": "PL-3b",
     "liga": "Premier League", "saison": "2025/2026", "spieltag": 3, "analysedatum": "2025-08-30",
-    "heim":      {"team": "Sunderland",     "spiele": 2,  "karten": 1,  "teamwert_roh": 0.5, "teamwert": "0.5"},
-    "auswaerts": {"team": "Brentford",      "spiele": 10, "karten": 20, "teamwert_roh": 2.0, "teamwert": "2.0"},
-    "ligareferenz": {"saison_spieltage": "2024/2025: 21-38 + 2025/2026: 1-2", "spiele": 200, "karten": 692, "wert_roh": 3.46, "wert": "3.5"},
-    "erwartet_roh": 2.5, "erwartet": "2.5",
-    "abweichung_roh": -27.7456647399, "abweichung": "-27.7",
+    "heim":      {"team": "Sunderland",     "spiele": 2,  "karten": 1,  "teamwert_roh": 0.5, "teamwert": "0.50"},
+    "auswaerts": {"team": "Brentford",      "spiele": 10, "karten": 20, "teamwert_roh": 2.0, "teamwert": "2.00"},
+    "ligareferenz": {"saison_spieltage": "2024/2025: 21-38 + 2025/2026: 1-2", "spiele": 200, "karten": 692, "wert_roh": 3.46, "wert": "3.46"},
+    "erwartet_roh": 2.5, "erwartet": "2.50",
+    "abweichung_roh": -27.7456647399, "abweichung": "-27.75",
     "anomalie": "leicht", "richtung": "negativ", "vorlaeufig": true,
     "ueberschrift": "Unterdurchschnittlich viele gelbe Karten",
-    "text": "In dieser Partie werden 2,5 gelbe Karten erwartet. Das liegt 27,7 % unter dem Liga-Durchschnitt."
+    "text": "In dieser Partie werden 2,50 gelbe Karten erwartet. Das liegt 27,75 % unter dem Liga-Durchschnitt."
   }
 ]
 ```
@@ -510,18 +512,18 @@ Summe: 624 + 68 = 692 Karten in 180 + 20 = 200 Spielen → 3,46
 **Nachholspiel: Filter nach `Gameday`, nicht nach Datum (wichtig)**
 - id 14680 (Everton – Liverpool, Spieltag 15, gespielt am 12.02.2025) darf **nicht** in der Premier-League-Referenz enthalten sein, obwohl es zeitlich zwischen Spieltag 24 und 25 liegt.
 - Ein Code, der nach Datum filtert (14.01.2025 bis 25.08.2025), kommt auf **201 Spiele und 700 Karten** (Ø 3,48) statt 200 Spiele und 692 Karten (Ø 3,46). Bei der Testkontrolle am 29.10.2026 tatsächlich so aufgetreten (manuelle Excel-Rechnung).
-- Folge hier: PL-3a −39,7 % statt −39,3 %, PL-3b −28,2 % statt −27,7 %. Die Einstufung bleibt gleich, bei grenznahen Werten wäre das aber nicht garantiert.
+- Folge hier: PL-3a −39,70 % statt −39,31 %, PL-3b −28,21 % statt −27,75 %. Die Einstufung bleibt gleich, bei grenznahen Werten wäre das aber nicht garantiert.
 - Gilt genauso für die Tor-Referenz von KPI 02 (siehe `test_kpi02_erwartete_tore.md`, Abschnitt 6.4).
 
 **Eigene Karten und echte Null (wichtig)**
 - Burnley hat in beiden Spielen **0** eigene Karten. Bei id 64535 (Burnley – Sunderland, Karten 0:1) ist Burnley Heimteam, es zählt die linke Zahl (0). Die 1 gehört Sunderland.
-- Typischer Fehler: Karten beider Teams statt eigener Karten zählen. Burnley käme auf 1 Karte (0,5), PL-3a auf 2,6 erwartete Karten und −24,9 %, also **leicht statt stark**. Hier ändert der Fehler die Einstufung. Bei der Testkontrolle am 29.10.2026 tatsächlich so aufgetreten.
+- Typischer Fehler: Karten beider Teams statt eigener Karten zählen. Burnley käme auf 1 Karte (0,5), PL-3a auf 2,60 erwartete Karten und −24,86 %, also **leicht statt stark**. Hier ändert der Fehler die Einstufung. Bei der Testkontrolle am 29.10.2026 tatsächlich so aufgetreten.
 - Eine echte 0 ist ein gültiger Wert und muss mitgezählt werden. Ein Code, der 0 wie eine leere Zelle behandelt, würde Burnley als „nicht berechenbar“ ausgeben. Gegenstück zur Regel „leere Zelle nie als 0“.
 - Weitere spiegelbildliche Duelle: id 14572 (Brentford 0 / Man Utd 2).
 
 **Negative Anomalien**
-- PL-3a: starke negative Anomalie (−39,3 %), PL-3b: leichte negative Anomalie (−27,7 %). Damit sind alle Stufen in beide Richtungen mit echten Daten abgedeckt.
-- Überschrift „Unterdurchschnittlich viele gelbe Karten“, Abweichung im Text ohne Vorzeichen („39,3 % unter“).
+- PL-3a: starke negative Anomalie (−39,31 %), PL-3b: leichte negative Anomalie (−27,75 %). Damit sind alle Stufen in beide Richtungen mit echten Daten abgedeckt.
+- Überschrift „Unterdurchschnittlich viele gelbe Karten“, Abweichung im Text ohne Vorzeichen („39,31 % unter“).
 
 **Ligareferenz über das Saisonende**
 - Bundesliga: 162 Spiele aus 2024/25 + 18 aus 2025/26 = 180. Premier League: 180 + 20 = 200.
@@ -542,5 +544,5 @@ Summe: 624 + 68 = 692 Karten in 180 + 20 = 200 Spielen → 3,46
 ## 8. Weitere Tests (geplant)
 
 - **Zusatztest fehlende Kartenwerte:** siehe Abschnitt 6.
-- **Ausgedachter Testdatensatz** für Sonderfälle: 2-Tage-Regel (Spiele genau 1, 2 und 3 Tage vor dem Analysedatum), Team mit genau 1 Spiel, Abweichung genau ±20,0 % und ±35,0 %.
+- **Ausgedachter Testdatensatz** für Sonderfälle: 2-Tage-Regel (Spiele genau 1, 2 und 3 Tage vor dem Analysedatum), Team mit genau 1 Spiel, Abweichung genau ±20,00 % und ±35,00 %.
 - **Praxistest 3. Spieltag 2026/27:** optional, sobald die Saison läuft.

@@ -1,6 +1,8 @@
-"""KPI 01–04 gegen die bestätigten Testfälle in docs/tests/*.md (JSON-Blöcke).
+"""KPI 01–09 gegen die bestätigten Testfälle in docs/tests/*.md (JSON-Blöcke).
 
-Die Testfälle gelten für die Datenbank mit der SHA-256 aus conftest.KNOWN_DB_SHA.
+Die Testfälle KPI 01–04 gelten für die Datenbank mit der SHA-256 aus conftest.KNOWN_DB_SHA,
+die Testfälle KPI 05–09 für conftest.KNOWN_DB_SHA_H (beide liegen in tests/referenz).
+Seit Etappe H (08.11.2026) werden alle Werte auf zwei Nachkommastellen gerundet.
 Zusätzlich: Grenzfälle der Rundung und Einstufung, fehlende Kartenwerte (Union Berlin, id 14421),
 2-Tage-Regel mit einem ausgedachten Mini-Datensatz.
 """
@@ -14,16 +16,17 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
-from conftest import KNOWN_DB_SHA, REFERENCE_DATABASE
+from conftest import KNOWN_DB_SHA, KNOWN_DB_SHA_H, REFERENCE_DATABASE, REFERENCE_DATABASE_H
 
 from core.kpis import (
-    LIGHT, NONE, STRONG, Match, classify, compute_match, de, de_signed, fmt, fmt_signed, kpi01_team, kpi02, kpi04,
-    prepare_league, reference_keys, reference_label, round1, team_cards, team_goals,
+    KPI_KEYS, LIGHT, NONE, STAT_KPIS, STRONG, Match, Thresholds, classify, compute_match, de, de_abs, de_signed, fmt,
+    fmt_signed, kpi01_team, kpi02, kpi04, prepare_league, reference_keys, reference_label, round_display, stat_kpi,
+    team_cards, team_goals,
 )
 from core.loader import load_database
 
 DOCS = Path(__file__).resolve().parents[1] / "docs" / "tests"
-MATCHDAYS = {"Bundesliga": 34, "Premier League": 38}
+MATCHDAYS = {"Bundesliga": 34, "Premier League": 38, "Serie A": 38, "LaLiga": 38}
 TOL = 1e-9
 
 
@@ -124,7 +127,7 @@ def test_kpi03(prepared, case):
     check_team(r.auswaerts, case["auswaerts"], "tore")
     for dev, side in zip(r.teamabweichung, ("heim", "auswaerts")):
         assert close(dev, case[side]["teamabweichung_roh"])
-        assert fmt_signed(round1(dev)) == case[side]["teamabweichung"]
+        assert fmt_signed(round_display(dev)) == case[side]["teamabweichung"]
     check_result(r, case, "gemeinsam")
 
 
@@ -181,29 +184,38 @@ def test_missing_cards_are_not_replaced(prepared):
 # --- Rundung, Einstufung, Formatierung (ohne Daten) ----------------------------------
 
 @pytest.mark.parametrize("value, expected", [
-    (Fraction(87, 20), "4.4"),       # 4,35 -> 4,4 (round() ergäbe 4,3)
-    (Fraction(53, 20), "2.7"),       # 2,65 -> 2,7
-    (Fraction(-53, 20), "-2.7"),     # kaufmännisch weg von null
-    (Fraction(2004, 100), "20.0"),
-    (Fraction(6), "6.0"),
+    (Fraction(2675, 1000), "2.68"),  # round(2.675, 2) ergäbe fälschlich 2,67
+    (Fraction(87, 20), "4.35"),      # bis 08.11.2026 mit einer Stelle 4,4
+    (Fraction(-2675, 1000), "-2.68"),  # kaufmännisch weg von null
+    (Fraction(20004, 1000), "20.00"),
+    (Fraction(6), "6.00"),
+    (Fraction(-4, 1000), "0.00"),    # −0,00 -> 0,00 (Regelwerk 2.4)
+    (Fraction(-5, 1000), "-0.01"),
 ])
-def test_round1(value, expected):
-    assert fmt(round1(value)) == expected
+def test_round_display(value, expected):
+    assert fmt(round_display(value)) == expected
 
 
 @pytest.mark.parametrize("dev, expected", [
-    ("20.0", (NONE, "positiv")), ("-20.0", (NONE, "negativ")), ("20.1", (LIGHT, "positiv")),
-    ("35.0", (LIGHT, "positiv")), ("-35.0", (LIGHT, "negativ")), ("35.1", (STRONG, "positiv")),
-    ("0.0", (NONE, None)),
+    ("20.00", (NONE, "positiv")), ("-20.00", (NONE, "negativ")), ("20.01", (LIGHT, "positiv")),
+    ("35.00", (LIGHT, "positiv")), ("-35.00", (LIGHT, "negativ")), ("35.01", (STRONG, "positiv")),
+    ("0.00", (NONE, None)),
 ])
 def test_classify_boundaries(dev, expected):
     assert classify(Decimal(dev)) == expected
 
 
+def test_classify_with_own_thresholds():
+    t = Thresholds(Decimal("12"), Decimal("18"))
+    assert classify(Decimal("12.00"), t)[0] == NONE and classify(Decimal("12.01"), t)[0] == LIGHT
+    assert classify(Decimal("-18.01"), t) == (STRONG, "negativ")
+
+
 def test_display_formats():
-    assert de(Decimal("4.4")) == "4,4" and de(None) == "–"
-    assert de_signed(Decimal("-8.9")) == "−8,9" and de_signed(Decimal("7.0")) == "+7,0"
-    assert de_signed(Decimal("0.0")) == "0,0"
+    assert de(Decimal("4.35")) == "4,35" and de(None) == "–"
+    assert de_signed(Decimal("-8.90")) == "−8,90" and de_signed(Decimal("7.01")) == "+7,01"
+    assert de_signed(Decimal("0.00")) == "0,00" and de_abs(Decimal("-39.31")) == "39,31"
+    assert de_signed(round_display(Fraction(-1, 1000))) == "0,00"      # kein „−0,00“
 
 
 def test_reference_keys_wrap_season():
@@ -251,7 +263,7 @@ def test_kpi03_zero_deviation_has_title_but_no_text():
                   (2, "2026-08-08", "2026/2027", 2, "B", "A", 1, 1, 0, 0)])
     m = Match("Liga", "2026/2027", 3, date(2026, 9, 1), "A", "B")
     r = compute_match(db, m, 34).kpi03
-    assert fmt_signed(r.abweichung_rund) == "0.0"
+    assert fmt_signed(r.abweichung_rund) == "0.00"
     assert r.ueberschrift == "Keine statistische Besonderheit" and r.text is None
 
 
@@ -267,7 +279,7 @@ def test_later_games_do_not_change_earlier_matchday(prepared):
     ])
     extended = pd.concat([base, extra]).sort_values(["date", "time", "id"], kind="stable").reset_index(drop=True)
     after = compute_match(extended, m1, 34)
-    for key in ("kpi02", "kpi03", "kpi04"):
+    for key in KPI_KEYS:
         a, b = getattr(before, key), getattr(after, key)
         assert (a.hauptwert, a.abweichung, a.vorlaeufig) == (b.hauptwert, b.abweichung, b.vorlaeufig)
         if a.referenz:
@@ -276,3 +288,78 @@ def test_later_games_do_not_change_earlier_matchday(prepared):
     # Spieltag 2 sieht die neuen Spiele dagegen schon
     m2 = Match("Bundesliga", "2026/2027", 2, date(2026, 9, 4), "Stuttgart", "Bayern Munich")
     assert 900001 in compute_match(extended, m2, 34).kpi02.heim.ids
+
+
+# --- KPI 05–09 (Regelwerk 9) gegen die bestätigten Testfälle -----------------------------
+
+STAT_FILES = {"kpi05": "test_kpi05_ecken.md", "kpi06": "test_kpi06_tore_hz1.md", "kpi07": "test_kpi07_tore_hz2.md",
+              "kpi08": "test_kpi08_btts.md", "kpi09": "test_kpi09_schuesse_aufs_tor.md"}
+
+
+@pytest.fixture(scope="module")
+def prepared_h():
+    if not REFERENCE_DATABASE_H.exists() or not DOCS.exists():
+        pytest.skip("Referenz-Datenbank (Etappe H) oder docs/tests nicht vorhanden")
+    db = load_database(REFERENCE_DATABASE_H)
+    assert db.sha256 == KNOWN_DB_SHA_H, "Referenz-Datenbank (Etappe H) wurde verändert"
+    return {name: prepare_league(df) for name, df in db.leagues.items()}
+
+
+def stat_cases():
+    if not DOCS.exists():
+        return []
+    return [(key, case) for key, f in STAT_FILES.items() for case in json_cases(f)]
+
+
+def check_stat(r, case):
+    for tv, side in ((r.heim, "heim"), (r.auswaerts, "auswaerts")):
+        exp = case[side]
+        assert (tv.team, tv.spiele, tv.summe) == (exp["team"], exp["spiele"], exp["summe"]), (case["testfall"], side)
+        assert close(tv.wert, exp["teamwert_roh"]) and fmt(tv.wert_rund) == exp["teamwert"], (case["testfall"], side)
+    ref = case["ligareferenz"]
+    assert (r.referenz.label, r.referenz.spiele, r.referenz.summe) == (ref["saison_spieltage"], ref["spiele"], ref["summe"])
+    assert close(r.referenz.wert, ref["wert_roh"]) and fmt(r.referenz.wert_rund) == ref["wert"]
+    assert close(r.hauptwert, case["hauptwert_roh"]) and fmt(r.hauptwert_rund) == case["hauptwert"]
+    assert close(r.abweichung, case["abweichung_roh"]), (case["testfall"], r.abweichung)
+    assert fmt(r.abweichung_rund) == case["abweichung"], (case["testfall"], r.abweichung_rund)
+    assert (r.anomalie, r.richtung, r.vorlaeufig) == (case["anomalie"], case["richtung"], case["vorlaeufig"])
+    assert r.ueberschrift == case["ueberschrift"] and r.text == case["text"], case["testfall"]
+
+
+@pytest.mark.parametrize("key, case", stat_cases(), ids=lambda x: x if isinstance(x, str) else x["testfall"])
+def test_kpi05_to_09(prepared_h, key, case):
+    m = match_of(case)
+    r = stat_kpi(prepared_h[m.league], m, MATCHDAYS[m.league], key)
+    check_stat(r, case)
+    # compute_match liefert für alle KPIs auf einmal dasselbe
+    assert vars(getattr(compute_match(prepared_h[m.league], m, MATCHDAYS[m.league]), key)) == vars(r)
+
+
+def test_stat_cases_cover_all_files():
+    keys = [k for k, _ in stat_cases()]
+    assert {k: keys.count(k) for k in STAT_FILES} == {"kpi05": 12, "kpi06": 12, "kpi07": 12, "kpi08": 11, "kpi09": 14}
+
+
+def test_stat_kpis_skip_missing_values_never_zero():
+    """Ecken fehlen in einem Spiel: Spiel fällt weg (kein älteres nachziehen), echte Nullen zählen mit."""
+    rows = [(i, f"2026-08-{i:02d}", "2026/2027", i, "A" if i % 2 else "B", "B" if i % 2 else "A", 1, 1, 0, 0)
+            for i in range(1, 13)]
+    df = pd.DataFrame([{
+        "id": r[0], "Date": pd.Timestamp(r[1]), "matchDate": pd.Timestamp(r[1]).strftime("%d-%m-%y 15:30"),
+        "Season": r[2], "Gameday": r[3], "homeTeam": r[4], "awayTeam": r[5], "FT Home Goals": r[6],
+        "FT Away Goals :": r[7], "Home Corners Full Time": (None if r[0] == 12 else 0 if r[0] == 11 else 4),
+        "Away Corners Full Time": 2,
+    } for r in rows])
+    db = prepare_league(df)
+    m = Match("Liga", "2026/2027", 20, date(2026, 9, 30), "A", "B")
+    r = stat_kpi(db, m, 34, "kpi05")
+    assert r.heim.spiele == 9 and 12 not in r.heim.ids and 2 not in r.heim.ids     # 10 letzte, davon 1 leer
+    assert r.heim.summe == 8 * 6 + 2                                              # Spiel 11: echte Null zählt
+    assert r.vorlaeufig
+    r8 = stat_kpi(db, m, 34, "kpi08")
+    assert r8.prozent and r8.heim.wert == Fraction(100) and r8.heim.summe == 10   # 1:1 -> immer BTTS
+
+
+def test_stat_kpi_specs():
+    assert list(STAT_KPIS) == ["kpi05", "kpi06", "kpi07", "kpi08", "kpi09"]
+    assert KPI_KEYS == ("kpi02", "kpi03", "kpi04", "kpi05", "kpi06", "kpi07", "kpi08", "kpi09")

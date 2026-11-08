@@ -60,19 +60,35 @@ def get_prepared() -> dict:
     return _cached_prepared(str(path), *_file_key(path))
 
 
-@st.cache_data(show_spinner="Häufigkeit der Anomalien wird berechnet (einmal je Datenbankstand) …", max_entries=4)
-def _cached_frequency(path: str, mtime_ns: int, size: int, league_name: str, teams: int):  # noqa: ARG001
+@st.cache_data(show_spinner="Häufigkeit der Anomalien wird berechnet (einmal je Datenbankstand) …", max_entries=8)
+def _cached_frequency(path: str, mtime_ns: int, size: int, league_name: str, teams: int,
+                      thresholds_key: tuple):  # noqa: ARG001 - Teil des Cache-Schlüssels
     from core.config import League
     from core.frequency import anomaly_frequency
     prepared = _cached_prepared(path, mtime_ns, size).get(league_name)
     if prepared is None:
         return None, None
-    return anomaly_frequency(prepared, League(league_name, "x", teams, True))
+    return anomaly_frequency(prepared, League(league_name, "x", teams, True), get_thresholds())
 
 
 def get_frequency(league: League):
     path = settings.DATABASE_FILE
-    return _cached_frequency(str(path), *_file_key(path), league.name, league.teams)
+    return _cached_frequency(str(path), *_file_key(path), league.name, league.teams,
+                             _file_key(settings.THRESHOLDS_FILE))
+
+
+# --- Schwellenwerte (app/config/schwellen.toml) ------------------------------------------
+
+@st.cache_data(show_spinner=False, max_entries=2)
+def _cached_thresholds(path: str, key: tuple, leagues_key: tuple):  # noqa: ARG001 - Teil des Cache-Schlüssels
+    from core.thresholds import load_thresholds
+    return load_thresholds(path, [lg.name for lg in get_leagues()])
+
+
+def get_thresholds():
+    """Schwellen je Liga und KPI (wirft ConfigError bei ungültiger Datei)."""
+    path = settings.THRESHOLDS_FILE
+    return _cached_thresholds(str(path), _file_key(path), _file_key(settings.LEAGUES_FILE))
 
 
 # --- Konfiguration -------------------------------------------------------------

@@ -9,16 +9,14 @@ from html import escape
 
 import streamlit as st
 
-from core.kpis import de, de_signed
+from core.kpis import de_signed
 from core.matchday import current_matchday, matchday_games
 from core.top import NO_ANOMALIES_TEXT, TOP_KPIS, Candidate, TopEntry, select_top
 from state import get_active_leagues, get_database, get_fixtures, today
 from views import components as ui
-from views.kpi_table import ANOMALY_LABEL, anomaly_cell
+from views.kpi_table import ANOMALY_LABEL, anomaly_cell, value_text
 from views.liga import matchday_kpis
 from views.registry import PAGES
-
-KPI_SHORT = {"kpi02": "Erwartete Tore", "kpi04": "Gelbe Karten"}
 
 
 def card_html(e: TopEntry) -> str:
@@ -30,7 +28,7 @@ def card_html(e: TopEntry) -> str:
         f'<span class="si-card-meta">{escape(c.league)} · Spieltag {c.matchday}</span></div>'
         f'<div class="si-card-match">{escape(c.home)} – {escape(c.away)}</div>'
         f'<div class="si-card-kpi">{escape(e.kpi_name)}</div>'
-        f'<div class="si-card-value">{anomaly_cell(r.anomalie)} <strong>{de(r.hauptwert_rund)}</strong> · '
+        f'<div class="si-card-value">{anomaly_cell(r.anomalie)} <strong>{value_text(r, r.hauptwert_rund)}</strong> · '
         f'{de_signed(r.abweichung_rund)} % · {ANOMALY_LABEL[r.anomalie]}</div>'
         f'<div class="si-desc"><strong>{escape(r.ueberschrift or "")}</strong>{text}</div>'
         "</div>"
@@ -82,7 +80,8 @@ def render() -> None:
                         st.page_link(page, label=f"Zur {e.candidate.league} →")
                     except Exception:  # noqa: BLE001 - ausserhalb der Navigation (Tests)
                         pass
-    st.caption(f"Berücksichtigt: {', '.join(TOP_KPIS.values())} mit leichter oder starker Anomalie, ohne vorläufige "
+    st.caption(f"Berücksichtigt: KPI 02–09 ({len(TOP_KPIS)} KPIs) mit leichter oder starker Anomalie, ohne vorläufige "
                "Werte und ohne verschobene oder abgesagte Spiele. Höchstens vier Einträge, pro Begegnung einer. "
-               "Rangfolge: stark vor leicht, dann grösste Abweichung.")
+               "Rangfolge: stark vor leicht, dann grösste Abweichung (Gewichtung wird mit der Schwellen-Analyse "
+               "überarbeitet).")
     ui.footer()

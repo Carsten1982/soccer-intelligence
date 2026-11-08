@@ -81,6 +81,56 @@ CSS = f"""
 [class*="st-key-prev_"] button p, [class*="st-key-next_"] button p {{font-size:1.5rem !important; line-height:1 !important;}}
 [class*="st-key-prev_"] button, [class*="st-key-next_"] button {{min-height:2.6rem; padding:0 .7rem;}}
 
+/* Kompakte Liga-Tabelle (Etappe H, Briefing 4.1): Raster statt Tabelle, jede Begegnung aufklappbar (<details>).
+   Die Spalten # und Spiel bleiben beim seitlichen Schieben stehen. */
+.si-cwrap {{overflow-x:auto; border:1px solid {LINE}; border-radius:.5rem; margin-bottom:.5rem;
+  scrollbar-width:auto; scrollbar-color:#9aa6b8 {HEAD_BG};}}
+.si-cgrid {{min-width:1060px; color:{NAVY};}}
+.si-crow {{display:grid; grid-template-columns:2.4rem 12.5rem 5.6rem repeat(8, minmax(5.9rem, 1fr)) 1.8rem;
+  align-items:center; border-bottom:1px solid {LINE}; font-size:.9rem; background:#fff;}}
+.si-crow.si-alt {{background:{ROW_ALT};}}
+.si-chead {{background:{HEAD_BG}; font-weight:700; font-size:.82rem; line-height:1.15;}}
+.si-chead small {{display:block; font-weight:500; color:{SLATE}; font-size:.7rem;}}
+details.si-cdet {{margin:0;}}
+details.si-cdet > summary {{list-style:none; cursor:pointer;}}
+details.si-cdet > summary::-webkit-details-marker {{display:none;}}
+details.si-cdet > summary:hover, details.si-cdet[open] > summary {{background:#e8f0fb;}}
+.si-cc {{padding:.42rem .5rem;}}
+.si-cn {{text-align:center; color:{SLATE};}}
+.si-cg .si-team {{display:block; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}}
+.si-cg .si-badge {{margin-top:.15rem;}}
+.si-cs1 {{position:sticky; left:0; z-index:2; background:inherit;}}
+.si-cs2 {{position:sticky; left:2.4rem; z-index:2; background:inherit; border-right:2px solid {LINE};}}
+.si-cf .si-fline {{display:block; line-height:1.45; white-space:nowrap;}}
+.si-cf .si-dot, .si-kc .si-formrow .si-dot {{width:.68rem; height:.68rem;}}
+.si-cf .si-form {{width:.68rem; font-size:.75rem;}}
+.si-ckv {{text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums;}}
+.si-num {{margin-right:.35rem;}}
+.si-ckv .si-v {{margin-left:.25rem;}}
+.si-chev {{display:inline-block; color:{SLATE}; font-size:1.2rem; transition:transform .15s;}}
+details.si-cdet[open] .si-chev {{transform:rotate(90deg);}}
+.si-cdetail {{border-bottom:2px solid {LINE}; background:#fafbfd;}}
+.si-cdetail-in {{position:sticky; left:0; width:min(100%, calc(100vw - 3rem)); box-sizing:border-box; display:grid;
+  grid-template-columns:repeat(3, minmax(0, 1fr)); gap:.6rem; padding:.7rem;}}
+.si-kc {{border:1px solid {LINE}; border-radius:.5rem; background:#fff; padding:.55rem .65rem; font-size:.82rem;
+  color:{NAVY}; min-width:0;}}
+.si-kc-h {{display:flex; align-items:center; gap:.35rem; font-size:.85rem; margin-bottom:.35rem;}}
+.si-kc-a {{margin-left:auto; color:{SLATE}; font-size:.75rem; white-space:nowrap;}}
+.si-kc-m {{display:grid; grid-template-columns:repeat(3, 1fr); gap:.3rem; margin-bottom:.35rem;}}
+.si-kc-m span {{display:block; color:{SLATE}; font-size:.7rem;}}
+.si-kc-m b {{font-size:.98rem;}}
+.si-kc-t {{display:grid; grid-template-columns:minmax(0, 1fr) auto; gap:.05rem .5rem; margin-bottom:.3rem;}}
+.si-kc-t span {{color:{SLATE}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}}
+.si-kc-t b {{text-align:right; white-space:nowrap;}}
+.si-kc-b {{color:{SLATE}; font-size:.72rem; margin-bottom:.3rem;}}
+.si-kc-x {{line-height:1.35;}}
+@media (max-width: 700px) {{
+  .si-cgrid {{min-width:0; width:max-content;}}
+  .si-crow {{grid-template-columns:2rem 9.2rem 5rem repeat(8, 5.6rem) 1.4rem; font-size:.84rem;}}
+  .si-cs2 {{left:2rem;}}
+  .si-cdetail-in {{grid-template-columns:1fr;}}
+}}
+
 /* Top Anomalien (Briefing 5.2) */
 .si-card {{border:1px solid {LINE}; border-radius:.6rem; padding:.9rem 1rem; background:#fff; color:{NAVY};}}
 .si-card-top {{display:flex; align-items:center; gap:.6rem; margin-bottom:.35rem;}}

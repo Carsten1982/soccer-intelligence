@@ -1,4 +1,5 @@
-"""Liga-Bereich: alle Begegnungen eines Spieltags mit KPI 01–04 (Dashboard-Briefing, Kapitel 4 und 7–9).
+"""Liga-Bereich: alle Begegnungen eines Spieltags mit KPI 01–09 (Dashboard-Briefing, Kapitel 4 und 7–9).
+Seit Etappe H als kompakte Tabelle; ein Klick auf eine Begegnung zeigt alle Details (views/kpi_table.py).
 
 Angezeigt wird der aktuelle Spieltag. Mit den Pfeilen lassen sich frühere Spieltage wählen (nicht in die Zukunft);
 die Auswahl steht in der Adresse (?spieltag=1). Die KPIs werden immer so berechnet, als wäre der gewählte
@@ -15,7 +16,7 @@ from core.kpis import Match, compute_match
 from core.matchday import (
     Matchday, Selection, date_range, matchday_games, matchday_overview, params_for, season_short, select_matchday,
 )
-from state import get_database, get_fixtures, get_prepared, today
+from state import get_database, get_fixtures, get_prepared, get_thresholds, today
 from views import components as ui
 from views import kpi_table
 from views.registry import PAGES
@@ -74,15 +75,12 @@ def render(league: League) -> None:
     md = sel.selected
     games = matchday_games(fixtures, md.saison, md.spieltag)
     results = matchday_kpis(league, md.saison, md.spieltag, games)
-    rows = []
-    for g, k in zip(games.itertuples(), results):
-        cells = kpi_table.empty_cells() if k is None else kpi_table.match_cells(k)
-        rows.append(ui.MatchRow(home=g.heim, away=g.gast, status=g.status, cells=cells))
+    rows = [(g.heim, g.gast, g.status, k) for g, k in zip(games.itertuples(), results)]
 
     st.caption(f"{league.name} · Spieltag {md.spieltag} · {date_range(md.erstes_datum, md.letztes_datum)} "
                f"· {len(rows)} Begegnungen · Berechnung so, als wären die Spiele noch nicht gespielt "
-               "(Stichtag „Datum von“)")
-    ui.match_table(rows, kpi_table.GROUPS)
+               "(Stichtag „Datum von“) · Zeile anklicken für Details")
+    st.markdown(kpi_table.compact_table_html(rows), unsafe_allow_html=True)
     st.markdown(kpi_table.LEGEND_HTML, unsafe_allow_html=True)
     ui.footer()
 
@@ -90,11 +88,12 @@ def render(league: League) -> None:
 def matchday_kpis(league: League, season: str, matchday: int, games) -> list:
     """KPI-Ergebnisse je Begegnung; None für verschobene/abgesagte Spiele. Stichtag = „Datum von“."""
     prepared = get_prepared().get(league.name)
+    thresholds = get_thresholds()
     results = []
     for g in games.itertuples():
         if g.status in INACTIVE_STATUS or prepared is None:
             results.append(None)
             continue
         match = Match(league.name, season, matchday, g.datum_von, g.heim, g.gast)
-        results.append(compute_match(prepared, match, 2 * (league.teams - 1)))
+        results.append(compute_match(prepared, match, 2 * (league.teams - 1), thresholds))
     return results

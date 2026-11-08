@@ -1,0 +1,24 @@
+# Soccer Intelligence – Schwellenwerte der Anomalie-Einstufung (KPI-Regelwerk, Abschnitt 2.2)
+#
+# Eingestuft wird die auf zwei Nachkommastellen gerundete relative Abweichung (nach Betrag):
+#   bis leicht        -> keine Anomalie     (genau 20,00 % = keine)
+#   bis stark         -> leichte Anomalie   (genau 35,00 % = leicht)
+#   darüber           -> starke Anomalie
+#
+# Änderungen nur bewusst über diese Datei: Neubau des Containers, Git-Commit und Eintrag im CHANGELOG.
+# Die gültigen Werte zeigt das Dashboard im Bereich Datenqualität.
+# Vorgehen (Carsten, 08.11.2026): zuerst überall der Standard; Feintuning je KPI und Liga nach der
+# Schwellen-Analyse (Etappe I).
+
+[standard]
+leicht = 20
+stark = 35
+
+# Abweichungen vom Standard (derzeit keine). Vorrang: Liga und KPI > nur KPI > nur Liga > Standard.
+# Beispiel:
+#
+# [[abweichung]]
+# liga = "Serie A"     # optional; Blattname wie in ligen.toml
+# kpi = "kpi05"        # optional; kpi02 … kpi09
+# leicht = 12
+# stark = 18

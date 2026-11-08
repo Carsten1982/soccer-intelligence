@@ -24,6 +24,9 @@ KNOWN_DB_SHA = "6d68583c2e66616e92c1bf3e8a8611b4b517bcf4c0a7a91c68101ea26a2284e2
 # Testfälle auch dann laufen, wenn data/ schon eine neuere Datenbank enthält.
 REFERENCE_DATABASE = ROOT / "tests" / "referenz" / "Database-Soccer-Intelligence_6d68583c.xlsx"
 KNOWN_FIXTURES_SHA = "5261e91646d0de697da145e77d85cf874681ccdd562187feb5395bb8c0eb4877"
+# Referenzstand für die Testfälle KPI 05–09 (bestätigt 08.11.2026, docs/tests/test_kpi05…09…): Datenbank mit vier Ligen.
+REFERENCE_DATABASE_H = ROOT / "tests" / "referenz" / "Database-Soccer-Intelligence_f37e36d3.xlsx"
+KNOWN_DB_SHA_H = "f37e36d301767321575aeadf908c39e288b9a655d02d85d5bcfde0507effdc34"
 
 
 def make_match(mid, home, away, date, ft=(1, 0), ht=(1, 0), league="Bundesliga", gameday=1):

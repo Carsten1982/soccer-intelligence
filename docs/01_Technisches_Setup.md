@@ -1,6 +1,6 @@
 # Soccer Intelligence – Technisches Setup
 
-**Stand:** 07.11.2026 · **Status:** Phase 1 (Etappen A–E) in Betrieb. Etappe F (vier Ligen, Version 0.8) als Paket bereit. Datenlieferung (Etappe G) in Klärung.
+**Stand:** 08.11.2026 · **Status:** Etappen A–F in Betrieb (Version 0.8, vier Ligen). Etappe H (KPI 05–09, zwei Nachkommastellen, Top Anomalien über KPI 02–09, Version 0.9) als Paket bereit. Datenlieferung (Etappe G) in Klärung.
 **Verantwortlich:** Carsten Thiele · **Mitwirkende:** ChatGPT (Server-Setup, Review), Claude (Daten, Architektur, Code)
 
 ---
@@ -28,9 +28,9 @@
 | KPIs, Top Anomalien | ✅ in Betrieb | Etappen C und D |
 | Phase 1 (Etappen A–E) | ✅ abgeschlossen 31.10.2026 | Browser-Anmeldung unter `/dashboard` noch von Carsten zu bestätigen |
 | Daten Serie A und LaLiga | ✅ aufbereitet 04.–07.11.2026 | Datum und Spieltag ergänzt, bereinigt (`02_Datenbasis.md`, Abschnitt 4c); Datenbank und Spielplan mit vier Blättern auf dem Server |
-| Erweiterung auf vier Ligen (Etappe F) | 📦 Paket bereit | Version 0.8; Gegenrechnung aller 8'808 Begegnungen ohne Abweichung (`docs/tests/pruefprotokoll_etappe_f.md`) |
+| Erweiterung auf vier Ligen (Etappe F) | ✅ in Betrieb | eingespielt 07.11.2026 (Git `cc00dd9`, 171 Tests bestanden), Version 0.8; Gegenrechnung aller 8'808 Begegnungen ohne Abweichung (`docs/tests/pruefprotokoll_etappe_f.md`) |
 | Regelmässige Datenlieferung (Etappe G) | 🔎 in Klärung | Footiqo: fester Download-Link, kumulative Excel-Datei, Di/Do; Konzept: `06_Datenlieferung.md` |
-| 4 neue KPIs | ⏳ geplant | Definition durch Carsten, dann Testfälle, dann Code |
+| Neue KPIs 05–09 (Frontend) und 10–13 (Simulation) | ✅ Testfälle KPI 05–09 bestätigt 08.11.2026 · 📦 Etappe H als Paket bereit (Vollvergleich 8'808 Begegnungen ohne Abweichung) | Regelwerk v2.1 Abschnitte 9–10; Testfälle `docs/tests/test_kpi05…09…` (61 Ergebnisse, Excel-Nachprüfung identisch); zwei Nachkommastellen für alle KPIs; KPI 10–13 weiter Entwurf (Etappe I) |
 | Öffentliche Website | ⏳ später | nach Etappe F und Klärung der Datenquelle |
 
 ---
@@ -62,6 +62,8 @@ Ausbaustufen:
 | 25.10.2026 | Daten werden **nur über die Datei auf dem Server** geändert, nie über die App. |
 | 25.10.2026 | **Einzige gültige Datenquelle:** `data/Database-Soccer-Intelligence.xlsx` |
 | 31.10.2026 | **Die md-Dateien in `docs/` sind die einzige massgebliche Quelle.** Die Word-Dokumente (`word/`) sind Archiv und werden nicht mehr gepflegt. Änderungen nur noch in den md-Dateien, mit Eintrag im CHANGELOG. |
+| 08.11.2026 | **Neue KPIs:** 5 Frontend-KPIs (05 Ecken, 06 Tore 1. HZ, 07 Tore 2. HZ, 08 Beide Teams treffen, 09 Schüsse aufs Tor) und 4 Simulations-KPIs nur im Backend (10/11 Angriff gegen Abwehr HZ 1/2, 12 Offensivdruck, 13 Abschluss-Effizienz). Schwellen pro Liga und KPI einstellbar (Datei `app/config/schwellen.toml`, Standard ±20/±35 %, kein eigener Tab). Kompakte Liga-Tabelle mit Details per Aufklappen. Reihenfolge: Spezifikation + Testfälle → Etappe H (KPI 05–09) → Etappe I (Simulations-Tab). Details: KPI-Regelwerk v2.0, CHANGELOG. |
+| 08.11.2026 | **Etappe H freigegeben (Carsten):** Testfälle KPI 05–09 bestätigt; **alle KPIs mit zwei Nachkommastellen** (auch Abweichung, Einstufung nach gerundetem Wert); **Top Anomalien über KPI 02–09** (bisherige Rangfolge, Gewichtung später); kompaktere Liga-Tabelle mit Aufklappen, Design-Vorschlag vor der Umsetzung. Danach Etappe I: interner Tab zur Schwellen-Analyse je KPI und Liga, Feintuning, Gewichtung der Top Anomalien. Ablauf: md-Dateien → Backup → Design-Vorschlag → Programmieren und Einspielen. |
 | 07.11.2026 | **Spieltage mit verlegten Spielen:** Die bestehende Logik für den aktuellen Spieltag bleibt. Spiele, die mehr als 3 Tage ausserhalb des Hauptzeitraums ihres Spieltags liegen, werden im Spielplan als `verschoben` gepflegt (keine KPIs, keine Top Anomalie). Keine Pflege auf Tagesebene, keine Mehrheitsregel. Grundlage: Auswertung 2022/23–2025/26, betroffen unter 2 % der Spiele (`04_Spielplan.md`, Abschnitt 6). |
 | 07.11.2026 | Blatt für Italien heisst in Datenbank und Spielplan **`Serie A`** (bisher `Seria A`); der Code wird in Etappe F angepasst. Blattnamen ohne Leerzeichen: `LaLiga`. |
 | 06.11.2026 | **Erweiterung auf vier Ligen** (Serie A, LaLiga) als nächster Schritt (Etappe F), vor der Datenlieferung (Etappe G). Reihenfolge: Daten auf den Server → Sicherung in GitHub → Etappe F → Etappe G → neue KPIs → öffentliche Website. |
@@ -376,9 +378,10 @@ CHANGELOG.md              Änderungsprotokoll
 | D – Top Anomalien | Auswahl-Logik gemäss Regelwerk, Abschnitt 2.6, Karten auf der Startseite, 13 Tests | Etappe C ✅ | ✅ eingespielt 31.10.2026 (Git `1a1c527`) |
 | E – Dashboard-Zugang | Umzug nach `/dashboard`, Passwortschutz über Traefik, `noindex`, Platzhalterseite unter `/` | Freigabe Carsten 31.10.2026 ✅ | ✅ eingespielt 31.10.2026 (Git `64a684b`) |
 | **Phase 1 abgeschlossen** | Etappen A–E in Betrieb | – | ✅ 31.10.2026 |
-| F – Vier Ligen | Serie A (`/dashboard/serie-a`) und LaLiga (`/dashboard/laliga`): Konfiguration, Blattname `Serie A` im Code, Aufsteiger in der Teamliste, kompakter Kopfbereich, Top Anomalien und Datenqualität über vier Ligen, Tests, Doku | Daten auf dem Server ✅, LaLiga 17.05.2026 korrigiert ✅, Freigabe 07.11.2026 ✅ | 📦 Paket bereit |
+| F – Vier Ligen | Serie A (`/dashboard/serie-a`) und LaLiga (`/dashboard/laliga`): Konfiguration, Blattname `Serie A` im Code, Aufsteiger in der Teamliste, kompakter Kopfbereich, Top Anomalien und Datenqualität über vier Ligen, Tests, Doku | Daten auf dem Server ✅, LaLiga 17.05.2026 korrigiert ✅, Freigabe 07.11.2026 ✅ | ✅ eingespielt 07.11.2026 (Git `cc00dd9`) |
 | G – Datenlieferung | regelmässiger Import mit Prüfschranke (Footiqo, Download-Link), Konzept `06_Datenlieferung.md` | Antworten von Footiqo, Testkauf, Freigabe | 🔎 in Klärung |
-| Neue KPIs | 4 weitere KPIs: Definition → Testfälle → Code | Definition durch Carsten | ⏳ geplant |
+| H – KPI 05–09 | Frontend-KPIs 05–09 gemäss Regelwerk 9, zwei Nachkommastellen für alle KPIs, Schwellen-Konfiguration (`schwellen.toml`), kompakte Tabelle mit Aufklappen, Top Anomalien über KPI 02–09, Anzeige der Schwellen in Datenqualität, Tests aus den Testfällen + Gegenrechnung | Testfälle bestätigt ✅, Design abgenommen ✅, Backup ✅ (08.11.2026) | 📦 Paket bereit (Version 0.9, `ANLEITUNG_ETAPPE_H.md`) |
+| I – Simulation | Bereich „Simulation“ (intern): zuerst Schwellen-Analyse je KPI und Liga mit anschliessendem Feintuning, Gewichtung der Top Anomalien; danach KPI 10–13 und Ergebniskontrolle | Etappe H, Spezifikation Ergebniskontrolle (Regelwerk 8.13) | ⏳ geplant |
 | Öffentliche Website | eigener Architekturvorschlag (Mobile First), eigener Ordner und eigenes Repository empfohlen | Etappe F, Datenquelle geklärt (G) | später |
 
 ---

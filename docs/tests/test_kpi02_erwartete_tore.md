@@ -1,10 +1,12 @@
 # Testfall KPI 02 – Erwartete Tore (Gesamtspiel)
 
-**Spezifikation v1.1** · Stand 30.10.2026
+**Spezifikation v1.2** · Stand 08.11.2026
 
 **Regelwerk:** `03_KPI_Regelwerk.md`, Abschnitte 1, 1.1, 2 und 4
 **Datenbasis:** `Database-Soccer-Intelligence.xlsx`, SHA-256 `6d68583c2e66616e92c1bf3e8a8611b4b517bcf4c0a7a91c68101ea26a2284e2`
 **Status:** Stand Spieltag 1 (2026/27) bestätigt am 28.10.2026 · Stand Spieltag 3 (2025/26) bestätigt am 29.10.2026
+
+**Änderung 08.11.2026 (Carsten, Etappe H): Anzeige mit zwei Nachkommastellen.** Alle angezeigten Werte (Teamwerte, Ligareferenz, Hauptwert, Abweichung) werden auf zwei Nachkommastellen gerundet; die Einstufung richtet sich nach der auf zwei Stellen gerundeten Abweichung (Regelwerk 2.3). Die JSON-Blöcke, Texte und Kontrollpunkte sind angepasst. **Keine Einstufung ändert sich** (24 von 24 geprüft). Exakte Rechenwerte in den Erläuterungen (z. B. „47 Tore / 10 Spiele = 4,7“) bleiben wie sie sind.
 
 **Datenbasis aktualisiert am 30.10.2026:** neue SHA-256 nach Korrektur von zwei versehentlich überschriebenen Zellen in der Premier League (id 5393 `Gameday` „bitte“ → 4; id 99466 `FT Home Goals` „Ergebnisse stimmen.“ → 2). Alle erwarteten Werte wurden mit der neuen Datei nachgerechnet: unverändert (144 Prüfwerte, 0 Abweichungen).
 
@@ -51,8 +53,8 @@ Dieser Testfall ist die verbindliche Referenz für die technische Umsetzung. Der
 2. Torindikator = (Teamwert Heim + Teamwert Auswärts) / 2.
 3. Fehlt die Ligareferenz oder ist sie 0 → Abweichung und Anomalie nicht verfügbar.
 4. Abweichung = (Torindikator − Ligareferenz) / Ligareferenz × 100, mit ungerundeten Werten.
-5. Rundung erst am Ende: alle angezeigten Werte auf eine Nachkommastelle, kaufmännisch (ab ,5 aufrunden). **Dezimalarithmetik verwenden, keine binäre Gleitkomma-Rundung** (siehe Kontrollpunkt 4.4).
-6. Anomalie anhand der **gerundeten** Abweichung: |x| ≤ 20,0 keine · 20,0 < |x| ≤ 35,0 leicht · |x| > 35,0 stark. Richtung: positiv wenn x > 0, negativ wenn x < 0.
+5. Rundung erst am Ende: alle angezeigten Werte auf **zwei Nachkommastellen** (seit 08.11.2026), kaufmännisch (ab ,5 aufrunden). **Dezimalarithmetik verwenden, keine binäre Gleitkomma-Rundung** (siehe Kontrollpunkt 4.4).
+6. Anomalie anhand der **gerundeten** Abweichung: |x| ≤ 20,00 keine · 20,00 < |x| ≤ 35,00 leicht · |x| > 35,00 stark. Richtung: positiv wenn x > 0, negativ wenn x < 0.
 
 ---
 
@@ -80,21 +82,21 @@ Ungerundete Werte (`_roh`) dienen der Kontrolle der Rechenschritte, gerundete We
   {
     "testfall": "BL-1",
     "liga": "Bundesliga", "saison": "2026/2027", "spieltag": 1, "analysedatum": "2026-08-22",
-    "heim":      {"team": "Bayern Munich",    "spiele": 10, "tore": 47, "teamwert_roh": 4.7, "teamwert": "4.7"},
-    "auswaerts": {"team": "Stuttgart",        "spiele": 10, "tore": 40, "teamwert_roh": 4.0, "teamwert": "4.0"},
-    "ligareferenz": {"saison_spieltage": "2025/2026: 15-34", "spiele": 180, "tore": 584, "wert_roh": 3.2444444444, "wert": "3.2"},
-    "torindikator_roh": 4.35, "torindikator": "4.4",
-    "abweichung_roh": 34.0753424658, "abweichung": "+34.1",
+    "heim":      {"team": "Bayern Munich",    "spiele": 10, "tore": 47, "teamwert_roh": 4.7, "teamwert": "4.70"},
+    "auswaerts": {"team": "Stuttgart",        "spiele": 10, "tore": 40, "teamwert_roh": 4.0, "teamwert": "4.00"},
+    "ligareferenz": {"saison_spieltage": "2025/2026: 15-34", "spiele": 180, "tore": 584, "wert_roh": 3.2444444444, "wert": "3.24"},
+    "torindikator_roh": 4.35, "torindikator": "4.35",
+    "abweichung_roh": 34.0753424658, "abweichung": "+34.08",
     "anomalie": "leicht", "richtung": "positiv", "vorlaeufig": false,
     "ueberschrift": "Viele Tore erwartet",
-    "text": "In dieser Partie liegt der Torindikator bei durchschnittlich 4,4 Toren. Das sind 34,1 % mehr als im Liga-Durchschnitt."
+    "text": "In dieser Partie liegt der Torindikator bei durchschnittlich 4,35 Toren. Das sind 34,08 % mehr als im Liga-Durchschnitt."
   },
   {
     "testfall": "BL-2",
     "liga": "Bundesliga", "saison": "2026/2027", "spieltag": 1, "analysedatum": "2026-08-22",
     "heim":      {"team": "Elversberg",       "spiele": 0,  "tore": null, "teamwert_roh": null, "teamwert": null},
-    "auswaerts": {"team": "Bayer Leverkusen", "spiele": 10, "tore": 41,   "teamwert_roh": 4.1,  "teamwert": "4.1"},
-    "ligareferenz": {"saison_spieltage": "2025/2026: 15-34", "spiele": 180, "tore": 584, "wert_roh": 3.2444444444, "wert": "3.2"},
+    "auswaerts": {"team": "Bayer Leverkusen", "spiele": 10, "tore": 41,   "teamwert_roh": 4.1,  "teamwert": "4.10"},
+    "ligareferenz": {"saison_spieltage": "2025/2026: 15-34", "spiele": 180, "tore": 584, "wert_roh": 3.2444444444, "wert": "3.24"},
     "torindikator_roh": null, "torindikator": null,
     "abweichung_roh": null, "abweichung": null,
     "anomalie": null, "richtung": null, "vorlaeufig": true,
@@ -103,21 +105,21 @@ Ungerundete Werte (`_roh`) dienen der Kontrolle der Rechenschritte, gerundete We
   {
     "testfall": "PL-1",
     "liga": "Premier League", "saison": "2026/2027", "spieltag": 1, "analysedatum": "2026-08-22",
-    "heim":      {"team": "Newcastle",        "spiele": 10, "tore": 26, "teamwert_roh": 2.6, "teamwert": "2.6"},
-    "auswaerts": {"team": "Liverpool",        "spiele": 10, "tore": 32, "teamwert_roh": 3.2, "teamwert": "3.2"},
-    "ligareferenz": {"saison_spieltage": "2025/2026: 19-38", "spiele": 200, "tore": 542, "wert_roh": 2.71, "wert": "2.7"},
-    "torindikator_roh": 2.9, "torindikator": "2.9",
-    "abweichung_roh": 7.0110701107, "abweichung": "+7.0",
+    "heim":      {"team": "Newcastle",        "spiele": 10, "tore": 26, "teamwert_roh": 2.6, "teamwert": "2.60"},
+    "auswaerts": {"team": "Liverpool",        "spiele": 10, "tore": 32, "teamwert_roh": 3.2, "teamwert": "3.20"},
+    "ligareferenz": {"saison_spieltage": "2025/2026: 19-38", "spiele": 200, "tore": 542, "wert_roh": 2.71, "wert": "2.71"},
+    "torindikator_roh": 2.9, "torindikator": "2.90",
+    "abweichung_roh": 7.0110701107, "abweichung": "+7.01",
     "anomalie": "keine", "richtung": "positiv", "vorlaeufig": false,
     "ueberschrift": "Keine statistische Besonderheit",
-    "text": "In dieser Partie liegt der Torindikator bei durchschnittlich 2,9 Toren. Die Abweichung vom Liga-Durchschnitt beträgt +7,0 %."
+    "text": "In dieser Partie liegt der Torindikator bei durchschnittlich 2,90 Toren. Die Abweichung vom Liga-Durchschnitt beträgt +7,01 %."
   },
   {
     "testfall": "PL-2",
     "liga": "Premier League", "saison": "2026/2027", "spieltag": 1, "analysedatum": "2026-08-22",
     "heim":      {"team": "Hull",             "spiele": 0,  "tore": null, "teamwert_roh": null, "teamwert": null},
-    "auswaerts": {"team": "Manchester Utd",   "spiele": 10, "tore": 31,   "teamwert_roh": 3.1,  "teamwert": "3.1"},
-    "ligareferenz": {"saison_spieltage": "2025/2026: 19-38", "spiele": 200, "tore": 542, "wert_roh": 2.71, "wert": "2.7"},
+    "auswaerts": {"team": "Manchester Utd",   "spiele": 10, "tore": 31,   "teamwert_roh": 3.1,  "teamwert": "3.10"},
+    "ligareferenz": {"saison_spieltage": "2025/2026: 19-38", "spiele": 200, "tore": 542, "wert_roh": 2.71, "wert": "2.71"},
     "torindikator_roh": null, "torindikator": null,
     "abweichung_roh": null, "abweichung": null,
     "anomalie": null, "richtung": null, "vorlaeufig": true,
@@ -127,7 +129,7 @@ Ungerundete Werte (`_roh`) dienen der Kontrolle der Rechenschritte, gerundete We
 ```
 
 Hinweise zum JSON:
-- Gerundete Werte sind als Text mit Punkt angegeben, damit kein Rundungsfehler beim Einlesen entsteht. Im Dashboard werden sie mit Komma angezeigt (4,4).
+- Gerundete Werte sind als Text mit Punkt angegeben, damit kein Rundungsfehler beim Einlesen entsteht. Im Dashboard werden sie mit Komma angezeigt (4,35).
 - `_roh`-Werte bei periodischen Zahlen sind auf 10 Nachkommastellen abgeschnitten; beim Vergleich eine Toleranz von 1e-9 verwenden.
 - `richtung` wird auch bei „keine Anomalie“ ausgegeben, damit das Dashboard die Abweichung korrekt einordnen kann.
 
@@ -275,23 +277,23 @@ Keine Spiele in der Datenbank (Aufsteiger).
 
 ### 4.3 Aufsteiger
 - Elversberg und Hull: Teamwert `null`, Torindikator, Abweichung und Anomalie `null`, **keine Fehlermeldung**.
-- Der Teamwert des Gegners (Leverkusen 4,1 / Man Utd 3,1) und die Ligareferenz werden trotzdem berechnet.
+- Der Teamwert des Gegners (Leverkusen 4,10 / Man Utd 3,10) und die Ligareferenz werden trotzdem berechnet.
 - Der Gegnerwert darf **nicht** als Torindikator ausgegeben werden.
 
 ### 4.4 Rundung (wichtigster Kontrollpunkt)
-- BL-1: Torindikator 4,35 muss als **4,4** angezeigt werden.
-- Mit binärer Gleitkomma-Rundung (z. B. `round(4.35, 1)` in Python) ergibt sich fälschlich 4,3, weil 4,35 intern als 4,34999… gespeichert wird. Für die Anzeige-Rundung Dezimalarithmetik verwenden (z. B. Python `decimal` mit `ROUND_HALF_UP`).
-- Die Anomalie-Einstufung erfolgt mit der gerundeten Abweichung (+34,1 → leicht), gerechnet wird aber mit dem ungerundeten Torindikator 4,35, **nicht** mit 4,4. Mit 4,4 ergäbe sich fälschlich +35,6 % → stark.
+- BL-1: Torindikator 4,35 wird mit zwei Nachkommastellen als **4,35** angezeigt (bis 08.11.2026 mit einer Stelle als 4,4).
+- Binäre Gleitkomma-Rundung bleibt verboten: `round()` rundet z. B. `round(2.675, 2)` fälschlich auf 2,67 statt 2,68, weil 2,675 intern als 2,67499… gespeichert wird. Für die Anzeige-Rundung Dezimalarithmetik verwenden (Python `decimal` mit `ROUND_HALF_UP`).
+- Die Anomalie-Einstufung erfolgt mit der gerundeten Abweichung (+34,08 → leicht), gerechnet wird aber mit den ungerundeten Werten. Mit der gerundeten Ligareferenz 3,24 statt 3,2444… ergäbe sich fälschlich +34,26 %.
 
 ### 4.5 Grenznähe
-- BL-1 liegt mit +34,1 % knapp unter der Grenze zur starken Anomalie (35,0 %). Ein Fehler bei Rundung oder Spielauswahl führt hier schnell zu einer falschen Einstufung.
+- BL-1 liegt mit +34,08 % knapp unter der Grenze zur starken Anomalie (35,00 %). Ein Fehler bei Rundung oder Spielauswahl führt hier schnell zu einer falschen Einstufung.
 
 ---
 
 ## 5. Annahmen, die noch zu bestätigen sind
 
 1. **KPI-Karte bei Aufsteiger-Spielen:** Teamwert des Gegners und Ligareferenz werden angezeigt, Hauptwert, Abweichung und Anomalie als „–“. Grundlage: Das Regelwerk verbietet nur, den Gegnerwert als Gesamtindikator auszugeben.
-2. ~~**Vorzeichen im Text „Keine Anomalie“**~~ **Geklärt am 30.10.2026** (Regelwerk 2.4): Vorzeichen steht immer, bei 0,0 % keins. PL-1-Text auf „+7,0 %“ angepasst.
+2. ~~**Vorzeichen im Text „Keine Anomalie“**~~ **Geklärt am 30.10.2026** (Regelwerk 2.4): Vorzeichen steht immer, bei 0,0 % keins. PL-1-Text auf „+7,0 %“ angepasst (seit 08.11.2026 mit zwei Nachkommastellen: „+7,01 %“, bei 0,00 % kein Vorzeichen).
 
 ---
 
@@ -317,50 +319,50 @@ Keine Spiele in der Datenbank (Aufsteiger).
   {
     "testfall": "BL-3a",
     "liga": "Bundesliga", "saison": "2025/2026", "spieltag": 3, "analysedatum": "2025-09-13",
-    "heim":      {"team": "Bayern Munich",  "spiele": 10, "tore": 43, "teamwert_roh": 4.3, "teamwert": "4.3"},
-    "auswaerts": {"team": "Hamburger SV",   "spiele": 2,  "tore": 2,  "teamwert_roh": 1.0, "teamwert": "1.0"},
-    "ligareferenz": {"saison_spieltage": "2024/2025: 17-34 + 2025/2026: 1-2", "spiele": 180, "tore": 552, "wert_roh": 3.0666666667, "wert": "3.1"},
-    "torindikator_roh": 2.65, "torindikator": "2.7",
-    "abweichung_roh": -13.5869565217, "abweichung": "-13.6",
+    "heim":      {"team": "Bayern Munich",  "spiele": 10, "tore": 43, "teamwert_roh": 4.3, "teamwert": "4.30"},
+    "auswaerts": {"team": "Hamburger SV",   "spiele": 2,  "tore": 2,  "teamwert_roh": 1.0, "teamwert": "1.00"},
+    "ligareferenz": {"saison_spieltage": "2024/2025: 17-34 + 2025/2026: 1-2", "spiele": 180, "tore": 552, "wert_roh": 3.0666666667, "wert": "3.07"},
+    "torindikator_roh": 2.65, "torindikator": "2.65",
+    "abweichung_roh": -13.5869565217, "abweichung": "-13.59",
     "anomalie": "keine", "richtung": "negativ", "vorlaeufig": true,
     "ueberschrift": "Keine statistische Besonderheit",
-    "text": "In dieser Partie liegt der Torindikator bei durchschnittlich 2,7 Toren. Die Abweichung vom Liga-Durchschnitt beträgt −13,6 %."
+    "text": "In dieser Partie liegt der Torindikator bei durchschnittlich 2,65 Toren. Die Abweichung vom Liga-Durchschnitt beträgt −13,59 %."
   },
   {
     "testfall": "BL-3b",
     "liga": "Bundesliga", "saison": "2025/2026", "spieltag": 3, "analysedatum": "2025-09-13",
-    "heim":      {"team": "Wolfsburg",      "spiele": 10, "tore": 27, "teamwert_roh": 2.7, "teamwert": "2.7"},
-    "auswaerts": {"team": "FC Koln",        "spiele": 2,  "tore": 6,  "teamwert_roh": 3.0, "teamwert": "3.0"},
-    "ligareferenz": {"saison_spieltage": "2024/2025: 17-34 + 2025/2026: 1-2", "spiele": 180, "tore": 552, "wert_roh": 3.0666666667, "wert": "3.1"},
-    "torindikator_roh": 2.85, "torindikator": "2.9",
-    "abweichung_roh": -7.0652173913, "abweichung": "-7.1",
+    "heim":      {"team": "Wolfsburg",      "spiele": 10, "tore": 27, "teamwert_roh": 2.7, "teamwert": "2.70"},
+    "auswaerts": {"team": "FC Koln",        "spiele": 2,  "tore": 6,  "teamwert_roh": 3.0, "teamwert": "3.00"},
+    "ligareferenz": {"saison_spieltage": "2024/2025: 17-34 + 2025/2026: 1-2", "spiele": 180, "tore": 552, "wert_roh": 3.0666666667, "wert": "3.07"},
+    "torindikator_roh": 2.85, "torindikator": "2.85",
+    "abweichung_roh": -7.0652173913, "abweichung": "-7.07",
     "anomalie": "keine", "richtung": "negativ", "vorlaeufig": true,
     "ueberschrift": "Keine statistische Besonderheit",
-    "text": "In dieser Partie liegt der Torindikator bei durchschnittlich 2,9 Toren. Die Abweichung vom Liga-Durchschnitt beträgt −7,1 %."
+    "text": "In dieser Partie liegt der Torindikator bei durchschnittlich 2,85 Toren. Die Abweichung vom Liga-Durchschnitt beträgt −7,07 %."
   },
   {
     "testfall": "PL-3a",
     "liga": "Premier League", "saison": "2025/2026", "spieltag": 3, "analysedatum": "2025-08-30",
-    "heim":      {"team": "Manchester Utd", "spiele": 10, "tore": 23, "teamwert_roh": 2.3, "teamwert": "2.3"},
-    "auswaerts": {"team": "Burnley",        "spiele": 2,  "tore": 5,  "teamwert_roh": 2.5, "teamwert": "2.5"},
-    "ligareferenz": {"saison_spieltage": "2024/2025: 21-38 + 2025/2026: 1-2", "spiele": 200, "tore": 570, "wert_roh": 2.85, "wert": "2.9"},
-    "torindikator_roh": 2.4, "torindikator": "2.4",
-    "abweichung_roh": -15.7894736842, "abweichung": "-15.8",
+    "heim":      {"team": "Manchester Utd", "spiele": 10, "tore": 23, "teamwert_roh": 2.3, "teamwert": "2.30"},
+    "auswaerts": {"team": "Burnley",        "spiele": 2,  "tore": 5,  "teamwert_roh": 2.5, "teamwert": "2.50"},
+    "ligareferenz": {"saison_spieltage": "2024/2025: 21-38 + 2025/2026: 1-2", "spiele": 200, "tore": 570, "wert_roh": 2.85, "wert": "2.85"},
+    "torindikator_roh": 2.4, "torindikator": "2.40",
+    "abweichung_roh": -15.7894736842, "abweichung": "-15.79",
     "anomalie": "keine", "richtung": "negativ", "vorlaeufig": true,
     "ueberschrift": "Keine statistische Besonderheit",
-    "text": "In dieser Partie liegt der Torindikator bei durchschnittlich 2,4 Toren. Die Abweichung vom Liga-Durchschnitt beträgt −15,8 %."
+    "text": "In dieser Partie liegt der Torindikator bei durchschnittlich 2,40 Toren. Die Abweichung vom Liga-Durchschnitt beträgt −15,79 %."
   },
   {
     "testfall": "PL-3b",
     "liga": "Premier League", "saison": "2025/2026", "spieltag": 3, "analysedatum": "2025-08-30",
-    "heim":      {"team": "Sunderland",     "spiele": 2,  "tore": 5,  "teamwert_roh": 2.5, "teamwert": "2.5"},
-    "auswaerts": {"team": "Brentford",      "spiele": 10, "tore": 30, "teamwert_roh": 3.0, "teamwert": "3.0"},
-    "ligareferenz": {"saison_spieltage": "2024/2025: 21-38 + 2025/2026: 1-2", "spiele": 200, "tore": 570, "wert_roh": 2.85, "wert": "2.9"},
-    "torindikator_roh": 2.75, "torindikator": "2.8",
-    "abweichung_roh": -3.5087719298, "abweichung": "-3.5",
+    "heim":      {"team": "Sunderland",     "spiele": 2,  "tore": 5,  "teamwert_roh": 2.5, "teamwert": "2.50"},
+    "auswaerts": {"team": "Brentford",      "spiele": 10, "tore": 30, "teamwert_roh": 3.0, "teamwert": "3.00"},
+    "ligareferenz": {"saison_spieltage": "2024/2025: 21-38 + 2025/2026: 1-2", "spiele": 200, "tore": 570, "wert_roh": 2.85, "wert": "2.85"},
+    "torindikator_roh": 2.75, "torindikator": "2.75",
+    "abweichung_roh": -3.5087719298, "abweichung": "-3.51",
     "anomalie": "keine", "richtung": "negativ", "vorlaeufig": true,
     "ueberschrift": "Keine statistische Besonderheit",
-    "text": "In dieser Partie liegt der Torindikator bei durchschnittlich 2,8 Toren. Die Abweichung vom Liga-Durchschnitt beträgt −3,5 %."
+    "text": "In dieser Partie liegt der Torindikator bei durchschnittlich 2,75 Toren. Die Abweichung vom Liga-Durchschnitt beträgt −3,51 %."
   }
 ]
 ```
@@ -520,8 +522,8 @@ Kontrollsumme: Heimspiele 13 Tore + Auswärtsspiele 14 Tore = 27.
 - Burnley und Sunderland haben beide 2,5, weil ihr direktes Duell (id 64535, 2:0) in beiden Stichproben steckt.
 
 **Rundung (zweiter Kontrollfall)**
-- BL-3a: Torindikator 2,65 muss als **2,7** angezeigt werden. Python `round(2.65, 1)` ergibt fälschlich 2,6.
-- BL-3b (2,85 → 2,9), PL-3b (2,75 → 2,8) und die PL-Ligareferenz (2,85 → 2,9) rundet `round()` zufällig richtig. Der Fehler tritt also nur bei manchen Werten auf. Darum braucht es mehrere Kontrollfälle (4,35 aus Abschnitt 3 und 2,65 hier).
+- BL-3a: Torindikator 2,65 wird mit zwei Nachkommastellen als **2,65** angezeigt (bis 08.11.2026 als 2,7; Python `round(2.65, 1)` ergab fälschlich 2,6).
+- Mit zwei Nachkommastellen sind die Torindikatoren hier exakt (2,65 · 2,85 · 2,40 · 2,75). Gerundet wird bei Ligareferenz (BL 3,0666… → 3,07) und Abweichung. Der Fehler von `round()` tritt nur bei manchen Werten auf, darum bleibt Dezimalarithmetik Pflicht.
 
 **Zukunftsdaten**
 - Das analysierte Spiel selbst darf nicht zählen. Beispiel: Wolfsburg – FC Koln 3:3 (id 64960). Mit diesem Spiel ergäbe sich für Wolfsburg 3,2 statt 2,7.
@@ -537,5 +539,5 @@ Kontrollsumme: Heimspiele 13 Tore + Auswärtsspiele 14 Tore = 27.
 
 ## 7. Weitere Tests (geplant)
 
-- **Ausgedachter Testdatensatz** für Sonderfälle: 2-Tage-Regel (Spiele genau 1, 2 und 3 Tage vor dem Analysedatum), Team mit genau 1 Spiel, Abweichung genau ±20,0 % und ±35,0 % (Grenzfälle der Einstufung), fehlende Torwerte.
+- **Ausgedachter Testdatensatz** für Sonderfälle: 2-Tage-Regel (Spiele genau 1, 2 und 3 Tage vor dem Analysedatum), Team mit genau 1 Spiel, Abweichung genau ±20,00 % und ±35,00 % (Grenzfälle der Einstufung), fehlende Torwerte.
 - **Praxistest 3. Spieltag 2026/27:** optional, sobald die Saison läuft. Zusätzlicher Realitätscheck, kein Ersatz für Abschnitt 6.

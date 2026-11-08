@@ -9,7 +9,8 @@ from core.issues import FEHLER, HINWEIS, LEVEL_ORDER, WARNUNG
 from core.matchday import CURRENT, date_range, matchday_games, matchday_overview, season_short
 from core.overview import games_per_season, league_summary
 from state import (
-    fixtures_banner, fmt_dt, get_active_leagues, get_database, get_fixtures, get_frequency, status_banner, today,
+    fixtures_banner, fmt_dt, get_active_leagues, get_database, get_fixtures, get_frequency, get_thresholds,
+    status_banner, today,
 )
 from views import components as ui
 
@@ -182,10 +183,21 @@ def _fixtures_section() -> None:
         st.markdown(FIXTURE_RULES)
 
 
+def _thresholds_section() -> None:
+    """Gültige Schwellenwerte (Briefing 6.3, Etappe H): nur Anzeige, Änderung bewusst über die Datei."""
+    from core.thresholds import describe
+    st.markdown("#### Gültige Schwellenwerte")
+    st.caption("Aus `app/config/schwellen.toml` · eingestuft wird die auf zwei Nachkommastellen gerundete "
+               "Abweichung · Änderungen nur über die Datei (Neubau, Git, CHANGELOG), nicht hier.")
+    st.dataframe(pd.DataFrame(describe(get_thresholds())), hide_index=True, width="stretch")
+
+
 def _frequency_section() -> None:
-    st.caption("Wie oft zeigen KPI 02–04 keine, leichte oder starke Anomalien? Grundlage: alle Spiele der letzten "
+    _thresholds_section()
+    st.markdown("#### Häufigkeit je Liga und KPI")
+    st.caption("Wie oft zeigen KPI 02–09 keine, leichte oder starke Anomalien? Grundlage: alle Spiele der letzten "
                "abgeschlossenen Saison, jeweils so berechnet, als wären sie noch nicht gespielt. Dient der Überprüfung "
-               "der Schwellenwerte (±20 % / ±35 %), insbesondere bei KPI 03.")
+               "der Schwellenwerte je Liga und KPI.")
     db = get_database()
     if db.has_errors:
         st.info("Wird angezeigt, sobald die Datenbank fehlerfrei ist.")

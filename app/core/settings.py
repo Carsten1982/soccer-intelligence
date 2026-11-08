@@ -14,6 +14,8 @@ FIXTURES_FILE = DATA_DIR / FIXTURES_FILENAME
 CONFIG_DIR = Path(os.environ.get("SI_CONFIG_DIR", Path(__file__).resolve().parents[1] / "config"))
 LEAGUES_FILE = CONFIG_DIR / "ligen.toml"
 TEAMS_FILE = CONFIG_DIR / "teams.toml"
+# Schwellenwerte der Anomalie-Einstufung je Liga und KPI (KPI-Regelwerk 2.2, seit Etappe H)
+THRESHOLDS_FILE = CONFIG_DIR / "schwellen.toml"
 
 # Pflicht-Ligablätter (müssen vorhanden und gefüllt sein). Seit Etappe F (07.11.2026) alle vier Ligen,
 # weil alle vier im Dashboard aktiv sind. Das Blatt für Italien heisst seit 07.11.2026 „Serie A“ (vorher „Seria A“).
@@ -28,4 +30,4 @@ LEAGUE_SHEETS = REQUIRED_LEAGUE_SHEETS + OPTIONAL_LEAGUE_SHEETS
 # Anzeige-Zeitzone
 TIMEZONE = "Europe/Zurich"  # massgeblich für „heute“ (aktueller Spieltag)
 
-APP_VERSION = "0.8 – Etappe F: Vier Ligen"
+APP_VERSION = "0.9 – Etappe H: KPI 05–09"

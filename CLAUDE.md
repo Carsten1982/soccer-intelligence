@@ -1,6 +1,6 @@
 # Soccer Intelligence – Projektübersicht
 
-**Spezifikation v1.4** · Stand 07.11.2026
+**Spezifikation v1.6** · Stand 08.11.2026
 
 ## Worum es geht
 Soccer Intelligence ist eine Fussball-Analyseplattform. Sie berechnet statistische Auffälligkeiten
@@ -41,11 +41,15 @@ Nicht Teil dieser Phase:
 - Externe Fussball-APIs, Bearbeiten oder Importieren von Daten in der App
 - **Vereinslogos** (nicht erlaubt, rechtliche Gründe)
 
-## Nach Phase 1 (Stand 07.11.2026)
-Reihenfolge: **Etappe F – Vier Ligen** (Serie A unter `/dashboard/serie-a`, LaLiga unter `/dashboard/laliga`;
-Blattnamen `Serie A` und `LaLiga`), danach **Etappe G – Datenlieferung** (Footiqo, Konzept
-`docs/06_Datenlieferung.md`, noch nicht freigegeben), dann die **neuen KPIs** (Definition durch Carsten →
-Testfälle → Code) und die **öffentliche Website**. Die Logik für den aktuellen Spieltag bleibt; verlegte Spiele
+## Nach Phase 1 (Stand 08.11.2026)
+Erledigt: **Etappe F – Vier Ligen** (07.11.2026). Als Paket bereit: **Etappe H – KPI 05–09** (Version 0.9) (Frontend; KPI-Regelwerk v2.1,
+Abschnitt 9; Testfälle `docs/tests/test_kpi05…09…` **bestätigt am 08.11.2026**). Mit Etappe H gilt ausserdem:
+**alle KPIs mit zwei Nachkommastellen** (auch die Abweichung; Einstufung nach dem auf zwei Stellen gerundeten Wert, Regelwerk 2.3),
+**Top Anomalien über KPI 02–09** (bisherige Rangfolge, Regelwerk 2.6), kompaktere Liga-Tabelle mit Details per Aufklappen,
+Schwellen in `app/config/schwellen.toml` (überall Standard ±20/±35 %). Ablauf: md-Dateien → Backup → Design-Vorschlag →
+Programmieren und Einspielen. Danach **Etappe I – Simulation** (intern): zuerst Schwellen-Analyse je KPI und Liga mit Feintuning
+und Gewichtung der Top Anomalien (Regelwerk, offener Punkt 17), danach KPI 10–13 und Ergebniskontrolle. Parallel in Klärung:
+**Etappe G – Datenlieferung** (Footiqo, `docs/06_Datenlieferung.md`). Danach die **öffentliche Website**. Die Logik für den aktuellen Spieltag bleibt; verlegte Spiele
 werden im Spielplan als `verschoben` gepflegt (`docs/04_Spielplan.md`, Abschnitt 6). Ein Import ändert die Datenbank nur kontrolliert (Prüfschranke,
 Backup, Korrekturen an alten Spielen nie still übernehmen); das Dashboard bleibt nur lesend.
 
@@ -56,10 +60,12 @@ Backup, Korrekturen an alten Spielen nie still übernehmen); das Dashboard bleib
 | docs/02_Datenbasis.md | Aufbau der Excel-Datei (58 Spalten inkl. `Gameday`), Formate, Prüfregeln |
 | docs/03_KPI_Regelwerk.md | Berechnungsregeln, Anomalie-Logik, Top-Anomalien, Dashboard-Texte |
 | docs/04_Spielplan.md | Aufbau des Spielplans (`Datum von` / `Datum bis`), aktueller Spieltag, Prüfregeln |
-| docs/05_Dashboard.md | Dashboard-Briefing (v4.4): Aufbau, Navigation, Darstellung, Abnahmekriterien |
+| docs/05_Dashboard.md | Dashboard-Briefing (v4.6): Aufbau, Navigation, Darstellung, Abnahmekriterien |
 | docs/06_Datenlieferung.md | Konzept regelmässige Datenlieferung / Import, Footiqo (Entwurf, nicht freigegeben) |
 | docs/tests/test_kpi01_formkurve.md … test_kpi04_gelbe_karten.md | Bestätigte Testfälle mit erwarteten Ergebnissen (JSON) |
+| docs/tests/test_kpi05_ecken.md … test_kpi09_schuesse_aufs_tor.md | Bestätigte Testfälle KPI 05–09 (08.11.2026), Nachprüfung `Testfaelle_KPI05-09_Nachpruefung.xlsx` |
 | docs/tests/pruefprotokoll_etappe_f.md | Prüfung der vier Ligen: Gegenrechnung, Plausibilität, Häufigkeit (07.11.2026) |
+| docs/tests/pruefprotokoll_etappe_h.md | Prüfung KPI 05–09 und zwei Nachkommastellen: Testfälle, Gegenrechnung, Vollvergleich (08.11.2026) |
 | data/Database-Soccer-Intelligence.xlsx | Einzige gültige Datenquelle für gespielte Spiele |
 | data/Spielplan.xlsx | Angesetzte Begegnungen |
 | CHANGELOG.md | Änderungsprotokoll, jede Änderung wird dort eingetragen |
@@ -72,7 +78,7 @@ den Testfällen steht.
 
 ## Arbeitsweise für die KPIs
 1. Allgemeine Regeln zentral umsetzen: Stichtag (`Datum von`), Saisonfenster, 2-Tage-Regel,
-   fehlende Werte, Ligareferenz über `Gameday`, Rundung (kaufmännisch, Dezimalarithmetik, nicht `round()`),
+   fehlende Werte, Ligareferenz über `Gameday`, Rundung (kaufmännisch, zwei Nachkommastellen ab Etappe H, Dezimalarithmetik, nicht `round()`),
    Vorzeichen, Anomalie-Schwellenwerte.
 2. Testfälle aus den JSON-Blöcken als automatische Tests anlegen, bevor der KPI-Code entsteht.
 3. KPI für KPI umsetzen, bis alle Tests grün sind.

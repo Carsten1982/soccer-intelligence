@@ -1,11 +1,13 @@
 """Auswahl der Top-Anomalien (KPI-Regelwerk, Abschnitt 2.6; Dashboard-Briefing, Kapitel 5.1).
 
 - Grundlage: Begegnungen des aktuellen Spieltags aller aktiven Ligen.
-- Vorerst nur KPI 02 und KPI 04 mit leichter oder starker Anomalie (KPI 03 erst nach Freigabe).
+- KPI 02–09 mit leichter oder starker Anomalie (seit Etappe H, Entscheidung 08.11.2026; vorher nur KPI 02 und 04).
+  Die Gewichtung (bisherige Rangfolge nach Prozent) wird mit der Schwellen-Analyse überarbeitet (Regelwerk, Punkt 17).
 - Ausgeschlossen: vorläufige Werte, Begegnungen mit Status „verschoben“ oder „abgesagt“.
 - Rangfolge: stark vor leicht · grösserer Betrag der gerundeten Abweichung · früheres „Datum von“ ·
   Reihenfolge im Spielplan (Ligen in der Reihenfolge der Konfiguration, darin Reihenfolge der Datei).
-- Pro Begegnung höchstens ein Eintrag (der KPI mit dem höheren Rang), insgesamt höchstens vier, kein Auffüllen.
+- Pro Begegnung höchstens ein Eintrag (der KPI mit dem höchsten Rang, bei Gleichstand die kleinere KPI-Nummer),
+  insgesamt höchstens vier, kein Auffüllen.
 
 Die Auswahl ist reine Logik ohne Oberfläche und gilt auch für die spätere öffentliche Website.
 """
@@ -18,8 +20,12 @@ from datetime import date
 from .fixtures import INACTIVE_STATUS
 from .kpis import LIGHT, STRONG, KpiResult, MatchKpis
 
-# KPIs, die in die Auswahl einfliessen (Schlüssel = Attribut in MatchKpis). KPI 03 erst nach Freigabe.
-TOP_KPIS = {"kpi02": "KPI 02 – Erwartete Tore", "kpi04": "KPI 04 – Gelbe Karten"}
+# KPIs, die in die Auswahl einfliessen (Schlüssel = Attribut in MatchKpis), in der Reihenfolge der KPI-Nummer.
+TOP_KPIS = {
+    "kpi02": "KPI 02 – Erwartete Tore", "kpi03": "KPI 03 – Over 2.5 Goals", "kpi04": "KPI 04 – Gelbe Karten",
+    "kpi05": "KPI 05 – Ecken", "kpi06": "KPI 06 – Tore 1. Halbzeit", "kpi07": "KPI 07 – Tore 2. Halbzeit",
+    "kpi08": "KPI 08 – Beide Teams treffen", "kpi09": "KPI 09 – Schüsse aufs Tor",
+}
 MAX_ENTRIES = 4
 NO_ANOMALIES_TEXT = "Für den aktuellen Spieltag liegen keine Anomalien vor."
 
@@ -58,7 +64,7 @@ def _sort_key(c: Candidate, result: KpiResult, kpi_order: int) -> tuple:
         -abs(result.abweichung_rund),               # 2. grösster Betrag zuerst
         c.datum_von,                                # 3. früheres Spieldatum
         c.league_order, c.file_order,               # 4. Reihenfolge im Spielplan
-        kpi_order,                                  # stabile Reihenfolge bei völligem Gleichstand
+        kpi_order,                                  # bei Gleichstand in einer Begegnung: kleinere KPI-Nummer
     )
 
 

@@ -9,7 +9,7 @@ from decimal import Decimal
 from types import SimpleNamespace
 
 from core.kpis import LIGHT, NONE, STRONG, classify
-from core.top import MAX_ENTRIES, Candidate, select_top
+from core.top import MAX_ENTRIES, TOP_KPIS, Candidate, select_top
 
 
 def res(deviation, vorlaeufig=False):
@@ -20,8 +20,10 @@ def res(deviation, vorlaeufig=False):
 
 
 def cand(name, kpi02=0, kpi04=0, *, day=1, league_order=0, file_order=0, status="", vorl02=False, vorl04=False,
-         kpi03=99):
-    kpis = SimpleNamespace(kpi02=res(kpi02, vorl02), kpi03=res(kpi03), kpi04=res(kpi04, vorl04))
+         kpi03=0, **more):
+    """more: weitere KPIs, z. B. kpi06=40.0 (alle anderen ohne Anomalie)."""
+    extra = {k: res(more.get(k, 0)) for k in ("kpi05", "kpi06", "kpi07", "kpi08", "kpi09")}
+    kpis = SimpleNamespace(kpi02=res(kpi02, vorl02), kpi03=res(kpi03), kpi04=res(kpi04, vorl04), **extra)
     return Candidate(league="Liga", league_order=league_order, season="2026/2027", matchday=1,
                      datum_von=date(2026, 8, day), file_order=file_order, home=name, away="Gast",
                      status=status, kpis=kpis)
@@ -32,10 +34,10 @@ def names(entries):
 
 
 def test_classify_thresholds_used_by_top():
-    assert classify(Decimal("20.0"))[0] == NONE
-    assert classify(Decimal("20.1"))[0] == LIGHT
-    assert classify(Decimal("-35.0"))[0] == LIGHT
-    assert classify(Decimal("35.1"))[0] == STRONG
+    assert classify(Decimal("20.00"))[0] == NONE
+    assert classify(Decimal("20.01"))[0] == LIGHT
+    assert classify(Decimal("-35.00"))[0] == LIGHT
+    assert classify(Decimal("35.01"))[0] == STRONG
 
 
 def test_strong_before_light_regardless_of_size():
@@ -81,8 +83,25 @@ def test_no_filling_with_non_anomalies():
     assert names(top) == ["A"]
 
 
-def test_kpi03_is_ignored():
-    assert select_top([cand("A", kpi02=5.0, kpi04=5.0, kpi03=80.0)]) == []
+def test_all_kpis_02_to_09_count_since_stage_h():
+    assert list(TOP_KPIS) == ["kpi02", "kpi03", "kpi04", "kpi05", "kpi06", "kpi07", "kpi08", "kpi09"]
+    top = select_top([cand("drei", kpi03=80.0), cand("sechs", kpi06=-50.0), cand("acht", kpi08=25.0),
+                      cand("neun", kpi09=-21.0)])
+    assert names(top) == ["drei", "sechs", "acht", "neun"]
+    assert [e.kpi_key for e in top] == ["kpi03", "kpi06", "kpi08", "kpi09"]
+    assert top[0].kpi_name == "KPI 03 – Over 2.5 Goals"
+
+
+def test_same_deviation_in_one_match_prefers_smaller_kpi_number():
+    top = select_top([cand("A", kpi04=-25.0, kpi05=25.0, kpi07=-25.0)])
+    assert top[0].kpi_key == "kpi04"
+    top = select_top([cand("B", kpi05=30.0, kpi09=30.0)])
+    assert top[0].kpi_key == "kpi05"
+
+
+def test_two_decimals_decide_the_rank():
+    top = select_top([cand("A", kpi02=25.01), cand("B", kpi05=25.02)])
+    assert names(top) == ["B", "A"]
 
 
 def test_provisional_values_excluded():

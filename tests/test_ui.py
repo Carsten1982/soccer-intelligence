@@ -4,7 +4,6 @@ Die AppTest-Tests laufen nur, wenn Streamlit installiert ist (z. B. im Test-Cont
 und die echten Dateien vorhanden sind. Sie prüfen, dass jede Seite ohne Fehler aufgebaut wird.
 """
 
-from fractions import Fraction
 from pathlib import Path
 
 import pytest
@@ -105,44 +104,78 @@ def test_league_pages(script):
     at = AppTest.from_function(script, default_timeout=TIMEOUT).run()
     assert not at.exception, at.exception
     text = _texts(at)
-    assert "Aktueller Spieltag" in text and 'class="si-table"' in text
+    assert "Aktueller Spieltag" in text and 'class="si-cgrid"' in text               # kompakte Tabelle (Etappe H)
     assert "KPI 02" in text and "Erwartete Tore" in text and "si-anom-" in text      # KPI-Spalten befüllt
+    assert "KPI 09" in text and "Schüsse aufs Tor" in text and "<details" in text    # KPI 05–09 und Details
 
 
 @needs_files
 def test_datenqualitaet_page():
     at = AppTest.from_function(_datenqualitaet, default_timeout=TIMEOUT).run()
     assert not at.exception, at.exception
-    assert "Datenqualität" in _texts(at)
+    text = _texts(at)
+    assert "Datenqualität" in text and "Gültige Schwellenwerte" in text
 
 
-# --- KPI-Zellen (Etappe C) ----------------------------------------------------------
+# --- Kompakte Tabelle (Etappe H) -------------------------------------------------------
 
-def _kpis(home_games=10, away_games=10, deviation=Fraction(341, 10)):
-    from core.kpis import KpiResult, Reference, TeamValue
-    h = TeamValue("A", home_games, 47 if home_games else None, Fraction(47, 10) if home_games else None)
-    a = TeamValue("B", away_games, 40, Fraction(4))
-    main = (h.wert + a.wert) / 2 if h.wert is not None else None
-    r = KpiResult("KPI02", h, a, Reference("x", 180, 584, Fraction(584, 180)), main,
-                  deviation if main is not None else None, vorlaeufig=min(home_games, away_games) < 10)
-    return r
+def _match_kpis(home_games: int = 10):
+    """Echt berechnete KPIs aus einem kleinen ausgedachten Datensatz. Team „Neu“ hat keine Spiele (Aufsteiger)."""
+    from datetime import date
+
+    import pandas as pd
+
+    from core.kpis import Match, compute_match, prepare_league
+    rows = []
+    for i in range(1, 13):
+        home, away = ("A", "B") if i % 2 else ("B", "C")
+        rows.append({"id": i, "Date": pd.Timestamp(f"2026-08-{i:02d}"), "matchDate": f"{i:02d}-08-26 15:30",
+                     "Season": "2026/2027", "Gameday": i, "homeTeam": home, "awayTeam": away,
+                     "FT Home Goals": 2, "FT Away Goals :": 1, "Home Yellow Cards Full Time": 2,
+                     "Away Yellow Cards Full Time": 1, "First-Half Home Goals": 1, "First-Half Away Goals": 0,
+                     "Second-Half Home Goals": 1, "Second-Half Away Goals": 1, "Home Corners Full Time": 6,
+                     "Away Corners Full Time": 4, "Home Shots on Target Full Time": 5, "Away Shots on Target Full Time": 3})
+    db = prepare_league(pd.DataFrame(rows))
+    home = "A" if home_games else "Neu"
+    return compute_match(db, Match("Liga", "2026/2027", 13, date(2026, 9, 1), home, "B"), 34)
 
 
-def test_kpi_cells_complete_and_promoted_team():
-    from views.kpi_table import N_CELLS, data_basis_cell, empty_cells, kpi_cells
-    full = kpi_cells(_kpis(), "3,2")
-    assert len(full) == 8 and "+34,1 %" in full[4] and "si-anom-leicht" in full[5] and full[6].endswith("10</span>")
-    promoted = kpi_cells(_kpis(home_games=0), "3,2")
-    assert promoted[0] == "–" and promoted[1] == "4,0"                 # Gegnerwert wird angezeigt
-    assert "–" in promoted[2] and promoted[4] == "–" and promoted[5] == "–"
-    assert "0 / 10" in data_basis_cell(_kpis(home_games=0)) and 'class="si-v"' in data_basis_cell(_kpis(home_games=0))
-    assert len(empty_cells()) == N_CELLS == 2 + 3 * 8
+def test_compact_table_rows_details_and_status():
+    from views.kpi_table import COLUMNS, compact_table_html
+    html = compact_table_html([("A", "B", "", _match_kpis()), ("X", "<b>Y</b>", "verschoben", None)])
+    assert "&lt;b&gt;Y&lt;/b&gt;" in html and "<b>Y" not in html
+    assert html.count("<details") == 1 and html.count("si-cplain") == 1          # verschoben: ohne Details
+    assert html.count('class="si-badge"') == 1 and "verschoben" in html
+    assert html.count('class="si-kc"') == 1 + len(COLUMNS) == 9                   # KPI 01 + KPI 02–09
+    assert html.count("si-cs1") == 3 and html.count("si-cs2") == 3               # Kopf + 2 Zeilen, fixiert
+    for c in COLUMNS:
+        assert f"<small>{c.number}</small>" in html
 
 
-def test_form_cell():
+def test_compact_values_two_decimals_kpi03_percent_kpi08():
+    from views.kpi_table import COLUMNS, compact_value
+    k = _match_kpis()
+    cols = {c.key: c for c in COLUMNS}
+    assert compact_value(cols["kpi02"], k.kpi02) == "3,00"                       # 3 Tore je Spiel
+    assert compact_value(cols["kpi03"], k.kpi03) == "+20,00 %"                   # Abweichung zur 2,5-Marke
+    assert compact_value(cols["kpi05"], k.kpi05) == "10,00"
+    assert compact_value(cols["kpi08"], k.kpi08) == "100,00 %"                   # BTTS-Quote in %
+
+
+def test_promoted_team_shows_dash_opponent_value_and_v():
+    from views.kpi_table import COLUMNS, compact_cell, detail_card
+    k = _match_kpis(home_games=0)
+    col = COLUMNS[0]
+    cell = compact_cell(col, k.kpi02)
+    assert ">–<" in cell and 'class="si-v"' in cell and "nicht berechenbar" in cell
+    card = detail_card(col, k.kpi02, k)
+    assert "nicht berechenbar" in card and "3,00" in card and "0 / 10 Spiele" in card   # Gegnerwert sichtbar
+
+
+def test_form_marks():
     from core.kpis import FormTeam
-    from views.kpi_table import form_cell
-    html = form_cell(FormTeam("A", ["–", "–", "–", "S", "N"], 2))
+    from views.kpi_table import form_marks
+    html = form_marks(FormTeam("A", ["–", "–", "–", "S", "N"], 2))
     assert html.count("si-form-none") == 3 and "si-form-S" in html and "si-form-N" in html
 
 
