@@ -5,10 +5,16 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
-## 09.11.2026 – Dokumentation zusammengeführt (nur Doku)
+## 09.11.2026 – Einspiel-Skript (Paket bereit)
+
+- **Carsten** · Entscheidungen: Commit am Ende mit j/n-Nachfrage; bei Fehler anhalten und Rückweg nennen (nichts automatisch zurücksetzen); eigener Befehl für den Rückweg. Eine Webmaske zum Hochladen wird nicht gebaut (Sicherheit: bräuchte praktisch Vollzugriff auf den Server); die Klick-Variante kommt später über GitHub („Run workflow“).
+- **Claude** · `tools/einspielen.sh` (Vorprüfung, Backup, Entpacken mit Löschliste `release_loeschen.txt`, Tests, Neubau nur `football-dashboard`, Prüfung 200/401, Commit nach j/n) und `tools/zurueck.sh` (fragt nach; nicht committet → zurücksetzen und neue Dateien entfernen; committet → `git revert` und Push; danach Neubau und Prüfung). Geprüft in einer Nachbildung des Servers (Git mit GitHub-Ersatz, nachgebildetes docker/curl) mit 8 Fällen; dabei gefunden und behoben: das hochgeladene Paket selbst galt als offene Änderung. 3 Schutztests in `tests/test_deploy.py`. `01`, Abschnitt 6.1: Skript als Normalfall.
+
+## 09.11.2026 – Dokumentation zusammengeführt (nur Doku, eingespielt)
 
 - **Carsten** · Auftrag: Anleitungen und Dokumentation zusammenführen, weil vieles mehrfach beschrieben ist.
 - **Claude** · Projektstand nur noch in `docs/01_Technisches_Setup.md`, Abschnitt 0 (Kurzstand, nächste Schritte, Versionstabelle mit Git-Nummern und Tests). Ein einheitlicher Release-Ablauf in `01`, Abschnitt 6.1; jedes Paket heisst künftig `release.zip` und bringt eine neue `RELEASE.md` mit (ersetzt die 12 Dateien `ANLEITUNG_*.md`, im Git-Verlauf erhalten). `CLAUDE.md` v1.8 gestrafft (Einstieg, Quellen, Arbeitsweise, Regeln). `01` gestrafft: Kopie von `docker-compose.yml` durch Kurzbeschreibung ersetzt, veraltete Abläufe entfernt, Entscheidungen nach Datum sortiert, erledigte offene Punkte entfernt.
+- **Carsten** · Eingespielt: Backup `backup/2026-11-08_1809_vor_doku` (Git `9684edb`), 12 Anleitungen gelöscht; Git `0d4d856`.
 
 ## 09.11.2026 – Etappe I.1, Nachtrag (Version 0.10.1, eingespielt)
 

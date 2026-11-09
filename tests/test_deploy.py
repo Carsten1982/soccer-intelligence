@@ -76,3 +76,30 @@ def test_password_script_stores_only_hash():
     assert "htpasswd -niB" in script                     # bcrypt-Hash
     assert "SOCCER_DASHBOARD_AUTH='$H'" in script        # nur der Hash landet in .env
     assert "set -euo pipefail" in script                 # bei Fehlern sofort abbrechen
+
+
+# --- Einspiel-Skripte (seit 09.11.2026): nur unser Container, nie data/ ---------------------------------------
+
+SCRIPTS = [ROOT / "tools" / "einspielen.sh", ROOT / "tools" / "zurueck.sh"]
+
+
+@pytest.mark.parametrize("script", SCRIPTS, ids=lambda p: p.name)
+def test_release_scripts_touch_only_our_container(script):
+    text = script.read_text(encoding="utf-8")
+    code = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("#"))
+    for forbidden in ("compose down", "docker stop", "docker rm", "docker system", "prune", "rm -rf", "restart",
+                      "git push -f", "--force", "git clean"):
+        assert forbidden not in code, f"{script.name}: verboten: {forbidden}"
+    assert "set -euo pipefail" in code                               # bricht bei jedem Fehler ab
+    for line in code.splitlines():
+        if "docker compose" in line:
+            assert "up -d --build football-dashboard" in line, line     # nur unser Service
+        if "docker " in line and "inspect" in line or "docker logs" in line:
+            assert "football-dashboard" in line, line
+    assert "data/" not in code.replace("data/*|", "")                # data/ nur in der Sperrliste für Löschungen
+
+
+def test_release_script_asks_before_commit():
+    code = SCRIPTS[0].read_text(encoding="utf-8")
+    assert code.index("read -rp") < code.index("git commit")          # Commit erst nach j/n
+    assert "zurueck.sh" in code                                       # nennt den Rückweg
