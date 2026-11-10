@@ -14,16 +14,18 @@ import pandas as pd
 
 from .config import League
 from .kpis import LIGHT, NONE, PLACEHOLDER, STRONG, Match, ThresholdLookup, compute_match, league_references
+from .seasons import analysed_seasons
 from .top import TOP_KPIS
 
 NOT_RATED = None        # Schlüssel im Zähler für „nicht berechenbar“ (Anomalie = None)
 
 
 def last_complete_season(prepared: pd.DataFrame, league: League) -> str | None:
-    """Neueste Saison mit allen Spielen (Teams × (Teams − 1))."""
+    """Neueste Saison mit allen Spielen (Teams × (Teams − 1)), nie die Referenzsaison (Version 0.11)."""
     expected = league.teams * (league.teams - 1)
     counts = prepared.groupby("season").size()
-    complete = sorted(s for s, n in counts.items() if n == expected)
+    analysed = set(analysed_seasons(prepared["season"]))
+    complete = sorted(s for s, n in counts.items() if n == expected and s in analysed)
     return complete[-1] if complete else None
 
 

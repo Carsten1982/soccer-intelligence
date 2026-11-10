@@ -14,19 +14,18 @@ import gegenrechnung as G
 import numpy as np
 import pandas as pd
 import pytest
-from conftest import KNOWN_DB_SHA_H, REFERENCE_DATABASE_H
+from conftest import REFERENCE_DATABASE_H
 
 from core.config import League
 from core.kpis import STANDARD_THRESHOLDS, Match, Thresholds, classify, compute_match, prepare_league
-from core.loader import load_database
+from core.seasons import analysed_seasons
 from core.simulation import (
-    BETTER, NO_DIFF, SAME, TOO_FEW, WORSE, Quality, Setting, _event, build_cases, frequency_rows, judge, levels, pct,
-    quality_rows, quantize_threshold, running_seasons, season_choices, usable_seasons,
+    BETTER, NO_DIFF, SAME, TOO_FEW, WORSE, Quality, Setting, _event, build_cases, default_choice, frequency_rows, judge,
+    levels, pct, quality_rows, quantize_threshold, running_seasons, season_choices,
 )
 from core.top import TOP_KPIS
 
 LEVEL = {"keine": 0, "leicht": 1, "stark": 2}
-BL = League("Bundesliga", "bundesliga", 18, True)
 
 
 def standard(league, kpi):
@@ -84,7 +83,7 @@ def _mini() -> pd.DataFrame:
 
 def test_build_cases_skips_first_season_and_provisional_values():
     db = _mini()
-    assert usable_seasons(db) == ["2025/2026"]
+    assert analysed_seasons(db["season"]) == ["2025/2026"]          # 2024/25 = Referenzsaison (0.11)
     cases = build_cases(db, League("Liga", "liga", 2, True))
     assert set(cases["season"]) == {"2025/2026"}
     # Team C hat vor Spieltag 11 weniger als 10 Spiele -> vorläufig -> nicht in der Simulation
@@ -95,12 +94,9 @@ def test_build_cases_skips_first_season_and_provisional_values():
 
 
 @pytest.fixture(scope="module")
-def bl_cases():
-    if not REFERENCE_DATABASE_H.exists():
-        pytest.skip("Referenz-Datenbank H nicht vorhanden")
-    db = load_database(REFERENCE_DATABASE_H)
-    assert db.sha256 == KNOWN_DB_SHA_H
-    return build_cases(prepare_league(db.leagues["Bundesliga"]), BL)
+def bl_cases(cases_h):
+    """Bundesliga aus den gemeinsamen Fällen der Referenz-Datenbank H (conftest, einmal je Testlauf berechnet)."""
+    return cases_h[cases_h["league"] == "Bundesliga"].reset_index(drop=True)
 
 
 def test_counter_calculation_bundesliga_2025_26(bl_cases):
@@ -188,15 +184,22 @@ def test_judge(before, after, same, expected):
 
 
 def test_season_choices():
-    cases = pd.DataFrame({"season": ["2021/2022", "2022/2023", "2023/2024", "2024/2025", "2025/2026", "2026/2027"],
-                          "complete": [True] * 5 + [False]})
+    """Saisonauswahl Version 0.11 (Briefing „Neue Datenbank“, Abschnitt 4): Reihenfolge, Beschriftung, Inhalt."""
+    cases = pd.DataFrame({"season": [f"{y}/{y + 1}" for y in range(2019, 2027)], "complete": [True] * 7 + [False]})
     choices = season_choices(cases)
-    assert list(choices) == ["Alle abgeschlossenen (2021/22–2025/26)", "Letzte 4 Saisons (2022/23–2025/26)",
-                             "Letzte 3 Saisons (2023/24–2025/26)", "Letzte 2 Saisons (2024/25–2025/26)",
-                             "Letzte Saison (2025/26)", "Aktuelle Saison (2026/27, vorläufig)"]
-    assert choices["Letzte 2 Saisons (2024/25–2025/26)"] == ["2024/2025", "2025/2026"]
+    assert list(choices) == [
+        "Aktuelle Saison (2026/27, vorläufig)", "Alle Saisons (2019/20–2025/26)",
+        "Alle Saisons plus aktuelle (2019/20–2026/27, inkl. vorläufig)",
+        "Letzte 2 Saisons (2024/25–2025/26)", "Letzte 3 Saisons (2023/24–2025/26)", "Letzte 4 Saisons (2022/23–2025/26)",
+        "Letzte 5 Saisons (2021/22–2025/26)", "Letzte 6 Saisons (2020/21–2025/26)",
+        "Saison 2025/26", "Saison 2024/25", "Saison 2023/24", "Saison 2022/23", "Saison 2021/22", "Saison 2020/21",
+        "Saison 2019/20"]
+    assert default_choice(choices) == "Alle Saisons (2019/20–2025/26)"
     assert choices["Aktuelle Saison (2026/27, vorläufig)"] == ["2026/2027"]
-    assert len(choices["Alle abgeschlossenen (2021/22–2025/26)"]) == 5
+    assert len(choices["Alle Saisons (2019/20–2025/26)"]) == 7
+    assert choices["Alle Saisons plus aktuelle (2019/20–2026/27, inkl. vorläufig)"][-1] == "2026/2027"
+    assert choices["Letzte 2 Saisons (2024/25–2025/26)"] == ["2024/2025", "2025/2026"]     # ohne laufende Saison
+    assert choices["Saison 2019/20"] == ["2019/2020"]
     assert running_seasons(cases) == ["2026/2027"]
 
 
@@ -212,13 +215,8 @@ TEAMS = {"Bundesliga": 18, "Premier League": 20, "Serie A": 20, "LaLiga": 20}
 
 
 @pytest.fixture(scope="module")
-def all_cases():
-    if not REFERENCE_DATABASE_H.exists():
-        pytest.skip("Referenz-Datenbank H nicht vorhanden")
-    db = load_database(REFERENCE_DATABASE_H)
-    frames = [build_cases(prepare_league(db.leagues[name]), League(name, "x", teams, True))
-              for name, teams in TEAMS.items()]
-    return pd.concat(frames, ignore_index=True)
+def all_cases(cases_h):
+    return cases_h
 
 
 @pytest.fixture(scope="module")

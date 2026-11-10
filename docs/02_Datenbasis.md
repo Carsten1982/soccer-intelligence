@@ -1,6 +1,6 @@
 # Soccer Intelligence – Datenbasis
 
-**Stand:** 08.11.2026 (Prüfregeln für Kommazahlen ergänzt, H.1; Zahl statt Datum, H.2; vier Ligen: Bundesliga, Premier League, Serie A, LaLiga; je 58 Spalten inkl. `Gameday`; Saisons 2020/21–2025/26 plus laufende Saison 2026/27)
+**Stand:** 10.11.2026 (neue Datenbank mit Saisons 2018/19–2025/26 plus laufende Saison 2026/27 bis 10.11.2026, Abschnitt 4d; **Referenzsaison** 2018/19; vier Ligen: Bundesliga, Premier League, Serie A, LaLiga; je 58 Spalten inkl. `Gameday`)
 **Datei:** `/docker/football-dashboard/data/Database-Soccer-Intelligence.xlsx`
 **SHA-256 (aktiv seit 31.10.2026):** `6b84d8d230f61b02166bead571a72ce599ec8d230cdda8c90f9b258dc8a46014`
 
@@ -8,7 +8,11 @@
 
 Diese Prüfsumme steht auch in den Testfällen (`docs/tests/`). Nach jeder Änderung an der Datei ändert sie sich. Dann hier und in den Testfällen nachtragen und die Testfälle erneut laufen lassen.
 
-**Neue Fassung (07.11.2026):** Serie A und LaLiga befüllt (siehe Abschnitt 4c). Aktive Fassung seit 07.11.2026: SHA-256 `f37e36d301767321575aeadf908c39e288b9a655d02d85d5bcfde0507effdc34` (LaLiga 17.05.2026 korrigiert, *Datenhinweise* ergänzt). Vorstufe `c0454c7f…` liegt in `backup/`. Bundesliga und Premier League sind gegenüber `6b84d8d2…` unverändert.
+**Neue Fassung (10.11.2026, Version 0.11):** Saisons 2018/19 und 2019/20 ergänzt, Spiele 2026/27 bis 10.11.2026 nachgetragen, geprüft und korrigiert (Abschnitt 4d). SHA-256 `451348b6550b91f4df3a26450a26d205e76f69c13ac520d080d3a427ff084904`. Eine Kopie liegt unter `tests/referenz/Database-Soccer-Intelligence_451348b6.xlsx`. Aktiv in `data/`, sobald Carsten sie nach dem Einspielen von Version 0.11 aufgespielt hat (`01`, Abschnitt 6.2). Die KPI-Testfälle bleiben an `6d68583c…` und `f37e36d3…` gebunden.
+
+**Referenzsaison (ab Version 0.11):** Die älteste Saison der Datei (heute 2018/19) liefert nur die Vorsaison für die Saison danach und wird nie ausgewertet (KPI-Regelwerk 1.2). Beim Saisonwechsel wird die älteste Saison aus der Datei entfernt.
+
+**Fassung 07.11.2026:** Serie A und LaLiga befüllt (siehe Abschnitt 4c). Aktive Fassung seit 07.11.2026: SHA-256 `f37e36d301767321575aeadf908c39e288b9a655d02d85d5bcfde0507effdc34` (LaLiga 17.05.2026 korrigiert, *Datenhinweise* ergänzt). Vorstufe `c0454c7f…` liegt in `backup/`. Bundesliga und Premier League sind gegenüber `6b84d8d2…` unverändert.
 
 **Bisher:** Die Fassung `6b84d8d2…` war seit 31.10.2026 in `data/` aktiv. Gegenüber dem Referenzstand neu: die 19 Spiele des 1. Spieltags 2026/27 (Bundesliga 9, Premier League 10). Beim Prüfen korrigiert: id 119365 (FC Koln – Heidenheim) `Home Yellow Cards Full Time` enthielt Leerzeichen statt 2. Ältere Fassungen liegen in `backup/`.
 
@@ -18,15 +22,19 @@ Diese Prüfsumme steht auch in den Testfällen (`docs/tests/`). Nach jeder Ände
 
 | Tabellenblatt | Spiele | Saisons | Teams | Zeitraum |
 |---|---|---|---|---|
-Stand 07.11.2026 (Saisons 2020/21–2025/26 vollständig, dazu die bisher gespielten Spiele 2026/27):
+Stand 10.11.2026 (Saisons 2018/19–2025/26 vollständig, dazu die bis 10.11.2026 gespielten Spiele 2026/27):
 
 | Tabellenblatt | Spiele | davon 2026/27 | Saisons | Teams | Zeitraum |
 |---|---|---|---|---|---|
-| Bundesliga | 1.845 | 9 (Spieltag 1) | 2020/21 – 2025/26 je 306 | 27 | 18.09.2020 – 30.08.2026 |
-| Premier League | 2.290 | 10 (Spieltag 1) | 2020/21 – 2025/26 je 380 | 30 | 12.09.2020 – 24.08.2026 |
-| Serie A | 2.290 | 10 (Spieltag 1) | 2020/21 – 2025/26 je 380 | 29 | 19.09.2020 – 24.08.2026 |
-| LaLiga | 2.305 | 25 (Spieltage 1–2, Teil von 3) | 2020/21 – 2025/26 je 380 | 31 | 12.09.2020 – 29.08.2026 |
-| Datenhinweise | 2 Einträge | – | – | – | dokumentierte Sonderfälle |
+| Bundesliga | 2.529 | 81 (Spieltage 1–9) | 2018/19 – 2025/26 je 306 | 30 | 24.08.2018 – 08.11.2026 |
+| Premier League | 3.140 | 100 (Spieltage 1–10) | 2018/19 – 2025/26 je 380 | 32 | 10.08.2018 – 08.11.2026 |
+| Serie A | 3.150 | 110 (Spieltage 1–11) | 2018/19 – 2025/26 je 380 | 32 | 18.08.2018 – 08.11.2026 |
+| LaLiga | 3.159 | 119 (Spieltage 1–12, eines nachzuholen) | 2018/19 – 2025/26 je 380 | 31 | 17.08.2018 – 08.11.2026 |
+| Datenhinweise | 9 Einträge | – | – | – | dokumentierte Sonderfälle und Korrekturen |
+
+Zusammen 11.978 Spiele. Referenzsaison 2018/19 (nur Vorsaison), ausgewertet 2019/20–2026/27 (KPI-Regelwerk 1.2).
+
+Bis 09.11.2026 (Fassung `f37e36d3…`): Saisons 2020/21–2025/26, 2026/27 nur Spieltag 1 (LaLiga 1–3), zusammen 8.730 Spiele.
 
 **Vier Ligen (Entscheidung 06./07.11.2026):** Das Dashboard zeigt seit Etappe F (Version 0.8) alle vier Ligen (`01_Technisches_Setup.md`).
 
@@ -174,6 +182,21 @@ Carsten hat die Spiele von Serie A und LaLiga in die Datei übernommen. Claude h
 
 ---
 
+## 4d. Neue Datenbank: 2018/19, 2019/20 und 2026/27 bis 10.11.2026 (Version 0.11)
+
+Carsten hat in allen vier Ligen die Saisons 2018/19 und 2019/20 ergänzt und die Spiele 2026/27 bis 10.11.2026 nachgetragen. Claude hat die Datei am 10.11.2026 geprüft und eine korrigierte Fassung erstellt. Die Eingangsdatei blieb unverändert; jede Änderung ist protokolliert (Prüfprotokoll `docs/tests/pruefprotokoll_datenbank_2018-2027.md`).
+
+- **Eingangsdatei** (SHA-256 `a54a9137…`): nicht verwendbar, 868 Fehler (fehlendes Datum und fehlender Spieltag in den neuen Zeilen, „Wert“ statt Zahl).
+- **Bundesliga, Spalten N–BF verrutscht (repariert):** Ab 2020/21 passten Full-Time-Tore, Halbzeiten und alle Statistiken nicht mehr zum Spiel in A–M (vermutlich wurden beim Einfügen nur in A–M Zeilen eingeschoben). 2020/21–2025/26 (1.836 Spiele) aus der Fassung `f37e36d3…` übernommen, 2026/27 (81 Spiele) aus der verschobenen Stelle derselben Datei; je Spiel geprüft: Tore K/L = Full-Time = Halbzeit 1 + 2. Stichproben von Carsten mit der Quelle: 25 Spiele Premier League 2021/22 (300 Werte) und 100 Spiele Bundesliga 2022/23 (1.300 Werte), alle gleich.
+- **LaLiga id 77856** (Girona – Osasuna, 10.01.2026): „Wert“ in Spalte L durch 0 ersetzt (wie in `f37e36d3…`).
+- **Spalte A `Date`:** aus `matchDate` ergänzt (in allen bisherigen Zeilen ist A genau dieses Datum).
+- **Spalte B `Gameday`:** rekonstruiert (jedes Team einmal je Spieltag, jedes Spiel in den Spieltag, dessen Termin am nächsten liegt; Nachholspiele in den Spieltag, in dem beide Teams frei sind). Test an den Saisons mit bekanntem Spieltag: Bundesliga und LaLiga 100 %, Serie A 98,9–100 %, Premier League 40–100 % (dort werden Spieltage teils in anderer Reihenfolge gespielt). Alle bekannten Spieltage 2026/27 getroffen.
+  - **Premier League 2018/19 und 2019/20: Spieltage rekonstruiert, nicht offiziell.** Einzelne Nummern können abweichen. Entscheidung Carsten 10.11.2026: so übernehmen, weil die Quelle keine offiziellen Spieltage liefert. Wirkung nur am Rand des Fensters der Ligareferenz (letzte 20 Spieltage); 2018/19 dient nur als Referenzsaison.
+- **Corona-Saisons** 2019/20 und 2020/21 zählen normal mit (Entscheidung Carsten 10.11.2026).
+- **Ergebnis der Prüfung (korrigierte Fassung `451348b6…`):** 0 Fehler, 24 Warnungen, 64 Hinweise. Neu gegenüber `f37e36d3…`: 18 Warnungen „Schüsse < aufs Tor + daneben“ (2018/19: Bundesliga 12, Premier League 4, LaLiga 2; Quelle), 1 Warnung LaLiga 2026/27 Spieltag 8 mit 9 von 10 Spielen (echtes Nachholspiel), 3 Hinweise „Mehr Tore als Schüsse aufs Tor“ (2019/20) und 1 (2026/27). Saisons 2020/21–2025/26 zellgenau gleich wie `f37e36d3…`. Neue Saisons vollständig (306 bzw. 380 Spiele, jede Paarung einmal, jedes Team einmal je Spieltag, keine fehlenden Statistikwerte), Durchschnittswerte plausibel.
+
+---
+
 ## 5. Prüfregeln (werden ab Schritt 1 automatisch angewendet)
 
 ### Fehler – Datenbank wird nicht verwendet
@@ -198,6 +221,7 @@ Carsten hat die Spiele von Serie A und LaLiga in die Datei übernommen. Claude h
 - Datenhinweis mit einer id, die keine ganze Zahl ist (z. B. 123,5): Er gilt für **kein** Spiel, auch nicht für 123 (seit H.2).
 - fehlende Statistik, die nicht in Datenhinweise dokumentiert ist (je Stufe höchstens 50 Einzelmeldungen, danach eine Sammelzeile „… und n weitere Zeilen“)
 - Saison unvollständig (n Teams → n × (n−1) Spiele), doppelte Paarung
+- **Saison fehlt** zwischen zwei vorhandenen Saisons (seit Version 0.11): Die Saison danach wird ohne Vorsaison berechnet (Teamwerte zu Saisonbeginn, Ligareferenz über das Saisonende) und trotzdem ausgewertet
 - `Date` passt nicht zu `matchDate`, negativer Wert
 - `Gameday` ausserhalb 1 bis 2 × (Teams − 1), Spieltag mit falscher Anzahl Spiele, Team mehrfach im selben Spieltag
 

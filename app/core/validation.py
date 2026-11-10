@@ -10,7 +10,9 @@ import pandas as pd
 
 from . import schema
 from .issues import HINWEIS, WARNUNG, Issue
+from .matchday import season_short
 from .rows import row_issues
+from .seasons import season_gaps
 
 
 def _result_letter(home: pd.Series, away: pd.Series) -> pd.Series:
@@ -145,6 +147,14 @@ def check_seasons(sheet: str, df: pd.DataFrame) -> list[Issue]:
     return issues
 
 
+def check_season_gaps(sheet: str, df: pd.DataFrame) -> list[Issue]:
+    """Fehlt zwischen zwei vorhandenen Saisons eine Saison, fehlen der Saison danach die Vorsaisonwerte
+    (Teamwerte zu Saisonbeginn, Ligareferenz über das Saisonende). Sie wird trotzdem ausgewertet -> Warnung (0.11)."""
+    return [Issue(WARNUNG, sheet, "Saison fehlt",
+                  f"Saison {season_short(missing)} fehlt; {season_short(later)} wird ohne Vorsaison berechnet")
+            for missing, later in season_gaps(df["Season"])]
+
+
 def check_gamedays(sheet: str, df: pd.DataFrame) -> list[Issue]:
     """Spalte Gameday: Bereich 1 bis 2*(n-1), n/2 Spiele je Spieltag, jedes Team einmal je Spieltag.
 
@@ -180,5 +190,6 @@ def run_plausibility_checks(sheet: str, df: pd.DataFrame, noted_ids: set[tuple[s
         + check_missing_stats(sheet, df, noted_ids)
         + check_referee(sheet, df)
         + check_seasons(sheet, df)
+        + check_season_gaps(sheet, df)
         + check_gamedays(sheet, df)
     )

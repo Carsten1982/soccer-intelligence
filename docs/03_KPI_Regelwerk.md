@@ -1,6 +1,6 @@
 # Soccer Intelligence – KPI-Regelwerk
 
-**Spezifikation v2.3** · Stand 08.11.2026 · KPI 01–09 gültig und umgesetzt (KPI 05–09, zwei Nachkommastellen und Top-Anomalien über KPI 02–09 seit Etappe H, eingespielt 08.11.2026) · KPI 10–13 Entwurf (Abschnitt 10)
+**Spezifikation v2.4** · Stand 10.11.2026 · KPI 01–09 gültig und umgesetzt (KPI 05–09, zwei Nachkommastellen und Top-Anomalien über KPI 02–09 seit Etappe H, eingespielt 08.11.2026) · KPI 10–13 Entwurf (Abschnitt 10)
 
 > **Massgebliche Quelle seit 31.10.2026.** Änderungen werden nur noch in dieser Datei gemacht, mit Datum in der Änderungshistorie bzw. im `CHANGELOG.md`.
 > Das Word-Dokument „Definition der Dashboard-KPIs (final)“ (Arbeitsstand 30.10.2026) liegt nur noch als Archiv im Ordner `word/` und wird nicht mehr gepflegt.
@@ -14,6 +14,7 @@ Abschnitt 8 sammelt offene Punkte.
 | Datum | Änderung | Abschnitt |
 |---|---|---|
 | 27.10.2026 | Erstfassung KPIs 01–04 | alle |
+| 10.11.2026 | **v2.4** (Version 0.11, Freigabe Carsten): Referenzsaison = älteste Saison der Datenbank, liefert nur die Vorsaison und wird nie ausgewertet; Saisonwechsel durch Entfernen der ältesten Saison aus der Datei. Neue Saisonauswahl der Simulation. Keine Änderung an Formeln, Rundung, Schwellen oder Testfällen | 1.2, 11.2, 11.4, 11.5 |
 | 08.11.2026 | **v2.3** (Etappe I.1): Ergebniskontrolle und Simulation festgelegt; offener Punkt 13 erledigt | 8, 11 |
 | 08.11.2026 | **v2.2** (H.1): Ein Statistikwert mit Kommastellen (z. B. 4,5 Ecken) gilt als **fehlend** und wird nie abgeschnitten; die Datenprüfung meldet ihn als Warnung. Keine Änderung an Formeln oder Testfällen | 1 |
 | 28.10.2026 | Ligareferenz über Spalte `Gameday` (letzte 20 Spieltage), Regel für Nachholspiele, fehlende Kartenwerte in Referenzspielen; offener Punkt 5 erledigt | 1.1, 6 |
@@ -64,6 +65,15 @@ Weitere KPIs werden im Projektverlauf ergänzt. Beispielrechnungen und Testfäll
 - Ein **Nachholspiel** zählt zu seinem ursprünglichen Spieltag. Ist es zum Zeitpunkt der Analyse noch nicht gespielt, fehlt es in der Referenz und wird **nicht ersetzt**.
 - Geteilt wird durch die **tatsächliche Anzahl** berücksichtigter Partien (im Normalfall 20 × Teams / 2, also 180 in der Bundesliga und 200 in Premier League, Serie A und LaLiga).
 - Ist die Ligareferenz nicht vorhanden oder = 0 → **keine relative Abweichung, keine Anomalie-Einstufung**.
+
+### 1.2 Referenzsaison (ab Version 0.11, Entscheidung Carsten 10.11.2026)
+
+- Die **älteste Saison** eines Ligablatts ist die **Referenzsaison**. Sie wird aus der Datei bestimmt, nie fest eingetragen.
+- Sie liefert nur Daten für die folgende Saison: Teamwerte aus der Vorsaison (Zeitfenster in Abschnitt 1) und Ligareferenz über das Saisonende hinweg (1.1). In ihr selbst fehlen diese Vorsaisonwerte; darum wird sie **nie ausgewertet**: keine Simulation, keine Häufigkeit der Anomalien, nicht in der Saisonauswahl.
+- **Alle anderen Saisons** werden ausgewertet, auch die laufende (als „vorläufig“ gekennzeichnet).
+- **Saisonwechsel:** Beginnt eine neue Saison, entfernt Carsten die älteste Saison aus der Excel-Datei. Die nächste wird automatisch Referenzsaison (Ablauf `01_Technisches_Setup.md`, Abschnitt 6.2).
+- Fehlt zwischen zwei vorhandenen Saisons eine Saison, wird die Saison danach ohne Vorsaison berechnet und trotzdem ausgewertet; die Datenqualität meldet eine **Warnung** („Saison fehlt“).
+- Datenstand 10.11.2026: Referenzsaison 2018/19, ausgewertet 2019/20–2026/27 in allen vier Ligen.
 
 ---
 
@@ -568,7 +578,7 @@ Fehlt der Wert im Spiel oder ist er keine ganze Zahl, zählt das Spiel für dies
 
 ### 11.2 Kennzahlen
 
-- **Grundlage:** alle Spiele der gewählten Saisons, je so berechnet, als wären sie noch nicht gespielt (Stichtag = Spieldatum, Spieltag = `Gameday`). Nicht verwendet: die erste Saison der Datenbank (ohne Vorsaison, d. h. 2020/21), vorläufige Werte (z. B. Aufsteiger) und nicht berechenbare Werte.
+- **Grundlage:** alle Spiele der gewählten Saisons, je so berechnet, als wären sie noch nicht gespielt (Stichtag = Spieldatum, Spieltag = `Gameday`). Nicht verwendet: die Referenzsaison (älteste Saison der Datenbank, Abschnitt 1.2; bis Version 0.10.1 fest 2020/21), vorläufige Werte (z. B. Aufsteiger) und nicht berechenbare Werte.
 - **Fälle:** Spiele mit Anomalie in dieser Richtung und bekanntem Ergebnis. Positiv und negativ werden getrennt ausgewertet; leicht und stark wahlweise gemeinsam oder getrennt.
 - **Trefferquote:** Anteil der Fälle, in denen die Anomalie eingetroffen ist (aus den aufsummierten Fällen, nicht als Durchschnitt von Saisonquoten).
 - **Ohne Anomalie:** dasselbe Ereignis in den Spielen ohne Anomalie (mit den eingestellten Schwellen).
@@ -587,7 +597,19 @@ Verglichen wird der Mehrwert nachher (eingestellte Schwellen) mit vorher (gülti
 
 ### 11.4 Saisons
 
-Auswahl (Wunsch Carsten 09.11.2026): alle abgeschlossenen Saisons (2021/22–2025/26), die letzten 4, 3 oder 2 Saisons, die letzte Saison und die aktuelle Saison (2026/27, vorläufig, noch nicht abgeschlossen). Ob eine Schwelle robust ist, zeigt der Vergleich „alle abgeschlossenen“ gegen „letzte 2 Saisons“: Hält der Mehrwert in beiden, ist die Schwelle nicht nur zufällig gut.
+Auswahl seit Version 0.11 (Entscheidung Carsten 10.11.2026), aus der Datei erzeugt, ohne Referenzsaison, die Beschriftung zeigt immer die Jahre:
+
+| Reihenfolge | Eintrag | Inhalt (Datenstand 10.11.2026) |
+|---|---|---|
+| 1 | Aktuelle Saison (vorläufig) | 2026/27, nur wenn eine Saison läuft |
+| 2 | **Alle Saisons** (Voreinstellung) | alle abgeschlossenen: 2019/20–2025/26 |
+| 3 | Alle Saisons plus aktuelle (inkl. vorläufig) | 2019/20–2026/27, nur wenn eine Saison läuft |
+| 4 | Letzte 2, 3 … n−1 Saisons | nur abgeschlossene, z. B. „Letzte 2“ = 2024/25–2025/26 |
+| 5 | jede abgeschlossene Saison einzeln | 2025/26, 2024/25 … 2019/20 (neueste zuerst) |
+
+Abgeschlossen ist eine Saison, wenn alle Spiele gespielt sind (Teams × (Teams − 1)). Wird die laufende Saison abgeschlossen, rückt sie ohne Codeänderung in „Alle Saisons“ und „Letzte n“. Ob eine Schwelle robust ist, zeigt der Vergleich „Alle Saisons“ gegen „Letzte 2 Saisons“ oder einzelne Saisons: Hält der Mehrwert, ist die Schwelle nicht nur zufällig gut.
+
+Bis Version 0.10.1 (Wunsch Carsten 09.11.2026): alle abgeschlossenen (2021/22–2025/26), letzte 4, 3, 2 Saisons, letzte Saison, aktuelle Saison.
 
 ### 11.5 Änderungen an den Definitionen
 
@@ -596,3 +618,4 @@ Werden Anomalien später neu definiert, wird das hier mit Datum festgehalten und
 | Datum | Änderung |
 |---|---|
 | 08.11.2026 | Erste Fassung (Etappe I.1) |
+| 10.11.2026 | Referenzsaison (1.2) statt fest 2020/21; neue Saisonauswahl (11.4); Definition „eingetroffen“ unverändert (Version 0.11) |

@@ -10,10 +10,13 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 
 **In Betrieb:** Version 0.10.1 – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09, Top Anomalien, Datenqualität und Simulation – Spielwiese. Passwortschutz unter `/dashboard`, Platzhalterseite unter `/`.
 
-**Als Nächstes:** Feintuning der Schwellen mit der Spielwiese · Gewichtung der Top Anomalien (Regelwerk, Punkt 17) · Datenlieferung Footiqo (Etappe G, in Klärung) · KPI 10–13 · öffentliche Website.
+**Bereit zum Einspielen:** Version 0.11 – neue Datenbank 2018/19–2026/27 (`451348b6…`), Referenzsaison (älteste Saison, nur Vorsaison, KPI-Regelwerk 1.2) und neue Saisonauswahl in der Simulation. Danach die neue Excel-Datei aufspielen (Abschnitt 6.2) und im Browser prüfen (`RELEASE.md`).
+
+**Als Nächstes:** neue Bewertungsmethode im Simulations-Tab (Stufen, Wilson-Spanne, Toreffekt; Festlegung 10.11.2026) · Feintuning der Schwellen mit der Spielwiese · Gewichtung der Top Anomalien (Regelwerk, Punkt 17) · Datenlieferung Footiqo (Etappe G, in Klärung) · KPI 10–13 · öffentliche Website.
 
 | Version | Etappe | Inhalt | Eingespielt | Git | Tests |
 |---|---|---|---|---|---|
+| 0.11 | Neue Datenbank | Datenbank 2018/19–2026/27, Referenzsaison, neue Saisonauswahl, Warnung „Saison fehlt“ | ausstehend | – | 373 (lokal) |
 | 0.10.1 | GitHub | GitHub als einzige Quelle: einspielen.sh github, automatische Tests, robuster Rückweg | 10.11.2026 | `20275e9` | 350 |
 | 0.10.1 | Skript | Einspiel-Skript `tools/einspielen.sh`, Rückweg `tools/zurueck.sh` | 09.11.2026 | `0dafea3` | 348 |
 | 0.10.1 | Doku | Dokumentation zusammengeführt (nur Doku, kein Code) | 08.11.2026 | `0d4d856` | – |
@@ -33,7 +36,7 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 - **Rückweg** zu einer Version: Abschnitt 6.1.
 - **Prüfprotokolle** grösserer Etappen: `docs/tests/pruefprotokoll_*.md`.
 - **Frühere Anleitungen** (`ANLEITUNG_*.md`): seit 09.11.2026 durch `RELEASE.md` und Abschnitt 6.1 ersetzt. Sie bleiben im Git-Verlauf erhalten.
-- **Daten:** Datenbank SHA-256 `f37e36d3…` (seit 07.11.2026, `02_Datenbasis.md`), Spielplan mit vier Blättern (`04_Spielplan.md`).
+- **Daten:** Datenbank SHA-256 `f37e36d3…` (seit 07.11.2026, `02_Datenbasis.md`), Spielplan mit vier Blättern (`04_Spielplan.md`). Neue Fassung `451348b6…` (2018/19–2026/27) mit Version 0.11 bereit; Prüfprotokoll `docs/tests/pruefprotokoll_datenbank_2018-2027.md`.
 
 ---
 
@@ -278,6 +281,12 @@ Grundsatz: Die neue Datei wird **erst geprüft und dann** zur gültigen Datenque
    ```
 
 Für `Spielplan.xlsx` gilt derselbe Ablauf. Die Prüfregeln stehen in `04_Spielplan.md`.
+
+**Saisonwechsel (seit Version 0.11, KPI-Regelwerk 1.2):** Die älteste Saison der Datenbank ist die Referenzsaison: Sie liefert nur die Vorsaison und wird nie ausgewertet. Beginnt eine neue Saison (z. B. 2027/28):
+
+1. In der Excel-Datei in allen vier Ligablättern die Zeilen der ältesten Saison löschen (z. B. 2018/19). Nur ganze Zeilen löschen, nie einzelne Zellen, sonst verrutschen die Spalten (Fehler vom 10.11.2026, `02_Datenbasis.md`, Abschnitt 4d). Einträge im Blatt *Datenhinweise* zu gelöschten Spielen ebenfalls löschen.
+2. Die neue Saison wie gewohnt ergänzen und die Datei nach den Schritten 1–4 oben aufspielen.
+3. Kontrolle im Bereich Datenqualität: je Liga „Referenzsaison: 2019/20 (nur Vorsaison, nicht ausgewertet)“, keine Warnung „Saison fehlt“. Im Code ist nichts zu ändern.
 
 ### 6.3 Dashboard-Zugang setzen oder Passwort ändern
 

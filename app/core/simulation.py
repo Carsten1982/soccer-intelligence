@@ -5,7 +5,7 @@ wäre es noch nicht gespielt (wie in der Häufigkeit: Stichtag = Spieldatum, Spi
 ob die Anomalie im Spiel eingetroffen ist.
 
 Ablauf:
-1. build_cases: einmal je Datenbankstand alle Spiele berechnen (rund 30 Sekunden). Gespeichert wird je Spiel und KPI
+1. build_cases: einmal je Datenbankstand alle Spiele berechnen (rund 50 Sekunden). Gespeichert wird je Spiel und KPI
    nur die gerundete Abweichung, ob der Wert vorläufig ist und ob „mehr“ bzw. „weniger“ als die Ligareferenz eintraf.
 2. frequency_rows / quality_rows: mit beliebigen Schwellen neu einstufen – das geht in Sekundenbruchteilen.
 
@@ -24,11 +24,11 @@ import numpy as np
 import pandas as pd
 
 from .config import League
-from .fixtures import previous_season
 from .kpis import (
     OVER_MARK, STAT_KPIS, KpiResult, Match, Thresholds, _both_cards, _goals, compute_match, league_references,
     round_display,
 )
+from .seasons import analysed_seasons
 from .top import TOP_KPIS
 
 MIN_CASES = 100          # darunter: „zu wenige Fälle“ (Regelwerk 11.3)
@@ -53,17 +53,13 @@ EVENT_TEXTS = {
 }
 DEFINITION_CHANGES = [
     ("08.11.2026", "Erste Fassung der Ergebniskontrolle (Etappe I.1, Freigabe Carsten)."),
+    ("10.11.2026", "Referenzsaison: Die älteste Saison der Datenbank liefert nur die Vorsaison und wird nicht "
+                   "ausgewertet (bisher fest 2020/21). Neue Saisonauswahl; Definition „eingetroffen“ unverändert "
+                   "(Version 0.11, Freigabe Carsten)."),
 ]
 
 
 # --- 1. Fälle aufbauen (teuer, einmal je Datenbankstand) -----------------------------------------
-
-def usable_seasons(prepared: pd.DataFrame) -> list[str]:
-    """Saisons, deren Vorsaison in der Datenbank steht. Die erste Saison fehlt, weil dort Teamwerte und
-    Ligareferenz unvollständig sind (Entscheidung Carsten 08.11.2026: 2020/21 nicht verwenden)."""
-    seasons = set(prepared["season"])
-    return sorted(s for s in seasons if previous_season(s) in seasons)
-
 
 def _event(r: KpiResult, value: int | None, scale: int, key: str) -> tuple[float, float]:
     """(mehr, weniger) als die Referenz: 1.0 / 0.0, NaN wenn der Wert im Spiel fehlt. Gleichstand = keins von beiden."""
@@ -75,13 +71,13 @@ def _event(r: KpiResult, value: int | None, scale: int, key: str) -> tuple[float
 
 
 def build_cases(prepared: pd.DataFrame, league: League) -> pd.DataFrame:
-    """Ein Fall je Spiel und KPI 02–09 aller verwendbaren Saisons.
+    """Ein Fall je Spiel und KPI 02–09 aller ausgewerteten Saisons, also ohne Referenzsaison (core/seasons.py).
 
     Spalten: league, season, complete (Saison vollständig gespielt), game (id), kpi,
     dev (gerundete Abweichung in Hundertsteln, z. B. 2228 = 22,28 %),
     up / down (1.0 = mehr / weniger als die Referenz eingetroffen, NaN = Wert fehlt).
     Weggelassen werden nicht berechenbare und vorläufige Werte (z. B. Aufsteiger, Entscheidung 08.11.2026)."""
-    seasons = set(usable_seasons(prepared))
+    seasons = set(analysed_seasons(prepared["season"]))
     games = prepared[prepared["season"].isin(seasons)]
     per_season = games.groupby("season").size()
     complete = {season for season, n in per_season.items() if n == league.teams * (league.teams - 1)}
@@ -110,21 +106,49 @@ def _short(season: str) -> str:
     return f"{season[:4]}/{season[-2:]}"
 
 
+ALL_SEASONS = "Alle Saisons"     # Anfang der Voreinstellung in der Saisonauswahl
+
+
 def season_choices(cases: pd.DataFrame) -> dict[str, list[str]]:
-    """Auswahl der Saisons (Wunsch Carsten 09.11.2026): alle abgeschlossenen, die letzten 4, 3, 2 Saisons,
-    die letzte Saison und die aktuelle (laufende) Saison. Die aktuelle Saison gilt als vorläufig."""
+    """Saisonauswahl (Briefing „Neue Datenbank“, Abschnitt 4; Regelwerk 11.4), in dieser Reihenfolge:
+
+    1. Aktuelle Saison (vorläufig)            – nur wenn eine Saison läuft
+    2. Alle Saisons                          – alle abgeschlossenen (Voreinstellung, siehe default_choice)
+    3. Alle Saisons plus aktuelle            – nur wenn eine Saison läuft
+    4. Letzte 2, 3 … n−1 Saisons              – nur abgeschlossene
+    5. jede abgeschlossene Saison einzeln     – neueste zuerst
+
+    Die Referenzsaison ist nie dabei, weil build_cases sie gar nicht berechnet. Die Beschriftung zeigt immer die Jahre.
+    Zählt eine Saison in einer Liga als abgeschlossen und in einer anderen als laufend, erscheint sie in beiden
+    Gruppen."""
     done = sorted(cases.loc[cases["complete"], "season"].unique())
     running = running_seasons(cases)
+    current = running[-1:] if running else []
     choices: dict[str, list[str]] = {}
+    if current:
+        choices[f"Aktuelle Saison ({_short(current[0])}, vorläufig)"] = current
     if done:
-        choices[f"Alle abgeschlossenen ({_short(done[0])}–{_short(done[-1])})"] = done
-        for n in (4, 3, 2):
-            if len(done) > n:
-                choices[f"Letzte {n} Saisons ({_short(done[-n])}–{_short(done[-1])})"] = done[-n:]
-        choices[f"Letzte Saison ({_short(done[-1])})"] = done[-1:]
-    if running:
-        choices[f"Aktuelle Saison ({_short(running[-1])}, vorläufig)"] = running[-1:]
+        choices[f"{ALL_SEASONS} ({_span(done)})"] = done
+    if done and current:
+        both = sorted(set(done) | set(current))
+        choices[f"{ALL_SEASONS} plus aktuelle ({_span(both)}, inkl. vorläufig)"] = both
+    for n in range(2, len(done)):
+        choices[f"Letzte {n} Saisons ({_span(done[-n:])})"] = done[-n:]
+    for season in reversed(done):
+        choices[f"Saison {_short(season)}"] = [season]
     return choices
+
+
+def default_choice(choices: dict[str, list[str]]) -> str | None:
+    """Voreinstellung der Saisonauswahl: „Alle Saisons (…)“, sonst der erste Eintrag."""
+    for label in choices:
+        if label.startswith(f"{ALL_SEASONS} ("):
+            return label
+    return next(iter(choices), None)
+
+
+def _span(seasons: list[str]) -> str:
+    return _short(seasons[0]) if len(seasons) == 1 else f"{_short(seasons[0])}–{_short(seasons[-1])}"
 
 
 def running_seasons(cases: pd.DataFrame) -> list[str]:
