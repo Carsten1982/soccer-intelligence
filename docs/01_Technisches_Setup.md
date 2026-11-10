@@ -14,6 +14,7 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 
 | Version | Etappe | Inhalt | Eingespielt | Git | Tests |
 |---|---|---|---|---|---|
+| 0.10.1 | GitHub | GitHub als einzige Quelle: einspielen.sh github, automatische Tests, robuster Rückweg | 10.11.2026 | `20275e9` | 350 |
 | 0.10.1 | Skript | Einspiel-Skript `tools/einspielen.sh`, Rückweg `tools/zurueck.sh` | 09.11.2026 | `0dafea3` | 348 |
 | 0.10.1 | Doku | Dokumentation zusammengeführt (nur Doku, kein Code) | 08.11.2026 | `0d4d856` | – |
 | 0.10.1 | I.1 Nachtrag | Simulation: Info-Fenster, Schwellen in der Ergebnisqualität, neue Saisonauswahl | 08.11.2026 | `9684edb` | 345 |
