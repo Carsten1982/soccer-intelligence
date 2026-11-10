@@ -5,10 +5,19 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
-## 09.11.2026 – Einspiel-Skript (Paket bereit)
+## 09.11.2026 – GitHub als einzige Quelle (Paket bereit)
+
+- **Carsten** · Auftrag: GitHub als einzige Quelle umsetzen.
+- **Claude** · Neuer Ablauf (`01`, Abschnitt 6.1): Änderungen entstehen nur auf GitHub (Claude Code auf einem Zweig `claude/…`, Pull Request mit automatischen Tests, Freigabe durch Carsten mit „Squash and merge“); der Server holt mit `bash tools/einspielen.sh github` ab (Backup, nur „fast-forward“, Tests mit echten Daten, Neubau, Prüfung 200/401, j/n). Das Paket `release.zip` bleibt als Ersatz; dieser Weg stoppt jetzt, wenn GitHub schon weiter ist.
+- **Claude** · Automatische Tests auf GitHub: `.github/workflows/tests.yml` (Python 3.12, bei Push auf `main`, bei Pull Requests und auf Knopfdruck; nur lesend, kein Zugang zum Server).
+- **Claude** · `tools/zurueck.sh`: Gegen-Commit, der genau den alten Stand wiederherstellt, statt `git revert` (funktioniert auch mit Merge-Commits von GitHub). Beide Skripte stehen ganz in `{ … }`, damit bash sie vollständig einliest: Gefunden beim Probelauf – ersetzte ein Paket das laufende Skript, las bash mitten im Lauf in der neuen Fassung weiter und brach ab. Ausserdem: Paket darf `release_2.zip` oder `release (1).zip` heissen.
+- **Claude** · Tests: `tests/test_einspielen.py` mit 11 Probeläufen beider Skripte (eigenes „GitHub“, nachgebildetes docker/curl; braucht git, darum im Test-Container auf dem Server übersprungen, auf GitHub aktiv), 2 neue Prüfungen in `tests/test_deploy.py`. `CLAUDE.md` v1.9 (Arbeitsweise Punkt 5).
+
+## 09.11.2026 – Einspiel-Skript (eingespielt)
 
 - **Carsten** · Entscheidungen: Commit am Ende mit j/n-Nachfrage; bei Fehler anhalten und Rückweg nennen (nichts automatisch zurücksetzen); eigener Befehl für den Rückweg. Eine Webmaske zum Hochladen wird nicht gebaut (Sicherheit: bräuchte praktisch Vollzugriff auf den Server); die Klick-Variante kommt später über GitHub („Run workflow“).
 - **Claude** · `tools/einspielen.sh` (Vorprüfung, Backup, Entpacken mit Löschliste `release_loeschen.txt`, Tests, Neubau nur `football-dashboard`, Prüfung 200/401, Commit nach j/n) und `tools/zurueck.sh` (fragt nach; nicht committet → zurücksetzen und neue Dateien entfernen; committet → `git revert` und Push; danach Neubau und Prüfung). Geprüft in einer Nachbildung des Servers (Git mit GitHub-Ersatz, nachgebildetes docker/curl) mit 8 Fällen; dabei gefunden und behoben: das hochgeladene Paket selbst galt als offene Änderung. 3 Schutztests in `tests/test_deploy.py`. `01`, Abschnitt 6.1: Skript als Normalfall.
+- **Carsten** · Eingespielt (von Hand, weil das Skript selbst neu war): Backup `backup/2026-11-09_1630_vor_skript` (Git `0d4d856`), 348 Tests bestanden, 1 übersprungen; Git `0dafea3`. Hinweis: Der Browser hatte das Paket als `release_2.zip` gespeichert.
 
 ## 09.11.2026 – Dokumentation zusammengeführt (nur Doku, eingespielt)
 

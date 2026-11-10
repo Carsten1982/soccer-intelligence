@@ -1,6 +1,6 @@
 # Soccer Intelligence – Einstieg für Claude
 
-**Spezifikation v1.8** · Stand 09.11.2026
+**Spezifikation v1.9** · Stand 09.11.2026
 
 ## Worum es geht
 Soccer Intelligence ist eine Fussball-Analyseplattform. Sie berechnet statistische Auffälligkeiten (Anomalien) anstehender
@@ -30,14 +30,14 @@ Schritt kurz erklären, was gemacht wurde.
 | docs/tests/test_kpi*.md | Bestätigte Testfälle mit erwarteten Ergebnissen (JSON) – Referenz für die Korrektheit |
 | docs/tests/pruefprotokoll_*.md | Prüfprotokolle grösserer Etappen (Gegenrechnung, Vollvergleich) |
 | CHANGELOG.md | Änderungsprotokoll: jede Änderung mit Datum und wer |
-| RELEASE.md | Das aktuelle Release-Paket: Inhalt und Erwartungswerte (Ablauf in `01`, Abschnitt 6.1) |
+| RELEASE.md | Die aktuelle Änderung: Inhalt, Erwartungswerte, was im Browser zu prüfen ist (Ablauf in `01`, Abschnitt 6.1) |
 
 Bei Widersprüchen gilt für Berechnungen das KPI-Regelwerk, für Darstellung und Navigation das Dashboard-Briefing.
 Die md-Dateien in `docs/` sind die einzige massgebliche Quelle; `word/` ist nur Archiv. Die Testfälle gelten für die
 Datenbank mit der SHA-256, die in ihnen steht (Kopien in `tests/referenz/`).
 
 **Jede Information steht nur an einer Stelle.** Stand und Versionen nur in `01`, Abschnitt 0; Änderungen im CHANGELOG;
-Befehle zum Einspielen nur in `01`, Abschnitt 6; das Paket-spezifische in `RELEASE.md` (wird mit jedem Paket ersetzt).
+Befehle zum Einspielen nur in `01`, Abschnitt 6; das Release-spezifische in `RELEASE.md` (wird mit jeder Änderung ersetzt).
 
 ## Arbeitsweise
 1. Vorschlag → Freigabe durch Carsten → Umsetzung. Bei Darstellungsänderungen zuerst ein Designentwurf.
@@ -47,8 +47,14 @@ Befehle zum Einspielen nur in `01`, Abschnitt 6; das Paket-spezifische in `RELEA
    `app/config/schwellen.toml`).
 4. Jeder gefundene Fehler bekommt einen Test. Rechnungen werden mit der unabhängigen Gegenrechnung
    (`tests/gegenrechnung.py`) geprüft; bei Umbauten Vollvergleich vorher/nachher.
-5. Paket bauen (`release.zip` mit `RELEASE.md`), auf einer sauberen Kopie des Server-Stands testen, Doku und
-   CHANGELOG nachführen.
+5. **GitHub ist die einzige Quelle** (`Carsten1982/soccer-intelligence`, Ablauf in `01`, Abschnitt 6.1):
+   - Arbeiten auf einem eigenen Zweig `claude/…`, nie direkt auf `main`. Carsten prüft den Pull Request und führt
+     ihn zusammen („Squash and merge“), erst wenn die automatischen Tests grün sind.
+   - Jede Änderung bringt eine neue `RELEASE.md` mit (`**Commit:**`-Zeile, `## Erwartungswerte`, `## Im Browser prüfen`)
+     sowie Einträge in CHANGELOG und `01`, Abschnitt 0.
+   - Im Repository fehlen `data/`, `backup/` und `.env` (nur auf dem Server). Tests mit echten Daten werden darum
+     übersprungen; die Testfälle laufen mit `tests/referenz/`. Nie Excel-Dateien ausser `tests/referenz/` committen.
+   - Einspielen auf dem Server: `bash /docker/football-dashboard/tools/einspielen.sh github` (macht Carsten).
 
 ## Wichtige Regeln
 - Schutzregeln in `docs/01_Technisches_Setup.md`, Abschnitt 5, sind verbindlich (nur im eigenen Ordner arbeiten,

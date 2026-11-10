@@ -5,12 +5,14 @@
 #
 # - Liest den Stand vor dem letzten Release aus backup/LETZTES_RELEASE (geschrieben von tools/einspielen.sh).
 # - Fragt vor jeder Änderung nach (j/n).
-# - Noch nicht committet: Code auf den alten Stand setzen, neue Dateien aus dem Paket entfernen.
-# - Schon committet: Der Release-Commit wird mit "git revert" rückgängig gemacht (neuer Commit, nichts geht
-#   verloren) und gepusht. So bleiben Server und GitHub gleich.
+# - Noch nicht committet (Weg Paket, Antwort n): Code auf den alten Stand setzen, neue Dateien aus dem Paket entfernen.
+# - Schon committet oder von GitHub geholt: Ein Gegen-Commit stellt genau den alten Stand wieder her (nichts geht
+#   verloren, auch Merge-Commits von GitHub sind kein Problem) und wird gepusht. So bleiben Server und GitHub gleich.
 # - Danach Neubau nur von football-dashboard und Prüfung. Die Excel-Dateien in data/ bleiben unberührt.
 set -euo pipefail
 
+# Alles steht in { … }: So liest bash das ganze Skript ein, bevor es startet (der Rückweg ersetzt Dateien).
+{
 PROJEKT="${SI_PROJEKT:-/docker/football-dashboard}"
 URL="https://soccer-intelligence.com"
 ok()   { printf '\033[32m✅ %s\033[0m\n' "$*"; }
@@ -31,8 +33,10 @@ if [ "$(git rev-parse "$VORHER")" = "$(git rev-parse HEAD)" ]; then
   info "Das Release ist noch nicht committet. Geänderte Dateien werden auf $VORHER zurückgesetzt,"
   info "neue Dateien aus dem Paket entfernt."
 else
-  MODUS=revert
-  info "Das Release ist schon committet. Es wird mit einem Gegen-Commit rückgängig gemacht und gepusht:"
+  MODUS=gegencommit
+  [ -z "$(git status --porcelain)" ] || { git status --short; stopp "Es gibt nicht committete Änderungen (oben)."; }
+  info "Das Release ist schon committet. Ein Gegen-Commit stellt den Stand $VORHER wieder her und wird gepusht."
+  info "Rückgängig gemacht werden:"
   git log --oneline "$VORHER..HEAD" | sed 's/^/     /'
 fi
 read -rp "   Wirklich zurück? (j/n): " ANTWORT
@@ -47,8 +51,10 @@ if [ "$MODUS" = zuruecksetzen ]; then
     fi
   done < "$BACKUP/paket_dateien.txt"
 else
-  git revert --no-edit "$VORHER..HEAD" || stopp "git revert ist auf einen Konflikt gestossen."
-  git push -q
+  # Neuer Commit auf dem aktuellen Stand, dessen Inhalt genau der alte Stand ist. Danach "fast-forward" dorthin.
+  GEGEN=$(git commit-tree "$VORHER^{tree}" -p HEAD -m "Rückweg auf Stand $VORHER (macht $JETZT rückgängig)")
+  git merge -q --ff-only "$GEGEN" || stopp "Gegen-Commit konnte nicht übernommen werden."
+  git push -q || stopp "Push nach GitHub fehlgeschlagen. Der Server ist zurück, GitHub noch nicht."
 fi
 ok "Code auf dem Stand vor dem Release ($(git log -1 --oneline))"
 
@@ -62,3 +68,5 @@ for _ in $(seq 1 15); do
 done
 [ "$P" = 200 ] && [ "$D" = 401 ] || stopp "Nach dem Rückweg: / = $P, /dashboard/ = $D (erwartet 200 und 401)."
 ok "Alter Stand läuft · / = 200 · /dashboard/ = 401"
+exit 0
+}

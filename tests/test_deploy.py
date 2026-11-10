@@ -103,3 +103,18 @@ def test_release_script_asks_before_commit():
     code = SCRIPTS[0].read_text(encoding="utf-8")
     assert code.index("read -rp") < code.index("git commit")          # Commit erst nach j/n
     assert "zurueck.sh" in code                                       # nennt den Rückweg
+
+
+def test_github_weg_holt_nur_von_github():
+    code = SCRIPTS[0].read_text(encoding="utf-8")
+    assert "merge -q --ff-only" in code                               # Server bekommt genau den Stand von GitHub
+    assert code.index('if [ "$WEG" = github ]; then\n  read -rp') < code.index("git commit")  # kein Commit im Weg github
+
+
+def test_automatische_tests_auf_github():
+    wf = (ROOT / ".github" / "workflows" / "tests.yml").read_text(encoding="utf-8")
+    assert 'python-version: "3.12"' in wf
+    assert "pip install -r requirements-dev.txt" in wf
+    assert "python -m pytest -q -p no:cacheprovider tests" in wf
+    assert "permissions:\n  contents: read" in wf                     # nur lesen
+    assert "secrets." not in wf and "ssh" not in wf.lower()           # kein Zugang zum Server

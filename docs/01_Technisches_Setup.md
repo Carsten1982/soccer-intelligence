@@ -10,10 +10,11 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 
 **In Betrieb:** Version 0.10.1 – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09, Top Anomalien, Datenqualität und Simulation – Spielwiese. Passwortschutz unter `/dashboard`, Platzhalterseite unter `/`.
 
-**Als Nächstes:** Feintuning der Schwellen mit der Spielwiese · Gewichtung der Top Anomalien (Regelwerk, Punkt 17) · GitHub als einzige Quelle mit automatischen Tests · Datenlieferung Footiqo (Etappe G, in Klärung) · KPI 10–13 · öffentliche Website.
+**Als Nächstes:** Feintuning der Schwellen mit der Spielwiese · Gewichtung der Top Anomalien (Regelwerk, Punkt 17) · Datenlieferung Footiqo (Etappe G, in Klärung) · KPI 10–13 · öffentliche Website.
 
 | Version | Etappe | Inhalt | Eingespielt | Git | Tests |
 |---|---|---|---|---|---|
+| 0.10.1 | Skript | Einspiel-Skript `tools/einspielen.sh`, Rückweg `tools/zurueck.sh` | 09.11.2026 | `0dafea3` | 348 |
 | 0.10.1 | Doku | Dokumentation zusammengeführt (nur Doku, kein Code) | 08.11.2026 | `0d4d856` | – |
 | 0.10.1 | I.1 Nachtrag | Simulation: Info-Fenster, Schwellen in der Ergebnisqualität, neue Saisonauswahl | 08.11.2026 | `9684edb` | 345 |
 | 0.10 | I.1 | Simulation – Spielwiese: Häufigkeit und Ergebnisqualität je KPI mit eigenen Schwellen (Regelwerk 11) | 08.11.2026 | `dbd90c5` | 345 |
@@ -50,6 +51,7 @@ Ausbaustufen:
 
 | Datum | Entscheidung |
 |---|---|
+| 09.11.2026 | **GitHub ist die einzige Quelle** (Carsten): Änderungen entstehen nur noch auf GitHub (Claude Code mit dem Repository verbunden, Pull Request mit automatischen Tests, Freigabe durch Carsten mit „Squash and merge“). Der Server holt mit `tools/einspielen.sh github` ab und ändert selbst nichts mehr. Das Paket `release.zip` bleibt als Ersatz (Abschnitt 6.1). |
 | 08.11.2026 | **Neue KPIs:** 5 Frontend-KPIs (05 Ecken, 06 Tore 1. HZ, 07 Tore 2. HZ, 08 Beide Teams treffen, 09 Schüsse aufs Tor) und 4 Simulations-KPIs nur im Backend (10/11 Angriff gegen Abwehr HZ 1/2, 12 Offensivdruck, 13 Abschluss-Effizienz). Schwellen pro Liga und KPI einstellbar (Datei `app/config/schwellen.toml`, Standard ±20/±35 %, kein eigener Tab). Kompakte Liga-Tabelle mit Details per Aufklappen. Reihenfolge: Spezifikation + Testfälle → Etappe H (KPI 05–09) → Etappe I (Simulations-Tab). Details: KPI-Regelwerk v2.0, CHANGELOG. |
 | 08.11.2026 | **Etappe H freigegeben (Carsten):** Testfälle KPI 05–09 bestätigt; **alle KPIs mit zwei Nachkommastellen** (auch Abweichung, Einstufung nach gerundetem Wert); **Top Anomalien über KPI 02–09** (bisherige Rangfolge, Gewichtung später); kompaktere Liga-Tabelle mit Aufklappen, Design-Vorschlag vor der Umsetzung. Danach Etappe I: interner Tab zur Schwellen-Analyse je KPI und Liga, Feintuning, Gewichtung der Top Anomalien. Ablauf: md-Dateien → Backup → Design-Vorschlag → Programmieren und Einspielen. |
 | 07.11.2026 | **Spieltage mit verlegten Spielen:** Die bestehende Logik für den aktuellen Spieltag bleibt. Spiele, die mehr als 3 Tage ausserhalb des Hauptzeitraums ihres Spieltags liegen, werden im Spielplan als `verschoben` gepflegt (keine KPIs, keine Top Anomalie). Keine Pflege auf Tagesebene, keine Mehrheitsregel. Grundlage: Auswertung 2022/23–2025/26, betroffen unter 2 % der Spiele (`04_Spielplan.md`, Abschnitt 6). |
@@ -127,6 +129,7 @@ Besucher → https://soccer-intelligence.com/dashboard…  → Traefik → Passw
 
 ```
 /docker/football-dashboard/
+├── .github/workflows/tests.yml automatische Tests auf GitHub (bei Push und Pull Request)
 ├── Dockerfile                  Bauplan des Containers (Python 3.12, Streamlit)
 ├── docker-compose.yml          Container-Konfiguration inkl. Traefik-Labels (Dashboard + Platzhalter)
 ├── .env                        Zugang zum Dashboard (Benutzername + Passwort-Hash), nicht in Git
@@ -141,7 +144,7 @@ Besucher → https://soccer-intelligence.com/dashboard…  → Traefik → Passw
 ├── word/                       Archiv der Word-Dokumente (nicht mehr gepflegt)
 ├── CLAUDE.md                   Einstieg und Regeln für Claude
 ├── CHANGELOG.md                Änderungsprotokoll
-└── RELEASE.md                  das aktuelle Release (wird mit jedem Paket ersetzt)
+└── RELEASE.md                  das aktuelle Release (wird mit jeder Änderung ersetzt)
 ```
 
 **docker-compose.yml:** Die Datei selbst ist massgeblich und wird hier nicht kopiert. Sie enthält zwei eigene Container:
@@ -192,17 +195,19 @@ Erwartet: genau die drei Versionen oben. Weicht etwas ab → Ursache klären, be
 
 ## 6. Abläufe
 
-### 6.1 Release einspielen (gilt für jedes Paket)
+### 6.1 Release einspielen
 
-Jedes Paket heisst `release.zip` und enthält `RELEASE.md`. Darin stehen die Änderungen, die Erwartungswerte (Zeilen bei `git status`, Anzahl Tests), was im Browser zu prüfen ist, und der Commit-Text (Zeile `**Commit:** …`). Sollen Dateien gelöscht werden, liegt im Paket `release_loeschen.txt` (eine Datei je Zeile).
+**GitHub ist die einzige Quelle** (seit 09.11.2026). Jede Änderung entsteht auf GitHub, der Server holt nur ab.
 
-**Normalfall: Einspiel-Skript** (seit 09.11.2026). `release.zip` mit WinSCP hochladen (Projektordner oder `/root`), dann:
+1. **Claude arbeitet auf GitHub.** In einer Sitzung von Claude Code (claude.ai/code, mit dem Repository `Carsten1982/soccer-intelligence` verbunden). Claude legt die Änderung auf einem eigenen Zweig ab (`claude/…`), mit neuer `RELEASE.md` (Inhalt, Erwartungswerte, was im Browser zu prüfen ist).
+2. **Carsten prüft auf GitHub.** „Create PR“ (Pull Request) öffnen. Dort stehen alle Änderungen Zeile für Zeile, und die **automatischen Tests** laufen (`.github/workflows/tests.yml`, rund 3 Minuten). Erst bei grünem Haken: „Squash and merge“ (ein Commit je Änderung, gut lesbarer Verlauf).
+3. **Server holt ab:**
+   ```bash
+   bash /docker/football-dashboard/tools/einspielen.sh github
+   ```
+   Das Skript zeigt, was neu ist, macht ein Backup, übernimmt genau den Stand von GitHub (nur „fast-forward“, kein eigener Commit), testet noch einmal mit den echten Excel-Dateien, baut nur `football-dashboard` neu und prüft `200`/`401`. Danach im Browser prüfen, was in `RELEASE.md` steht, und mit `j` bestätigen.
 
-```bash
-bash /docker/football-dashboard/tools/einspielen.sh
-```
-
-Das Skript erledigt Vorprüfung, Backup, Entpacken (inkl. Löschliste), Tests, Neubau nur von `football-dashboard` und die Prüfung `200`/`401`. Danach fragt es: „Alles in Ordnung? Commit und Push machen (j/n)“. Vorher im Browser prüfen, was in `RELEASE.md` steht. Bei einem Fehler hält es an, setzt nichts selbst zurück und nennt den Rückweg. Protokolle (Tests, Neubau) liegen im Backup-Ordner.
+Das Skript stoppt, wenn auf dem Server etwas geändert wurde, das nicht auf GitHub ist (`git status` nicht leer oder eigene Commits). Bei einem Fehler hält es an, setzt nichts selbst zurück und nennt den Rückweg. Protokolle (Tests, Neubau) liegen im Backup-Ordner. Die automatischen Tests auf GitHub laufen ohne die Excel-Dateien aus `data/` (die liegen nur auf dem Server); dafür prüfen sie auch die Einspiel-Skripte in einem Probelauf (`tests/test_einspielen.py`, im Test-Container auf dem Server übersprungen, weil dort `git` fehlt).
 
 **Rückweg zum Stand vor dem letzten Release:**
 
@@ -210,9 +215,11 @@ Das Skript erledigt Vorprüfung, Backup, Entpacken (inkl. Löschliste), Tests, N
 bash /docker/football-dashboard/tools/zurueck.sh
 ```
 
-Fragt vorher nach. Noch nicht committet: Dateien zurücksetzen, neue Dateien aus dem Paket entfernen. Schon committet: Gegen-Commit mit `git revert` und Push (nichts geht verloren, Server und GitHub bleiben gleich). Danach Neubau und Prüfung. Die Excel-Dateien bleiben unberührt.
+Fragt vorher nach. Schon übernommen oder committet: Ein Gegen-Commit stellt genau den alten Stand wieder her und wird gepusht (nichts geht verloren, Server und GitHub bleiben gleich). Noch nicht committet (Weg Paket, Antwort `n`): Dateien zurücksetzen, neue Dateien aus dem Paket entfernen. Danach Neubau und Prüfung. Die Excel-Dateien bleiben unberührt.
 
-**Ohne Skript** (Ersatz, z. B. wenn das Skript selbst geändert wird) – dieselben Schritte einzeln:
+**Ersatz: Paket `release.zip`** (wenn GitHub nicht geht). Das Paket enthält `RELEASE.md` mit dem Commit-Text (Zeile `**Commit:** …`); sollen Dateien gelöscht werden, liegt `release_loeschen.txt` bei (eine Datei je Zeile). Mit WinSCP hochladen (Projektordner oder `/root`, auch als `release_2.zip`), dann `bash /docker/football-dashboard/tools/einspielen.sh` (ohne `github`). Am Schluss fragt es „Commit und Push machen (j/n)“. Das Skript stoppt, wenn GitHub schon weiter ist als der Server.
+
+**Ohne Skript** (Notfall) – die Schritte für ein Paket einzeln:
 
 1. **Backup.** `git status` muss leer sein. Am Schluss steht der Git-Stand vorher.
    ```bash
@@ -334,7 +341,7 @@ CHANGELOG.md              Änderungsprotokoll
 
 ## 8. Offene Punkte
 
-- [ ] Ablauf verbessern: GitHub als einzige Quelle, automatische Tests bei jedem Push, Knopf „Run workflow“ auf GitHub (Einspiel-Skript erledigt 09.11.2026)
+- [ ] Ablauf: Knopf „Run workflow“ auf GitHub zum Einspielen (GitHub als einzige Quelle und automatische Tests erledigt 09.11.2026)
 - [ ] Spielplan LaLiga 2026/27, Spieltag 1: späte Spiele mit Status `verschoben` pflegen (Pflegeregel `04_Spielplan.md`, Abschnitt 6). Prüfen, ob erledigt.
 - [ ] Spielplan Premier League, Spieltag 1 (16.–20.08. statt gespielt 21.–24.08.): prüft Carsten
 - [ ] Warnung zu Spiel-ID 11344 (Schusssumme): Wert korrigieren oder als Hinweis herabstufen?
