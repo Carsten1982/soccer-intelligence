@@ -8,15 +8,13 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 
 ## 0. Stand und Versionen
 
-**In Betrieb:** Version 0.10.1 – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09, Top Anomalien, Datenqualität und Simulation – Spielwiese. Passwortschutz unter `/dashboard`, Platzhalterseite unter `/`.
-
-**Bereit zum Einspielen:** Version 0.11 – neue Datenbank 2018/19–2026/27 (`451348b6…`), Referenzsaison (älteste Saison, nur Vorsaison, KPI-Regelwerk 1.2) und neue Saisonauswahl in der Simulation. Danach die neue Excel-Datei aufspielen (Abschnitt 6.2) und im Browser prüfen (`RELEASE.md`).
+**In Betrieb:** Version 0.11 – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09, Top Anomalien, Datenqualität und Simulation – Spielwiese; Datenbank 2018/19–2026/27 mit Referenzsaison 2018/19 (KPI-Regelwerk 1.2). Passwortschutz unter `/dashboard`, Platzhalterseite unter `/`.
 
 **Als Nächstes:** neue Bewertungsmethode im Simulations-Tab (Stufen, Wilson-Spanne, Toreffekt; Festlegung 10.11.2026) · Feintuning der Schwellen mit der Spielwiese · Gewichtung der Top Anomalien (Regelwerk, Punkt 17) · Datenlieferung Footiqo (Etappe G, in Klärung) · KPI 10–13 · öffentliche Website.
 
 | Version | Etappe | Inhalt | Eingespielt | Git | Tests |
 |---|---|---|---|---|---|
-| 0.11 | Neue Datenbank | Datenbank 2018/19–2026/27, Referenzsaison, neue Saisonauswahl, Warnung „Saison fehlt“ | ausstehend | – | 373 (lokal) |
+| 0.11 | Neue Datenbank | Datenbank 2018/19–2026/27, Referenzsaison, neue Saisonauswahl, Warnung „Saison fehlt“ | 10.11.2026 | `034e57a` | 376 |
 | 0.10.1 | GitHub | GitHub als einzige Quelle: einspielen.sh github, automatische Tests, robuster Rückweg | 10.11.2026 | `20275e9` | 350 |
 | 0.10.1 | Skript | Einspiel-Skript `tools/einspielen.sh`, Rückweg `tools/zurueck.sh` | 09.11.2026 | `0dafea3` | 348 |
 | 0.10.1 | Doku | Dokumentation zusammengeführt (nur Doku, kein Code) | 08.11.2026 | `0d4d856` | – |
@@ -36,7 +34,7 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 - **Rückweg** zu einer Version: Abschnitt 6.1.
 - **Prüfprotokolle** grösserer Etappen: `docs/tests/pruefprotokoll_*.md`.
 - **Frühere Anleitungen** (`ANLEITUNG_*.md`): seit 09.11.2026 durch `RELEASE.md` und Abschnitt 6.1 ersetzt. Sie bleiben im Git-Verlauf erhalten.
-- **Daten:** Datenbank SHA-256 `f37e36d3…` (seit 07.11.2026, `02_Datenbasis.md`), Spielplan mit vier Blättern (`04_Spielplan.md`). Neue Fassung `451348b6…` (2018/19–2026/27) mit Version 0.11 bereit; Prüfprotokoll `docs/tests/pruefprotokoll_datenbank_2018-2027.md`.
+- **Daten:** Datenbank SHA-256 `451348b6…` (2018/19–2026/27, seit 10.11.2026; vorher `f37e36d3…`), `02_Datenbasis.md`; Prüfprotokoll `docs/tests/pruefprotokoll_datenbank_2018-2027.md`. Spielplan mit vier Blättern (`04_Spielplan.md`).
 
 ---
 
