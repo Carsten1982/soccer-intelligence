@@ -8,7 +8,7 @@
 
 Diese Prüfsumme steht auch in den Testfällen (`docs/tests/`). Nach jeder Änderung an der Datei ändert sie sich. Dann hier und in den Testfällen nachtragen und die Testfälle erneut laufen lassen.
 
-**Neue Fassung (10.11.2026, Version 0.11):** Saisons 2018/19 und 2019/20 ergänzt, Spiele 2026/27 bis 10.11.2026 nachgetragen, geprüft und korrigiert (Abschnitt 4d). SHA-256 `451348b6550b91f4df3a26450a26d205e76f69c13ac520d080d3a427ff084904`. Eine Kopie liegt unter `tests/referenz/Database-Soccer-Intelligence_451348b6.xlsx`. Aktiv in `data/`, sobald Carsten sie nach dem Einspielen von Version 0.11 aufgespielt hat (`01`, Abschnitt 6.2). Die KPI-Testfälle bleiben an `6d68583c…` und `f37e36d3…` gebunden.
+**Neue Fassung (10.11.2026, Version 0.11):** Saisons 2018/19 und 2019/20 ergänzt, Spiele 2026/27 bis 10.11.2026 nachgetragen, geprüft und korrigiert (Abschnitt 4d). SHA-256 `451348b6550b91f4df3a26450a26d205e76f69c13ac520d080d3a427ff084904`. Eine Kopie liegt unter `tests/referenz/Database-Soccer-Intelligence_451348b6.xlsx`. **Aktiv in `data/` seit 10.11.2026** (nach dem Einspielen von Version 0.11 von Carsten aufgespielt; Prüfung auf dem Server: 0 Fehler, 24 Warnungen, 64 Hinweise; vorherige Datei in `backup/`). Die KPI-Testfälle bleiben an `6d68583c…` und `f37e36d3…` gebunden.
 
 **Referenzsaison (ab Version 0.11):** Die älteste Saison der Datei (heute 2018/19) liefert nur die Vorsaison für die Saison danach und wird nie ausgewertet (KPI-Regelwerk 1.2). Beim Saisonwechsel wird die älteste Saison aus der Datei entfernt.
 

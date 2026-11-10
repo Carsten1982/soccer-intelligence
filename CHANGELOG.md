@@ -5,13 +5,14 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
-## 10.11.2026 – Version 0.11: Neue Datenbank 2018/19–2026/27 (bereit zum Einspielen)
+## 10.11.2026 – Version 0.11: Neue Datenbank 2018/19–2026/27 (eingespielt)
 
 - **Carsten** · Saisons 2018/19 und 2019/20 in allen vier Ligen ergänzt, Spiele 2026/27 bis 10.11.2026 nachgetragen. Entscheidungen: Corona-Saisons zählen normal mit; Spieltage der Premier League 2018/19 und 2019/20 rekonstruiert übernehmen (Quelle liefert keine); älteste Saison = Referenzsaison; Saisonwechsel durch Löschen der ältesten Saison in der Datei; neue Saisonauswahl. Briefing „Neue Datenbank 2018/19–2026/27 einführen“ freigegeben.
 - **Claude** · Prüfung der Excel-Datei (Prüfprotokoll `docs/tests/pruefprotokoll_datenbank_2018-2027.md`, Teil A): Eingangsdatei mit 868 Fehlern; Bundesliga Spalten N–BF ab 2020/21 verrutscht (beim Einfügen nur A–M verschoben) – repariert aus `f37e36d3` bzw. der verschobenen Stelle, je Spiel gegen K/L und Halbzeiten geprüft, Stichproben von Carsten (1.600 Werte) gleich; LaLiga id 77856 „Wert“ → 0; Datum aus `matchDate` und Spieltag rekonstruiert ergänzt. Ergebnis `451348b6…`: 0 Fehler, 2020/21–2025/26 zellgenau gleich wie bisher.
 - **Claude** · Code (Briefing C1–C6): `app/core/seasons.py` (Referenzsaison, ausgewertete Saisons, Lücken); Simulation wertet alle Saisons ausser der ältesten aus (ersetzt `usable_seasons`); neue Saisonauswahl (Aktuelle Saison · Alle Saisons, voreingestellt · Alle Saisons plus aktuelle · Letzte 2 … n−1 · jede Saison einzeln) mit ⓘ; Datenqualität zeigt je Liga Referenzsaison und ausgewertete Saisons; neue Warnung „Saison fehlt“; Häufigkeit nie in der Referenzsaison. Rechenzeit `build_cases` 42 → 67 s lokal (Server erwartet rund 50 s statt 30 s).
 - **Claude** · Doku: KPI-Regelwerk v2.4 (1.2 Referenzsaison, 11.2, 11.4, 11.5), Dashboard-Briefing v4.9 (6.1, 6.3, 6.4), `02_Datenbasis.md` (Abschnitt 4d, Überblick, Prüfregel), `01` Abschnitt 0 und 6.2 (Saisonwechsel).
 - **Claude** · Tests: `tests/test_seasons.py` (T1–T6, 26 neu), Referenzkopie `tests/referenz/Database-Soccer-Intelligence_451348b6.xlsx`, gemeinsame Simulationsfälle in `conftest.py`; KPI-Testfälle unverändert an `6d68583c`/`f37e36d3`. Vollvergleich (Teil B): Code vorher/nachher auf beiden Datenbanken, alte gegen neue Datenbank ab 2021/22 (Ligaseiten, Top Anomalien, Häufigkeit, Simulation) und Gegenrechnung aller 3.302 neu ausgewerteten Spiele – 0 Abweichungen. Lokal 373 Tests bestanden, 15 übersprungen (3:35 statt 2:04).
+- **Carsten** · Pull Request #2 zusammengeführt; eingespielt mit `einspielen.sh github` am 10.11.2026: 376 Tests bestanden, 12 übersprungen (6:10), `/` 200, `/dashboard/` 401; Git `034e57a`. Danach neue Datenbank aufgespielt (Kopie aus `tests/referenz/`, Prüfung 0 Fehler / 24 Warnungen / 64 Hinweise, SHA-256 `451348b6…`, alte Datei in `backup/`). Im Browser geprüft: Datenqualität, Simulation („Alle Saisons (2019/20–2025/26)“, 9'381 Spiele), Ligaseite.
 
 ## 09.11.2026 – GitHub als einzige Quelle (eingespielt)
 
