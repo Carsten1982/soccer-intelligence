@@ -5,13 +5,14 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
-## 09.11.2026 – GitHub als einzige Quelle (Paket bereit)
+## 09.11.2026 – GitHub als einzige Quelle (eingespielt)
 
 - **Carsten** · Auftrag: GitHub als einzige Quelle umsetzen.
 - **Claude** · Neuer Ablauf (`01`, Abschnitt 6.1): Änderungen entstehen nur auf GitHub (Claude Code auf einem Zweig `claude/…`, Pull Request mit automatischen Tests, Freigabe durch Carsten mit „Squash and merge“); der Server holt mit `bash tools/einspielen.sh github` ab (Backup, nur „fast-forward“, Tests mit echten Daten, Neubau, Prüfung 200/401, j/n). Das Paket `release.zip` bleibt als Ersatz; dieser Weg stoppt jetzt, wenn GitHub schon weiter ist.
 - **Claude** · Automatische Tests auf GitHub: `.github/workflows/tests.yml` (Python 3.12, bei Push auf `main`, bei Pull Requests und auf Knopfdruck; nur lesend, kein Zugang zum Server).
 - **Claude** · `tools/zurueck.sh`: Gegen-Commit, der genau den alten Stand wiederherstellt, statt `git revert` (funktioniert auch mit Merge-Commits von GitHub). Beide Skripte stehen ganz in `{ … }`, damit bash sie vollständig einliest: Gefunden beim Probelauf – ersetzte ein Paket das laufende Skript, las bash mitten im Lauf in der neuen Fassung weiter und brach ab. Ausserdem: Paket darf `release_2.zip` oder `release (1).zip` heissen.
 - **Claude** · Tests: `tests/test_einspielen.py` mit 11 Probeläufen beider Skripte (eigenes „GitHub“, nachgebildetes docker/curl; braucht git, darum im Test-Container auf dem Server übersprungen, auf GitHub aktiv), 2 neue Prüfungen in `tests/test_deploy.py`. `CLAUDE.md` v1.9 (Arbeitsweise Punkt 5).
+- **Carsten** · Eingespielt am 10.11.2026 über eine Kopie des alten Skripts: Backup `backup/2026-11-10_0224_vor_release` (Git `0dafea3`), 350 Tests bestanden, 12 übersprungen; Git `20275e9`.
 
 ## 09.11.2026 – Einspiel-Skript (eingespielt)
 
