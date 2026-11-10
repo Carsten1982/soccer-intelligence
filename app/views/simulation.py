@@ -15,8 +15,8 @@ import streamlit as st
 from core.kpis import Thresholds
 from core.matchday import season_short
 from core.simulation import (
-    BETTER, DEFINITION_CHANGES, EVENT_TEXTS, MIN_CASES, SAME, TOO_FEW, WORSE, Setting, frequency_rows, pct,
-    quality_rows, quantize_threshold, running_seasons, season_choices,
+    BETTER, DEFINITION_CHANGES, EVENT_TEXTS, MIN_CASES, SAME, TOO_FEW, WORSE, Setting, default_choice, frequency_rows,
+    pct, quality_rows, quantize_threshold, running_seasons, season_choices,
 )
 from core.top import TOP_KPIS
 from state import get_active_leagues, get_database, get_simulation_cases, get_thresholds
@@ -57,6 +57,10 @@ INFO = {
     "stufe": "Bestimmt, welche Anomalien in der Tabelle Ergebnisqualität zählen: leichte und starke zusammen, nur "
              "leichte oder nur starke. Starke Anomalien sind seltener, treffen aber oft häufiger ein. Mit „nur stark“ "
              "siehst du, ob sich die starke Stufe lohnt. Die Tabelle Häufigkeit zeigt immer beide Stufen getrennt.",
+    "saisons": "Welche Saisons in die Tabellen einfliessen. „Alle Saisons“ sind alle abgeschlossenen Saisons, "
+               "„Letzte 2, 3 …“ zählen ebenfalls nur abgeschlossene. Die aktuelle Saison ist noch nicht fertig und "
+               "darum vorläufig. Die älteste Saison der Datenbank (Referenzsaison) fehlt immer: Sie liefert nur die "
+               "Vorsaison für die Saison danach.",
     "schwellen": "Ab welcher Abweichung vom Liga-Durchschnitt (in %) eine Anomalie als leicht bzw. stark gilt. Die "
                  "zwei Felder oben gelten für alle KPIs; je KPI kannst du darunter einen eigenen Wert eintragen "
                  "(leer = Wert für alle). „Vorher“ sind die gültigen Schwellen aus schwellen.toml.",
@@ -128,8 +132,11 @@ def settings_panel(cases, standard: Thresholds) -> dict:
         st.markdown("**Einstellungen**")
         leagues = [lg.name for lg in get_active_leagues()]
         league = st.selectbox("Liga", [ALL, *leagues], key="sim_liga")
-        choices = season_choices(cases)
-        season_label = st.selectbox("Saisons", list(choices), key="sim_saisons")
+        choices = season_choices(cases)          # ohne Referenzsaison, Voreinstellung „Alle Saisons“ (Version 0.11)
+        labels = list(choices)
+        default = default_choice(choices)
+        season_label = st.selectbox("Saisons", labels, index=labels.index(default) if default else 0,
+                                    key="sim_saisons", help=INFO["saisons"])
 
         st.markdown("**Schwellen für alle KPIs**", help=INFO["schwellen"])
         a, b = st.columns(2)
@@ -241,8 +248,8 @@ def definitions() -> None:
                     "Richtung als eingetroffen.")
         st.markdown("\n".join(f"- **{TOP_KPIS[k]}:** {t}" for k, t in EVENT_TEXTS.items()))
         st.markdown("**Grundlage:** jedes Spiel so berechnet, als wäre es noch nicht gespielt (Stichtag = Spieldatum, "
-                    "Spieltag = Gameday). Nicht verwendet: die erste Saison der Datenbank (ohne Vorsaison), vorläufige "
-                    "Werte (z. B. Aufsteiger) und nicht berechenbare Werte.")
+                    "Spieltag = Gameday). Nicht verwendet: die Referenzsaison (älteste Saison der Datenbank, liefert nur "
+                    "die Vorsaison), vorläufige Werte (z. B. Aufsteiger) und nicht berechenbare Werte.")
         st.markdown("**Änderungen an den Definitionen**\n\n" + "\n".join(f"- {d}: {t}" for d, t in DEFINITION_CHANGES))
 
 
@@ -264,7 +271,8 @@ def render() -> None:
         return
     cases = get_simulation_cases()
     if cases.empty:
-        st.info("Keine Spiele für die Simulation vorhanden.")
+        st.info("Keine Spiele für die Simulation vorhanden. Ausgewertet werden alle Saisons ausser der ältesten "
+                "(Referenzsaison); enthält die Datenbank nur eine Saison, gibt es nichts auszuwerten.")
         ui.footer()
         return
 

@@ -1,6 +1,6 @@
 # Soccer Intelligence – Dashboard-Briefing
 
-**Version 4.8** · Stand 08.11.2026 (Etappe I.1: Bereich Simulation, 6.4)
+**Version 4.9** · Stand 10.11.2026 (Version 0.11: Referenzsaison und neue Saisonauswahl, 6.1, 6.3, 6.4)
 
 > **Massgebliche Quelle seit 31.10.2026.** Änderungen werden nur noch in dieser Datei gemacht, mit Datum in der Änderungshistorie bzw. im `CHANGELOG.md`.
 > Das Word-Dokument *Dashboard-Briefing v4.2* liegt nur noch als Archiv im Ordner `word/` und wird nicht mehr gepflegt. Änderungen seit 31.10.2026 sind im Text als „Änderung“ mit Datum gekennzeichnet.
@@ -315,6 +315,8 @@ Der Bereich Datenqualität (/dashboard/datenqualitaet) ist ein internes Kontroll
 
 - Datenstand: Dateiname, Datum der letzten Änderung, Anzahl Spiele je Liga und Saison
 
+- **Änderung 10.11.2026 (Version 0.11):** je Liga die **Referenzsaison** (älteste Saison, nur Vorsaison, nicht ausgewertet) und die ausgewerteten Saisons, z. B. „Referenzsaison: 2018/19 (nur Vorsaison, nicht ausgewertet) · Ausgewertet: 2019/20–2026/27“ (KPI-Regelwerk 1.2). Fehlt zwischen zwei Saisons eine Saison, erscheint eine Warnung „Saison fehlt“.
+
 - Prüfergebnisse gemäss 02_Datenbasis.md, gegliedert in Fehler, Warnungen und Hinweise
 
 - Inhalt des Tabellenblatts «Datenhinweise»
@@ -333,7 +335,7 @@ Der Bereich Datenqualität (/dashboard/datenqualitaet) ist ein internes Kontroll
 
 ### 6.3 Häufigkeit der Anomalien
 
-Für jede Liga und jeden KPI (ausser KPI01) wird angezeigt, wie oft keine, leichte und starke Anomalien auftreten. Grundlage sind alle Spiele der letzten abgeschlossenen Saison, jeweils so berechnet, als wären sie noch nicht gespielt. Die Übersicht dient der Überprüfung der Schwellenwerte, insbesondere bei KPI03.
+Für jede Liga und jeden KPI (ausser KPI01) wird angezeigt, wie oft keine, leichte und starke Anomalien auftreten. Grundlage sind alle Spiele der letzten abgeschlossenen Saison (nie der Referenzsaison, Änderung 10.11.2026), jeweils so berechnet, als wären sie noch nicht gespielt. Die Übersicht dient der Überprüfung der Schwellenwerte, insbesondere bei KPI03.
 
 **Ergänzung 08.11.2026 (ab Etappe H):** Unter der Häufigkeit werden die **gültigen Schwellenwerte** angezeigt (Standard ±20 % / ±35 % und allfällige Abweichungen je Liga und KPI aus `app/config/schwellen.toml`, KPI-Regelwerk 2.2). Nur Anzeige, keine Bearbeitung.
 
@@ -344,15 +346,15 @@ Für jede Liga und jeden KPI (ausser KPI01) wird angezeigt, wie oft keine, leich
 Siebter Bereich (ganz rechts, nur intern): `/dashboard/simulation`. Frage: Wie gut funktionieren die Anomalien und ihre Schwellen? Rechenregeln: KPI-Regelwerk, Abschnitt 11.
 
 - **Überschrift** „Simulation – Spielwiese (intern)“ und ein gelber Hinweis: Nur zum Ausprobieren, hier veränderte Schwellen wirken nicht auf das Dashboard; übernommen wird bewusst über `schwellen.toml`.
-- **Links Einstellungen** (bleiben beim Scrollen stehen, grau hinterlegt): Liga (Alle Ligen oder eine Liga), Saisons (alle abgeschlossenen / letzte 4, 3, 2 / letzte Saison / aktuelle Saison, vorläufig), Schwellen leicht/stark für alle KPIs, Stufe für die Ergebnisqualität (leicht + stark / nur leicht / nur stark, mit ⓘ), darunter je KPI eigene Werte (leer = Wert für alle), Knopf „Auf gültige Schwellen zurücksetzen“.
+- **Links Einstellungen** (bleiben beim Scrollen stehen, grau hinterlegt): Liga (Alle Ligen oder eine Liga), Saisons (**Änderung 10.11.2026, Version 0.11:** Aktuelle Saison (vorläufig) / **Alle Saisons** = alle abgeschlossenen, voreingestellt / Alle Saisons plus aktuelle / Letzte 2, 3 … Saisons, nur abgeschlossene / jede abgeschlossene Saison einzeln, neueste zuerst; nie die Referenzsaison; Beschriftung immer mit Jahren, KPI-Regelwerk 11.4), Schwellen leicht/stark für alle KPIs, Stufe für die Ergebnisqualität (leicht + stark / nur leicht / nur stark, mit ⓘ), darunter je KPI eigene Werte (leer = Wert für alle), Knopf „Auf gültige Schwellen zurücksetzen“.
 - **Rechts zwei Tabellen**, darunter je ein bis zwei Sätze, wofür sie da sind:
   1. **Häufigkeit der Anomalien:** je KPI 02–09 Schwellen vorher/nachher, Anzahl leicht und stark vorher/nachher, gesamt mit Anteil der Spiele, Veränderung in %.
   2. **Ergebnisqualität:** je KPI die eingestellten Schwellen (eigene blau, darunter die gültigen) und je Richtung (positiv/negativ) Fälle, eingetroffen, ohne Anomalie, Mehrwert (mit Schwankung), Urteil. Unter 100 Fällen grau.
   - KPI-Spalte zweizeilig und schmal (Nummer, darunter Name).
-- **Info-Symbole ⓘ** mit 3–5 einfachen Sätzen an Fällen, eingetroffen, ohne Anomalie, Mehrwert, positiv, negativ, Urteil, Schwellen und Stufe. Die Erklärung erscheint beim Darüberfahren in einem eigenen Fenster.
+- **Info-Symbole ⓘ** mit 3–5 einfachen Sätzen an Saisons (seit 10.11.2026), Fällen, eingetroffen, ohne Anomalie, Mehrwert, positiv, negativ, Urteil, Schwellen und Stufe. Die Erklärung erscheint beim Darüberfahren in einem eigenen Fenster.
 - **Aufklappbar „Definitionen und Änderungen“:** wann eine Anomalie als eingetroffen gilt, Grundlage, Änderungen mit Datum.
 - KPI 01 hat keine Anomalie und erscheint nicht. Keine Einzelspielansicht, keine Diagramme, keine Übernahme in die gültigen Schwellen.
-- Die KPIs aller Spiele werden einmal je Datenbankstand berechnet (rund 30 Sekunden beim ersten Aufruf), jede Änderung der Schwellen danach sofort.
+- Die KPIs aller Spiele werden einmal je Datenbankstand berechnet (beim ersten Aufruf rund 50 Sekunden; bis Version 0.10.1 mit 6 statt 8 Saisons rund 30), jede Änderung der Schwellen danach sofort.
 
 Später (eigene Schritte): Gewichtung der Top Anomalien (Regelwerk, Punkt 17), Simulations-KPIs 10–13, Liga-Vergleich nebeneinander.
 

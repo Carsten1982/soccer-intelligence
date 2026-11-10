@@ -7,7 +7,7 @@ import streamlit as st
 
 from core.issues import FEHLER, HINWEIS, LEVEL_ORDER, WARNUNG
 from core.matchday import CURRENT, date_range, matchday_games, matchday_overview, season_short
-from core.overview import games_per_season, league_summary
+from core.overview import games_per_season, league_summary, seasons_text
 from state import (
     fixtures_banner, fmt_dt, get_active_leagues, get_database, get_fixtures, get_frequency, get_thresholds,
     status_banner, today,
@@ -33,6 +33,7 @@ DB_RULES = """
 - fehlende Statistikwerte, die nicht im Blatt *Datenhinweise* dokumentiert sind (höchstens 50 Einzelzeilen je Stufe,
   danach eine Sammelzeile)
 - Saison unvollständig, doppelte Paarung, Datum passt nicht zu *matchDate*
+- Saison fehlt zwischen zwei vorhandenen Saisons (die Saison danach wird dann ohne Vorsaison berechnet)
 - *Gameday* ausserhalb des möglichen Bereichs, Spieltag mit falscher Anzahl Spiele, Team mehrfach im selben Spieltag
 
 **Hinweise** – kein Handlungsbedarf:
@@ -101,6 +102,7 @@ def _database_section() -> None:
                 b.metric("Teams", s["Teams"])
                 st.caption(f"{s['Saisons']} Saisons ({s['Erste Saison']} – {s['Letzte Saison']}) · "
                            f"{s['Erstes Spiel']:%d.%m.%Y} bis {s['Letztes Spiel']:%d.%m.%Y}")
+                st.caption(seasons_text(s))
         st.markdown("**Spiele je Saison**")
         st.dataframe(games_per_season(db.leagues), width="stretch")
 
@@ -210,7 +212,8 @@ def _frequency_section() -> None:
         season, table = get_frequency(league)
         st.markdown(f"**{league.name}**" + (f" · Saison {season_short(season)}" if season else ""))
         if season is None:
-            st.caption("Keine vollständige Saison in der Datenbank.")
+            st.caption("Keine vollständige Saison in der Datenbank (ausser der Referenzsaison, "
+                       "die nie ausgewertet wird).")
             continue
         st.dataframe(table, hide_index=True, width="stretch")
 
