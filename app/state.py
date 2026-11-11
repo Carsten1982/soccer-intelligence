@@ -23,7 +23,7 @@ from core.kpis import MatchKpis, prepare_league
 from core.loader import DatabaseLoad, load_database
 from core.matchday import matchday_games
 from core.results import matchday_kpis
-from core.simulation import build_cases
+from core.simulation import build_cases, closed_matchdays
 from core.thresholds import ThresholdConfig, load_thresholds
 
 TZ = ZoneInfo(settings.TIMEZONE)
@@ -73,10 +73,10 @@ def get_frequency(league: League):
                              _file_key(settings.THRESHOLDS_FILE), _file_key(settings.LEAGUES_FILE))
 
 
-# --- Simulation (Etappe I.1) ----------------------------------------------------------------
+# --- Sensitivitätsanalyse (Etappe I.1, seit Version 0.12) ------------------------------------------------
 
-@st.cache_data(show_spinner="Simulation wird vorbereitet: alle Spiele werden berechnet (einmal je Datenbankstand, "
-                            "rund 50 Sekunden) …", max_entries=2)
+@st.cache_data(show_spinner="Sensitivitätsanalyse wird vorbereitet: alle Spiele werden berechnet (einmal je "
+                            "Datenbankstand, rund 50 Sekunden) …", max_entries=2)
 def _cached_simulation(path: str, key: tuple, leagues_key: tuple) -> pd.DataFrame:  # noqa: ARG001
     prepared = _cached_prepared(path, key)
     frames = [build_cases(prepared[lg.name], lg) for lg in get_active_leagues() if lg.name in prepared]
@@ -87,6 +87,19 @@ def get_simulation_cases() -> pd.DataFrame:
     """Alle Fälle der Simulation (je Spiel und KPI), unabhängig von den Schwellen. Siehe core/simulation.py."""
     path = settings.DATABASE_FILE
     return _cached_simulation(str(path), _file_key(path), _file_key(settings.LEAGUES_FILE))
+
+
+@st.cache_data(show_spinner=False, max_entries=2)
+def _cached_matchdays(path: str, key: tuple, leagues_key: tuple) -> pd.DataFrame:  # noqa: ARG001
+    prepared = _cached_prepared(path, key)
+    frames = [closed_matchdays(prepared[lg.name], lg) for lg in get_active_leagues() if lg.name in prepared]
+    return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame(columns=["league", "season", "gameday"])
+
+
+def get_closed_matchdays() -> pd.DataFrame:
+    """Abgeschlossene Spieltage der ausgewerteten Saisons (Nenner der Sensitivitätsanalyse)."""
+    path = settings.DATABASE_FILE
+    return _cached_matchdays(str(path), _file_key(path), _file_key(settings.LEAGUES_FILE))
 
 
 # --- KPI-Ergebnisse eines Spieltags (seit H.1) ------------------------------------------

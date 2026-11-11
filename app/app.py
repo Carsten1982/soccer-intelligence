@@ -1,7 +1,7 @@
 """Soccer Intelligence – Einstiegspunkt und Navigation (Dashboard-Briefing, Kapitel 2 und 3).
 
 Bereiche (Tabs oben):
-  Top Anomalien (Startbereich)  ·  je aktive Liga ein Bereich  ·  Datenqualität  ·  Simulation (intern, ganz rechts)
+  Top Anomalien (Startbereich)  ·  je aktive Liga ein Bereich  ·  Datenqualität  ·  Sensitivitätsanalyse (intern, ganz rechts)
 
 Welche Ligen aktiv sind, steht in config/ligen.toml, nicht im Programmcode. Ist eine der Konfigurationsdateien
 (ligen.toml, teams.toml, schwellen.toml) ungültig, zeigt die App nur eine klare Meldung.
@@ -41,7 +41,8 @@ league_pages = [st.Page(_league_page(lg), title=lg.name, url_path=lg.url) for lg
 for lg, page in zip(leagues, league_pages):
     PAGES[f"liga_{lg.url}"] = page
 PAGES["datenqualitaet"] = st.Page(datenqualitaet.render, title="Datenqualität", url_path="datenqualitaet")
-PAGES["simulation"] = st.Page(simulation.render, title="Simulation", url_path="simulation")   # intern, Etappe I.1
+PAGES["simulation"] = st.Page(simulation.render, title="Sensitivitätsanalyse",
+                              url_path="simulation")   # intern; Name seit 0.12, Adresse unverändert
 
 nav = st.navigation([PAGES["top"], *league_pages, PAGES["datenqualitaet"], PAGES["simulation"]], position="top")
 nav.run()

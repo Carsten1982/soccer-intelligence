@@ -1,244 +1,239 @@
-"""Bereich Simulation – Spielwiese (Etappe I.1, Dashboard-Briefing 6.4, Design Variante B vom 08.11.2026).
+"""Bereich Sensitivitätsanalyse (Version 0.12, Dashboard-Briefing 6.4, Designentwurf B vom 11.11.2026).
 
-Links die Einstellungen (Liga, Saisons, Schwellen für alle KPIs und je KPI, Stufe), rechts zwei Tabellen:
-„Häufigkeit“ (wie viele Anomalien) und „Ergebnisqualität“ (treffen sie ein?). Gerechnet wird in core/simulation.py.
-Die Einstellungen hier ändern nie die gültigen Schwellen (schwellen.toml).
+Links Liga und Saison, rechts eine Karte je KPI 02–09: vier Schwellen (leicht/stark, positiv/negativ) und daneben
+Häufigkeit (leicht, stark) und Ergebnisqualität (Schwelle = leicht). Gerechnet wird in core/sensitivity.py mit den Fällen
+aus core/simulation.py. Die Eingaben hier ändern nie die gültigen Schwellen (schwellen.toml).
 """
 
 from __future__ import annotations
 
-from decimal import Decimal
 from html import escape
 
 import streamlit as st
 
-from core.kpis import Thresholds
 from core.matchday import season_short
-from core.simulation import (
-    BETTER, DEFINITION_CHANGES, EVENT_TEXTS, MIN_CASES, SAME, TOO_FEW, WORSE, Setting, default_choice, frequency_rows,
-    pct, quality_rows, quantize_threshold, running_seasons, season_choices,
+from core.sensitivity import (
+    NEG, POS, RECOMMENDATIONS, TOO_FEW, TOTAL, Count, KpiSensitivity, Limits, Quality, evaluate, limit, matchday_summary,
 )
+from core.simulation import DEFINITION_CHANGES, EVENT_TEXTS, default_choice, pct, running_seasons, season_choices
 from core.top import TOP_KPIS
-from state import get_active_leagues, get_database, get_simulation_cases, get_thresholds
+from state import get_active_leagues, get_closed_matchdays, get_database, get_simulation_cases, get_thresholds
 from views import components as ui
 from views.registry import PAGES
 
 ALL = "Alle Ligen"
-STAGES = {"leicht + stark": "beide", "nur leicht": "leicht", "nur stark": "stark"}
+KEY = "sth_"                                  # Präfix der Schwellenfelder (Zurücksetzen löscht alle)
+PARTS = {"lp": POS, "sp": POS, "ln": NEG, "sn": NEG}
+RATIO = [0.9, 1.05, 1.05, 12.0]               # Zeile: Richtung · leicht · stark · Zahlen
+COLS = [6.5, 5, 7.5, 6, 5, 7.5, 6.5, 6.5, 7, 9, 7.5, 12.5, 13.5]    # Breiten der Zahlenspalten in % (Summe 100)
+STAGE_CSS = dict(zip(RECOMMENDATIONS, ("zw", "ng", "ok", "lt", "nr", "uk")))
 
 INFO = {
-    "faelle": "Anzahl Spiele, in denen dieser KPI eine Anomalie in dieser Richtung gezeigt hat (je nach Stufe leicht "
-              "und stark zusammen). Gezählt werden nur Spiele mit bekanntem Ergebnis, ohne Aufsteiger und ohne "
-              "„vorläufige“ Werte. Je mehr Fälle, desto verlässlicher sind die Quoten. Unter 100 Fällen ist die "
-              "Zeile grau.",
-    "treffer": "Anteil dieser Fälle, in denen das erwartete Ereignis im Spiel tatsächlich eingetreten ist. Beispiel "
-               "KPI 02 positiv: Im Spiel fielen mehr Tore als der Liga-Durchschnitt, der vor dem Spiel galt. Diese "
-               "Zahl allein sagt wenig, weil manche Ereignisse von Natur aus selten oder häufig sind. Darum steht "
-               "daneben die Quote ohne Anomalie.",
-    "ohne": "Wie oft dasselbe Ereignis in Spielen eintrat, in denen der KPI keine Anomalie zeigte (mit deinen "
-            "Schwellen). Das ist der Normalfall, mit dem wir vergleichen. Liegt die Trefferquote nur knapp darüber, "
-            "weiss die Anomalie kaum mehr als der Zufall.",
-    "mehrwert": "Trefferquote minus Quote ohne Anomalie, in Prozentpunkten. +8 heisst: Bei einer Anomalie trat das "
-                "Ereignis in 8 von 100 Spielen häufiger ein als sonst. Je höher, desto aussagekräftiger ist der KPI; "
-                "Werte nahe 0 oder darunter bedeuten, dass die Anomalie nicht hilft. Die Zahl nach ± ist die "
-                "zufällige Schwankung: Mit anderen Saisons könnte der Wert um so viel höher oder tiefer liegen.",
-    "positiv": "Positive Anomalie: Der KPI erwartet mehr als üblich, zum Beispiel mehr Tore, Karten oder Ecken als im "
-               "Liga-Durchschnitt. Sie gilt als eingetroffen, wenn der tatsächliche Wert im Spiel über der "
-               "Ligareferenz lag, die vor dem Spiel galt. Bei KPI 03 zählen mindestens 3 Tore, bei KPI 08 „beide "
-               "Teams treffen“. Fehlt der Wert im Spiel, zählt das Spiel nicht.",
-    "negativ": "Negative Anomalie: Der KPI erwartet weniger als üblich, zum Beispiel weniger Tore, Karten oder Ecken "
-               "als im Liga-Durchschnitt. Sie gilt als eingetroffen, wenn der tatsächliche Wert im Spiel unter der "
-               "Ligareferenz lag, die vor dem Spiel galt. Bei KPI 03 zählen höchstens 2 Tore, bei KPI 08 „nicht "
-               "beide Teams treffen“. Fehlt der Wert im Spiel, zählt das Spiel nicht.",
-    "urteil": "Vergleicht den Mehrwert mit deinen Schwellen (nachher) mit dem Mehrwert der gültigen Schwellen "
-              "(vorher). „Besser“ oder „schlechter“ erscheint nur, wenn der Unterschied grösser ist als die zufällige "
-              "Schwankung. Sonst steht „kein klarer Unterschied“ – die Veränderung kann dann auch Zufall sein. Hat "
-              "vorher oder nachher weniger als 100 Fälle, steht „zu wenige Fälle“.",
-    "stufe": "Bestimmt, welche Anomalien in der Tabelle Ergebnisqualität zählen: leichte und starke zusammen, nur "
-             "leichte oder nur starke. Starke Anomalien sind seltener, treffen aber oft häufiger ein. Mit „nur stark“ "
-             "siehst du, ob sich die starke Stufe lohnt. Die Tabelle Häufigkeit zeigt immer beide Stufen getrennt.",
-    "saisons": "Welche Saisons in die Tabellen einfliessen. „Alle Saisons“ sind alle abgeschlossenen Saisons, "
-               "„Letzte 2, 3 …“ zählen ebenfalls nur abgeschlossene. Die aktuelle Saison ist noch nicht fertig und "
-               "darum vorläufig. Die älteste Saison der Datenbank (Referenzsaison) fehlt immer: Sie liefert nur die "
-               "Vorsaison für die Saison danach.",
-    "schwellen": "Ab welcher Abweichung vom Liga-Durchschnitt (in %) eine Anomalie als leicht bzw. stark gilt. Die "
-                 "zwei Felder oben gelten für alle KPIs; je KPI kannst du darunter einen eigenen Wert eintragen "
-                 "(leer = Wert für alle). „Vorher“ sind die gültigen Schwellen aus schwellen.toml.",
+    "schnitt": "Anzahl Anomalien geteilt durch die Anzahl abgeschlossener Spieltage der Auswahl. Total = positiv + negativ.",
+    "abdeckung": "Anteil der Spieltage, an denen die Schwelle mindestens einmal erreicht wird. 85,30 % heisst: an 85 von "
+                 "100 Spieltagen gab es bei diesem KPI mindestens eine solche Anomalie. Total = positiv oder negativ.",
+    "spiele": "Spiele, bei denen der KPI vor dem Spiel über der leichten Schwelle lag (die starken eingeschlossen) und "
+              "deren Ergebnis bekannt ist. Vorläufige Werte (z. B. Aufsteiger) zählen nicht. Total = positiv + negativ.",
+    "eingetroffen": "Davon die Spiele, in denen das Erwartete tatsächlich eintrat: positiv = mehr als der "
+                    "Liga-Durchschnitt vor dem Spiel, negativ = weniger. Total = positiv + negativ.",
+    "treffer": "Wie oft lag die Anomalie richtig? Eingetroffen geteilt durch Spiele mit Anomalie.",
+    "grund": "Wie oft trat dasselbe in allen Spielen der Auswahl ein, mit und ohne Anomalie? Das ist der Normalfall, "
+             "mit dem verglichen wird.",
+    "mehrwert": "Trefferquote minus Grundquote, in Prozentpunkten. +8 heisst: Mit Anomalie trat das Erwartete in 8 von "
+                "100 Spielen häufiger ein als im Normalfall.",
+    "spanne": "Zeigt, wie stark der Mehrwert zufällig schwanken kann: Mit 95 % Sicherheit liegt der echte Mehrwert in "
+              "diesem Bereich. Je weniger Spiele, desto breiter. Liegt der linke Wert über 0, ist der Vorteil gesichert.",
+    "empfehlung": "Zu wenige Daten: unter 50 Spielen · Negativ: ganze Spanne unter 0 · Funktioniert: Mehrwert ≥ +5 Pp. "
+                  "und linker Wert > 0 · Funktioniert leicht: Mehrwert ≥ +2 Pp. und linker Wert ≥ −5 · Keine relevante "
+                  "Verbesserung: rechter Wert < +5 Pp. · Noch unklar: alles übrige. Beruht auf den gewählten Saisons.",
+    "saisons": "„Alle Saisons“ sind alle abgeschlossenen Saisons; „Letzte 2, 3 …“ zählen nur abgeschlossene. Die "
+               "älteste Saison der Datenbank (Referenzsaison) liefert nur die Vorsaison und fehlt immer.",
 }
-CAP_FREQ = ("Wie viele Anomalien entstehen mit deinen Schwellen? Hier siehst du, wie Spiele zwischen keine, leicht "
-            "und stark wandern, wenn du eine Schwelle veränderst.")
-CAP_QUAL = ("Treffen die Anomalien im Spiel tatsächlich ein? Entscheidend ist der Mehrwert gegenüber Spielen ohne "
-            "Anomalie, nicht die Trefferquote allein.")
 
 CSS = """<style>
-[data-testid="stColumn"]:has(.st-key-sim_settings) {position:sticky; top:4.2rem; align-self:flex-start;}
-.st-key-sim_settings {border:1px solid #c3ccd8; border-radius:.5rem; padding:.6rem .7rem; background:#e3e8ef;}
-.si-sim-banner {background:#fff3cd; border:1px solid #f2c230; border-radius:.5rem; padding:.6rem .9rem;
-  margin:.2rem 0 1rem; color:#14213d;}
-.si-sim h4 {margin:.6rem 0 .1rem; font-size:1.1rem; color:#14213d;}
-.si-sim .cap {color:#5b6b84; font-size:.88rem; margin:0 0 .5rem;}
-.si-sim .meta {color:#5b6b84; font-size:.8rem; margin:0 0 .4rem;}
-.si-sim table {border-collapse:collapse; width:100%; font-size:.85rem; color:#14213d; font-variant-numeric:tabular-nums;}
-.si-sim th {background:#eef2f7; font-weight:700; padding:.32rem .45rem; border:1px solid #d8e0eb; font-size:.76rem;
-  text-align:center;}
-.si-sim td {padding:.3rem .45rem; border:1px solid #e3e9f1; text-align:right; white-space:nowrap;}
-.si-sim td.k {text-align:left; white-space:normal; width:8.5rem; line-height:1.2;}
-.si-sim td.k small {display:block; font-size:.74rem;}
-.si-sim td.c {text-align:center;} .si-sim td.c small {display:block; font-size:.72rem;}
-.si-sim td.u {text-align:center; white-space:normal; width:6.6rem;}
-.si-sim tr.sep td {border-top:2px solid #d8e0eb;}
-.si-sim tr.grey td {color:#9aa6b8; background:#f7f8fa;}
-.si-sim small {color:#5b6b84;} .si-sim .own {color:#1d5fb4; font-weight:700;}
-.si-sim .up {color:#1f7a45; font-weight:700;} .si-sim .dn {color:#b42318; font-weight:700;}
-.si-sim .i {position:relative; color:#4a90e2; cursor:help; margin-left:.15rem; font-weight:400;}
-.si-sim .i .tip {display:none; position:absolute; z-index:50; top:1.25rem; left:50%; transform:translateX(-50%);
-  width:19rem; background:#fff; border:1px solid #c3ccd8; border-radius:.45rem; padding:.55rem .65rem;
-  box-shadow:0 6px 18px rgba(20,33,61,.18); color:#14213d; font-weight:400; font-size:.8rem; line-height:1.4;
-  text-align:left; white-space:normal;}
-.si-sim .i.r .tip {left:auto; right:-.4rem; transform:none;}
-.si-sim .i:hover .tip {display:block;}
-.si-sim .j {display:inline-block; line-height:1.2; padding:.08rem .4rem; border-radius:.3rem; background:#eef2f7;
-  font-size:.78rem;}
-.si-sim .j.good {background:#dcf3e5; color:#1f7a45; font-weight:700;}
-.si-sim .j.bad {background:#fde8e8; color:#9b1c1c; font-weight:700;}
-.si-sim .j.grey {background:#f1f3f6; color:#8a96a8;}
+[data-testid="stColumn"]:has(.st-key-sens_settings) {position:sticky; top:4.2rem; align-self:flex-start;}
+.st-key-sens_settings {border:1px solid #c3ccd8; border-radius:.5rem; padding:.6rem .7rem; background:#e3e8ef;}
+.si-sim-banner {background:#fff3cd; border:1px solid #f2c230; border-radius:.5rem; padding:.6rem .9rem; margin:.2rem 0 .8rem;
+  color:#14213d;}
+.si-warn {background:#fdf1e6; border:1px solid #f0a35a; border-radius:.5rem; padding:.45rem .8rem; margin:.2rem 0 .5rem;
+  font-size:.85rem; color:#14213d;}
+.si-meta {color:#5b6b84; font-size:.8rem; margin:0 0 .3rem;}
+.si-note {color:#5b6b84; font-size:.8rem; margin:.3rem 0 0;}
+[class*="st-key-sens_card_"] [data-testid="stVerticalBlock"] {gap:.2rem;}
+[class*="st-key-sens_card_"] [data-testid="stHorizontalBlock"] {gap:.35rem; align-items:center;}
+[class*="st-key-sens_card_"] input {padding:.15rem .35rem; font-size:.85rem; font-variant-numeric:tabular-nums;}
+[class*="st-key-sens_card_"] [data-testid="stNumberInputContainer"] {height:1.9rem;}
+[class*="st-key-sens_card_"] [data-testid="stMarkdownContainer"] p {margin:0;}
+[class*="st-key-sens_card_"] .stMarkdown {margin-bottom:0;}
+.si-kh {display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; font-size:1rem; color:#14213d;}
+.si-kh .r {margin-left:auto; font-size:.82rem; color:#5b6b84;}
+.si-lab {font-size:.82rem; color:#14213d; white-space:nowrap;} .si-lab.h {font-weight:700; text-align:center; font-size:.76rem;}
+table.si-t {border-collapse:collapse; width:100%; table-layout:fixed; font-size:.82rem; color:#14213d;
+  font-variant-numeric:tabular-nums;}
+.si-t th {background:#eef2f7; border:1px solid #d8e0eb; padding:.2rem .25rem; font-size:.72rem; font-weight:700;
+  text-align:center; line-height:1.15;}
+.si-t th.g {background:#dfe6ef; font-size:.76rem;}
+.si-t td {border:1px solid #e3e9f1; padding:.25rem .3rem; text-align:right; white-space:nowrap; overflow:hidden;
+  text-overflow:ellipsis;}
+.si-t td.c {text-align:center; white-space:normal;} .si-t td.s {color:#5b6b84; font-size:.76rem;}
+.si-t td.q {border-left:2px solid #c3ccd8;}
+.si-t th.q {border-left:2px solid #c3ccd8;}
+.si-t tr.tot td {background:#f4f6f9; font-weight:700;} .si-t tr.grey td {color:#9aa6b8; background:#f7f8fa;}
+.si-p {display:inline-block; border-radius:.25rem; padding:.02rem .35rem; font-size:.74rem; white-space:nowrap;}
+.si-p.ok {background:#dcf3e5; color:#1f7a45; font-weight:700;} .si-p.lt {background:#fff1c2; color:#7a5a00;}
+.si-p.nr {background:#eef0f3; color:#5b6b84;} .si-p.uk {background:#e3edfb; color:#1d5fb4;}
+.si-p.ng {background:#fde8e8; color:#9b1c1c; font-weight:700;} .si-p.zw {background:#f1f3f6; color:#8a96a8;}
+.si-i {position:relative; color:#4a90e2; cursor:help; font-weight:400;}
+.si-i .tip {display:none; position:absolute; z-index:60; top:1.2rem; left:50%; transform:translateX(-50%); width:17rem;
+  background:#fff; border:1px solid #c3ccd8; border-radius:.45rem; padding:.5rem .6rem; box-shadow:0 6px 18px rgba(20,33,61,.18);
+  color:#14213d; font-weight:400; font-size:.78rem; line-height:1.35; text-align:left; white-space:normal;}
+.si-i.r .tip {left:auto; right:-.3rem; transform:none;} .si-i:hover .tip {display:block;}
 </style>"""
 
 
 def info(key: str, right: bool = False) -> str:
-    """ⓘ mit Erklärung, die beim Darüberfahren erscheint.
-    Eigenes Fenster statt Browser-Tooltip, weil dieser in Streamlit nicht erscheint (Nachtrag 09.11.2026).
-    right=True: Fenster öffnet nach links (für Spalten am rechten Rand)."""
-    return f'<span class="i{" r" if right else ""}">ⓘ<span class="tip">{escape(INFO[key])}</span></span>'
+    """ⓘ mit eigenem Fenster beim Darüberfahren (Browser-Tooltips erscheinen in Streamlit nicht)."""
+    return f'<span class="si-i{" r" if right else ""}">ⓘ<span class="tip">{escape(INFO[key])}</span></span>'
 
 
-def threshold_text(t: Thresholds) -> str:
-    def num(d: Decimal) -> str:
-        return format(d.normalize(), "f").replace(".", ",")
-    return f"±{num(t.leicht)} / ±{num(t.stark)}"
+def pill(stage: str) -> str:
+    return f'<span class="si-p {STAGE_CSS[stage]}">{escape(stage)}</span>'
 
 
-# --- Einstellungen (links) -----------------------------------------------------------------------
-
-def _reset() -> None:
-    for key in list(st.session_state):
-        if key.startswith("sim_th_"):
-            del st.session_state[key]
+def num(n: int) -> str:
+    return f"{n:,}".replace(",", "'")
 
 
-def settings_panel(cases, standard: Thresholds) -> dict:
-    """Linke Spalte. Gibt die Auswahl zurück; ungültige Schwellen ergeben einen Eintrag in 'errors'."""
-    with st.container(key="sim_settings"):
+def colgroup() -> str:
+    return "<colgroup>" + "".join(f'<col style="width:{w}%">' for w in COLS) + "</colgroup>"
+
+
+# --- Einstellungen (links) -----------------------------------------------------------------------------------
+
+def settings_panel(cases) -> dict:
+    with st.container(key="sens_settings"):
         st.markdown("**Einstellungen**")
-        leagues = [lg.name for lg in get_active_leagues()]
-        league = st.selectbox("Liga", [ALL, *leagues], key="sim_liga")
-        choices = season_choices(cases)          # ohne Referenzsaison, Voreinstellung „Alle Saisons“ (Version 0.11)
+        league = st.selectbox("Liga", [ALL, *[lg.name for lg in get_active_leagues()]], key="sens_liga")
+        choices = season_choices(cases)
         labels = list(choices)
         default = default_choice(choices)
-        season_label = st.selectbox("Saisons", labels, index=labels.index(default) if default else 0,
-                                    key="sim_saisons", help=INFO["saisons"])
-
-        st.markdown("**Schwellen für alle KPIs**", help=INFO["schwellen"])
-        a, b = st.columns(2)
-        g_light = a.number_input("leicht ± %", min_value=0.0, value=float(standard.leicht), step=1.0, format="%.2f",
-                                 key="sim_th_all_l")
-        g_strong = b.number_input("stark ± %", min_value=0.0, value=float(standard.stark), step=1.0, format="%.2f",
-                                  key="sim_th_all_s")
-        stage = st.selectbox("Stufe (Ergebnisqualität)", list(STAGES), key="sim_stufe", help=INFO["stufe"])
-        st.markdown("**Je KPI** (leer = Wert für alle)")
-        after, errors = {}, []
-        for kpi, name in TOP_KPIS.items():
-            label, cl, cs = st.columns([1.1, 1, 1], vertical_alignment="center")
-            label.markdown(name.split(" – ")[0])
-            own_l = cl.number_input(f"{name} leicht", min_value=0.0, value=None, step=1.0, format="%.2f",
-                                    placeholder="alle", label_visibility="collapsed", key=f"sim_th_{kpi}_l")
-            own_s = cs.number_input(f"{name} stark", min_value=0.0, value=None, step=1.0, format="%.2f",
-                                    placeholder="alle", label_visibility="collapsed", key=f"sim_th_{kpi}_s")
-            light = quantize_threshold(own_l if own_l is not None else g_light)
-            strong = quantize_threshold(own_s if own_s is not None else g_strong)
-            if not (0 < light < strong):
-                errors.append(f"{name.split(' – ')[0]}: leicht muss grösser als 0 und kleiner als stark sein")
-            after[kpi] = Thresholds(light, strong)
-        st.button("Auf gültige Schwellen zurücksetzen", on_click=_reset, key="sim_reset")
-    seasons = list(choices.get(season_label, []))
-    return {"league": league, "seasons": seasons, "season_label": season_label,
-            "running": bool(set(seasons) & set(running_seasons(cases))),
-            "after": after, "errors": errors, "stage": STAGES[stage]}
+        label = st.selectbox("Saison", labels, index=labels.index(default) if default else 0, key="sens_saison",
+                             help=INFO["saisons"])
+    seasons = list(choices.get(label, []))
+    return {"league": league, "seasons": seasons, "running": bool(set(seasons) & set(running_seasons(cases)))}
 
 
-# --- Tabellen (rechts) -------------------------------------------------------------------------------
-
-def _before_text(cases, kpi: str, before) -> str:
-    texts = {threshold_text(before(lg, kpi)) for lg in cases["league"].unique()}
-    return texts.pop() if len(texts) == 1 else "je Liga"
+def _reset() -> None:
+    for key in [k for k in st.session_state if str(k).startswith(KEY)]:
+        del st.session_state[key]
 
 
-def _share(n: int, total: int) -> str:
-    return f'<small>({pct(n / total * 100) if total else "–"} %)</small>'
+def defaults(league: str) -> dict[str, Limits]:
+    """Gültige Schwellen aus schwellen.toml; bei „Alle Ligen“ die Werte ohne Liga-Abweichung."""
+    config = get_thresholds()
+    return {kpi: Limits.from_thresholds(config.get(None if league == ALL else league, kpi)) for kpi in TOP_KPIS}
 
 
-def kpi_cell(name: str, rowspan: int = 1) -> str:
-    """KPI-Spalte zweizeilig und schmal: „KPI 02“ fett, darunter klein der Name (Nachtrag 09.11.2026)."""
-    number, _, title = name.partition(" – ")
-    span = f" rowspan='{rowspan}'" if rowspan > 1 else ""
-    return f"<td class='k'{span}><b>{escape(number)}</b><small>{escape(title)}</small></td>"
+def _keep_order(kpi: str) -> None:
+    """Bei jeder Eingabe: stark betragsmässig nie unter leicht – sonst wird stark auf den leichten Wert gesetzt."""
+    state = st.session_state
+    for light, strong, sign in (("lp", "sp", 1), ("ln", "sn", -1)):
+        lk, sk = f"{KEY}{kpi}_{light}", f"{KEY}{kpi}_{strong}"
+        if lk in state and sk in state and sign * state[sk] < sign * state[lk]:
+            state[sk] = state[lk]
 
 
-def threshold_cell(cases, kpi: str, setting: Setting, rowspan: int = 1, show_before: bool = False) -> str:
-    """Schwellen nachher; eigene Werte blau. show_before: darunter klein die gültigen Schwellen (vorher)."""
-    changed = not all(setting.before(lg, kpi) == setting.after[kpi] for lg in cases["league"].unique())
-    own = " class='own'" if changed else ""
-    before = f"<small>vorher {_before_text(cases, kpi, setting.before)}</small>" if show_before and changed else ""
-    span = f" rowspan='{rowspan}'" if rowspan > 1 else ""
-    return f"<td class='c'{span}><span{own}>{threshold_text(setting.after[kpi])}</span>{before}</td>"
+def threshold_input(kpi: str, part: str, base: Limits) -> float:
+    """Ein Schwellenfeld: positiv 0 bis 999, negativ −999 bis 0, eine Nachkommastelle (Spezifikation R10)."""
+    key = f"{KEY}{kpi}_{part}"
+    default = float(getattr(base, {"lp": "light_pos", "ln": "light_neg", "sp": "strong_pos", "sn": "strong_neg"}[part]))
+    lo, hi = (0.0, 999.0) if PARTS[part] == POS else (-999.0, 0.0)
+    start = {} if key in st.session_state else {"value": default}       # Wert sonst aus der Sitzung
+    return st.number_input(f"{kpi} {part}", min_value=lo, max_value=hi, step=0.1, format="%.1f", key=key,
+                           label_visibility="collapsed", on_change=_keep_order, args=(kpi,), **start)
 
 
-def frequency_table(cases, setting: Setting) -> str:
-    head = ("<tr><th rowspan='2'>KPI</th><th colspan='2'>Schwellen " + info("schwellen") + "</th>"
-            "<th colspan='2'>leicht</th><th colspan='2'>stark</th><th colspan='2'>Anomalien gesamt (Anteil der Spiele)</th>"
-            "<th rowspan='2'>Veränderung</th></tr><tr>" + "<th>vorher</th><th>nachher</th>" * 4 + "</tr>")
-    body = []
-    for r in frequency_rows(cases, setting):
-        kpi, total = r["kpi"], r["games"]
-        b, a = r["total_before"], r["total_after"]
-        change = "–" if not b else ("±0,00 %" if a == b else f"{pct((a - b) / b * 100, signed=True)} %")
-        css = "up" if a > b else "dn" if a < b else ""
-        body.append(
-            f"<tr>{kpi_cell(r['name'])}<td class='c'>{_before_text(cases, kpi, setting.before)}</td>"
-            f"{threshold_cell(cases, kpi, setting)}"
-            f"<td>{r['light_before']}</td><td>{r['light_after']}</td>"
-            f"<td>{r['strong_before']}</td><td>{r['strong_after']}</td>"
-            f"<td>{b} {_share(b, total)}</td><td><b>{a}</b> {_share(a, total)}</td><td class='{css}'>{change}</td></tr>")
-    return f"<table>{head}{''.join(body)}</table>"
+# --- Karte je KPI ----------------------------------------------------------------------------------------------
+
+def head_html() -> str:
+    h = (f'<table class="si-t">{colgroup()}<tr><th colspan=3 class=g>Häufigkeit leicht</th>'
+         '<th colspan=3 class=g>Häufigkeit stark</th><th colspan=7 class="g q">Ergebnisqualität (Schwelle leicht)</th></tr><tr>'
+         f'<th>Anzahl</th><th>Ø/ST {info("schnitt")}</th><th>Abdeckung {info("abdeckung")}</th>'
+         f'<th>Anzahl</th><th>Ø/ST</th><th>Abdeckung</th>'
+         f'<th class=q>Spiele {info("spiele")}</th><th>eingetr. {info("eingetroffen")}</th>'
+         f'<th>Treffer {info("treffer")}</th><th>Grundquote {info("grund")}</th>'
+         f'<th>Mehrwert Pp. {info("mehrwert", True)}</th><th>Spanne 95 % {info("spanne", True)}</th>'
+         f'<th>Empfehlung {info("empfehlung", True)}</th></tr></table>')
+    return h
 
 
-JUDGE_CSS = {BETTER: "good", WORSE: "bad", TOO_FEW: "grey", SAME: ""}
+def _freq(c: Count) -> str:
+    per = pct(c.per_matchday) if c.per_matchday is not None else "–"
+    cov = f"{pct(c.coverage)} %" if c.coverage is not None else "–"
+    return f"<td>{num(c.count)}</td><td>{per}</td><td>{cov}</td>"
 
 
-def quality_table(cases, setting: Setting, stage: str) -> str:
-    head = ("<tr><th rowspan='2'>KPI</th><th rowspan='2'>Schwellen " + info("schwellen") + "<br><small>leicht / stark"
-            "</small></th><th rowspan='2'>Richtung</th><th colspan='2'>Fälle " + info("faelle") + "</th>"
-            "<th colspan='2'>eingetroffen " + info("treffer") + "</th><th rowspan='2'>ohne Anomalie "
-            + info("ohne") + "</th><th colspan='2'>Mehrwert " + info("mehrwert", right=True) + "</th>"
-            "<th rowspan='2'>Urteil " + info("urteil", right=True) + "</th></tr><tr>"
-            + "<th>vorher</th><th>nachher</th>" * 3 + "</tr>")
-    body = []
-    for i, r in enumerate(quality_rows(cases, setting, stage)):
-        b, a = r["before"], r["after"]
-        first = i % 2 == 0
-        classes = " ".join(c for c in ("sep" if first else "", "grey" if a.cases < MIN_CASES else "") if c)
-        lead = (kpi_cell(r["name"], 2) + threshold_cell(cases, r["kpi"], setting, 2, show_before=True)) if first else ""
-        margin = f" <small>±{pct(a.margin)}</small>" if a.margin is not None else ""
-        judge = f"<span class='j {JUDGE_CSS.get(r['judge'], '')}'>{r['judge']}</span>"
-        hit_b = f"{pct(b.hit)} %" if b.hit is not None else "–"
-        hit_a = f"{pct(a.hit)} %" if a.hit is not None else "–"
-        ctrl = f"{pct(a.control)} %" if a.control is not None else "–"
-        body.append(
-            f"<tr class='{classes}'>{lead}<td>{r['direction']} {info(r['direction'])}</td><td>{b.cases}</td>"
-            f"<td><b>{a.cases}</b></td><td>{hit_b}</td><td>{hit_a}</td><td>{ctrl}</td>"
-            f"<td>{pct(b.gain, signed=True)}</td><td><b>{pct(a.gain, signed=True)}</b>{margin}</td>"
-            f"<td class='u'>{judge}</td></tr>")
-    return f"<table>{head}{''.join(body)}</table>"
+def _quality(q: Quality) -> str:
+    if q.hit is None:
+        rest = "<td class=c>–</td>" * 4
+    else:
+        rest = (f"<td>{pct(q.hit)} %</td><td>{pct(q.base)} %</td><td><b>{pct(q.gain, True)}</b></td>"
+                f"<td class=s>{pct(q.low, True)} bis {pct(q.high, True)}</td>")
+    return f"<td class=q>{num(q.cases)}</td><td>{num(q.hits)}</td>{rest}<td class=c>{pill(q.recommendation)}</td>"
+
+
+def row_html(r: KpiSensitivity, direction: str) -> str:
+    if direction == TOTAL:
+        cells = (_freq(r.light[TOTAL]) + _freq(r.strong[TOTAL]) + f"<td class=q>{num(r.total_cases)}</td>"
+                 f"<td>{num(r.total_hits)}</td>" + "<td class=c>–</td>" * 5)
+        css = "tot"
+    else:
+        q = r.quality[direction]
+        cells = _freq(r.light[direction]) + _freq(r.strong[direction]) + _quality(q)
+        css = "grey" if q.recommendation == TOO_FEW else ""
+    return f'<table class="si-t">{colgroup()}<tr class="{css}">{cells}</tr></table>'
+
+
+def kpi_card(kpi: str, base: Limits, result_for) -> Limits:
+    """Zeichnet die Karte; gibt die eingestellten Schwellen zurück. result_for(limits) rechnet den KPI aus."""
+    number, _, title = TOP_KPIS[kpi].partition(" – ")
+    with st.container(border=True, key=f"sens_card_{kpi}"):
+        head = st.empty()
+        c = st.columns(RATIO, vertical_alignment="bottom")
+        c[1].markdown('<div class="si-lab h">Schwelle<br>leicht</div>', unsafe_allow_html=True)
+        c[2].markdown('<div class="si-lab h">Schwelle<br>stark</div>', unsafe_allow_html=True)
+        c[3].markdown(head_html(), unsafe_allow_html=True)
+        values, rows = {}, []
+        for direction, (lp, sp) in ((POS, ("lp", "sp")), (NEG, ("ln", "sn"))):
+            c = st.columns(RATIO, vertical_alignment="center")
+            c[0].markdown(f'<div class="si-lab">{"↗ Positiv" if direction == POS else "↘ Negativ"}</div>',
+                          unsafe_allow_html=True)
+            with c[1]:
+                values[lp] = threshold_input(kpi, lp, base)
+            with c[2]:
+                values[sp] = threshold_input(kpi, sp, base)
+            rows.append(c[3])
+        total = st.columns(RATIO, vertical_alignment="center")
+        total[0].markdown('<div class="si-lab"><b>Total</b></div>', unsafe_allow_html=True)
+        total[1].markdown('<div class="si-lab h">–</div>', unsafe_allow_html=True)
+        total[2].markdown('<div class="si-lab h">–</div>', unsafe_allow_html=True)
+        limits = Limits(limit(values["lp"]), limit(values["ln"]), limit(values["sp"]), limit(values["sn"]))
+        r = result_for(limits)
+        rows[0].markdown(row_html(r, POS), unsafe_allow_html=True)
+        rows[1].markdown(row_html(r, NEG), unsafe_allow_html=True)
+        total[3].markdown(row_html(r, TOTAL), unsafe_allow_html=True)
+        head.markdown(f'<div class="si-kh"><b>{escape(number)}</b> {escape(title)}<span class="r">positiv '
+                      f'{pill(r.quality[POS].recommendation)} · negativ {pill(r.quality[NEG].recommendation)}</span></div>',
+                      unsafe_allow_html=True)
+    return limits
+
+
+def own_values_css(chosen: dict[str, Limits], base: dict[str, Limits]) -> str:
+    """Eigene Werte blau (abweichend von schwellen.toml)."""
+    names = {"lp": "light_pos", "ln": "light_neg", "sp": "strong_pos", "sn": "strong_neg"}
+    keys = [f".st-key-{KEY}{kpi}_{part} input" for kpi, lim in chosen.items() for part, attr in names.items()
+            if getattr(lim, attr) != getattr(base[kpi], attr)]
+    return f"<style>{', '.join(keys)} {{color:#1d5fb4; font-weight:700;}}</style>" if keys else ""
 
 
 def definitions() -> None:
@@ -248,58 +243,61 @@ def definitions() -> None:
                     "Richtung als eingetroffen.")
         st.markdown("\n".join(f"- **{TOP_KPIS[k]}:** {t}" for k, t in EVENT_TEXTS.items()))
         st.markdown("**Grundlage:** jedes Spiel so berechnet, als wäre es noch nicht gespielt (Stichtag = Spieldatum, "
-                    "Spieltag = Gameday). Nicht verwendet: die Referenzsaison (älteste Saison der Datenbank, liefert nur "
-                    "die Vorsaison), vorläufige Werte (z. B. Aufsteiger) und nicht berechenbare Werte.")
+                    "Spieltag = Gameday); nur abgeschlossene Spieltage. Nicht verwendet: die Referenzsaison (älteste "
+                    "Saison der Datenbank), vorläufige Werte (z. B. Aufsteiger) und nicht berechenbare Werte.")
         st.markdown("**Änderungen an den Definitionen**\n\n" + "\n".join(f"- {d}: {t}" for d, t in DEFINITION_CHANGES))
 
 
-# --- Seite --------------------------------------------------------------------------------------------
+# --- Seite ---------------------------------------------------------------------------------------------------------
 
 def render() -> None:
     st.markdown(CSS, unsafe_allow_html=True)
-    ui.header()
-    st.markdown("### Simulation – Spielwiese <small>(intern)</small>", unsafe_allow_html=True)
-    st.caption("Wie gut funktionieren die Anomalien und ihre Schwellen? Berechnet mit allen historischen Spielen, "
-               "jeweils so, als wären sie noch nicht gespielt.")
-    st.markdown("<div class='si-sim-banner'><b>Spielwiese – nur zum Ausprobieren.</b> Hier veränderte Schwellen wirken "
-                "nicht auf das Dashboard. Gültig bleiben die Werte in <code>schwellen.toml</code>; eine Übernahme "
-                "erfolgt bewusst über die Datei.</div>", unsafe_allow_html=True)
-
+    ui.header(subtitle="Sensitivitätsanalyse")
+    st.markdown("<div class='si-sim-banner'>Die hier angepassten Schwellen dienen der Simulation und haben keinen Einfluss "
+                "auf die anderen Dashboard-Tabs. Es gelten weiterhin die Werte in der Datei <code>schwellen.toml</code>."
+                "</div>", unsafe_allow_html=True)
     if get_database().has_errors:
         ui.blocked_notice(True, False, PAGES.get("datenqualitaet"))
         ui.footer()
         return
     cases = get_simulation_cases()
     if cases.empty:
-        st.info("Keine Spiele für die Simulation vorhanden. Ausgewertet werden alle Saisons ausser der ältesten "
+        st.info("Keine Spiele für die Sensitivitätsanalyse vorhanden. Ausgewertet werden alle Saisons ausser der ältesten "
                 "(Referenzsaison); enthält die Datenbank nur eine Saison, gibt es nichts auszuwerten.")
         ui.footer()
         return
 
-    config = get_thresholds()
-    left, right = st.columns([0.9, 3.7], gap="medium")   # links 10 % schmaler (Nachtrag 09.11.2026)
+    left, right = st.columns([0.9, 3.7], gap="medium")
     with left:
-        sel = settings_panel(cases, config.standard)
+        sel = settings_panel(cases)
     with right:
-        if sel["errors"]:
-            st.error("Schwellen ungültig – bitte korrigieren:\n\n" + "\n".join(f"- {e}" for e in sel["errors"]))
-            ui.footer()
-            return
         chosen = cases[cases["season"].isin(sel["seasons"])]
+        matchdays = get_closed_matchdays()
+        matchdays = matchdays[matchdays["season"].isin(sel["seasons"])]
         if sel["league"] != ALL:
             chosen = chosen[chosen["league"] == sel["league"]]
-        setting = Setting(before=config.get, after=sel["after"])
+            matchdays = matchdays[matchdays["league"] == sel["league"]]
+        per_league = matchday_summary(matchdays)
         games = chosen[["league", "game"]].drop_duplicates().shape[0]
         seasons = ", ".join(season_short(s) for s in sel["seasons"])
-        note = " · aktuelle Saison: vorläufig, noch nicht abgeschlossen" if sel["running"] else ""
-        html = [
-            "<div class='si-sim'>",
-            f"<div class='meta'>Grundlage: {games:,} Spiele".replace(",", "'")
-            + f" · {escape(sel['league'])} · Saisons {seasons}{note} · ohne Aufsteiger und vorläufige Werte</div>",
-            f"<h4>Häufigkeit der Anomalien</h4><p class='cap'>{CAP_FREQ}</p>", frequency_table(chosen, setting),
-            f"<h4>Ergebnisqualität</h4><p class='cap'>{CAP_QUAL}</p>", quality_table(chosen, setting, sel["stage"]),
-            "</div>",
-        ]
-        st.markdown("".join(html), unsafe_allow_html=True)
+        st.markdown(f"<p class='si-meta'>Grundlage: {num(games)} Spiele · {escape(sel['league'])} · Saisons {seasons} · "
+                    f"{num(len(matchdays))} abgeschlossene Spieltage · ohne vorläufige Werte</p>", unsafe_allow_html=True)
+        if sel["league"] == ALL:
+            detail = ", ".join(f"{escape(lg)} {num(n)}" for lg, n in per_league.items())
+            st.markdown(f"<div class='si-warn'>⚠ Alle Ligen: Die Ligen haben unterschiedlich viele Spieltage (Bundesliga "
+                        f"34, andere 38 je Saison; in der laufenden Saison unterschiedlich weit). Gezählt wird je Liga: "
+                        f"{num(len(matchdays))} abgeschlossene Spieltage ({detail}).</div>", unsafe_allow_html=True)
+        st.button("↺ Auf gültige Schwellen zurücksetzen", on_click=_reset, key="sens_reset")
+        base = defaults(sel["league"])
+        chosen_limits = {}
+        for kpi in TOP_KPIS:
+            chosen_limits[kpi] = kpi_card(kpi, base[kpi],
+                                          lambda lim, k=kpi: evaluate(chosen, matchdays, {k: lim})[0])
+        st.markdown(own_values_css(chosen_limits, base), unsafe_allow_html=True)
+        st.markdown("<p class='si-note'>Gezählt wird, was <b>über</b> der Schwelle liegt: Bei 15 % zählt +15,00 % nicht, "
+                    "+15,01 % schon. „Leicht“ enthält die starken Anomalien. Blau = abweichend von schwellen.toml.</p>"
+                    "<p class='si-note'>Die Empfehlung beruht auf den gewählten Saisons (historisch). Bestätigen mit "
+                    "einer einzelnen Saison, z. B. „Saison 2025/26“. Unter 50 Spielen ist die Zeile grau.</p>",
+                    unsafe_allow_html=True)
         definitions()
     ui.footer()
