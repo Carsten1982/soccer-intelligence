@@ -5,11 +5,12 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
-## 11.11.2026 – Version 0.12: Sensitivitätsanalyse (bereit zum Einspielen)
+## 11.11.2026 – Version 0.12: Sensitivitätsanalyse (eingespielt)
 
 - **Carsten** · Spezifikation „Sensitivitätsanalyse“ (Teil 0 Rahmen, Teil 1 Häufigkeit, Teil 2 Ergebnisqualität) in mehreren Runden festgelegt; Designentwurf B (eine Karte je KPI) gewählt; „Funktioniert leicht“ nur mit unterem Rand ≥ −5 Pp.; Vergleich mit der Grundquote aller Spiele statt „Spiele ohne Anomalie“ (nicht über die Gegenrichtung beeinflussbar). Vorgabe: genaue Berechnung und schlanker Code.
 - **Claude** · Rechenkern behalten (`build_cases`, unabhängig gegengerechnet; neu mit Spieltag je Fall), neu `closed_matchdays` (abgeschlossene Spieltage). Auswertung neu in `app/core/sensitivity.py` (vier Schwellen, Häufigkeit mit Ø pro Spieltag und Spieltagsabdeckung, Trefferquote, Grundquote, Mehrwert, Newcombe/Wilson-Spanne, sechs Stufen; Vergleich in ganzen Hundertsteln). Alte Auswertung (symmetrische Schwellen, Urteil vorher/nachher) und alte Seite gelöscht. Seite neu nach Entwurf B: Kopf „Sensitivitätsanalyse“, Tab-Name, nur Liga und Saison, Eingabefelder je KPI (stark wird bei der Eingabe nie unter leicht gelassen), Hinweis „Alle Ligen“, Info-Texte. Saisonnamen ohne „vorläufig“. App-Version 0.12.
 - **Claude** · Tests: `tests/test_sensitivity.py` (T1–T13: Zählung über der Schwelle, Teilmenge, Total, Spieltagsabdeckung, Eingaben, Spieltage je Liga, offenes Nachholspiel, Handrechnung, veröffentlichte Newcombe/Wilson-Beispiele, Grundquote unabhängig, Stufengrenzen, Verknüpfung, Ausgangswerte), Gegenrechnung erweitert (`sens_closed_matchdays`, `sens_summary`; vier Ligen, vier Schwellensätze inkl. ungleicher), Seitentest mit Eingaben. Vollvergleich gegen 0.11 mit der aktiven Datenbank: Ligaseiten (11.978 Spiele, 1.226 Spieltage), Top Anomalien (316), Häufigkeit Datenqualität und alle 77.318 Fälle identisch. Lokal 395 Tests bestanden, 15 übersprungen (2:53).
+- **Carsten** · Pull Request #4 zusammengeführt; eingespielt mit `einspielen.sh github` am 12.11.2026: 398 Tests bestanden, 12 übersprungen (7:18), `/` 200, `/dashboard/` 401; Git `1482bc3`. Im Browser geprüft.
 - **Claude** · Doku: KPI-Regelwerk v2.5 (Abschnitt 11), Dashboard-Briefing v5.0 (6.4), `01` Abschnitt 0.
 
 ## 10.11.2026 – Version 0.11: Neue Datenbank 2018/19–2026/27 (eingespielt)
