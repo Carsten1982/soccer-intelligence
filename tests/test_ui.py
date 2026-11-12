@@ -21,6 +21,8 @@ def test_header():
     html = header_html("Aktueller Spieltag", "Saison 2026/27 · Spieltag 1")
     assert "Soccer Intelligence" in html and "KPI-Übersicht pro Spiel" in html and "Spieltag 1" in html
     assert "si-matchday" not in header_html("", "")
+    from views.components import SUBTITLE, title_html                  # Ligaseiten-Kopf (Fehler beim Bau von 0.12)
+    assert SUBTITLE in title_html() and "Sensitivitätsanalyse" in header_html("", "", subtitle="Sensitivitätsanalyse")
     grid = header_html("Aktueller Spieltag", ["Bundesliga: Spieltag 2", "Serie A: Spieltag 1", "<x>"])
     assert grid.count('class="si-grid-item"') == 3 and "si-grid" in grid and "&lt;x&gt;" in grid
 
@@ -101,13 +103,17 @@ def _simulation():
 
 @needs_files
 def test_simulation_page():
-    """Etappe I.1: Spielwiese mit zwei Tabellen, Hinweis „wirkt nicht auf das Dashboard“."""
+    """Version 0.12: Sensitivitätsanalyse, eine Karte je KPI mit vier Schwellen; Eingaben wirken nur hier."""
     at = AppTest.from_function(_simulation, default_timeout=TIMEOUT).run()
     assert not at.exception, at.exception
     text = _texts(at)
-    assert "Simulation – Spielwiese" in text and "wirken nicht auf das Dashboard" in text
-    assert "Häufigkeit der Anomalien" in text and "Ergebnisqualität" in text and "Mehrwert" in text
-    assert len(at.number_input) == 2 + 2 * 8                       # alle KPIs + je KPI leicht/stark
+    assert "Sensitivitätsanalyse" in text and "keinen Einfluss auf die anderen Dashboard-Tabs" in text
+    assert "Häufigkeit leicht" in text and "Ergebnisqualität (Schwelle leicht)" in text and "Empfehlung" in text
+    assert len(at.number_input) == 4 * 8                           # je KPI leicht/stark, positiv/negativ
+    assert [s.label for s in at.selectbox] == ["Liga", "Saison"]
+    at.number_input(key="sth_kpi02_lp").set_value(40.0).run()      # leicht über stark -> stark wird nachgezogen
+    assert not at.exception and at.number_input(key="sth_kpi02_sp").value == 40.0
+    assert ".st-key-sth_kpi02_lp input" in _texts(at)               # eigener Wert blau
 
 
 @needs_files

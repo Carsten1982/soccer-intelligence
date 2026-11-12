@@ -1,6 +1,6 @@
 # Soccer Intelligence – KPI-Regelwerk
 
-**Spezifikation v2.4** · Stand 10.11.2026 · KPI 01–09 gültig und umgesetzt (KPI 05–09, zwei Nachkommastellen und Top-Anomalien über KPI 02–09 seit Etappe H, eingespielt 08.11.2026) · KPI 10–13 Entwurf (Abschnitt 10)
+**Spezifikation v2.5** · Stand 11.11.2026 · KPI 01–09 gültig und umgesetzt (KPI 05–09, zwei Nachkommastellen und Top-Anomalien über KPI 02–09 seit Etappe H, eingespielt 08.11.2026) · KPI 10–13 Entwurf (Abschnitt 10)
 
 > **Massgebliche Quelle seit 31.10.2026.** Änderungen werden nur noch in dieser Datei gemacht, mit Datum in der Änderungshistorie bzw. im `CHANGELOG.md`.
 > Das Word-Dokument „Definition der Dashboard-KPIs (final)“ (Arbeitsstand 30.10.2026) liegt nur noch als Archiv im Ordner `word/` und wird nicht mehr gepflegt.
@@ -14,6 +14,7 @@ Abschnitt 8 sammelt offene Punkte.
 | Datum | Änderung | Abschnitt |
 |---|---|---|
 | 27.10.2026 | Erstfassung KPIs 01–04 | alle |
+| 11.11.2026 | **v2.5** (Version 0.12, Freigabe Carsten): Sensitivitätsanalyse statt Spielwiese – vier Schwellen je KPI (leicht/stark, positiv/negativ, ungleich möglich, nur Simulation), Häufigkeit mit Ø pro Spieltag und Spieltagsabdeckung über abgeschlossene Spieltage, Ergebnisqualität gegen die Grundquote aller Spiele mit Wilson/Newcombe-Spanne und Empfehlung in sechs Stufen; Urteil vorher/nachher entfällt. Keine Änderung an KPI-Formeln, Rundung, gültigen Schwellen oder Testfällen | 11 |
 | 10.11.2026 | **v2.4** (Version 0.11, Freigabe Carsten): Referenzsaison = älteste Saison der Datenbank, liefert nur die Vorsaison und wird nie ausgewertet; Saisonwechsel durch Entfernen der ältesten Saison aus der Datei. Neue Saisonauswahl der Simulation. Keine Änderung an Formeln, Rundung, Schwellen oder Testfällen | 1.2, 11.2, 11.4, 11.5 |
 | 08.11.2026 | **v2.3** (Etappe I.1): Ergebniskontrolle und Simulation festgelegt; offener Punkt 13 erledigt | 8, 11 |
 | 08.11.2026 | **v2.2** (H.1): Ein Statistikwert mit Kommastellen (z. B. 4,5 Ecken) gilt als **fehlend** und wird nie abgeschnitten; die Datenprüfung meldet ihn als Warnung. Keine Änderung an Formeln oder Testfällen | 1 |
@@ -556,9 +557,9 @@ Freigabekriterien: Berechnung auf historischen Begegnungen aller vier Ligen · P
 
 ---
 
-## 11. Ergebniskontrolle und Simulation (Etappe I.1, Entscheidungen Carsten 08.11.2026)
+## 11. Ergebniskontrolle und Sensitivitätsanalyse (Etappe I.1; seit Version 0.12, Entscheidungen Carsten 11.11.2026)
 
-Nur im internen Bereich „Simulation – Spielwiese“. Ändert keine Live-Werte und keine gültigen Schwellen.
+Nur im internen Bereich „Sensitivitätsanalyse“ (bis Version 0.11 „Simulation – Spielwiese“). Ändert keine Live-Werte und keine gültigen Schwellen. Umsetzung: `app/core/simulation.py` (Fälle, Spieltage, Saisonauswahl) und `app/core/sensitivity.py` (Auswertung); Darstellung: Dashboard-Briefing 6.4.
 
 ### 11.1 Wann ist eine Anomalie eingetroffen?
 
@@ -574,36 +575,50 @@ Verglichen wird der **tatsächliche Wert im Spiel** mit der **Ligareferenz, die 
 | 08 | beide treffen (100 %) oder nicht (0 %) | Ligareferenz BTTS-Quote, also: positiv = beide treffen, negativ = nicht beide |
 | 09 | Schüsse aufs Tor beider Teams | Ligareferenz Schüsse aufs Tor |
 
-Fehlt der Wert im Spiel oder ist er keine ganze Zahl, zählt das Spiel für diesen KPI nicht (Abschnitt 1). Hinweis: Weil die Werte ganze Zahlen sind, ist „über der Referenz“ unterschiedlich leicht zu erreichen (bei 3,07 Toren braucht es mindestens 4). Darum wird immer mit Spielen ohne Anomalie verglichen (11.2).
+Fehlt der Wert im Spiel oder ist er keine ganze Zahl, zählt das Spiel für diesen KPI nicht (Abschnitt 1). Hinweis: Weil die Werte ganze Zahlen sind, ist „über der Referenz“ unterschiedlich leicht zu erreichen (bei 3,07 Toren braucht es mindestens 4). Darum wird immer mit der Grundquote aller Spiele verglichen (11.3).
 
-### 11.2 Kennzahlen
+### 11.2 Grundlage, Schwellen und Häufigkeit
 
-- **Grundlage:** alle Spiele der gewählten Saisons, je so berechnet, als wären sie noch nicht gespielt (Stichtag = Spieldatum, Spieltag = `Gameday`). Nicht verwendet: die Referenzsaison (älteste Saison der Datenbank, Abschnitt 1.2; bis Version 0.10.1 fest 2020/21), vorläufige Werte (z. B. Aufsteiger) und nicht berechenbare Werte.
-- **Fälle:** Spiele mit Anomalie in dieser Richtung und bekanntem Ergebnis. Positiv und negativ werden getrennt ausgewertet; leicht und stark wahlweise gemeinsam oder getrennt.
-- **Trefferquote:** Anteil der Fälle, in denen die Anomalie eingetroffen ist (aus den aufsummierten Fällen, nicht als Durchschnitt von Saisonquoten).
-- **Ohne Anomalie:** dasselbe Ereignis in den Spielen ohne Anomalie (mit den eingestellten Schwellen).
-- **Mehrwert** (Hauptkennzahl): Trefferquote minus Quote ohne Anomalie, in Prozentpunkten.
-- **Schwankung:** ±1,96 · √(p · (100 − p) / n) Prozentpunkte (95 %).
-- Alle Zahlen mit zwei Nachkommastellen, kaufmännisch gerundet.
+- **Fälle:** alle Spiele der gewählten Saisons (und Liga), je so berechnet, als wären sie noch nicht gespielt (Stichtag = Spieldatum, Spieltag = `Gameday`). Nicht verwendet: die Referenzsaison (Abschnitt 1.2), vorläufige Werte (z. B. Aufsteiger, fehlende Statistikwerte) und nicht berechenbare Werte.
+- **Abgeschlossene Spieltage:** Spieltag = Liga + Saison + `Gameday`, je Liga gezählt. Abgeschlossen = alle Spiele gespielt; ein Spieltag mit offenem Nachholspiel zählt, sobald ein späterer Spieltag derselben Saison vollständig ist; ein halb gespielter letzter Spieltag zählt nicht. Nur Spiele abgeschlossener Spieltage fliessen ein. Bei „Alle Ligen“ erscheint immer ein Hinweis mit den Spieltagen je Liga (Bundesliga 34, andere 38 je Saison; laufende Saison unterschiedlich weit).
+- **Schwellen:** je KPI vier Werte – leicht positiv, leicht negativ, stark positiv, stark negativ (ungleich möglich). Positiv 0 oder grösser, negativ 0 oder kleiner, höchstens eine Nachkommastelle (mehr wird kaufmännisch gerundet), stark betragsmässig nie kleiner als leicht (gleich erlaubt; wird bei der Eingabe angepasst). Ausgangswerte: gültige Schwellen aus `schwellen.toml` (bei „Alle Ligen“ ohne Liga-Abweichungen); eigene Werte blau. Die Werte bleiben beim Wechsel von Liga oder Saison stehen. Gültig im Dashboard werden ungleiche Schwellen erst mit einer eigenen Programmieranweisung.
+- **Anomalie:** gerundete Abweichung **über** der Schwelle (positiv: > Schwelle, negativ: < Schwelle); genau auf der Schwelle zählt nicht. **Leicht zählt die starken mit** (alles über der leichten Schwelle); stark = alles über der starken Schwelle.
+- **Anzahl gesamt:** Spiele mit Anomalie je Richtung; Total = positiv + negativ.
+- **Ø pro Spieltag:** Anzahl ÷ Anzahl abgeschlossener Spieltage der Auswahl; Total = positiv + negativ.
+- **Spieltagsabdeckung:** Spieltage mit mindestens einer solchen Anomalie ÷ alle abgeschlossenen Spieltage × 100; Total = Spieltage mit mindestens einer positiven **oder** negativen.
 
-### 11.3 Urteil
+### 11.3 Ergebnisqualität und Empfehlung
 
-Verglichen wird der Mehrwert nachher (eingestellte Schwellen) mit vorher (gültige Schwellen aus `schwellen.toml`):
+Schwelle = **leichte Schwelle** (zählt die starken mit); die starke Schwelle wirkt hier nicht.
 
-- **unverändert:** gleiche Schwellen;
-- **zu wenige Fälle:** vorher oder nachher weniger als 100 Fälle (Zeile grau, wenn nachher unter 100);
-- **besser / schlechter:** der Mehrwert verändert sich um mehr als die Schwankung nachher;
-- sonst **kein klarer Unterschied**.
+- **Spiele mit Anomalie:** wie 11.2, mit bekanntem Ergebnis (11.1); Total = Summe.
+- **davon eingetroffen:** Ereignis nach 11.1 eingetreten; Total = Summe.
+- **Trefferquote:** eingetroffen ÷ Spiele mit Anomalie (aus den aufsummierten Fällen).
+- **Grundquote (alle Spiele):** Anteil **aller** Spiele der Auswahl (mit und ohne Anomalie, ohne vorläufige), in denen dasselbe Ereignis eintrat. Unabhängig von allen Schwellen und darum nicht über die Gegenrichtung beeinflussbar (Entscheidung 11.11.2026; bis Version 0.11: „Spiele ohne Anomalie“).
+- **Mehrwert:** Trefferquote − Grundquote, in Prozentpunkten (Pp.).
+- **Spanne (Wilson 95 %):** 95-%-Intervall des Mehrwerts nach Newcombe (Methode 10, aus zwei Wilson-Intervallen). Geprüft an den veröffentlichten Beispielen (56/70 gegen 48/80: +5,24 bis +33,39 Pp.).
+- **Empfehlung:** die erste zutreffende Regel gilt; massgeblich sind die auf zwei Stellen gerundeten Werte.
+
+| Reihenfolge | Empfehlung | Regel |
+|---|---|---|
+| 1 | Zu wenige Daten (Zeile grau) | unter 50 Spielen mit Anomalie |
+| 2 | Negativ | oberer Rand der Spanne < 0 |
+| 3 | Funktioniert | Mehrwert ≥ +5,00 Pp. und unterer Rand > 0 |
+| 4 | Funktioniert leicht | Mehrwert ≥ +2,00 Pp. und unterer Rand ≥ −5,00 Pp. |
+| 5 | Keine relevante Verbesserung | oberer Rand < +5,00 Pp. |
+| 6 | Noch unklar | alles übrige |
+
+Die Empfehlung beruht auf den gewählten Saisons (historisch). Bestätigt wird eine Schwelle mit einer einzelnen, neueren Saison (z. B. „Saison 2025/26“). Alle Zahlen mit zwei Nachkommastellen, kaufmännisch gerundet.
 
 ### 11.4 Saisons
 
-Auswahl seit Version 0.11 (Entscheidung Carsten 10.11.2026), aus der Datei erzeugt, ohne Referenzsaison, die Beschriftung zeigt immer die Jahre:
+Auswahl seit Version 0.11 (Entscheidung Carsten 10.11.2026; Namen seit 0.12 ohne „vorläufig“), aus der Datei erzeugt, ohne Referenzsaison, die Beschriftung zeigt immer die Jahre:
 
 | Reihenfolge | Eintrag | Inhalt (Datenstand 10.11.2026) |
 |---|---|---|
-| 1 | Aktuelle Saison (vorläufig) | 2026/27, nur wenn eine Saison läuft |
+| 1 | Aktuelle Saison (2026/27) | 2026/27, nur wenn eine Saison läuft |
 | 2 | **Alle Saisons** (Voreinstellung) | alle abgeschlossenen: 2019/20–2025/26 |
-| 3 | Alle Saisons plus aktuelle (inkl. vorläufig) | 2019/20–2026/27, nur wenn eine Saison läuft |
+| 3 | Alle Saisons plus aktuelle (2019/20–2026/27) | nur wenn eine Saison läuft |
 | 4 | Letzte 2, 3 … n−1 Saisons | nur abgeschlossene, z. B. „Letzte 2“ = 2024/25–2025/26 |
 | 5 | jede abgeschlossene Saison einzeln | 2025/26, 2024/25 … 2019/20 (neueste zuerst) |
 
@@ -619,3 +634,4 @@ Werden Anomalien später neu definiert, wird das hier mit Datum festgehalten und
 |---|---|
 | 08.11.2026 | Erste Fassung (Etappe I.1) |
 | 10.11.2026 | Referenzsaison (1.2) statt fest 2020/21; neue Saisonauswahl (11.4); Definition „eingetroffen“ unverändert (Version 0.11) |
+| 11.11.2026 | Sensitivitätsanalyse: vier Schwellen, Ø pro Spieltag, Spieltagsabdeckung, Grundquote aller Spiele, Wilson/Newcombe-Spanne, Empfehlung in sechs Stufen; Urteil vorher/nachher entfällt (Version 0.12) |

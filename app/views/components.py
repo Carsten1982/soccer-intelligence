@@ -143,7 +143,7 @@ TITLE = "Soccer Intelligence"
 SUBTITLE = "KPI-Übersicht pro Spiel – alle Begegnungen eines Spieltags"
 
 
-def header_html(right_label: str, right_value: str | list[str]) -> str:
+def header_html(right_label: str, right_value: str | list[str], subtitle: str = SUBTITLE) -> str:
     """Kopfbereich. right_value: ein Text (Liga-Bereich) oder eine Liste (Top Anomalien: eine Zeile je Liga,
     kompakt in zwei Spalten, damit der Kopf bei vier Ligen nicht zu breit wird)."""
     right = ""
@@ -154,7 +154,7 @@ def header_html(right_label: str, right_value: str | list[str]) -> str:
     elif right_value:
         right = (f'<div class="si-matchday"><div class="si-label">{escape(right_label)}</div>'
                  f'<div class="si-box">{escape(right_value)}</div></div>')
-    return (f'<div class="si-header"><div><h1>{TITLE}</h1><div class="si-sub">{escape(SUBTITLE)}</div></div>'
+    return (f'<div class="si-header"><div><h1>{TITLE}</h1><div class="si-sub">{escape(subtitle)}</div></div>'
             f"{right}</div>")
 
 
@@ -167,8 +167,8 @@ def matchday_box_html(label: str, value: str) -> str:
             f'<div class="si-box">{escape(value)}</div></div>')
 
 
-def header(right_label: str = "", right_value: str | list[str] = "") -> None:
-    st.markdown(header_html(right_label, right_value), unsafe_allow_html=True)
+def header(right_label: str = "", right_value: str | list[str] = "", subtitle: str = SUBTITLE) -> None:
+    st.markdown(header_html(right_label, right_value, subtitle), unsafe_allow_html=True)
 
 
 def footer() -> None:

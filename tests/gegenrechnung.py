@@ -276,3 +276,68 @@ def sim_summary(events: list[dict], light: Decimal, strong: Decimal) -> dict:
                     c[direction][1] += int(happened)
         out[key] = c
     return out
+
+
+# --- Sensitivitätsanalyse (Version 0.12, Spezifikation 11.11.2026), unabhängig von app/core/sensitivity.py -------------
+
+def sens_closed_matchdays(lg: League, teams: int, seasons: set[str]) -> set[tuple[str, int]]:
+    """Abgeschlossene Spieltage (Saison, Spieltag): alle Teams/2 Spiele gespielt; ein unvollständiger Spieltag zählt,
+    wenn in derselben Saison ein späterer Spieltag vollständig ist."""
+    out = set()
+    for season in seasons:
+        sizes = {gd: len(gs) for (s, gd), gs in lg.by_key.items() if s == season}
+        complete = [gd for gd, n in sizes.items() if n == teams // 2]
+        last = max(complete) if complete else 0
+        out |= {(season, gd) for gd in sizes if gd in complete or gd < last}
+    return out
+
+
+def _wilson(k: int, n: int) -> tuple[float, float]:
+    z = 1.959963984540054
+    p = k / n
+    c = (p + z * z / (2 * n)) / (1 + z * z / n)
+    h = z / (1 + z * z / n) * (p * (1 - p) / n + z * z / (4 * n * n)) ** 0.5
+    return c - h, c + h
+
+
+def sens_summary(events: list[tuple[str, tuple, dict]], closed: set[tuple[str, tuple]], lim: dict) -> dict:
+    """events: (Liga, (Saison, Spieltag), sim_events-Ergebnis); closed: {(Liga, (Saison, Spieltag))}.
+    lim: {"lp", "ln", "sp", "sn"} als Decimal in %. Je KPI: Anzahl, Spieltage, Treffer, Grundquote, Mehrwert, Spanne."""
+    n_md = len(closed)
+    out = {}
+    for key in ("kpi02", "kpi03", "kpi04", "kpi05", "kpi06", "kpi07", "kpi08", "kpi09"):
+        r = {f"{st}_{d}": [0, set()] for st in ("leicht", "stark") for d in ("pos", "neg", "tot")}
+        q = {"pos": [0, 0], "neg": [0, 0], "alle_pos": [0, 0], "alle_neg": [0, 0]}
+        for league, md, ev in events:
+            if (league, md) not in closed:
+                continue
+            dev, provisional, more, less = ev[key]
+            if dev is None or provisional:
+                continue
+            day = (league, md)
+            for st, hi, lo in (("leicht", lim["lp"], lim["ln"]), ("stark", lim["sp"], lim["sn"])):
+                for d, hit in (("pos", dev > hi), ("neg", dev < lo), ("tot", dev > hi or dev < lo)):
+                    if hit:
+                        r[f"{st}_{d}"][0] += 1
+                        r[f"{st}_{d}"][1].add(day)
+            for d, happened, sign in (("pos", more, dev > lim["lp"]), ("neg", less, dev < lim["ln"])):
+                if happened is None:
+                    continue
+                q["alle_" + d][0] += 1
+                q["alle_" + d][1] += int(happened)
+                if sign:
+                    q[d][0] += 1
+                    q[d][1] += int(happened)
+        res = {k: (v[0], v[0] / n_md, len(v[1]) / n_md * 100) for k, v in r.items()}
+        for d in ("pos", "neg"):
+            (n, k), (n0, k0) = q[d], q["alle_" + d]
+            if n and n0:
+                p1, p2 = k / n, k0 / n0
+                (l1, u1), (l2, u2) = _wilson(k, n), _wilson(k0, n0)
+                low = p1 - p2 - ((p1 - l1) ** 2 + (u2 - p2) ** 2) ** 0.5
+                high = p1 - p2 + ((u1 - p1) ** 2 + (p2 - l2) ** 2) ** 0.5
+                res["q_" + d] = (n, k, 100 * p1, 100 * p2, 100 * (p1 - p2), 100 * low, 100 * high)
+            else:                          # keine Anomalie: nur die Grundquote (hängt nicht von den Schwellen ab)
+                res["q_" + d] = (n, k, None, 100 * k0 / n0 if n0 else None, None, None, None)
+        out[key] = res
+    return out

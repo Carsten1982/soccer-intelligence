@@ -139,3 +139,18 @@ def cases_h() -> pd.DataFrame:
 def cases_2018() -> pd.DataFrame:
     """build_cases aller vier Ligen mit der neuen Datenbank (451348b6, Referenzsaison 2018/19)."""
     return _all_cases(REFERENCE_DATABASE_2018, KNOWN_DB_SHA_2018)
+
+
+@pytest.fixture(scope="session")
+def matchdays_2018() -> pd.DataFrame:
+    """Abgeschlossene Spieltage aller vier Ligen der neuen Datenbank (Nenner der Sensitivitätsanalyse)."""
+    from core.config import League
+    from core.kpis import prepare_league
+    from core.loader import load_database
+    from core.simulation import closed_matchdays
+
+    if not REFERENCE_DATABASE_2018.exists():
+        pytest.skip("Referenz-Datenbank 451348b6 nicht vorhanden")
+    db = load_database(REFERENCE_DATABASE_2018)
+    return pd.concat([closed_matchdays(prepare_league(db.leagues[name]), League(name, "x", teams, True))
+                      for name, teams in LEAGUE_TEAMS.items()], ignore_index=True)

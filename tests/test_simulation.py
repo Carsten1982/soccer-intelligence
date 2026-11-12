@@ -1,7 +1,7 @@
-"""Simulation – Spielwiese (Etappe I.1, KPI-Regelwerk Abschnitt 11): Einstufung, Ergebniskontrolle, Urteil.
+"""Sensitivitätsanalyse, Teil Fälle (core/simulation.py): Ereignis, Fälle je Spiel, Saisonauswahl.
 
-Der wichtigste Test vergleicht die Ergebniskontrolle der App mit der unabhängigen Gegenrechnung (tests/gegenrechnung.py)
-für alle Spiele der Bundesliga 2025/26.
+Der wichtigste Test vergleicht die Fälle der App mit der unabhängigen Gegenrechnung (tests/gegenrechnung.py) für alle
+Spiele der Bundesliga 2025/26. Die Auswertung (Häufigkeit, Ergebnisqualität) prüft tests/test_sensitivity.py.
 """
 
 import math
@@ -17,29 +17,31 @@ import pytest
 from conftest import REFERENCE_DATABASE_H
 
 from core.config import League
-from core.kpis import STANDARD_THRESHOLDS, Match, Thresholds, classify, compute_match, prepare_league
+from core.kpis import Match, classify, compute_match, prepare_league
 from core.seasons import analysed_seasons
-from core.simulation import (
-    BETTER, NO_DIFF, SAME, TOO_FEW, WORSE, Quality, Setting, _event, build_cases, default_choice, frequency_rows, judge,
-    levels, pct, quality_rows, quantize_threshold, running_seasons, season_choices,
-)
+from core.sensitivity import NEG, POS, Limits, evaluate
+from core.simulation import _event, build_cases, default_choice, pct, running_seasons, season_choices
 from core.top import TOP_KPIS
 
 LEVEL = {"keine": 0, "leicht": 1, "stark": 2}
 
 
-def standard(league, kpi):
-    return STANDARD_THRESHOLDS
-
-
 # --- Einstufung wie im Dashboard ----------------------------------------------------------------
 
-def test_levels_match_classify():
+def test_counting_matches_classify():
+    """Bei symmetrischen Schwellen ±20/±35 zählt die Auswertung genau die Spiele, die das Dashboard als leichte bzw.
+    starke Anomalie einstuft (classify, Regelwerk 2.2; leicht enthält stark)."""
     rng = np.random.default_rng(1)
-    devs = np.concatenate([rng.integers(-6000, 6000, 3000), [2000, -2000, 2001, -2001, 3500, 3501, -3501, 0]])
-    got = levels(devs.astype(float), 2000.0, 3500.0)
-    expected = [LEVEL[classify(Decimal(int(d)) / 100)[0]] for d in devs]
-    assert list(got) == expected
+    devs = [int(d) for d in rng.integers(-6000, 6000, 3000)] + [2000, -2000, 2001, -2001, 3500, 3501, -3501, 0]
+    cases = pd.DataFrame({"league": "L", "season": "S", "gameday": 1, "complete": True, "game": range(len(devs)),
+                          "kpi": "kpi02", "dev": devs, "up": 0.0, "down": 0.0})
+    r = evaluate(cases, pd.DataFrame({"league": ["L"], "season": ["S"], "gameday": [1]}),
+                 {"kpi02": Limits(Decimal(20), Decimal(-20), Decimal(35), Decimal(-35))})[0]
+    stage = [LEVEL[classify(Decimal(d) / 100)[0]] for d in devs]
+    assert r.light[POS].count == sum(1 for d, s in zip(devs, stage) if s >= 1 and d > 0)
+    assert r.light[NEG].count == sum(1 for d, s in zip(devs, stage) if s >= 1 and d < 0)
+    assert r.strong[POS].count == sum(1 for d, s in zip(devs, stage) if s == 2 and d > 0)
+    assert r.strong[NEG].count == sum(1 for d, s in zip(devs, stage) if s == 2 and d < 0)
 
 
 # --- Wann ist eine Anomalie eingetroffen? -----------------------------------------------------------
@@ -138,66 +140,21 @@ def test_counter_calculation_bundesliga_2025_26(bl_cases):
     assert checked > 1500 and not diffs, diffs[:5]
 
 
-def test_frequency_with_standard_equals_before(bl_cases):
-    setting = Setting(standard, {k: STANDARD_THRESHOLDS for k in TOP_KPIS})
-    for row in frequency_rows(bl_cases, setting):
-        assert row["unchanged"] and row["total_before"] == row["total_after"]
-        assert row["light_before"] + row["strong_before"] == row["total_before"]
-
-
-def test_lower_threshold_gives_more_anomalies(bl_cases):
-    after = {k: STANDARD_THRESHOLDS for k in TOP_KPIS}
-    after["kpi05"] = Thresholds(Decimal(12), Decimal(18))
-    rows = {r["kpi"]: r for r in frequency_rows(bl_cases, Setting(standard, after))}
-    assert rows["kpi05"]["total_after"] > rows["kpi05"]["total_before"] and not rows["kpi05"]["unchanged"]
-    assert rows["kpi02"]["total_after"] == rows["kpi02"]["total_before"]
-    q = {(r["kpi"], r["direction"]): r for r in quality_rows(bl_cases, Setting(standard, after))}
-    assert q[("kpi02", "positiv")]["judge"] == SAME
-    assert q[("kpi05", "positiv")]["after"].cases > q[("kpi05", "positiv")]["before"].cases
-
-
-# --- Ergebnisqualität und Urteil -----------------------------------------------------------------------
-
-def test_quality_on_hand_made_cases():
-    """4 positive Anomalien (3 eingetroffen), 4 Spiele ohne Anomalie (1 Mal mehr als die Referenz)."""
-    cases = pd.DataFrame({"league": "L", "season": "S", "complete": True, "game": range(8), "kpi": "kpi02",
-                          "dev": [2500, 3000, 4000, 2200, 0, 500, -1000, 100],
-                          "up": [1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0], "down": [0.0] * 8})
-    after = {k: STANDARD_THRESHOLDS for k in TOP_KPIS}
-    row = quality_rows(cases, Setting(standard, after))[0]
-    assert row["kpi"] == "kpi02" and row["direction"] == "positiv"
-    a = row["after"]
-    assert (a.cases, a.hit, a.control, a.gain) == (4, 75.0, 25.0, 50.0)
-    strong = quality_rows(cases, Setting(standard, after), "stark")[0]["after"]
-    assert (strong.cases, strong.hit) == (1, 100.0)                       # nur 40 % ist stark
-
-
-@pytest.mark.parametrize("before, after, same, expected", [
-    (Quality(500, 55.0, 46.0, 4.3), Quality(500, 55.0, 46.0, 4.3), True, SAME),
-    (Quality(80, 60.0, 47.6, 10.7), Quality(558, 58.2, 47.8, 4.1), False, TOO_FEW),
-    (Quality(515, 54.6, 46.1, 4.3), Quality(255, 56.5, 46.2, 6.1), False, NO_DIFF),      # +1,8 Punkte < ±6,1
-    (Quality(515, 54.6, 46.1, 4.3), Quality(400, 66.0, 46.0, 4.6), False, BETTER),       # +11,5 Punkte > ±4,6
-    (Quality(515, 54.6, 46.1, 4.3), Quality(900, 46.5, 46.4, 3.3), False, WORSE),
-])
-def test_judge(before, after, same, expected):
-    assert judge(before, after, same) == expected
-
-
 def test_season_choices():
     """Saisonauswahl Version 0.11 (Briefing „Neue Datenbank“, Abschnitt 4): Reihenfolge, Beschriftung, Inhalt."""
     cases = pd.DataFrame({"season": [f"{y}/{y + 1}" for y in range(2019, 2027)], "complete": [True] * 7 + [False]})
     choices = season_choices(cases)
     assert list(choices) == [
-        "Aktuelle Saison (2026/27, vorläufig)", "Alle Saisons (2019/20–2025/26)",
-        "Alle Saisons plus aktuelle (2019/20–2026/27, inkl. vorläufig)",
+        "Aktuelle Saison (2026/27)", "Alle Saisons (2019/20–2025/26)",
+        "Alle Saisons plus aktuelle (2019/20–2026/27)",
         "Letzte 2 Saisons (2024/25–2025/26)", "Letzte 3 Saisons (2023/24–2025/26)", "Letzte 4 Saisons (2022/23–2025/26)",
         "Letzte 5 Saisons (2021/22–2025/26)", "Letzte 6 Saisons (2020/21–2025/26)",
         "Saison 2025/26", "Saison 2024/25", "Saison 2023/24", "Saison 2022/23", "Saison 2021/22", "Saison 2020/21",
         "Saison 2019/20"]
     assert default_choice(choices) == "Alle Saisons (2019/20–2025/26)"
-    assert choices["Aktuelle Saison (2026/27, vorläufig)"] == ["2026/2027"]
+    assert choices["Aktuelle Saison (2026/27)"] == ["2026/2027"]
     assert len(choices["Alle Saisons (2019/20–2025/26)"]) == 7
-    assert choices["Alle Saisons plus aktuelle (2019/20–2026/27, inkl. vorläufig)"][-1] == "2026/2027"
+    assert choices["Alle Saisons plus aktuelle (2019/20–2026/27)"][-1] == "2026/2027"
     assert choices["Letzte 2 Saisons (2024/25–2025/26)"] == ["2024/2025", "2025/2026"]     # ohne laufende Saison
     assert choices["Saison 2019/20"] == ["2019/2020"]
     assert running_seasons(cases) == ["2026/2027"]
@@ -206,43 +163,3 @@ def test_season_choices():
 def test_formats():
     assert pct(54.555) == "54,56" and pct(8.4, signed=True) == "+8,40" and pct(-6.1, signed=True) == "−6,10"
     assert pct(None) == "–" and pct(0.0, signed=True) == "0,00"
-    assert quantize_threshold(12.5) == Decimal("12.50") and quantize_threshold(20) == Decimal("20.00")
-
-
-# --- Unabhängige Gegenrechnung der Tabellenwerte (alle vier Ligen, Saison 2025/26, mehrere Schwellen) -------------
-
-TEAMS = {"Bundesliga": 18, "Premier League": 20, "Serie A": 20, "LaLiga": 20}
-
-
-@pytest.fixture(scope="module")
-def all_cases(cases_h):
-    return cases_h
-
-
-@pytest.fixture(scope="module")
-def counter_events():
-    out = []
-    for name, teams in TEAMS.items():
-        lg = G.League(G.read_league(REFERENCE_DATABASE_H, name), 2 * (teams - 1))
-        out += [G.sim_events(lg, g) for gs in lg.by_key.values() for g in gs if g.season == "2025/2026"]
-    return out
-
-
-@pytest.mark.parametrize("light, strong", [(20, 35), (12, 18), (15, 25), (30, 45)])
-def test_tables_match_counter_calculation(all_cases, counter_events, light, strong):
-    """Häufigkeit und Ergebnisqualität der App = unabhängig gezählte Werte der Gegenrechnung."""
-    cases = all_cases[all_cases["season"] == "2025/2026"]
-    t = Thresholds(Decimal(light), Decimal(strong))
-    setting = Setting(standard, {k: t for k in TOP_KPIS})
-    mine = G.sim_summary(counter_events, Decimal(light), Decimal(strong))
-    for row in frequency_rows(cases, setting):
-        c = mine[row["kpi"]]
-        assert (row["light_after"], row["strong_after"]) == (c["leicht"], c["stark"]), row["kpi"]
-    for row in quality_rows(cases, setting):
-        c, a = mine[row["kpi"]], row["after"]
-        n, hits = c[row["direction"]]
-        n0, hits0 = c["ohne_" + row["direction"]]
-        assert a.cases == n, (row["kpi"], row["direction"])
-        if n:
-            assert pct(a.hit) == pct(hits / n * 100) and pct(a.control) == pct(hits0 / n0 * 100)
-            assert pct(a.gain, True) == pct(hits / n * 100 - hits0 / n0 * 100, True)

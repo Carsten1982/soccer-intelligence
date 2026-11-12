@@ -148,15 +148,15 @@ def test_choices_without_running_season():
 
 def test_choices_with_one_complete_season():
     choices = season_choices(_cases({"2025/2026": True, "2026/2027": False}))
-    assert list(choices) == ["Aktuelle Saison (2026/27, vorläufig)", "Alle Saisons (2025/26)",
-                             "Alle Saisons plus aktuelle (2025/26–2026/27, inkl. vorläufig)", "Saison 2025/26"]
+    assert list(choices) == ["Aktuelle Saison (2026/27)", "Alle Saisons (2025/26)",
+                             "Alle Saisons plus aktuelle (2025/26–2026/27)", "Saison 2025/26"]
     assert default_choice(choices) == "Alle Saisons (2025/26)"
 
 
 def test_choices_with_running_season_only():
     choices = season_choices(_cases({"2026/2027": False}))
-    assert list(choices) == ["Aktuelle Saison (2026/27, vorläufig)"]
-    assert default_choice(choices) == "Aktuelle Saison (2026/27, vorläufig)"
+    assert list(choices) == ["Aktuelle Saison (2026/27)"]
+    assert default_choice(choices) == "Aktuelle Saison (2026/27)"
     assert default_choice({}) is None
 
 
@@ -198,7 +198,7 @@ def test_new_database_simulation_seasons(cases_2018):
         assert seasons == set(SEASONS_9[1:]), name                     # 2018/19 nie ausgewertet
     choices = season_choices(cases_2018)
     assert default_choice(choices) == "Alle Saisons (2019/20–2025/26)"
-    assert "Saison 2019/20" in choices and "Aktuelle Saison (2026/27, vorläufig)" in choices
+    assert "Saison 2019/20" in choices and "Aktuelle Saison (2026/27)" in choices
     assert not any("2018/19" in label for label in choices)
 
 

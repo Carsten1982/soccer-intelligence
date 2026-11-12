@@ -10,10 +10,13 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 
 **In Betrieb:** Version 0.11 – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09, Top Anomalien, Datenqualität und Simulation – Spielwiese; Datenbank 2018/19–2026/27 mit Referenzsaison 2018/19 (KPI-Regelwerk 1.2). Passwortschutz unter `/dashboard`, Platzhalterseite unter `/`.
 
-**Als Nächstes:** neue Bewertungsmethode im Simulations-Tab (Stufen, Wilson-Spanne, Toreffekt; Festlegung 10.11.2026) · Feintuning der Schwellen mit der Spielwiese · Gewichtung der Top Anomalien (Regelwerk, Punkt 17) · Datenlieferung Footiqo (Etappe G, in Klärung) · KPI 10–13 · öffentliche Website.
+**Bereit zum Einspielen:** Version 0.12 – Sensitivitätsanalyse (ersetzt die Spielwiese; KPI-Regelwerk 11, Dashboard-Briefing 6.4).
+
+**Als Nächstes:** Schwellen je KPI mit der Sensitivitätsanalyse festlegen und in `schwellen.toml` übernehmen (ungleiche Schwellen positiv/negativ, eigene Programmieranweisung), danach Häufigkeit im Bereich Datenqualität anpassen · Gewichtung der Top Anomalien (Regelwerk, Punkt 17) · Datenlieferung Footiqo (Etappe G, in Klärung) · KPI 10–13 · öffentliche Website.
 
 | Version | Etappe | Inhalt | Eingespielt | Git | Tests |
 |---|---|---|---|---|---|
+| 0.12 | Sensitivitätsanalyse | Spielwiese ersetzt: vier Schwellen je KPI, Häufigkeit mit Spieltagsabdeckung, Ergebnisqualität gegen Grundquote mit Wilson-Spanne und Empfehlung | ausstehend | – | 395 (lokal) |
 | 0.11 | Neue Datenbank | Datenbank 2018/19–2026/27, Referenzsaison, neue Saisonauswahl, Warnung „Saison fehlt“ | 10.11.2026 | `034e57a` | 376 |
 | 0.10.1 | GitHub | GitHub als einzige Quelle: einspielen.sh github, automatische Tests, robuster Rückweg | 10.11.2026 | `20275e9` | 350 |
 | 0.10.1 | Skript | Einspiel-Skript `tools/einspielen.sh`, Rückweg `tools/zurueck.sh` | 09.11.2026 | `0dafea3` | 348 |
