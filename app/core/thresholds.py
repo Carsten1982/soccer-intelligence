@@ -9,8 +9,15 @@ Aufbau der Datei:
     [[abweichung]]   # optional, beliebig oft
     liga = "Serie A" # optional (ohne: alle Ligen)
     kpi = "kpi03"    # optional (ohne: alle KPIs)
-    leicht = 15
+    leicht = 15      # gleich für positiv und negativ (±15 / ±30) …
     stark = 30
+
+    [[abweichung]]
+    kpi = "kpi02"    # … oder positiv und negativ getrennt (seit Version 0.13)
+    leicht_positiv = 20     # über +20,00 % leicht
+    stark_positiv = 30      # über +30,00 % stark
+    leicht_negativ = -15    # unter −15,00 % leicht
+    stark_negativ = -25     # unter −25,00 % stark
 
 Vorrang: Liga und KPI > nur KPI > nur Liga > Standard. Die Datei wird mit dem Code versioniert; Änderungen nur
 bewusst über die Datei (Neubau, Git, CHANGELOG), nie über das Dashboard.
@@ -63,8 +70,27 @@ def _number(value, where: str) -> Decimal:
     return number
 
 
+SYMMETRIC = ("leicht", "stark")
+SPLIT = ("leicht_positiv", "stark_positiv", "leicht_negativ", "stark_negativ")
+
+
 def _pair(entry: dict, where: str) -> Thresholds:
-    for key in ("leicht", "stark"):
+    """Entweder leicht/stark (für beide Richtungen) oder alle vier Felder leicht/stark × positiv/negativ."""
+    split = [k for k in SPLIT if k in entry]
+    if split:
+        if any(k in entry for k in SYMMETRIC):
+            raise ConfigError(f"schwellen.toml, {where}: entweder leicht/stark oder die vier Felder "
+                              f"{', '.join(SPLIT)} angeben, nicht beides")
+        for key in SPLIT:
+            if key not in entry:
+                raise ConfigError(f"schwellen.toml, {where}: Feld '{key}' fehlt")
+        lp, sp, ln, sn = (_number(entry[k], where) for k in SPLIT)
+        if not (0 < lp < sp):
+            raise ConfigError(f"schwellen.toml, {where}: es muss gelten 0 < leicht_positiv < stark_positiv")
+        if not (sn < ln < 0):
+            raise ConfigError(f"schwellen.toml, {where}: es muss gelten stark_negativ < leicht_negativ < 0")
+        return Thresholds(lp, sp, ln, sn)
+    for key in SYMMETRIC:
         if key not in entry:
             raise ConfigError(f"schwellen.toml, {where}: Feld '{key}' fehlt")
     light, strong = _number(entry["leicht"], where), _number(entry["stark"], where)
@@ -100,13 +126,18 @@ def load_thresholds(path: Path | str | None = None, league_names: list[str] | No
     return ThresholdConfig(standard, tuple(overrides))
 
 
+def _pct(value: Decimal) -> str:
+    return f"{value:+.2f} %".replace(".", ",").replace("-", "−")
+
+
 def describe(config: ThresholdConfig) -> list[dict]:
-    """Zeilen für die Anzeige im Bereich Datenqualität."""
-    def fmt(t: Thresholds) -> str:
-        return (f"keine bis ±{t.leicht:.2f} % · leicht bis ±{t.stark:.2f} % · stark darüber"
-                .replace(".", ","))
-    rows = [{"Gilt für": "Standard (alle Ligen, alle KPIs)", "Schwellen": fmt(config.standard)}]
-    for o in sorted(config.overrides, key=lambda o: (-o.rank, o.liga or "", o.kpi or "")):
-        scope = " · ".join(x for x in (o.liga, o.kpi.upper().replace("KPI", "KPI ") if o.kpi else None) if x)
-        rows.append({"Gilt für": scope, "Schwellen": fmt(o.thresholds)})
+    """Zeilen für die Anzeige im Bereich Datenqualität: je Geltungsbereich die vier Schwellen.
+    Eine Anomalie liegt vor, wenn die gerundete Abweichung über (positiv) bzw. unter (negativ) der Schwelle liegt."""
+    def row(scope: str, t: Thresholds) -> dict:
+        return {"Gilt für": scope, "Leicht positiv": _pct(t.leicht), "Stark positiv": _pct(t.stark),
+                "Leicht negativ": _pct(t.leicht_negativ), "Stark negativ": _pct(t.stark_negativ)}
+    rows = [row("Standard (alle übrigen)", config.standard)]
+    for o in sorted(config.overrides, key=lambda o: o.kpi or ""):     # je KPI, Ligen in Dateireihenfolge
+        scope = " · ".join(x for x in (o.kpi.upper().replace("KPI", "KPI ") if o.kpi else None, o.liga) if x)
+        rows.append(row(scope, o.thresholds))
     return rows

@@ -1,24 +1,112 @@
 # Soccer Intelligence – Schwellenwerte der Anomalie-Einstufung (KPI-Regelwerk, Abschnitt 2.2)
 #
-# Eingestuft wird die auf zwei Nachkommastellen gerundete relative Abweichung (nach Betrag):
-#   bis leicht        -> keine Anomalie     (genau 20,00 % = keine)
-#   bis stark         -> leichte Anomalie   (genau 35,00 % = leicht)
-#   darüber           -> starke Anomalie
+# Eingestuft wird die auf zwei Nachkommastellen gerundete relative Abweichung, positiv und negativ getrennt:
+#   positiv: bis leicht_positiv -> keine Anomalie, bis stark_positiv -> leichte, darüber -> starke Anomalie
+#   negativ: bis leicht_negativ -> keine Anomalie, bis stark_negativ -> leichte, darunter -> starke Anomalie
+#   Genau auf der Schwelle zählt zur schwächeren Stufe (z. B. genau +20,00 % bei 20 = keine Anomalie).
 #
 # Änderungen nur bewusst über diese Datei: Neubau des Containers, Git-Commit und Eintrag im CHANGELOG.
 # Die gültigen Werte zeigt das Dashboard im Bereich Datenqualität.
-# Vorgehen (Carsten, 08.11.2026): zuerst überall der Standard; Feintuning je KPI und Liga nach der
-# Schwellen-Analyse (Etappe I).
+# Festgelegt von Carsten am 14.11.2026 (Version 0.13) mit der Sensitivitätsanalyse: alle Ligen, Saisons
+# 2019/20–2025/26. Je KPI eine Schwelle für alle Ligen; nur KPI 03 je Liga, weil er an der festen Marke
+# 2,5 Tore misst und nicht an der Ligareferenz.
+#
+# Aufbau: [standard] gilt, wo keine Abweichung passt (z. B. für eine neue Liga bei KPI 03).
+# Vorrang der Abweichungen: Liga und KPI > nur KPI > nur Liga > Standard.
+# Eine Abweichung nennt entweder leicht/stark (gleich für beide Richtungen) oder die vier Felder unten.
 
 [standard]
 leicht = 20
 stark = 35
 
-# Abweichungen vom Standard (derzeit keine). Vorrang: Liga und KPI > nur KPI > nur Liga > Standard.
-# Beispiel:
-#
-# [[abweichung]]
-# liga = "Serie A"     # optional; Blattname wie in ligen.toml
-# kpi = "kpi05"        # optional; kpi02 … kpi09
-# leicht = 12
-# stark = 18
+# KPI 02 – Erwartete Tore
+[[abweichung]]
+kpi = "kpi02"
+leicht_positiv = 20
+stark_positiv = 30
+leicht_negativ = -15
+stark_negativ = -25
+
+# KPI 03 – Über 2,5 Tore, Bundesliga
+[[abweichung]]
+liga = "Bundesliga"
+kpi = "kpi03"
+leicht_positiv = 35
+stark_positiv = 40
+leicht_negativ = -5
+stark_negativ = -10
+
+# KPI 03 – Über 2,5 Tore, Premier League
+[[abweichung]]
+liga = "Premier League"
+kpi = "kpi03"
+leicht_positiv = 30
+stark_positiv = 40
+leicht_negativ = -10
+stark_negativ = -15
+
+# KPI 03 – Über 2,5 Tore, Serie A
+[[abweichung]]
+liga = "Serie A"
+kpi = "kpi03"
+leicht_positiv = 30
+stark_positiv = 40
+leicht_negativ = -10
+stark_negativ = -20
+
+# KPI 03 – Über 2,5 Tore, LaLiga
+[[abweichung]]
+liga = "LaLiga"
+kpi = "kpi03"
+leicht_positiv = 20
+stark_positiv = 30
+leicht_negativ = -15
+stark_negativ = -25
+
+# KPI 04 – Gelbe Karten
+[[abweichung]]
+kpi = "kpi04"
+leicht_positiv = 15
+stark_positiv = 35
+leicht_negativ = -20
+stark_negativ = -30
+
+# KPI 05 – Ecken
+[[abweichung]]
+kpi = "kpi05"
+leicht_positiv = 15
+stark_positiv = 20
+leicht_negativ = -10
+stark_negativ = -15
+
+# KPI 06 – Tore 1. Halbzeit
+[[abweichung]]
+kpi = "kpi06"
+leicht_positiv = 15
+stark_positiv = 25
+leicht_negativ = -20
+stark_negativ = -30
+
+# KPI 07 – Tore 2. Halbzeit
+[[abweichung]]
+kpi = "kpi07"
+leicht_positiv = 25
+stark_positiv = 30
+leicht_negativ = -20
+stark_negativ = -25
+
+# KPI 08 – Beide Teams treffen
+[[abweichung]]
+kpi = "kpi08"
+leicht_positiv = 20
+stark_positiv = 25
+leicht_negativ = -30
+stark_negativ = -35
+
+# KPI 09 – Schüsse aufs Tor
+[[abweichung]]
+kpi = "kpi09"
+leicht_positiv = 15
+stark_positiv = 20
+leicht_negativ = -10
+stark_negativ = -15

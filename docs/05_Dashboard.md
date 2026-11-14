@@ -1,6 +1,6 @@
 # Soccer Intelligence – Dashboard-Briefing
 
-**Version 5.0** · Stand 11.11.2026 (Version 0.12: Sensitivitätsanalyse ersetzt die Spielwiese, 6.4)
+**Version 5.1** · Stand 14.11.2026 (Version 0.13: neue gültige Schwellen, Sensitivitätsanalyse nach Designentwurf C, 6.3 und 6.4)
 
 > **Massgebliche Quelle seit 31.10.2026.** Änderungen werden nur noch in dieser Datei gemacht, mit Datum in der Änderungshistorie bzw. im `CHANGELOG.md`.
 > Das Word-Dokument *Dashboard-Briefing v4.2* liegt nur noch als Archiv im Ordner `word/` und wird nicht mehr gepflegt. Änderungen seit 31.10.2026 sind im Text als „Änderung“ mit Datum gekennzeichnet.
@@ -339,27 +339,30 @@ Für jede Liga und jeden KPI (ausser KPI01) wird angezeigt, wie oft keine, leich
 
 **Ergänzung 08.11.2026 (ab Etappe H):** Unter der Häufigkeit werden die **gültigen Schwellenwerte** angezeigt (Standard ±20 % / ±35 % und allfällige Abweichungen je Liga und KPI aus `app/config/schwellen.toml`, KPI-Regelwerk 2.2). Nur Anzeige, keine Bearbeitung.
 
+**Änderung 14.11.2026 (Version 0.13):** Die Tabelle der gültigen Schwellen zeigt je Zeile („Gilt für“: Standard, KPI oder KPI und Liga) vier Spalten: Leicht positiv, Stark positiv, Leicht negativ, Stark negativ. KPI 03 erscheint je Liga. Die Häufigkeit zählt automatisch mit den gültigen Schwellen.
+
 **Ergänzung 08.11.2026 (H.1):** Die Anteile „leicht“ und „stark“ werden wie alle Werte im Dashboard mit zwei Nachkommastellen **kaufmännisch** gerundet (0,125 % → 0,13 %). Die Berechnung für alle vier Ligen dauert beim ersten Aufruf je Datenbankstand rund 6 Sekunden (vorher rund 30).
 
-### 6.4 Sensitivitätsanalyse (Version 0.12, freigegeben 11.11.2026, Designentwurf B)
+### 6.4 Sensitivitätsanalyse (Version 0.12; seit 0.13 Designentwurf C, freigegeben 14.11.2026)
 
-Siebter Bereich (ganz rechts, nur intern), Tab-Name **„Sensitivitätsanalyse“**, Adresse unverändert `/dashboard/simulation`. Frage: Wie oft schlagen die Anomalien mit bestimmten Schwellen an, und bringen sie einen Mehrwert? Rechenregeln: KPI-Regelwerk, Abschnitt 11. Bis Version 0.11 „Simulation – Spielwiese“ (Etappe I.1, 08.11.2026).
+Siebter Bereich (ganz rechts, nur intern), Tab-Name **„Sensitivitätsanalyse“**, Adresse unverändert `/dashboard/simulation`. Frage: Wie oft schlagen die Anomalien mit bestimmten Schwellen an, und bringen sie einen Mehrwert? Rechenregeln: KPI-Regelwerk, Abschnitt 11. Bis Version 0.11 „Simulation – Spielwiese“ (Etappe I.1, 08.11.2026); Version 0.12 mit einer Karte je KPI (Designentwurf B).
 
-- **Kopf:** „Soccer Intelligence“, darunter **„Sensitivitätsanalyse“** (nur auf diesem Tab; die anderen Tabs behalten ihren Untertitel). Gelber Hinweis: „Die hier angepassten Schwellen dienen der Simulation und haben keinen Einfluss auf die anderen Dashboard-Tabs. Es gelten weiterhin die Werte in der Datei schwellen.toml.“
+- **Kopf:** „Soccer Intelligence“, darunter **„Sensitivitätsanalyse“** (nur auf diesem Tab). Gelber Hinweis: „Die hier angepassten Schwellen dienen der Simulation und haben keinen Einfluss auf die anderen Dashboard-Tabs. Es gelten weiterhin die Werte in der Datei schwellen.toml.“ **Darunter 1 cm Abstand** (Änderung 14.11.2026).
 - **Links Einstellungen** (bleiben beim Scrollen stehen, grau): nur **Liga** (Alle Ligen oder eine Liga) und **Saison** (Regelwerk 11.4, voreingestellt „Alle Saisons“, mit ⓘ).
 - **Rechts:** Grundlage (Spiele, Liga, Saisons, abgeschlossene Spieltage); bei „Alle Ligen“ ein orangefarbener Hinweis mit den Spieltagen je Liga; Knopf **„Auf gültige Schwellen zurücksetzen“**.
-- **Je KPI 02–09 eine Karte:** oben Nummer, Name und die Empfehlung positiv/negativ. Darunter drei Zeilen (Positiv, Negativ, Total):
-  - **Schwelle leicht** und **Schwelle stark** als Eingabefelder (eine Nachkommastelle; positiv ≥ 0, negativ ≤ 0; stark betragsmässig nie unter leicht). Eigene Werte blau.
-  - **Häufigkeit leicht** und **Häufigkeit stark:** Anzahl, Ø pro Spieltag (ⓘ), Spieltagsabdeckung (ⓘ).
-  - **Ergebnisqualität (Schwelle leicht):** Spiele (ⓘ), eingetroffen (ⓘ), Trefferquote (ⓘ), Grundquote (ⓘ), Mehrwert in Pp. (ⓘ), Spanne 95 % (ⓘ), Empfehlung (ⓘ) als farbige Marke: Funktioniert grün, Funktioniert leicht gelb, Keine relevante Verbesserung grau, Noch unklar blau, Negativ rot, Zu wenige Daten grau. Unter 50 Spielen ist die Zeile grau.
-  - **Total:** Häufigkeit wie Regelwerk 11.2; Ergebnisqualität nur Spiele und eingetroffen.
-- **Anmerkungen** unter den Karten: „Gezählt wird, was über der Schwelle liegt …“, „Leicht enthält die starken Anomalien“, „Die Empfehlung beruht auf den gewählten Saisons (historisch) …“.
-- **Aufklappbar „Definitionen und Änderungen“:** wann eine Anomalie als eingetroffen gilt, Grundlage, Änderungen mit Datum.
+- **Eine Tabelle für alle KPIs 02–09** (Änderung 14.11.2026, Entwurf C). Kopfzeile (bleibt beim Scrollen oben):
+  - **KPI** · **Schwellen:** Eigenschaft (ⓘ), Abweichung in % (ⓘ) · **Betroffene Spiele:** Anzahl Spiele (ⓘ), Ø/ST (ⓘ), Spieltagsabdeckung (ⓘ) · **Prognosewert:** Anzahl eingetroffen (ⓘ), Trefferquote (ⓘ), Vergleichsgruppe (alle Spiele) (ⓘ), Mehrwert in Pp. (ⓘ), Spanne (Wilson 95 %) (ⓘ), Empfehlung (ⓘ).
+  - Je KPI fünf Zeilen: **↗ Leicht positiv, ⇈ Stark positiv, ↘ Leicht negativ, ⇊ Stark negativ, Total**; Nummer und Name des KPI links in der Mitte, KPIs durch eine Linie getrennt.
+  - In jeder der vier Zeilen ein **Eingabefeld** für die Schwelle (eine Nachkommastelle; positiv ≥ 0, negativ ≤ 0; stark betragsmässig nie unter leicht). Vorbelegt mit den gültigen Schwellen der gewählten Liga; eigene Werte blau. Hat ein KPI Schwellen je Liga (KPI 03), ist das Feld bei „Alle Ligen“ leer mit grauem Text **„je Liga“**: jede Liga zählt mit ihrer gültigen Schwelle; eine eingetragene Zahl gilt für alle Ligen. Beim Wechsel der Liga zeigen unveränderte Felder den gültigen Wert der neuen Auswahl, eigene Eingaben bleiben stehen.
+  - Jede Zeile wird mit ihrer eigenen Schwelle gezählt und bewertet (auch stark). Empfehlung als farbige Marke: Funktioniert grün, Funktioniert leicht gelb, Keine relevante Verbesserung grau, Noch unklar blau, Negativ rot, Zu wenige Daten grau. Unter 50 Spielen ist die Zeile grau. Stark-Zeilen leicht eingerückt und hinterlegt.
+  - **Total:** leicht positiv + leicht negativ (die starken sind darin enthalten und werden nicht nochmals gezählt): Anzahl Spiele, Ø/ST, Spieltagsabdeckung, Anzahl eingetroffen, Trefferquote; übrige Spalten „–“.
+- **Anmerkungen** unter der Tabelle: „Gezählt wird, was über der Schwelle liegt …“, Total, blaue Werte, graue Zeilen, „je Liga“, „Die Empfehlung beruht auf den gewählten Saisons (historisch) …“.
+- **Aufklappbar „Definitionen und Änderungen“:** wann eine Anomalie als eingetroffen gilt, Grundlage, **„Wie entsteht die Empfehlung?“** (die sechs Stufen in einfacher Sprache, verständlich für einen 16-Jährigen; Wunsch Carsten 14.11.2026), Änderungen mit Datum (u. a. 14.11.2026: neue Schwellen).
 - Kein vorher/nachher, keine Einzelspielansicht, keine Diagramme, keine Übernahme in die gültigen Schwellen. KPI 01 erscheint nicht.
 - Die Fälle aller Spiele werden einmal je Datenbankstand berechnet (beim ersten Aufruf rund 50 Sekunden); jede Änderung der Schwellen wirkt danach sofort.
-- Hinweis zur Eingabe: Die Felder zeigen den Dezimalpunkt des Browsers (z. B. „20.0“); die Tabellen zeigen Zahlen wie überall mit Komma.
+- Hinweis zur Eingabe: Die Felder zeigen den Dezimalpunkt des Browsers (z. B. „20.0“); die Tabelle zeigt Zahlen wie überall mit Komma.
 
-Später (eigene Schritte): ungleiche Schwellen in `schwellen.toml` übernehmen und danach die Häufigkeit im Bereich Datenqualität anpassen; Gewichtung der Top Anomalien (Regelwerk, Punkt 17); Simulations-KPIs 10–13.
+Später (eigene Schritte): Gewichtung der Top Anomalien (Regelwerk, Punkt 17); Simulations-KPIs 10–13.
 
 ## 7. Verbindliche KPI-Spaltenstruktur
 

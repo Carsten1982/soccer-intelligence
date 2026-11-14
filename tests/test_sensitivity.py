@@ -206,7 +206,12 @@ def counter():
     return events, closed
 
 
-@pytest.mark.parametrize("limits", [(20, -20, 35, -35), (15, -10, 25, -15), (12.5, -7.5, 30, -40), (0, 0, 0, 0)])
+PER_LEAGUE = {"Bundesliga": (35, -5, 40, -10), "Premier League": (30, -10, 40, -15), "Serie A": (30, -10, 40, -20),
+              "LaLiga": (20, -15, 30, -25)}            # wie KPI 03 seit Version 0.13 (Schwellen je Liga)
+
+
+@pytest.mark.parametrize("limits", [(20, -20, 35, -35), (15, -10, 25, -15), (12.5, -7.5, 30, -40), (0, 0, 0, 0),
+                                    PER_LEAGUE], ids=["standard", "ungleich", "komma", "null", "je_liga"])
 @pytest.mark.parametrize("league", ["Alle Ligen", "Bundesliga", "LaLiga"])
 def test_t13_counter_calculation(cases_2018, matchdays_2018, counter, limits, league):
     events, closed = counter
@@ -217,16 +222,61 @@ def test_t13_counter_calculation(cases_2018, matchdays_2018, counter, limits, le
         events = [e for e in events if e[0] == league]
         closed = {x for x in closed if x[0] == league}
     assert len(md) == len(closed)
-    mine = G.sens_summary(events, closed, dict(zip(("lp", "ln", "sp", "sn"), (D(str(v)) for v in limits))))
-    for r in evaluate(c, md, {k: lim(*limits) for k in TOP_KPIS}):
+
+    def ref_lim(v):
+        return dict(zip(("lp", "ln", "sp", "sn"), (D(str(x)) for x in v)))
+    if isinstance(limits, dict):
+        mine = G.sens_summary(events, closed, {lg: ref_lim(v) for lg, v in limits.items()})
+        app_limits = {lg: lim(*v) for lg, v in limits.items()}
+    else:
+        mine = G.sens_summary(events, closed, ref_lim(limits))
+        app_limits = lim(*limits)
+    for r in evaluate(c, md, {k: app_limits for k in TOP_KPIS}):
         m = mine[r.kpi]
         for stage, attr in (("leicht", "light"), ("stark", "strong")):
             for d, key in ((POS, "pos"), (NEG, "neg"), (TOTAL, "tot")):
                 app, ref = getattr(r, attr)[d], m[f"{stage}_{key}"]
                 assert app.count == ref[0], (r.kpi, stage, d)
                 assert math.isclose(app.per_matchday, ref[1]) and math.isclose(app.coverage, ref[2]), (r.kpi, stage, d)
-        for d, key in ((POS, "pos"), (NEG, "neg")):
-            q, ref = r.quality[d], m["q_" + key]
-            assert (q.cases, q.hits) == ref[:2], (r.kpi, d)
-            for got, exp in zip((q.hit, q.base, q.gain, q.low, q.high), ref[2:]):
-                assert (got is None and exp is None) or math.isclose(got, exp, abs_tol=1e-9), (r.kpi, d, got, exp)
+        for attr, prefix in (("quality", "q_"), ("strong_quality", "qs_")):        # seit 0.13 auch für stark
+            for d, key in ((POS, "pos"), (NEG, "neg")):
+                q, ref = getattr(r, attr)[d], m[prefix + key]
+                assert (q.cases, q.hits) == ref[:2], (r.kpi, attr, d)
+                for got, exp in zip((q.hit, q.base, q.gain, q.low, q.high), ref[2:]):
+                    assert (got is None and exp is None) or math.isclose(got, exp, abs_tol=1e-9), (r.kpi, d, got, exp)
+
+
+# --- Version 0.13: Ergebnisqualität für stark, Schwellen je Liga ---------------------------------------------------------
+
+def test_t14_quality_for_strong_threshold():
+    """Stark wird wie leicht bewertet, aber mit der starken Schwelle; stark = leicht ergibt dieselbe Bewertung."""
+    up = [1.0] * 5 + [0.0] * 5
+    c = cases([3000, 3000, 2600, 2100, 1000, 3000, 2600, 2100, 1000, 500], up=up)
+    r = evaluate(c, days(1), {"kpi02": lim(20, -20, 28, -35)})[0]
+    assert (r.quality[POS].cases, r.quality[POS].hits) == (7, 4)
+    assert (r.strong_quality[POS].cases, r.strong_quality[POS].hits) == (3, 2)
+    assert r.strong_quality[POS].base == r.quality[POS].base == 50.0          # Vergleichsgruppe = alle Spiele
+    same = evaluate(c, days(1), {"kpi02": lim(20, -20, 20, -20)})[0]
+    assert same.strong_quality == same.quality
+
+
+def test_t15_limits_per_league():
+    """Je Liga gilt die eigene Schwelle; Ergebnis = Summe der Ligen einzeln. Liga ohne Schwelle: keine Anomalie."""
+    a = cases([3000, 2500, -1200, 100])
+    b = cases([3000, 2500, -1200, 100]).assign(league="M")
+    both = pd.concat([a, b], ignore_index=True)
+    md = pd.concat([days(1), days(1).assign(league="M")], ignore_index=True)
+    per = {"L": lim(20, -10, 28, -15), "M": lim(28, -15, 35, -20)}
+    r = evaluate(both, md, {"kpi02": per})[0]
+    one = evaluate(a, days(1), {"kpi02": per["L"]})[0]
+    two = evaluate(b, days(1).assign(league="M"), {"kpi02": per["M"]})[0]
+    for attr in ("light", "strong"):
+        for d in (POS, NEG, TOTAL):
+            assert getattr(r, attr)[d].count == getattr(one, attr)[d].count + getattr(two, attr)[d].count
+    assert (r.light[POS].count, r.strong[POS].count, r.light[NEG].count) == (3, 1, 1)
+    only_l = evaluate(both, md, {"kpi02": {"L": per["L"]}})[0]
+    assert only_l.light[POS].count == one.light[POS].count
+
+
+def test_t16_from_thresholds_split():
+    assert Limits.from_thresholds(Thresholds(D(20), D(30), D(-15), D(-25))) == lim(20, -15, 30, -25)

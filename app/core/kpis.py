@@ -104,9 +104,21 @@ def de_abs(value: Decimal | None) -> str:
 
 @dataclass(frozen=True)
 class Thresholds:
-    """Schwellen nach Betrag: |x| ≤ leicht → keine · ≤ stark → leicht · darüber → stark."""
+    """Schwellen der Einstufung (Regelwerk 2.2), positiv und negativ getrennt (seit Version 0.13).
+
+    Positiv: x ≤ leicht → keine · ≤ stark → leicht · darüber → stark.
+    Negativ: x ≥ leicht_negativ → keine · ≥ stark_negativ → leicht · darunter → stark.
+    leicht_negativ und stark_negativ sind negative Zahlen; ohne Angabe gelten −leicht und −stark (symmetrisch)."""
     leicht: Decimal = Decimal("20")
     stark: Decimal = Decimal("35")
+    leicht_negativ: Decimal | None = None
+    stark_negativ: Decimal | None = None
+
+    def __post_init__(self) -> None:
+        if self.leicht_negativ is None:
+            object.__setattr__(self, "leicht_negativ", -self.leicht)
+        if self.stark_negativ is None:
+            object.__setattr__(self, "stark_negativ", -self.stark)
 
 
 STANDARD_THRESHOLDS = Thresholds()
@@ -114,11 +126,16 @@ STANDARD_THRESHOLDS = Thresholds()
 
 def classify(deviation: Decimal | None, thresholds: Thresholds = STANDARD_THRESHOLDS
              ) -> tuple[str | None, str | None]:
-    """(anomalie, richtung) anhand der gerundeten Abweichung."""
+    """(anomalie, richtung) anhand der gerundeten Abweichung; genau auf der Schwelle zählt zur schwächeren Stufe."""
     if deviation is None:
         return None, None
-    size = abs(deviation)
-    anomaly = NONE if size <= thresholds.leicht else LIGHT if size <= thresholds.stark else STRONG
+    t = thresholds
+    if deviation > 0:
+        anomaly = NONE if deviation <= t.leicht else LIGHT if deviation <= t.stark else STRONG
+    elif deviation < 0:
+        anomaly = NONE if deviation >= t.leicht_negativ else LIGHT if deviation >= t.stark_negativ else STRONG
+    else:
+        anomaly = NONE
     direction = POSITIVE if deviation > 0 else NEGATIVE if deviation < 0 else None
     return anomaly, direction
 

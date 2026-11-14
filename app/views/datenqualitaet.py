@@ -194,7 +194,9 @@ def _thresholds_section() -> None:
     from core.thresholds import describe
     st.markdown("#### Gültige Schwellenwerte")
     st.caption("Aus `app/config/schwellen.toml` · eingestuft wird die auf zwei Nachkommastellen gerundete "
-               "Abweichung · Änderungen nur über die Datei (Neubau, Git, CHANGELOG), nicht hier.")
+               "Abweichung: Anomalie, wenn sie über der positiven bzw. unter der negativen Schwelle liegt (genau auf "
+               "der Schwelle zählt zur schwächeren Stufe) · KPI 03 je Liga · Änderungen nur über die Datei (Neubau, "
+               "Git, CHANGELOG), nicht hier.")
     st.dataframe(pd.DataFrame(describe(get_thresholds())), hide_index=True, width="stretch")
 
 
