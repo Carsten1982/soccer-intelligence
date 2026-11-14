@@ -197,7 +197,8 @@ def _thresholds_section() -> None:
                "Abweichung: Anomalie, wenn sie über der positiven bzw. unter der negativen Schwelle liegt (genau auf "
                "der Schwelle zählt zur schwächeren Stufe) · KPI 03 je Liga · Änderungen nur über die Datei (Neubau, "
                "Git, CHANGELOG), nicht hier.")
-    st.dataframe(pd.DataFrame(describe(get_thresholds())), hide_index=True, width="stretch")
+    rows = describe(get_thresholds())
+    st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch", height=(len(rows) + 1) * 35 + 3)   # ohne Scrollen
 
 
 def _frequency_section() -> None:
