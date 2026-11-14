@@ -1,11 +1,12 @@
-"""Sensitivitätsanalyse, Teil Auswertung (Version 0.12; KPI-Regelwerk 11, Dashboard-Briefing 6.4).
+"""Sensitivitätsanalyse, Teil Auswertung (Version 0.12, erweitert 0.13; KPI-Regelwerk 11, Dashboard-Briefing 6.4).
 
 Wertet die Fälle aus core/simulation.py (build_cases) mit frei einstellbaren Schwellen aus:
 
 - vier Schwellen je KPI: leicht positiv/negativ, stark positiv/negativ (Limits), ungleich erlaubt;
 - Tabelle „Häufigkeit“: Anzahl, Ø pro Spieltag, Spieltagsabdeckung; „leicht“ zählt die starken mit;
-- Tabelle „Ergebnisqualität“ mit der leichten Schwelle: Trefferquote, Grundquote aller Spiele, Mehrwert,
-  Spanne (Newcombe aus zwei Wilson-Intervallen, 95 %) und Empfehlung in sechs Stufen.
+- Ergebnisqualität je Schwelle (seit 0.13 auch für stark): Trefferquote, Grundquote aller Spiele, Mehrwert,
+  Spanne (Newcombe aus zwei Wilson-Intervallen, 95 %) und Empfehlung in sechs Stufen;
+- Schwellen gleich für alle Ligen (Limits) oder je Liga (dict Liga -> Limits, z. B. KPI 03 bei „Alle Ligen“).
 
 Anomalie = gerundete Abweichung über der Schwelle (positiv: > Schwelle, negativ: < Schwelle); genau auf der Schwelle
 zählt nicht. Verglichen wird in ganzen Hundertsteln (Schwellen haben höchstens eine Nachkommastelle), also exakt.
@@ -15,6 +16,7 @@ Gezählt werden nur Spiele abgeschlossener Spieltage (core.simulation.closed_mat
 from __future__ import annotations
 
 import math
+from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import ROUND_HALF_UP, Decimal
 
@@ -50,8 +52,8 @@ class Limits:
 
     @classmethod
     def from_thresholds(cls, t: Thresholds) -> Limits:
-        """Gültige (symmetrische) Schwellen aus schwellen.toml."""
-        return cls(t.leicht, -t.leicht, t.stark, -t.stark)
+        """Gültige Schwellen aus schwellen.toml (positiv und negativ getrennt)."""
+        return cls(t.leicht, t.leicht_negativ, t.stark, t.stark_negativ)
 
     def errors(self) -> list[str]:
         out = []
@@ -68,9 +70,19 @@ def _hundredths(value: Decimal) -> int:
     return int(value * 100)
 
 
-def _masks(dev: pd.Series, lim: Limits, stage: str) -> dict[str, pd.Series]:
-    pos, neg = (lim.light_pos, lim.light_neg) if stage == "leicht" else (lim.strong_pos, lim.strong_neg)
-    return {POS: dev > _hundredths(pos), NEG: dev < _hundredths(neg)}
+LimitsLike = Limits | Mapping[str, Limits]          # gleich für alle Ligen oder je Liga
+
+
+def _masks(rows: pd.DataFrame, lim: LimitsLike, stage: str) -> dict[str, pd.Series]:
+    """Anomalie je Fall: Abweichung (Hundertstel) über der positiven bzw. unter der negativen Schwelle.
+    Bei Schwellen je Liga gilt für jeden Fall die Schwelle seiner Liga (fehlt die Liga: keine Anomalie)."""
+    attrs = ("light_pos", "light_neg") if stage == "leicht" else ("strong_pos", "strong_neg")
+    dev = rows["dev"]
+    if isinstance(lim, Limits):
+        pos, neg = (_hundredths(getattr(lim, a)) for a in attrs)
+    else:
+        pos, neg = (rows["league"].map({lg: _hundredths(getattr(x, a)) for lg, x in lim.items()}) for a in attrs)
+    return {POS: (dev > pos).fillna(False).astype(bool), NEG: (dev < neg).fillna(False).astype(bool)}
 
 
 # --- Tabelle 1: Häufigkeit ---------------------------------------------------------------------------------------------
@@ -162,11 +174,12 @@ class KpiSensitivity:
     light: dict[str, Count]      # positiv, negativ, total
     strong: dict[str, Count]
     quality: dict[str, Quality]  # positiv, negativ (Schwelle = leicht)
+    strong_quality: dict[str, Quality]   # positiv, negativ (Schwelle = stark, seit 0.13)
     total_cases: int             # Ergebnisqualität Total = positiv + negativ
     total_hits: int
 
 
-def evaluate(cases: pd.DataFrame, matchdays: pd.DataFrame, limits: dict[str, Limits]) -> list[KpiSensitivity]:
+def evaluate(cases: pd.DataFrame, matchdays: pd.DataFrame, limits: dict[str, LimitsLike]) -> list[KpiSensitivity]:
     """cases: Fälle der Auswahl (Liga, Saisons); matchdays: abgeschlossene Spieltage derselben Auswahl.
     Nur Fälle abgeschlossener Spieltage zählen; Nenner = Anzahl abgeschlossener Spieltage."""
     n_md = len(matchdays)
@@ -174,15 +187,15 @@ def evaluate(cases: pd.DataFrame, matchdays: pd.DataFrame, limits: dict[str, Lim
     out = []
     for kpi, lim in limits.items():
         rows = closed[closed["kpi"] == kpi]
-        counts = {}
+        counts, quality = {}, {}
         for stage in ("leicht", "stark"):
-            m = _masks(rows["dev"], lim, stage)
+            m = _masks(rows, lim, stage)
             counts[stage] = {POS: _count(rows[m[POS]], n_md), NEG: _count(rows[m[NEG]], n_md),
                              TOTAL: _count(rows[m[POS] | m[NEG]], n_md)}
-        m = _masks(rows["dev"], lim, "leicht")
-        quality = {POS: _quality(rows, m[POS], "up"), NEG: _quality(rows, m[NEG], "down")}
-        out.append(KpiSensitivity(kpi, counts["leicht"], counts["stark"], quality,
-                                  quality[POS].cases + quality[NEG].cases, quality[POS].hits + quality[NEG].hits))
+            quality[stage] = {POS: _quality(rows, m[POS], "up"), NEG: _quality(rows, m[NEG], "down")}
+        q = quality["leicht"]
+        out.append(KpiSensitivity(kpi, counts["leicht"], counts["stark"], q, quality["stark"],
+                                  q[POS].cases + q[NEG].cases, q[POS].hits + q[NEG].hits))
     return out
 
 

@@ -19,16 +19,11 @@ def write(tmp_path, text: str) -> Path:
     return p
 
 
-def test_shipped_file_is_standard_everywhere():
-    """Vorgehen 08.11.2026: zuerst überall ±20 % / ±35 %, keine Abweichungen."""
+def test_shipped_file_has_standard_and_decided_overrides():
+    """Standard ±20 % / ±35 % bleibt; seit Version 0.13 Abweichungen je KPI (Werte: tests/test_schwellen.py)."""
     cfg = load_thresholds(CONFIG, LEAGUES)
     assert cfg.standard == STANDARD_THRESHOLDS == Thresholds(Decimal("20"), Decimal("35"))
-    assert cfg.overrides == ()
-    for league in LEAGUES:
-        for kpi in ("kpi02", "kpi05", "kpi09"):
-            assert cfg.get(league, kpi) == STANDARD_THRESHOLDS
-    assert describe(cfg) == [{"Gilt für": "Standard (alle Ligen, alle KPIs)",
-                              "Schwellen": "keine bis ±20,00 % · leicht bis ±35,00 % · stark darüber"}]
+    assert len(cfg.overrides) == 11                           # 7 KPIs + KPI 03 in 4 Ligen
 
 
 def test_precedence_league_and_kpi_before_kpi_before_league(tmp_path):
@@ -55,8 +50,11 @@ stark = 16
     assert cfg.get("Bundesliga", "kpi05") == Thresholds(Decimal(12), Decimal(18))
     assert cfg.get("Serie A", "kpi05") == Thresholds(Decimal("10.5"), Decimal(16))     # 10.5 bleibt genau 10,5
     rows = describe(cfg)
-    assert rows[1] == {"Gilt für": "Serie A · KPI 05",
-                       "Schwellen": "keine bis ±10,50 % · leicht bis ±16,00 % · stark darüber"}
+    assert rows[0]["Gilt für"] == "Standard (alle übrigen)"
+    assert rows[1] == {"Gilt für": "Serie A", "Leicht positiv": "+18,00 %", "Stark positiv": "+30,00 %",
+                       "Leicht negativ": "−18,00 %", "Stark negativ": "−30,00 %"}
+    assert rows[3] == {"Gilt für": "KPI 05 · Serie A", "Leicht positiv": "+10,50 %", "Stark positiv": "+16,00 %",
+                       "Leicht negativ": "−10,50 %", "Stark negativ": "−16,00 %"}
 
 
 @pytest.mark.parametrize("text, message", [

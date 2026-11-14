@@ -53,6 +53,10 @@ DEFINITION_CHANGES = [
     ("11.11.2026", "Sensitivitätsanalyse: vier Schwellen je KPI (leicht/stark, positiv/negativ), Ø pro Spieltag und "
                    "Spieltagsabdeckung über abgeschlossene Spieltage, Vergleich mit der Grundquote aller Spiele, "
                    "Spanne nach Wilson/Newcombe und Empfehlung in sechs Stufen (Version 0.12, Freigabe Carsten)."),
+    ("14.11.2026", "Neue gültige Schwellen, mit dieser Analyse festgelegt (alle Ligen, Saisons 2019/20–2025/26): je KPI "
+                   "positiv und negativ getrennt, KPI 03 je Liga. Ergebnisqualität jetzt auch für die starke Schwelle, "
+                   "eine Tabelle mit vier Zeilen je KPI; Definition „eingetroffen“ unverändert (Version 0.13, Freigabe "
+                   "Carsten)."),
 ]
 
 

@@ -103,17 +103,28 @@ def _simulation():
 
 @needs_files
 def test_simulation_page():
-    """Version 0.12: Sensitivitätsanalyse, eine Karte je KPI mit vier Schwellen; Eingaben wirken nur hier."""
+    """Version 0.13: Sensitivitätsanalyse als eine Tabelle mit vier Zeilen je KPI (Entwurf C); Eingaben wirken nur hier.
+    Vorbelegt mit den gültigen Schwellen; KPI 03 bei „Alle Ligen“ leer („je Liga“), bei einer Liga deren Werte."""
     at = AppTest.from_function(_simulation, default_timeout=TIMEOUT).run()
     assert not at.exception, at.exception
     text = _texts(at)
     assert "Sensitivitätsanalyse" in text and "keinen Einfluss auf die anderen Dashboard-Tabs" in text
-    assert "Häufigkeit leicht" in text and "Ergebnisqualität (Schwelle leicht)" in text and "Empfehlung" in text
+    for label in ("Betroffene Spiele", "Prognosewert", "Vergleichs", "Empfehlung", "Leicht positiv", "Stark negativ",
+                  "Wie entsteht die Empfehlung?"):
+        assert label in text, label
     assert len(at.number_input) == 4 * 8                           # je KPI leicht/stark, positiv/negativ
     assert [s.label for s in at.selectbox] == ["Liga", "Saison"]
+    value = lambda kpi: [at.number_input(key=f"sth_{kpi}_{p}").value for p in ("lp", "sp", "ln", "sn")]  # noqa: E731
+    assert value("kpi02") == [20.0, 30.0, -15.0, -25.0] and value("kpi03") == [None] * 4
     at.number_input(key="sth_kpi02_lp").set_value(40.0).run()      # leicht über stark -> stark wird nachgezogen
     assert not at.exception and at.number_input(key="sth_kpi02_sp").value == 40.0
     assert ".st-key-sth_kpi02_lp input" in _texts(at)               # eigener Wert blau
+    at.number_input(key="sth_kpi03_lp").set_value(30.0).run()      # eine Zahl gilt für alle Ligen
+    assert not at.exception and ".st-key-sth_kpi03_lp input" in _texts(at)
+    at.button(key="sens_reset").click().run()
+    assert value("kpi02")[0] == 20.0 and value("kpi03") == [None] * 4
+    at.selectbox(key="sens_liga").set_value("Bundesliga").run()
+    assert not at.exception and value("kpi03") == [35.0, 40.0, -5.0, -10.0]
 
 
 @needs_files

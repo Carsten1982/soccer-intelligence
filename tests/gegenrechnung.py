@@ -113,6 +113,18 @@ def grade(dev: Decimal | None) -> str | None:
     return "keine" if a <= LIGHT_MAX else "leicht" if a <= STRONG_MAX else "stark"
 
 
+def grade_split(dev: Decimal | None, lp: Decimal, sp: Decimal, ln: Decimal, sn: Decimal) -> str | None:
+    """Einstufung mit getrennten Schwellen (seit Version 0.13): positiv über lp (leicht) bzw. sp (stark),
+    negativ unter ln bzw. sn (negative Zahlen); genau auf der Schwelle = schwächere Stufe."""
+    if dev is None:
+        return None
+    if dev > 0:
+        return "keine" if dev <= lp else "leicht" if dev <= sp else "stark"
+    if dev < 0:
+        return "keine" if dev >= ln else "leicht" if dev >= sn else "stark"
+    return "keine"
+
+
 class League:
     """Alle abgeschlossenen Spiele einer Liga, vorbereitet für schnelle Abfragen."""
 
@@ -302,42 +314,48 @@ def _wilson(k: int, n: int) -> tuple[float, float]:
 
 def sens_summary(events: list[tuple[str, tuple, dict]], closed: set[tuple[str, tuple]], lim: dict) -> dict:
     """events: (Liga, (Saison, Spieltag), sim_events-Ergebnis); closed: {(Liga, (Saison, Spieltag))}.
-    lim: {"lp", "ln", "sp", "sn"} als Decimal in %. Je KPI: Anzahl, Spieltage, Treffer, Grundquote, Mehrwert, Spanne."""
+    lim: {"lp", "ln", "sp", "sn"} als Decimal in %, oder je Liga {Liga: {...}} (seit 0.13).
+    Je KPI: Anzahl, Spieltage; Ergebnisqualität für leicht (q_) und stark (qs_): Treffer, Grundquote, Mehrwert, Spanne."""
     n_md = len(closed)
     out = {}
     for key in ("kpi02", "kpi03", "kpi04", "kpi05", "kpi06", "kpi07", "kpi08", "kpi09"):
         r = {f"{st}_{d}": [0, set()] for st in ("leicht", "stark") for d in ("pos", "neg", "tot")}
-        q = {"pos": [0, 0], "neg": [0, 0], "alle_pos": [0, 0], "alle_neg": [0, 0]}
+        q = {f"{st}_{d}": [0, 0] for st in ("leicht", "stark") for d in ("pos", "neg")}
+        q.update({"alle_pos": [0, 0], "alle_neg": [0, 0]})
         for league, md, ev in events:
             if (league, md) not in closed:
                 continue
             dev, provisional, more, less = ev[key]
             if dev is None or provisional:
                 continue
+            t = lim[league] if league in lim else lim
             day = (league, md)
-            for st, hi, lo in (("leicht", lim["lp"], lim["ln"]), ("stark", lim["sp"], lim["sn"])):
+            for st, hi, lo in (("leicht", t["lp"], t["ln"]), ("stark", t["sp"], t["sn"])):
                 for d, hit in (("pos", dev > hi), ("neg", dev < lo), ("tot", dev > hi or dev < lo)):
                     if hit:
                         r[f"{st}_{d}"][0] += 1
                         r[f"{st}_{d}"][1].add(day)
-            for d, happened, sign in (("pos", more, dev > lim["lp"]), ("neg", less, dev < lim["ln"])):
+            for d, happened in (("pos", more), ("neg", less)):
                 if happened is None:
                     continue
                 q["alle_" + d][0] += 1
                 q["alle_" + d][1] += int(happened)
-                if sign:
-                    q[d][0] += 1
-                    q[d][1] += int(happened)
+                for st, border in (("leicht", t["lp"] if d == "pos" else t["ln"]),
+                                   ("stark", t["sp"] if d == "pos" else t["sn"])):
+                    if (dev > border) if d == "pos" else (dev < border):
+                        q[f"{st}_{d}"][0] += 1
+                        q[f"{st}_{d}"][1] += int(happened)
         res = {k: (v[0], v[0] / n_md, len(v[1]) / n_md * 100) for k, v in r.items()}
-        for d in ("pos", "neg"):
-            (n, k), (n0, k0) = q[d], q["alle_" + d]
-            if n and n0:
-                p1, p2 = k / n, k0 / n0
-                (l1, u1), (l2, u2) = _wilson(k, n), _wilson(k0, n0)
-                low = p1 - p2 - ((p1 - l1) ** 2 + (u2 - p2) ** 2) ** 0.5
-                high = p1 - p2 + ((u1 - p1) ** 2 + (p2 - l2) ** 2) ** 0.5
-                res["q_" + d] = (n, k, 100 * p1, 100 * p2, 100 * (p1 - p2), 100 * low, 100 * high)
-            else:                          # keine Anomalie: nur die Grundquote (hängt nicht von den Schwellen ab)
-                res["q_" + d] = (n, k, None, 100 * k0 / n0 if n0 else None, None, None, None)
+        for st, prefix in (("leicht", "q_"), ("stark", "qs_")):
+            for d in ("pos", "neg"):
+                (n, k), (n0, k0) = q[f"{st}_{d}"], q["alle_" + d]
+                if n and n0:
+                    p1, p2 = k / n, k0 / n0
+                    (l1, u1), (l2, u2) = _wilson(k, n), _wilson(k0, n0)
+                    low = p1 - p2 - ((p1 - l1) ** 2 + (u2 - p2) ** 2) ** 0.5
+                    high = p1 - p2 + ((u1 - p1) ** 2 + (p2 - l2) ** 2) ** 0.5
+                    res[prefix + d] = (n, k, 100 * p1, 100 * p2, 100 * (p1 - p2), 100 * low, 100 * high)
+                else:                      # keine Anomalie: nur die Grundquote (hängt nicht von den Schwellen ab)
+                    res[prefix + d] = (n, k, None, 100 * k0 / n0 if n0 else None, None, None, None)
         out[key] = res
     return out
