@@ -8,15 +8,13 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 
 ## 0. Stand und Versionen
 
-**In Betrieb:** Version 0.12 – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09, Top Anomalien, Datenqualität und Sensitivitätsanalyse; Datenbank 2018/19–2026/27 mit Referenzsaison 2018/19 (KPI-Regelwerk 1.2). Passwortschutz unter `/dashboard`, Platzhalterseite unter `/`.
-
-**Bereit zum Einspielen:** Version 0.13 – neue gültige Schwellen (positiv/negativ getrennt, KPI 03 je Liga; KPI-Regelwerk 2.2) und Sensitivitätsanalyse nach Designentwurf C (Dashboard-Briefing 6.4).
+**In Betrieb:** Version 0.13 – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit den festgelegten Schwellen (positiv/negativ getrennt, KPI 03 je Liga), Top Anomalien, Datenqualität und Sensitivitätsanalyse; Datenbank 2018/19–2026/27 mit Referenzsaison 2018/19 (KPI-Regelwerk 1.2). Passwortschutz unter `/dashboard`, Platzhalterseite unter `/`.
 
 **Als Nächstes:** Datenlieferung über eine Schnittstelle (API-Football: Vergleichstest 2025/26, danach Importprogramm; Etappe G) · Rundum-Prüfung des Codes, bevor das Frontend beginnt · KPI-Erweiterungen und Kombinationen (z. B. xG) · Gewichtung der Top Anomalien (Regelwerk, Punkt 17) · öffentliche Website.
 
 | Version | Etappe | Inhalt | Eingespielt | Git | Tests |
 |---|---|---|---|---|---|
-| 0.13 | Neue Schwellen | Gültige Schwellen positiv/negativ getrennt, KPI 03 je Liga; Sensitivitätsanalyse nach Entwurf C (vier Zeilen je KPI, Bewertung auch für stark) | ausstehend | – | 425 (lokal) |
+| 0.13 | Neue Schwellen | Gültige Schwellen positiv/negativ getrennt, KPI 03 je Liga; Sensitivitätsanalyse nach Entwurf C (vier Zeilen je KPI, Bewertung auch für stark) | 14.11.2026 | `89128e5` | 428 |
 | 0.12 | Sensitivitätsanalyse | Spielwiese ersetzt: vier Schwellen je KPI, Häufigkeit mit Spieltagsabdeckung, Ergebnisqualität gegen Grundquote mit Wilson-Spanne und Empfehlung | 12.11.2026 | `1482bc3` | 398 |
 | 0.11 | Neue Datenbank | Datenbank 2018/19–2026/27, Referenzsaison, neue Saisonauswahl, Warnung „Saison fehlt“ | 10.11.2026 | `034e57a` | 376 |
 | 0.10.1 | GitHub | GitHub als einzige Quelle: einspielen.sh github, automatische Tests, robuster Rückweg | 10.11.2026 | `20275e9` | 350 |
