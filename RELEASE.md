@@ -19,13 +19,13 @@
 ## Erwartungswerte
 
 - Git-Stand vorher: `1482bc3`. Der Doku-Stand von Version 0.12 (Zweig `claude/doku-0-12-eingespielt`) ist in diesem Pull Request enthalten.
-- Tests beim Einspielen: rund **@@TESTS_SERVER@@** (bisher 398/12).
+- Tests beim Einspielen: rund **428 bestanden, 12 übersprungen** (bisher 398/12; 30 Tests mehr). Laufzeit etwa wie bisher.
 - Erster Aufruf der Sensitivitätsanalyse: rund 50 Sekunden, danach sofort.
 
 ## Im Browser prüfen
 
 1. **Datenqualität → Häufigkeit der Anomalien:** Tabelle „Gültige Schwellenwerte“ mit 12 Zeilen (Standard, KPI 02, KPI 03 · Bundesliga … LaLiga, KPI 04 … KPI 09) und vier Spalten; z. B. KPI 03 · Bundesliga **+35,00 % / +40,00 % / −5,00 % / −10,00 %**.
-2. **Häufigkeit Bundesliga 2025/26:** @@FREQ@@
+2. **Häufigkeit Bundesliga 2025/26** (leicht / stark): KPI 02 **52 / 8**, KPI 03 **31 / 70**, KPI 06 **58 / 45**, KPI 08 **12 / 36**.
 3. **Sensitivitätsanalyse:** 1 cm Abstand unter dem gelben Hinweis; eine Tabelle mit Kopfzeile KPI · Schwellen · Betroffene Spiele · Prognosewert; ⓘ an allen Spalten.
 4. **KPI 02** (Alle Ligen, Alle Saisons): Felder 20.0 / 30.0 / −15.0 / −25.0. Leicht positiv **684** Spiele (0,66 je Spieltag, 48,94 %), 374 eingetroffen, Trefferquote 54,68 %, Vergleichsgruppe 46,56 %, Mehrwert **+8,12**, Funktioniert. Stark positiv **175**, Mehrwert **+12,87**. Total **1'972**, 1'141 eingetroffen, 57,86 %.
 5. **KPI 03** (Alle Ligen): vier leere Felder „je Liga“; leicht positiv **1'589** Spiele, Mehrwert **+8,23**. Eine Zahl eintragen (z. B. 30) → blau, Werte ändern sich; „Auf gültige Schwellen zurücksetzen“ → wieder „je Liga“.
