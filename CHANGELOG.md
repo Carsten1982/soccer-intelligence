@@ -5,6 +5,12 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 15.11.2026 – Spezifikation Datenlieferung über API-Football (v0.3, freigegeben)
+
+- **Carsten** · Entwurf v0.1 (mit ChatGPT erstellt) zur Prüfung übergeben. Konto bei API-Football eröffnet; Test in der Live Demo: Gratis-Plan nur Saisons 2022–2024. Entscheidungen: Pro-Abo 3 Monate (43,20 $); Umstellung der ganzen Datenbank auf API-Daten, wenn die KPI-Felder zu mindestens 99 % mit dem Altbestand übereinstimmen; Werte, die die API nicht liefert (z. B. Halbzeit-Statistiken vor 2024), aus dem Altbestand behalten; Anreicherung (Tabellenstände, Quoten, Machine Learning) erst in Phase 2.
+- **Claude** · Entwurf kritisch geprüft und als v0.2 in `docs/06_Datenlieferung.md` überführt (ersetzt das Footiqo-Konzept, dieses als Anhang): korrigierte Dateinamen und Quellen, neue Fassung statt Änderung der Excel-Datei, keine 59. Spalte (API-Fixture-ID als `id` neuer Spiele), Saison- und Zeitzonen-Umrechnung, Spieltag aus der Runde, Wertungsspiele und eigene Korrekturliste, Statusabbildung auf den Spielplan, Feldzuordnung aller 58 Spalten, Abfragebudget, Rohdatenspeicher, Vollvergleich aller Saisons statt 200 Stichproben, Tests, Phasen und Entscheidungen E1–E12. Befund aus der Datenbank: Schüsse gesamt im Altbestand je Saison unterschiedlich gezählt (Abschnitt 6.1).
+- **Carsten** · Entscheidungen E1–E12 getroffen und Spezifikation freigegeben (v0.3): halbautomatischer Tausch nur 2 Wochen (statt 4), Teamnamen künftig von API-Football (je Team-ID fest hinterlegt), Wettquoten und Verletzungen ab Phase 1 nur sammeln; übrige Vorschläge übernommen. KPI-Freigabe je Liga bleibt geparkt, bis die neue Datenbasis steht.
+
 ## 14.11.2026 – Version 0.13: Neue Schwellen und Sensitivitätsanalyse nach Entwurf C (eingespielt)
 
 - **Carsten** · Schwellen mit der Sensitivitätsanalyse festgelegt (alle Ligen, Saisons 2019/20–2025/26), je KPI positiv und negativ getrennt; Empfehlungen Claude übernommen (KPI 06 stark positiv 25 und negativ 20/30, KPI 03 und KPI 08 neu). KPI 03 je Liga, weil er an der festen Marke 2,5 misst. Rangfolge der Top Anomalien unverändert. Designentwurf C (eine Tabelle, vier Zeilen je KPI) freigegeben mit Anpassungen: 1 cm Abstand unter dem gelben Hinweis, ⓘ bei Ø/ST und Abdeckung, Info-Text Empfehlung, Erklärung der Empfehlungsstufen für einen 16-Jährigen unter „Definitionen und Änderungen“, Eintrag der neuen Schwellen. KPI 03 bei „Alle Ligen“: Feld leer „je Liga“ statt Durchschnitt.

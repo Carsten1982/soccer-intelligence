@@ -1,99 +1,334 @@
-# Soccer Intelligence – Datenlieferung (Konzept)
+# Soccer Intelligence – Datenlieferung über API-Football (Spezifikation)
 
-**Status: Entwurf, noch nicht freigegeben** · Stand 07.11.2026
+**Version 0.3** · Stand 15.11.2026 · **Status: freigegeben von Carsten am 15.11.2026** · Grundlage: Entwurf v0.1 (ChatGPT,
+15.11.2026), kritisch geprüft und ergänzt von Claude (v0.2); Entscheidungen E1–E12 von Carsten am 15.11.2026 (v0.3).
 
-Dieses Dokument hält fest, wie neue Spieldaten künftig regelmässig auf den Server kommen sollen.
-Es ist noch nichts umgesetzt. Programmiert wird erst nach Klärung mit dem Datenlieferanten
-und nach Freigabe durch Carsten (**Etappe G**, nach der Erweiterung auf vier Ligen in Etappe F).
+Diese Datei ist die einzige Stelle für die Datenlieferung: Datenquelle, Feldzuordnung, Abläufe, Abfragebudget und
+offene Entscheidungen. Der Prüfbericht des Vollvergleichs kommt später nach `docs/tests/pruefprotokoll_api.md`.
+Programmiert wird erst nach Freigabe dieser Spezifikation (Arbeitsweise: Vorschlag → Freigabe → Umsetzung).
 
 ---
 
+## 0. Kurzfassung
+
+- **Quelle:** API-Football (API v3, `v3.football.api-sports.io`). **Tarif:** Pro, 3 Monate für 43,20 $ (Entscheidung
+  Carsten). Der Gratis-Plan enthält nur die Saisons 2022–2024 und reicht nicht für den Tagesbetrieb (Test 15.11.2026).
+- **Phase 1 – Datenquelle wechseln:** gleiche Datenbank mit 58 Spalten, KPI-Regelwerk unverändert. Zuerst ein
+  **Vollvergleich** aller Saisons 2018/19–2025/26. Ist er auf den Feldern zu **mindestens 99 % identisch**, wird die
+  Datenbank vollständig aus API-Daten erzeugt; Werte, die die API nicht liefert, werden aus dem Altbestand behalten.
+- **Danach Tagesbetrieb:** Montag bis Freitag um 04:00 (Europe/Zurich) neue Spiele, Statistiken und Spielplan holen;
+  daraus eine **neue Fassung** der Excel-Dateien erzeugen, prüfen und tauschen. Die bestehende Datei wird nie
+  verändert.
+- **Teamnamen:** künftig die Namen von API-Football (E6), je Team-ID fest hinterlegt.
+- **Rohdaten:** Jede API-Antwort wird unverändert gespeichert. Damit sind spätere Auswertungen ohne neue Abfragen
+  möglich. Wettquoten und Verletzungen werden ab Phase 1 nur gesammelt (E10).
+- **Phase 2 – Anreicherung (später):** weitere Statistiken, Tabellenstände (selbst berechnet), Wettquoten,
+  Verletzungen, Datensatz für Machine Learning.
+
 ## 1. Ausgangslage
 
-- Heute: Carsten pflegt `data/Database-Soccer-Intelligence.xlsx` und `data/Spielplan.xlsx` von Hand und lädt sie mit WinSCP hoch.
-- Ziel: weniger Handarbeit, regelmässige Aktualisierung, gleichzeitig keine unkontrollierte Änderung der Datenbank.
+- Heute pflegt Carsten `data/Database-Soccer-Intelligence.xlsx` (58 Spalten, Aufbau `02_Datenbasis.md`) und
+  `data/Spielplan.xlsx` (`04_Spielplan.md`) von Hand und lädt sie hoch (`01`, Abschnitt 6.2).
+- **Footiqo** (Excel-Lieferung, Gespräche bis 06.11.2026) wurde verworfen: Lieferung nur dienstags und freitags um die
+  Mittagszeit, also zu spät für die Analyse der kommenden Spieltage; neues Angebot 19 € statt 9 € je 4 Wochen.
+- **API-Football** liefert Ergebnisse und Statistiken in der Regel am Morgen nach dem Spiel und den Spielplan
+  der ganzen Saison. Gewählt am 15.11.2026.
 
-## 2. Datenlieferant Footiqo (Stand der Gespräche bis 06.11.2026)
+## 2. Ziel und Abgrenzung
 
-Ansprechpartner: Javier (Footiqo). E-Mail-Verlauf bei Carsten, nicht in Git.
+**Ziel Phase 1:** Wechsel der Datenquelle, **keine** Neuentwicklung des KPI-Modells.
 
-| Punkt | Inhalt |
+- Alle 58 Spalten bleiben erhalten (Namen, Reihenfolge, Bedeutung, Format). Keine Spalte kommt dazu.
+- Das KPI-Regelwerk (`03_KPI_Regelwerk.md`) gilt unverändert: letzte 5/10 Spiele, Ligareferenz über 20 Spieltage,
+  2-Tage-Regel, fehlende Werte nie als 0, gerundete Abweichung, gültige Schwellen.
+- Die bestätigten Testfälle (`docs/tests/`) laufen weiter mit ihren Referenzkopien in `tests/referenz/`.
+- Fehlende API-Werte bleiben **leer**; `null` wird nie zu 0; eine echte 0 bleibt 0.
+
+**Nicht Teil von Phase 1:** neue KPIs, neue Spalten, Tabellenstände, Verarbeitung von Wettquoten und Verletzungen
+(nur Sammeln, E10), Machine Learning (siehe Abschnitt 13), KPI-Freigabe je Liga (geparkt, Diskussionspapier vom 14.11.2026).
+
+## 3. Tarif, Kontingent und Grundsätze der Abfrage
+
+| Punkt | Festlegung |
 |---|---|
-| Format | **eine** Excel-Datei (.xlsx), ein Tabellenblatt je Liga, Spalten nach Carstens Beispieldatei |
-| Zugriff | **fester Download-Link** auf der Plattform Footiqo; der Link bleibt dauerhaft gleich und liefert immer die aktuelle Fassung |
-| Aktualisierung | zweimal pro Woche: **dienstags und donnerstags**; die Datei wird jeweils ersetzt |
-| Umfang | **kumulativ**: alle abgeschlossenen Spiele ab Saison 2020/21, neue Spiele werden laufend ergänzt (keine Teillieferungen) |
-| Spiel-ID | eindeutig und **dauerhaft**, auch bei Verlegungen |
-| Abgesagte Spiele | nicht enthalten, solange sie nicht tatsächlich gespielt wurden |
-| Korrekturen | selten; Footiqo informiert darüber |
-| API | keine |
-| Preis (Angebot) | 49.99 € (Historie + 4 Wochen Updates), danach 9.99 € je 4 Wochen oder 99.99 € für 12 Monate; keine Verlängerungspflicht |
+| Gratis-Plan | 100 Abfragen pro Tag, nur Saisons 2022–2024. Test 15.11.2026: `fixtures?league=78&season=2026` → „Free plans do not have access to this season, try from 2022 to 2024.“ |
+| Betrieb | **Pro**, 3 Monate (43,20 $), laut Anbieter 7'500 Abfragen pro Tag. Vor Abschluss im Dashboard prüfen: automatische Verlängerung, und bei Überschreitung **sperren statt Zusatzkosten**. |
+| Eigene Obergrenze | **500 Abfragen pro Tag** im Tagesbetrieb (Schutz gegen Fehler im Skript; für den einmaligen Vollvergleich 4'000, Abschnitt 12). Bei Erreichen stoppen alle nicht zwingenden Abrufe, und es erscheint eine Meldung. |
+| Zählung | Jede HTTP-Anfrage zählt als eine Abfrage, unabhängig von der Anzahl Spiele in der Antwort (laut Anbieter, im Test zu bestätigen). Das verbleibende Kontingent steht in den Antwort-Kopfzeilen (`x-ratelimit-requests-remaining`, zu bestätigen); `status` zählt nicht. |
+| Minutenlimit | Abfragen gedrosselt (höchstens eine pro Sekunde, im Test anpassen). |
+| Fehler | Höchstens 3 Wiederholungen mit wachsender Wartezeit, danach Abbruch mit Meldung; nie eine Endlosschleife. |
+| Schlüssel | API-Schlüssel nur in `.env` auf dem Server (wie der Passwort-Hash), nie in Code, Logs, Rohdaten, Excel oder Git. Für Tests von Claude über das sichere Formular der Arbeitsumgebung, nie im Chat. **Der am 15.11.2026 auf einem Screenshot sichtbare Schlüssel wird vor dem Betrieb ersetzt.** |
+| Daten zuerst sichern | Jede Antwort wird zuerst als Rohdatei gespeichert (Abschnitt 11), erst danach verarbeitet. |
 
-**Gewünschte Ligen:** Bundesliga, Premier League, Serie A, LaLiga (Etappe F). Weitere Ligen ggf. später.
+## 4. API-Grundlagen
 
-## 3. Noch offene Fragen an Footiqo
+| Punkt | Inhalt | Geprüft? |
+|---|---|---|
+| Ligen | Bundesliga **78**, Premier League **39**, Serie A **135**, LaLiga **140** | ja (Bundesliga 78, Saison 2026 „Current“) |
+| Saison | API-Saison = Startjahr: `2025` ↔ `2025/2026` | ja |
+| Zeitzone | `timezone=Europe/Zurich`; unsere Spalte `matchDate` steht schon in mitteleuropäischer Zeit (Beispiel Bundesliga 08.11.2026, 19:30) | zu bestätigen im Vergleich |
+| Spielliste | `fixtures?league=…&season=…` liefert die ganze Saison (alle Runden, Status, Ergebnisse) in **einer** Abfrage | zu testen |
+| Mehrfachabfrage | `fixtures?ids=ID1-ID2-…` (bis 20 Spiele) liefert je Spiel zusätzlich `events`, `lineups`, `statistics`, `players` | zu testen (wichtigste offene Frage) |
+| Halbzeit-Statistik | `fixtures/statistics?fixture=…&half=true`, laut Anbieter erst ab Saison 2024; eine Abfrage je Spiel | zu testen |
+| Status | `status` zeigt Plan und Verbrauch, zählt nicht zum Kontingent | zu testen |
 
-1. Werden fehlende Einzelstatistiken (z. B. Ecken, Gelbe Karten) in einer späteren Lieferung nachgeliefert?
-2. Kann die Spalte **`Gameday`** (offizieller Spieltag) mitgeliefert werden? Sie würde die berechneten Spieltage von Serie A und LaLiga ersetzen (siehe `02_Datenbasis.md`, Abschnitt 4c).
-3. **Nutzungsrechte:** Dürfen daraus berechnete Kennzahlen (nicht die Rohdaten) auf einer nicht-kommerziellen Website gezeigt werden, mit Footiqo als Quelle?
-4. **Spielplan:** Kann Footiqo auch die angesetzten Spiele liefern? (Carsten klärt das ab, 07.11.2026.) Sonst bleibt der Spielplan Handarbeit, mit der Pflegeregel aus `04_Spielplan.md`.
+## 5. Feldzuordnung der 58 Spalten
 
-Bewusst **nicht** nötig (lösen wir selbst): Dateiname, Uhrzeit des Updates, Aufbewahrung früherer Fassungen, Kennzeichnung von Korrekturen (unser Vergleich findet jede Änderung).
+Status: **D** = direkt übernehmbar · **T** = mit Umwandlung · **E** = aus Ereignissen gezählt · **H** = nur ab 2024
+(Halbzeit-Statistik) · **A** = Altbestand behalten, falls die API nichts liefert. Alle Zuordnungen werden im Vollvergleich
+geprüft; vorher gelten sie als „noch nicht geprüft“.
 
-## 4. Grundsätze (Vorschlag)
+| Spalte(n) | Inhalt | API-Quelle | Umwandlung | Status |
+|---|---|---|---|---|
+| A `Date` | Spieldatum | `fixture.date` | Datum ohne Uhrzeit, Europe/Zurich | T |
+| B `Gameday` | Spieltag | `league.round` „Regular Season – 12“ | Zahl aus dem Text; Nachholspiel muss die ursprüngliche Runde behalten (Regel `02`) | T, zu prüfen |
+| C `id` | Spiel-ID | bestehende Spiele: unverändert · neue: `fixture.id` | Entscheidung E2 | T |
+| D `matchDate` | Datum und Uhrzeit | `fixture.date` | Text `TT-MM-JJ HH:MM`, Europe/Zurich | T |
+| E `Country` | Land | `league.country` | Germany, England, Italy, Spain wie bisher | T |
+| F `League` | Liga | `league.name` | unsere Namen (Bundesliga, Premier League, Serie A, LaLiga) | T |
+| G `Season` | Saison | `league.season` | `2025` → `2025/2026` | T |
+| H, I `homeTeam`, `awayTeam` | Teams | `teams.home/away.id` | Name von API-Football, je Team-ID fest hinterlegt (E6) | T |
+| J `referee` | Schiedsrichter | `fixture.referee` | „Name, Land“ → „Name“; Schreibweise kann abweichen (nur Anzeige) | T |
+| K–M `FT …` | Endstand und Ergebnis | `score.fulltime` | H/D/A berechnen; Wertungsspiele siehe 6.3 | T |
+| N–P `Full-Time …` | Endstand (doppelt, beabsichtigt) | wie K–M | identisch zu K–M | T |
+| Q–S `First-Half …` | Halbzeitstand | `score.halftime` | H/D/A berechnen | T |
+| T–V `Second-Half …` | Tore 2. Halbzeit | `score.fulltime − score.halftime` | getrennt, nicht kumuliert | T |
+| W, X Ecken gesamt | Corner Kicks | `statistics` „Corner Kicks“ | Zahl; `null` bleibt leer | D |
+| Y–AB Ecken je Halbzeit | Corner Kicks | `half=true` | ab 2024; vorher Altbestand | H, A |
+| AC, AD Gelbe Karten gesamt | Yellow Cards (KPI 04) | `statistics` „Yellow Cards“ | Zählweise Gelb-Rot prüfen (6.2) | D, zu prüfen |
+| AE–AH Gelbe Karten je Halbzeit | Karten-Ereignisse | `events` (type Card, Minute) | zählen nach Minute ≤ 45+ / > 45; alle Saisons möglich | E |
+| AI, AJ Ballbesitz gesamt | Ball Possession | `statistics` | „55%“ → 55 | T |
+| AK–AN Ballbesitz je Halbzeit | Ball Possession | `half=true` | ab 2024; vorher Altbestand | H, A |
+| AO, AP Schüsse gesamt | Total Shots | `statistics` | Zahl; Zählweise Altbestand uneinheitlich (6.1) | D, zu prüfen |
+| AQ–AT Schüsse je Halbzeit | Total Shots | `half=true` | ab 2024; vorher Altbestand | H, A |
+| AU, AV Schüsse aufs Tor gesamt | Shots on Goal (KPI 09) | `statistics` | Zahl | D |
+| AW–AZ Schüsse aufs Tor je Halbzeit | Shots on Goal | `half=true` | ab 2024; vorher Altbestand | H, A |
+| BA, BB Schüsse daneben gesamt | Shots off Goal | `statistics` | Zahl; ohne geblockte (6.1) | D, zu prüfen |
+| BC–BF Schüsse daneben je Halbzeit | Shots off Goal | `half=true` | ab 2024; vorher Altbestand | H, A |
+| Blatt *Datenhinweise* | eigene Hinweise | – | bleibt unverändert, wird nie aus der API erzeugt | – |
 
-- **Wir holen ab.** Der Server lädt die Datei selbst über den Download-Link. Kein Zugang für Dritte auf den Server.
-- Der **Download-Link gilt als Geheimnis**: nur in `.env`, nie in Git oder in der Dokumentation.
-- **Täglich nachsehen, nur bei Änderung verarbeiten:** Der Abholdienst lädt einmal täglich, vergleicht die Prüfsumme mit der letzten Fassung und arbeitet nur weiter, wenn sich etwas geändert hat. Damit ist die Uhrzeit des Updates egal.
-- **Prüfschranke:** Eine Lieferung wird erst übernommen, wenn alle Prüfungen bestanden sind. Sonst bleibt die bisherige Datenbank gültig; lieber veraltete als falsche Daten.
-- Alle gelieferten Dateien werden mit Datum aufbewahrt (`data/eingang/`), die ersetzte Datenbank kommt nach `backup/`.
+**Für KPIs massgeblich** (Abnahme mit 99 %): Tore Endstand und Halbzeit (K, L, Q, R, T, U), Ecken gesamt (W, X), Gelbe
+Karten gesamt (AC, AD), Schüsse aufs Tor gesamt (AU, AV), dazu Datum, Teams und Spieltag.
 
-## 5. Ablauf des Abholdienstes (Vorschlag)
+## 6. Bekannte Unterschiede und Risiken
+
+### 6.1 Schüsse: Altbestand zählt uneinheitlich
+
+Im Altbestand gilt meist „Schüsse gesamt > aufs Tor + daneben“: Geblockte Schüsse zählen zu „gesamt“, aber nicht zu
+„daneben“. In einigen Saisons sind beide Werte gleich, dort fehlen die geblockten Schüsse in „gesamt“:
+
+| Liga | Saisons mit gesamt = aufs Tor + daneben |
+|---|---|
+| Bundesliga | 2020/21–2023/24 (fast alle Spiele) |
+| Premier League | 2023/24 |
+| Serie A | 2018/19–2019/20, 2020/21 teilweise |
+| LaLiga | keine |
+
+Der Vergleich wertet die Schüsse darum **je Saison** aus. KPI 09 (aufs Tor) ist nicht betroffen; der Versuchs-KPI 12
+(Offensivdruck) würde einheitlichere Werte erhalten.
+
+### 6.2 Zählweisen, die der Vergleich klären muss
+
+- **Gelb-Rot:** Zählt die zweite Gelbe als Gelbe Karte (Altbestand und API)? Wirkt direkt auf KPI 04.
+- **Karten für Trainer oder Ersatzspieler auf der Bank:** zählen sie mit?
+- **Eigentore:** gehen in den Endstand ein (unverändert); nur bei Torminuten aus Ereignissen relevant.
+- **Nachspielzeit:** Ereignisse in der Nachspielzeit der 1. Halbzeit gehören zur 1. Halbzeit (`time.elapsed` 45 plus `time.extra`).
+- **Fehlende Statistik:** kommt sie als `null`, als fehlender Eintrag oder als 0? Nur eine ausdrücklich gelieferte 0 ist eine 0.
+
+### 6.3 Wertungsspiele und eigene Korrekturen
+
+- Die Datenbank führt das **Ergebnis auf dem Platz**, nicht die Wertung (Union Berlin – Bochum 2024/25, Verona – Roma
+  2020/21; `02_Datenbasis.md`). Die API liefert bei Wertungen vermutlich das gewertete Ergebnis (Status `AWD`/`WO`).
+  Solche Spiele werden **nie automatisch** übernommen, sondern gemeldet.
+- **Eigene Korrekturliste:** Nachträge, Löschungen (z. B. Serie A 2019/20, Entscheidungsspiel Spezia – Verona) und
+  Korrekturen aus `02` stehen in einer Liste, die bei jeder Erzeugung der Datenbank angewendet wird. Sie gehen durch
+  den Wechsel der Quelle nicht verloren.
+
+### 6.4 Halbzeit-Statistiken vor 2024
+
+Ecken, Ballbesitz und Schüsse je Halbzeit liefert die API erst ab 2024. Vor 2024 bleiben die Werte des Altbestands
+(Entscheidung Carsten 15.11.2026), sofern der Vollvergleich die übrigen Felder bestätigt. Keine dieser Spalten wird
+heute von einem KPI genutzt.
+
+## 7. Spiel-ID, Teamnamen und Stichtag
+
+- **Bestehende Spiele** behalten ihre `id`; es gibt keine Umnummerierung.
+- **Neue Spiele** (ab Stichtag, E4) erhalten als `id` die API-Fixture-ID (E2). Kollisionen sind ausgeschlossen: unsere IDs
+  liegen heute unter 160'000, die API-IDs über 1 Million. So bleiben es 58 Spalten.
+- **Zuordnung alter Spiele zu API-Spielen** (für Vergleich und Erzeugung): über Liga, Saison, Heimteam, Gastteam und
+  Datum. Die Zuordnungstabelle (unsere `id` ↔ API-ID) wird als eigene Datei gespeichert und ist danach fest.
+- **Teamnamen (E6, Carsten 15.11.2026): die Namen von API-Football** (z. B. statt `FC Koln` der Name der API). Sie
+  werden je Team-ID **einmal festgehalten** (`app/config/teams.toml`, Felder `api_team_id` und `team_name`), damit eine
+  spätere Namensänderung bei der API (z. B. Sponsor) nicht still alle Spiele umbenennt; eine Änderung wird gemeldet.
+  Mit der Umstellung (Phase 3) erhalten **alle** Spiele, auch die historischen, die neuen Namen; ebenso der Spielplan.
+  Die Testfälle in `docs/tests/` und `tests/referenz/` behalten ihre bisherigen Namen (eigene Referenzkopien).
+  Neue Teams (Aufsteiger) werden gemeldet, nie geraten.
+- **Doppelte Spiele** sind ausgeschlossen: Ein Spiel wird über seine Fixture-ID erkannt, auch nach einer Verlegung.
+
+## 8. Spielplan
+
+Der Spielplan wird aus der Spielliste der Saison erzeugt (eine Abfrage je Liga). Zielformat bleibt `Spielplan.xlsx`
+nach `04_Spielplan.md`: Saison, Spieltag, Datum von, Datum bis, Heimmannschaft, Gastmannschaft, Status. Zusätzlich
+erlaubt (werden von der App ignoriert): Anstosszeit, API-Fixture-ID.
+
+- **Umfang:** alle noch nicht gespielten Spiele der laufenden Saison, mindestens die nächsten 14 Tage.
+- **Datum von / bis** je Spieltag nach der bestehenden Regel (`04`, Abschnitt 6): Hauptzeitraum des Spieltags; ein Spiel
+  mehr als 3 Tage ausserhalb erhält `verschoben`.
+- **Status der API** auf unsere Werte abgebildet:
+
+| API | Bedeutung | Spielplan |
+|---|---|---|
+| `TBD`, `NS` | angesetzt | `geplant` |
+| `1H`, `HT`, `2H`, `ET`, `BT`, `P`, `LIVE`, `SUSP`, `INT` | läuft oder unterbrochen | `geplant` (noch kein Ergebnis) |
+| `FT`, `AET`, `PEN` | beendet | Spiel kommt in die Datenbank |
+| `PST` | verschoben | `verschoben` |
+| `CANC` | abgesagt | `abgesagt` |
+| `ABD` | abgebrochen | E9 |
+| `AWD`, `WO` | gewertet | Meldung, Entscheid von Hand (6.3) |
+
+## 9. Phase A: Vollvergleich (Skript A)
+
+**Zweck:** Prüfen, ob die API-Daten unseren Altbestand ersetzen können. Keine Änderung an produktiven Dateien.
+
+- **Umfang:** alle Spiele 2018/19–2025/26 der vier Ligen (rund 11'000), dazu Halbzeit-Statistiken 2024/25 und
+  2025/26. Statt der 200 Stichproben aus v0.1, weil das Kontingent von Pro das erlaubt und kleine Stichproben
+  Zählweisen übersehen können.
+- **Ablauf:** Spielliste je Liga und Saison → Zuordnung zu unseren Spielen → Mehrfachabfrage (20 Spiele je Abfrage) →
+  Rohdaten speichern → Umwandlung nach Abschnitt 5 → Vergleich Feld für Feld.
+- **Bericht** (`docs/tests/pruefprotokoll_api.md`) je Liga, Saison und Feld: Anzahl verglichen, gleich, abweichend,
+  fehlend (API oder Altbestand), mit Beispielen. Jede Abweichung wird eingeordnet als technische Abweichung (Format),
+  echte Datenabweichung, andere Zählweise oder fehlender Wert. Dazu: nicht zuordenbare Spiele, Wirkung auf die KPIs
+  (KPI-Werte mit beiden Quellen gerechnet, Anzahl geänderter Anomalien).
+- **Abnahmeregel (Carsten 15.11.2026):** Sind die für KPIs massgeblichen Felder (Abschnitt 5) zu **mindestens 99 %**
+  identisch, wird umgestellt. Bei geringerer Übereinstimmung entscheidet Carsten anhand des Berichts.
+- **Danach** läuft die Sensitivitätsanalyse einmal mit den neuen Daten, um zu bestätigen, dass die gültigen
+  Schwellen weiter passen.
+
+## 10. Phase B: Tagesbetrieb (Skript B)
+
+**Rhythmus:** Montag bis Freitag um 04:00 Europe/Zurich (E8). Geprüft mit der 2-Tage-Regel: Wochenendspiele sind am
+Montag da, Montagsspiele am Dienstag, Spiele unter der Woche am Folgetag, also immer vor dem nächsten Spieltag.
+
+**Ablauf je Lauf:**
 
 ```
-täglich, z. B. 06:00
-1. Abholen      Datei über den Download-Link laden
-2. Vergleichen  Prüfsumme gleich wie zuletzt → Ende (nichts zu tun)
-3. Ablegen      data/eingang/<Datum>_footiqo.xlsx
-4. Prüfen       dieselben Prüfregeln wie im Bereich Datenqualität (02_Datenbasis.md)
-5. Vergleichen  neu gegen aktuell (siehe 6)
-6. Entscheiden  ok → alte Datenbank nach backup/, neue wird gültig (Dashboard liest automatisch neu ein)
-                Problem → nichts ändern, Bericht ablegen
-7. Melden       Kurzmeldung an Carsten; Anzeige „Letzter Import“ im Bereich Datenqualität
-8. Ausbleiben   seit mehr als 5 Tagen keine neue Fassung → Warnung
+1. Kontingent prüfen (status)
+2. Spielliste je Liga holen (4 Abfragen): Ergebnisse, Status, Spielplan der ganzen Saison
+3. Fertige Spiele seit dem letzten erfolgreichen Lauf plus 3 Tage zurück bestimmen
+   (Nachholspiele, späte Statistiken, Korrekturen)
+4. Details dieser Spiele per Mehrfachabfrage holen (20 Spiele je Abfrage), ab 2024 Halbzeit-Statistik je Spiel
+5. Rohdaten speichern
+6. Neue Fassung erzeugen: Altbestand + neue Spiele (+ geänderte Werte) + eigene Korrekturliste
+   → data/eingang/<Datum>_Database.xlsx und <Datum>_Spielplan.xlsx
+7. Prüfen mit den bestehenden Prüfregeln (02, 04) und Vergleich mit der gültigen Fassung
+8. Tauschen (E3) oder bei Problemen nichts ändern und melden
+   Zusätzlich (E10): Wettquoten der kommenden Spiele und Verletzungen nur als Rohdaten speichern
+9. Protokoll: Abfragen, neue Spiele, Korrekturen, fehlende Werte, Meldungen
 ```
 
-## 6. Vergleich neu gegen bisher
+**Regeln:**
+- **Prüfschranke:** Eine neue Fassung wird nur gültig, wenn alle Prüfungen bestanden sind. Lieber veraltete als falsche
+  Daten.
+- **Vergleich neu gegen bisher:** neues Spiel → übernehmen · leerer Wert jetzt gefüllt → übernehmen und melden ·
+  gefüllter Wert jetzt anders → melden, Carsten entscheidet · Spiel fehlt plötzlich → Fassung ablehnen.
+- Spiele **ohne Statistik** am Morgen nach dem Spiel werden mit leeren Werten übernommen und bei den nächsten Läufen
+  nachgefüllt (höchstens 7 Tage lang, danach Meldung).
+- Spiele vor dem Stichtag werden im Tagesbetrieb **nie** verändert.
+- Die ersetzte Fassung kommt nach `backup/`. Das Dashboard liest die neue Datei beim nächsten Aufruf automatisch.
 
-Footiqo liefert immer den **ganzen Bestand**. Verglichen wird über die Spiel-`id`:
+**Technik:** eigener kleiner Container `soccer-import` im Projektordner mit Zeitplan (wie im Konzept vom 07.11.2026);
+nur er schreibt in `data/eingang/` und tauscht Dateien; das Dashboard bleibt nur lesend. Wiederverwendung von Loader
+und Prüfregeln aus `app/core/`. Kein Eingriff in Traefik oder andere Container; Einrichtung nur mit Freigabe Carsten
+(Schutzregeln `01`, Abschnitt 5).
 
-| Fall | Behandlung |
+## 11. Rohdatenspeicher
+
+- Jede API-Antwort unverändert als komprimierte Datei (`data/api_roh/<Jahr>/<Datum>/<Endpunkt>_<Parameter>.json.gz`).
+- Dazu je Abfrage: Abrufzeit, Endpunkt, Parameter (ohne Schlüssel), Liga, Saison, Fixture-IDs, HTTP-Status,
+  verbleibendes Kontingent, Verarbeitungsstatus.
+- Nie in Git; im Backup enthalten. Geschätzt wenige hundert MB für alle Saisons.
+- Die Excel-Fassung lässt sich jederzeit aus den Rohdaten neu erzeugen, ohne neue Abfragen.
+
+## 12. Abfragebudget (Schätzung, im Test zu bestätigen)
+
+| Vorgang | Abfragen |
 |---|---|
-| neues Spiel | übernehmen |
-| Spiel unverändert | nichts zu tun |
-| Wert war leer, ist jetzt gefüllt (Nachlieferung) | übernehmen, im Bericht erwähnen |
-| Wert war gefüllt, ist jetzt **anders** (Korrektur) | auflisten; Carsten entscheidet |
-| Spiel fehlt in der neuen Datei | **nicht** übernehmen, Lieferung ablehnen und melden |
+| Vollvergleich: Spielliste je Liga und Saison (4 × 8) | 32 |
+| Vollvergleich: Mehrfachabfrage, rund 11'000 Spiele ÷ 20 | ≈ 560 |
+| Vollvergleich: Halbzeit-Statistik 2024/25 und 2025/26 (je Spiel) | ≈ 2'900 |
+| **Vollvergleich gesamt** | **≈ 3'500**, einmalig, an einem Tag möglich (Pro). Für diesen Lauf gilt eine eigene Obergrenze von 4'000, die beim Start ausdrücklich gesetzt wird. |
+| Tagesbetrieb: Status + Spielliste | 5 |
+| Tagesbetrieb: Mehrfachabfrage (bis 38 Spiele) | 2–3 |
+| Tagesbetrieb: Halbzeit-Statistik je Spiel | bis 38 |
+| Tagesbetrieb: Wettquoten und Verletzungen sammeln (E10) | wenige, im Test zu bestimmen |
+| **Tagesbetrieb je Lauf** | **≈ 10–50**, weit unter 500 |
 
-**Eigene Ergänzungen bleiben erhalten:** Spieltage (`Gameday`), Nachträge wie Union – Bochum oder Verona – Roma und die Löschungen aus `02_Datenbasis.md`, Abschnitt 4c, dürfen durch eine Lieferung nicht verloren gehen. Wie das genau geregelt wird (z. B. eigene Korrekturliste, die nach jedem Import angewendet wird), wird in der Spezifikation von Etappe G festgelegt.
+Mit Pro bleibt viel Reserve; die Planung „höchstens 80 pro Tag“ aus v0.1 ist damit nicht mehr nötig.
 
-**Teamnamen:** Weichen sie von unseren ab, braucht es eine Zuordnungstabelle. Das zeigt der erste Vergleich nach dem Testkauf.
+## 13. Phase 2: Anreicherung (später, eigene Spezifikation)
 
-## 7. Technik (Vorschlag)
+Nach dem Wechsel der Quelle, als eigener Schritt (Entscheidung Carsten 15.11.2026):
 
-- Eigener kleiner Container `soccer-import` im Projektordner, mit eigenem Zeitplan. Keine Änderung an der Server-Konfiguration.
-- Nur der Abholdienst darf in `data/` schreiben; das Dashboard bleibt nur lesend.
-- Wiederverwendung von Loader und Prüfregeln aus `app/core/`. Neu: Abholen, Vergleich, Übernahme, Meldung.
+- **Weitere Statistiken** aus den Rohdaten, ohne neue Abfragen: Fouls, Abseits, geblockte Schüsse, Schüsse im und
+  ausserhalb des Strafraums, Pässe, Paraden, xG (falls vorhanden), Torminuten, Aufstellungen.
+- **Tabellenstände vor jedem Spieltag** selbst aus den Ergebnissen berechnet. Die API liefert nur die aktuelle Tabelle;
+  für die Vergangenheit führte sie zu Wissen aus der Zukunft.
+- **Wettquoten vor dem Spiel** und **Verletzungen/Sperren:** lassen sich vermutlich nicht nachträglich für vergangene
+  Spiele abfragen (zu prüfen). Darum werden sie ab Phase 1 als Rohdaten gesammelt (E10) und erst hier verarbeitet.
+- **Datensatz für Machine Learning** als eigene Datei aus den Rohdaten; jedes Merkmal nur mit dem Wissen vor dem Spiel.
 
-## 8. Vorgehen
+## 14. Tests und Abnahme
 
-1. Antworten von Footiqo auf Abschnitt 3.
-2. Testkauf und **einmaliger Vergleich** der gelieferten Datei mit der heutigen Datenbank: Spalten, Teamnamen, IDs, Zählweise (v. a. Gelbe Karten, KPI 04), fehlende Werte, Spieltage.
-3. Import-Regeln als Spezifikation, Freigabe durch Carsten.
-4. Stufe 1: Abholdienst wird von Hand gestartet.
-5. Stufe 2: täglicher Zeitplan und Meldung.
+- **Datenstruktur:** 58 Spalten, Namen, Reihenfolge, Formate; Blatt *Datenhinweise* unverändert; erzeugte Datei besteht
+  die Prüfregeln aus `02` und `04`.
+- **Umwandlung:** je Feld ein Test mit gespeicherten Beispiel-Antworten der API (ohne Netz): Endstand, Halbzeit, 2.
+  Halbzeit, Ecken, Karten (inkl. Gelb-Rot und Nachspielzeit), Ballbesitz „55%“, fehlender Wert bleibt leer, echte 0
+  bleibt 0, Saison, Zeitzone, Spieltag aus der Runde.
+- **Zuordnung:** neues Spiel wird angelegt; vorhandenes nicht verdoppelt; gleiche Teams an verschiedenen Terminen
+  getrennt; verschobenes Spiel über die Fixture-ID aktualisiert; abweichende Teamnamen korrekt zugeordnet; unbekanntes
+  Team gemeldet.
+- **Spielplan:** neue Spiele ergänzt, mindestens 14 Tage, Verschiebungen und Absagen gekennzeichnet, Spieltag und
+  Hauptzeitraum richtig.
+- **Kontingent:** Zählung, Stopp bei der Obergrenze, keine Endlosschleife bei Fehlern.
+- **Sicherheit:** kein Schlüssel in Code, Rohdaten oder Logs (Test sucht danach); bei Fehlern bleibt die gültige Fassung
+  unverändert.
+- **KPIs:** bestätigte Testfälle grün; Vollvergleich der Dashboard-Werte alte gegen neue Datenquelle mit Bericht.
 
-## 9. Alternativen (zur Einordnung)
+## 15. Arbeitsphasen und Freigaben
 
-- **Fussball-API:** sauber dokumentiertes Format, aber Zuordnungstabelle nötig, Abfrage-Grenzen, Detailstatistiken meist kostenpflichtig. Denkbar als Ergänzung nur für den **Spielplan**, falls Footiqo ihn nicht liefert. Vorher Anbieter und Kosten recherchieren.
-- **Weiter von Hand:** möglich; die Prüfungen im Bereich Datenqualität bleiben in jedem Fall bestehen.
+| Phase | Inhalt | Ergebnis | Freigabe |
+|---|---|---|---|
+| 0 | Spezifikation (diese Datei) | v0.3, freigegeben 15.11.2026 | Carsten |
+| 1 | Zugang: Pro-Abo; Schlüssel und Netzfreigabe für Claudes Arbeitsumgebung; Test der offenen API-Fragen (Abschnitt 4) | kurzer Testbericht | – |
+| 2 | Skript A und Vollvergleich, nur in der Arbeitsumgebung, keine produktiven Dateien | `pruefprotokoll_api.md` | Carsten: Umstellung ja/nein |
+| 3 | Erzeugung der Datenbank aus API-Daten + Altbestand + Korrekturliste; Vollvergleich der Dashboard-Werte; Sensitivitätsanalyse neu | neue Datenbank, Bericht | Carsten |
+| 4 | Skript B und Container `soccer-import`, zuerst halbautomatisch | Release mit Tests | Carsten |
+| 5 | Abnahme nach 2 Wochen Betrieb; Entscheid über vollautomatischen Tausch | Eintrag CHANGELOG | Carsten |
+| später | Phase 2: Anreicherung | eigene Spezifikation | Carsten |
+
+## 16. Entscheidungen
+
+| # | Frage | Stand |
+|---|---|---|
+| E1 | Tarif | **Entschieden:** Pro, 3 Monate (43,20 $). Gratis-Plan nur für erste Versuche (Saisons 2022–2024). |
+| E2 | ID neuer Spiele | **Entschieden:** API-Fixture-ID als `id`; keine neue Spalte. |
+| E3 | Automatisierung | **Entschieden:** 2 Wochen halbautomatisch (Carsten bestätigt den Tausch mit einem Befehl), danach automatisch. |
+| E4 | Stichtag für API-IDs | **Entschieden:** erster Spieltag nach der Abnahme von Phase 3. |
+| E5 | Halbzeit-Statistik ab 2024 | **Entschieden:** holen (rund 38 Abfragen je Spieltag). |
+| E6 | Teamnamen | **Entschieden:** Namen von API-Football, je Team-ID fest hinterlegt (Abschnitt 7). |
+| E7 | Umfang Vergleich | **Entschieden:** Vollvergleich aller Saisons statt 200 Stichproben; Abnahme bei mindestens 99 %. |
+| E8 | Rhythmus | **Entschieden:** Montag bis Freitag 04:00 Europe/Zurich, je Lauf „seit letztem Lauf plus 3 Tage“. |
+| E9 | Abgebrochene Spiele (`ABD`) | **Entschieden:** neuer Status `abgebrochen` im Spielplan (Ergänzung `04`, Prüfregel und Anzeige wie `abgesagt`). |
+| E10 | Wettquoten und Verletzungen | **Entschieden:** ab Phase 1 nur sammeln (Rohdaten), Verarbeitung in Phase 2. |
+| E11 | Altwerte, die die API nicht liefert | **Entschieden:** behalten, sofern der Vergleich die übrigen Daten bestätigt. |
+| E12 | Umstellung der ganzen Datenbank auf API-Daten | **Entschieden:** ja, wenn die KPI-Felder zu mindestens 99 % identisch sind. |
+
+Alle Entscheidungen von Carsten am 15.11.2026.
+
+## Anhang: Vorgeschichte Footiqo (bis 07.11.2026)
+
+Footiqo bot eine kumulative Excel-Datei (Historie ab 2020/21) über einen festen Download-Link an, zweimal pro Woche
+aktualisiert, ohne API und ohne Spielplan. Preis: 49,99 € (Historie + 4 Wochen), danach 9,99 € je 4 Wochen; später
+19 €. Verworfen wegen der Lieferzeiten (dienstags und freitags mittags). Die damals festgelegten Grundsätze
+(Prüfschranke, Eingangsordner, eigene Korrekturen bleiben erhalten, Dashboard nur lesend) gelten weiter und sind oben
+eingearbeitet.
