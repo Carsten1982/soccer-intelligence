@@ -1,18 +1,19 @@
-# Release: Doku: Version 0.13 eingespielt
+# Release: Doku: Spezifikation Datenlieferung über API-Football (v0.2)
 
-**Stand:** 14.11.2026 · Version bleibt 0.13 · Nur Doku, kein Code geändert · Auftrag Carsten 14.11.2026
+**Stand:** 15.11.2026 · Version bleibt 0.13 · Nur Doku, kein Code geändert · Auftrag Carsten 15.11.2026
 
-**Commit:** Doku: Version 0.13 eingespielt (89128e5)
+**Commit:** Doku: Spezifikation Datenlieferung über API-Football (v0.2, Entwurf)
 
 ## Was ändert sich?
 
-- `docs/01_Technisches_Setup.md`, Abschnitt 0: In Betrieb ist Version 0.13; Versionstabelle mit Einspieldatum 14.11.2026, Git `89128e5`, 428 Tests.
-- `CHANGELOG.md`: Eintrag Version 0.13 auf „(eingespielt)“ gesetzt, Einspielen festgehalten.
+- `docs/06_Datenlieferung.md`: neue Fassung, Spezifikation v0.2 der Datenlieferung über API-Football (Entwurf zur Freigabe). Das bisherige Footiqo-Konzept steht als Anhang.
+- `docs/01_Technisches_Setup.md`, Abschnitt 0: „Als Nächstes“ nachgeführt.
+- `CHANGELOG.md`: Eintrag 15.11.2026.
 
 ## Erwartungswerte
 
-- Git-Stand vorher: `89128e5`.
-- Tests: **428 bestanden, 12 übersprungen** (rund 8 Minuten).
+- Git-Stand vorher: `9a0b4d9`.
+- Tests: unverändert **428 bestanden, 12 übersprungen**.
 
 ## Im Browser prüfen
 
