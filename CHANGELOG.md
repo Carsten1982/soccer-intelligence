@@ -5,6 +5,11 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 15.11.2026 – Version 0.14 eingespielt, Nachtrag 0.14.1 (Teamnamen mit Akzenten)
+
+- **Carsten** · API-Schlüssel in `.env` eingetragen (Kontrolle: 32 Zeichen). Pull Request #9 zusammengeführt (`8260056`). Einspielen: Verbindung der Browser-Konsole in Schritt 4 abgerissen; Tests (441 bestanden, 12 übersprungen) und Neubau danach von Hand in `tmux`; beide Container laufen, `/` = 200, `/dashboard/` = 401. Erster Lauf von Hand (`--jetzt`, 9 Abfragen): 0 neue Spiele, 0 Korrekturen, Vollständigkeit überall vollständig, Prüfung 0 Fehler / 35 Warnungen wie bisher, 30 Teamnamen umgestellt, Spielplan 1'446 Spiele (neu 1'368, geändert 78 – genaue Spieltage statt Zeiträume, 4 LaLiga-Spiele vom 1. Spieltag „verschoben“, entfallen 0). Übernommen 15.11.2026 14:37. Entscheidung: Teamnamen mit ü und Akzenten schreiben, wo die API sie weglässt.
+- **Claude** · 0.14.1: `teamnamen.toml` – 10 Teams mit ü/Akzent (Fortuna Düsseldorf, 1. FC Nürnberg, SpVgg Greuther Fürth, Alavés, Almería, Atlético Madrid, Cádiz, Deportivo La Coruña, Leganés, Málaga); `alt` darf eine Liste sein (bisherige und API-Schreibweise), die API-Schreibweise löst keine Meldung „Namensänderung“ aus. `einspielen.sh`: merkt sich einen geholten, aber nicht fertig eingespielten Stand (`backup/EINSPIELEN_OFFEN`) und macht beim nächsten Aufruf mit Tests und Neubau weiter. Statustext im Protokoll ohne Doppelung („übernommen 15.11.2026 14:37 (Dashboard)“). `01` Abschnitt 6.1: Einspielen immer in `tmux`. Tests: Akzent-Namen, Weitermachen nach Abbruch. Gesamt 440 bestanden, 15 übersprungen (ohne echte Daten).
+
 ## 15.11.2026 – Version 0.14: Datenimport über API-Football
 
 - **Carsten** · Designentwurf Reiter „Datenimport/API“ freigegeben; Entscheidungen: eigener Reiter mit „Übernehmen“/„Verwerfen“ und Qualitätsbericht, Vollständigkeit gegen den Spielplan, 2 Wochen halbautomatisch, je Lauf die letzten 2 Spieltage neu holen (montags die ganze Saison), Verschiebungen automatisch im Spielplan, fehlende Ergebnisse sperren nicht, erste Übernahme stellt die Teamnamen um, Wettquoten/Verletzungen erst in Phase 2 (rückwirkend), E-Mail-Benachrichtigung später.

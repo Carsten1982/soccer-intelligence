@@ -138,6 +138,17 @@ def test_team_names_fixed_per_id_and_reported():
     assert names.name({"id": 999999, "name": "Neuer Klub"}) == "Neuer Klub" and names.unknown == {999999: "Neuer Klub"}
 
 
+
+def test_team_names_with_accents_rename_api_spelling_without_warning():
+    """15.11.2026 (Carsten): ü und Akzente, wo die API sie weglässt; Umbenennung der schon übernommenen API-Schreibweise."""
+    names = load_team_names(NAMES_FILE)
+    assert names.renames["Bundesliga"]["Fortuna Dusseldorf"] == "Fortuna Düsseldorf"
+    assert names.renames["Bundesliga"]["Dusseldorf"] == "Fortuna Düsseldorf"           # ganz alte Schreibweise
+    assert names.renames["LaLiga"]["Atletico Madrid"] == "Atlético Madrid"
+    assert names.renames["LaLiga"]["Deportivo La Coruna"] == "Deportivo La Coruña"
+    assert names.name({"id": 530, "name": "Atletico Madrid"}) == "Atlético Madrid"
+    assert 530 not in names.changed                                                    # keine Meldung „Namensänderung“
+
 # --- Abfragen --------------------------------------------------------------------------------------------------------
 
 class Resp:

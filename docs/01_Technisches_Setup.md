@@ -8,15 +8,16 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 
 ## 0. Stand und Versionen
 
-**In Betrieb:** Version 0.13 – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit den festgelegten Schwellen (positiv/negativ getrennt, KPI 03 je Liga), Top Anomalien, Datenqualität und Sensitivitätsanalyse; Datenbank 2018/19–2026/27 mit Referenzsaison 2018/19 (KPI-Regelwerk 1.2). Passwortschutz unter `/dashboard`, Platzhalterseite unter `/`.
+**In Betrieb:** Version 0.14 – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit den festgelegten Schwellen (positiv/negativ getrennt, KPI 03 je Liga), Top Anomalien, Datenqualität und Sensitivitätsanalyse; Datenbank 2018/19–2026/27 mit Referenzsaison 2018/19 (KPI-Regelwerk 1.2). Seit 15.11.2026 **Datenimport über API-Football**: Container `soccer-import` (Montag bis Freitag 04:00), Reiter „Datenimport/API“ mit Freigabe (halbautomatisch), Spielplan der ganzen Saison aus der API, Teamnamen von API-Football (Abschnitt 6.5). Passwortschutz unter `/dashboard`, Platzhalterseite unter `/`.
 
-**Bereit zum Einspielen:** Version 0.14 – Datenimport über API-Football: Container `soccer-import` (Montag bis Freitag 04:00), Reiter „Datenimport/API“ mit Freigabe, Spielplan aus der API, Teamnamen von API-Football (Spezifikation `06_Datenlieferung.md`, Dashboard-Briefing 6.5). Vor dem Einspielen den API-Schlüssel in `.env` eintragen (Abschnitt 6.5).
+**Bereit zum Einspielen:** Version 0.14.1 – Teamnamen mit ü und Akzenten (z. B. Fortuna Düsseldorf, Atlético Madrid), Einspiel-Skript macht nach einem Abbruch weiter, Statustext im Protokoll.
 
 **Als Nächstes:** 2 Wochen halbautomatischer Betrieb, danach Datum für den automatischen Tausch festlegen (`app/config/import.toml`) · E-Mail-Benachrichtigung · Phase 2: Wettquoten, Verletzungen, Tabellenstände (rückwirkend) · Rundum-Prüfung des Codes · KPI-Erweiterungen und Freigabe je Liga · Gewichtung der Top Anomalien (Regelwerk, Punkt 17) · öffentliche Website.
 
 | Version | Etappe | Inhalt | Eingespielt | Git | Tests |
 |---|---|---|---|---|---|
-| 0.14 | Datenimport | Datenimport über API-Football: Container soccer-import, Reiter Datenimport/API mit Freigabe, Spielplan aus der API, Teamnamen der API, Status „abgebrochen“ | ausstehend | – | 438 |
+| 0.14.1 | Datenimport, Nachtrag | Teamnamen mit ü und Akzenten (10 Teams), Einspiel-Skript macht nach Abbruch weiter, Statustext | ausstehend | – | 440 |
+| 0.14 | Datenimport | Datenimport über API-Football: Container soccer-import, Reiter Datenimport/API mit Freigabe, Spielplan aus der API, Teamnamen der API, Status „abgebrochen“ | 15.11.2026 | `8260056` | 441 |
 | 0.13 | Neue Schwellen | Gültige Schwellen positiv/negativ getrennt, KPI 03 je Liga; Sensitivitätsanalyse nach Entwurf C (vier Zeilen je KPI, Bewertung auch für stark) | 14.11.2026 | `89128e5` | 428 |
 | 0.12 | Sensitivitätsanalyse | Spielwiese ersetzt: vier Schwellen je KPI, Häufigkeit mit Spieltagsabdeckung, Ergebnisqualität gegen Grundquote mit Wilson-Spanne und Empfehlung | 12.11.2026 | `1482bc3` | 398 |
 | 0.11 | Neue Datenbank | Datenbank 2018/19–2026/27, Referenzsaison, neue Saisonauswahl, Warnung „Saison fehlt“ | 10.11.2026 | `034e57a` | 376 |
@@ -212,10 +213,15 @@ Erwartet: genau die drei Versionen oben. Weicht etwas ab → Ursache klären, be
 
 1. **Claude arbeitet auf GitHub.** In einer Sitzung von Claude Code (claude.ai/code, mit dem Repository `Carsten1982/soccer-intelligence` verbunden). Claude legt die Änderung auf einem eigenen Zweig ab (`claude/…`), mit neuer `RELEASE.md` (Inhalt, Erwartungswerte, was im Browser zu prüfen ist).
 2. **Carsten prüft auf GitHub.** „Create PR“ (Pull Request) öffnen. Dort stehen alle Änderungen Zeile für Zeile, und die **automatischen Tests** laufen (`.github/workflows/tests.yml`, rund 3 Minuten). Erst bei grünem Haken: „Squash and merge“ (ein Commit je Änderung, gut lesbarer Verlauf).
-3. **Server holt ab:**
+3. **Server holt ab** – immer in einer `tmux`-Sitzung, damit ein Verbindungsabbruch der Browser-Konsole den Lauf nicht stoppt (seit 15.11.2026):
+   ```bash
+   tmux new -s einspielen
+   ```
    ```bash
    bash /docker/football-dashboard/tools/einspielen.sh github
    ```
+   Nach einem Verbindungsabbruch: neu anmelden und `tmux attach -t einspielen` (der Lauf geht dort weiter); fertig: `exit`.
+   Wurde der Lauf trotzdem nach dem Holen abgebrochen, merkt sich das Skript das (`backup/EINSPIELEN_OFFEN`) und macht beim nächsten Aufruf mit Tests und Neubau weiter, statt „Nichts Neues“ zu melden.
    Das Skript zeigt, was neu ist, macht ein Backup, übernimmt genau den Stand von GitHub (nur „fast-forward“, kein eigener Commit), testet noch einmal mit den echten Excel-Dateien, baut nur `football-dashboard` neu und prüft `200`/`401`. Danach im Browser prüfen, was in `RELEASE.md` steht, und mit `j` bestätigen.
 
 Das Skript stoppt, wenn auf dem Server etwas geändert wurde, das nicht auf GitHub ist (`git status` nicht leer oder eigene Commits). Bei einem Fehler hält es an, setzt nichts selbst zurück und nennt den Rückweg. Protokolle (Tests, Neubau) liegen im Backup-Ordner. Die automatischen Tests auf GitHub laufen ohne die Excel-Dateien aus `data/` (die liegen nur auf dem Server); dafür prüfen sie auch die Einspiel-Skripte in einem Probelauf (`tests/test_einspielen.py`, im Test-Container auf dem Server übersprungen, weil dort `git` fehlt).

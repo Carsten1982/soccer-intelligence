@@ -11,6 +11,8 @@
 # - Weg "Paket" committet am Schluss (nach j/n) und pusht nach GitHub. Er stoppt, wenn GitHub schon weiter ist.
 # - Bei einem Fehler hält das Skript an, zeigt den Fehler und nennt den Rückweg (tools/zurueck.sh).
 #   Es setzt nie selbst etwas zurück.
+# - Bricht ein Lauf nach Schritt 3 ab (z. B. Verbindung weg), merkt sich das Skript den geholten Stand in
+#   backup/EINSPIELEN_OFFEN. Der nächste Aufruf "github" macht dann mit Tests und Neubau weiter (seit 15.11.2026).
 # - Es berührt nur unsere Container football-dashboard und soccer-import (seit 0.14). Kein "docker compose down",
 #   keine anderen Container.
 # - Die Excel-Dateien in data/ werden weder gelesen noch verändert (ausser lesend von den Tests).
@@ -56,12 +58,19 @@ fi
 ZIEL=$(git rev-parse --abbrev-ref '@{u}' 2>/dev/null) || stopp "Der Zweig main ist mit keinem GitHub-Zweig verbunden."
 git fetch -q || stopp "GitHub ist nicht erreichbar (git fetch)."
 VORHER=$(git rev-parse --short HEAD)
+OFFEN="backup/EINSPIELEN_OFFEN"   # geholter, aber noch nicht fertig eingespielter Stand
+NACHHOLEN=""
 
-if [ "$WEG" = github ]; then
-  if [ "$(git rev-parse HEAD)" = "$(git rev-parse "$ZIEL")" ]; then
+if [ "$WEG" = github ] && [ "$(git rev-parse HEAD)" = "$(git rev-parse "$ZIEL")" ]; then
+  if [ -f "$OFFEN" ] && [ "$(cat "$OFFEN")" = "$(git rev-parse HEAD)" ]; then
+    NACHHOLEN=1
+    ok "Stand $VORHER ist schon geholt, aber noch nicht fertig eingespielt (letzter Lauf abgebrochen)."
+    info "Es geht mit den Tests und dem Neubau weiter (Schritte 4 bis 6)."
+  else
     ok "Nichts Neues auf GitHub. Der Server ist schon auf dem Stand $VORHER."
     exit 0
   fi
+elif [ "$WEG" = github ]; then
   git merge-base --is-ancestor HEAD "$ZIEL" || stopp "Der Server hat Commits, die nicht auf GitHub sind. Nichts geändert."
   info "Neu auf GitHub (wird übernommen):"
   git log --oneline "HEAD..$ZIEL" | sed 's/^/     /'
@@ -89,6 +98,12 @@ else
   ok "Git-Stand vorher: $VORHER · Paket gefunden"
 fi
 
+if [ -n "$NACHHOLEN" ]; then
+  BACKUP=$(cat backup/LETZTES_RELEASE 2>/dev/null || echo "backup/$(date +%F_%H%M)_nachgeholt")
+  mkdir -p "$BACKUP"
+  VORHER=$(cat "$BACKUP/git_stand.txt" 2>/dev/null || echo "$VORHER")   # Stand vor dem abgebrochenen Lauf
+  info "Backup vom abgebrochenen Lauf: $BACKUP (Stand davor: $VORHER)"
+else
 # ── 2 Backup ──────────────────────────────────────────────────────────────────────────────────
 schritt "2/6: Backup"
 BACKUP="backup/$(date +%F_%H%M)_vor_release"
@@ -132,7 +147,9 @@ if [ -f RELEASE.md ] && ! git diff --quiet "$VORHER" -- RELEASE.md; then   # nur
   info "Erwartungswerte aus RELEASE.md:"
   sed -n '/^## Erwartungswerte/,/^## /p' RELEASE.md | sed '1d;$d' | sed 's/^/   /'
 fi
+[ "$WEG" = github ] && git rev-parse HEAD > "$OFFEN"   # bis Schritt 5 fertig ist
 ok "Neuer Stand liegt bereit"
+fi
 
 # ── 4 Tests ───────────────────────────────────────────────────────────────────────────────────
 schritt "4/6: Tests (rund 4 Minuten, Wegwerf-Container)"
@@ -166,6 +183,7 @@ IMPORT=$(docker inspect -f '{{.State.Running}}' soccer-import 2>/dev/null || ech
 [ "$PLATZHALTER" = 200 ] || stopp "Platzhalterseite antwortet mit $PLATZHALTER statt 200."
 [ "$DASHBOARD" = 401 ] || stopp "Dashboard antwortet mit $DASHBOARD statt 401 (Passwortschutz)."
 ok "Container laufen (Dashboard und Import) · / = 200 · /dashboard/ = 401"
+rm -f "$OFFEN"
 
 # ── 6 Abschluss ───────────────────────────────────────────────────────────────────────────────
 schritt "6/6: Prüfung im Browser und Abschluss"
