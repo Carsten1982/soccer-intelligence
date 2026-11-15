@@ -10,7 +10,7 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 
 **In Betrieb:** Version 0.13 – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit den festgelegten Schwellen (positiv/negativ getrennt, KPI 03 je Liga), Top Anomalien, Datenqualität und Sensitivitätsanalyse; Datenbank 2018/19–2026/27 mit Referenzsaison 2018/19 (KPI-Regelwerk 1.2). Passwortschutz unter `/dashboard`, Platzhalterseite unter `/`.
 
-**Als Nächstes:** Datenlieferung über API-Football (Spezifikation v0.3 in `06_Datenlieferung.md`, freigegeben 15.11.2026; Pro-Abo aktiv bis 15.02.2027; Vollvergleich und Bereinigung erledigt, bereinigte Datenbank aufspielen; als Nächstes Tagesbetrieb, Vollvergleich aller Saisons, Umstellung bei mindestens 99 % Übereinstimmung, Tagesbetrieb; Etappe G) · Rundum-Prüfung des Codes, bevor das Frontend beginnt · KPI-Erweiterungen und Kombinationen (z. B. xG) · Gewichtung der Top Anomalien (Regelwerk, Punkt 17) · öffentliche Website.
+**Als Nächstes:** Datenlieferung über API-Football (Spezifikation v0.3 in `06_Datenlieferung.md`, freigegeben 15.11.2026; Pro-Abo aktiv bis 15.02.2027; Vollvergleich und Bereinigung erledigt, bereinigte Datenbank aktiv seit 15.11.2026; als Nächstes Tagesbetrieb, Vollvergleich aller Saisons, Umstellung bei mindestens 99 % Übereinstimmung, Tagesbetrieb; Etappe G) · Rundum-Prüfung des Codes, bevor das Frontend beginnt · KPI-Erweiterungen und Kombinationen (z. B. xG) · Gewichtung der Top Anomalien (Regelwerk, Punkt 17) · öffentliche Website.
 
 | Version | Etappe | Inhalt | Eingespielt | Git | Tests |
 |---|---|---|---|---|---|
@@ -36,7 +36,7 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 - **Rückweg** zu einer Version: Abschnitt 6.1.
 - **Prüfprotokolle** grösserer Etappen: `docs/tests/pruefprotokoll_*.md`.
 - **Frühere Anleitungen** (`ANLEITUNG_*.md`): seit 09.11.2026 durch `RELEASE.md` und Abschnitt 6.1 ersetzt. Sie bleiben im Git-Verlauf erhalten.
-- **Daten:** Datenbank SHA-256 `451348b6…` (2018/19–2026/27, seit 10.11.2026; vorher `f37e36d3…`), `02_Datenbasis.md`; Prüfprotokoll `docs/tests/pruefprotokoll_datenbank_2018-2027.md`. **Bereinigte Fassung `3a258961…` (15.11.2026) zum Aufspielen bereit** (`02`, Abschnitt 4e; Prüfprotokoll `docs/tests/pruefprotokoll_api.md`). Spielplan mit vier Blättern (`04_Spielplan.md`).
+- **Daten:** Datenbank SHA-256 `3a258961…` (2018/19–2026/27, bereinigt mit API-Football und football-data.co.uk, aktiv seit 15.11.2026; vorher `451348b6…`), `02_Datenbasis.md` Abschnitt 4e; Prüfprotokolle `docs/tests/pruefprotokoll_api.md` und `pruefprotokoll_datenbank_2018-2027.md`. Spielplan mit vier Blättern (`04_Spielplan.md`).
 
 ---
 

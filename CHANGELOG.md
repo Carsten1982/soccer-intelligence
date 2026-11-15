@@ -5,10 +5,11 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
-## 15.11.2026 – Vollvergleich API-Football und bereinigte Datenbank
+## 15.11.2026 – Vollvergleich API-Football und bereinigte Datenbank (aufgespielt)
 
 - **Carsten** · Pro-Abo API-Football (3 Monate, bis 15.02.2027) gebucht, neuer API-Schlüssel (sicher hinterlegt, nicht im Chat). Freigaben: Gelbe Karten bei leerem API-Wert aus Ereignissen zählen; Download der dritten Quelle football-data.co.uk; Bereinigung mit zwei Quellen statt vollständiger Umstellung; Teamnamen erst mit dem automatischen Spielplan. Aktuelle Datenbank vom Server geliefert (identisch mit `451348b6…`). Abweichungsliste an den Datenlieferanten weitergeleitet.
 - **Claude** · Phase 1: Tests der API (Plan, Mehrfachabfrage mit Statistik, Halbzeit-Statistik, Zeitzone, leere Kartenwerte, Relegationsspiele). Vollvergleich aller 11'568 Spiele 2018/19–2025/26 (3'534 Abfragen): Zuordnung 100 %, Tore/Datum/Spieltag/Ecken über 99 %, Gelbe Karten 97,2 %, Schüsse aufs Tor 89,6 %. Dreifachvergleich mit football-data.co.uk; Abweichungsliste (8'419 Werte) deutsch und englisch. Befund: LaLiga 2025/26 Spieltag 37 mit vertauschten Toren im Altbestand. Bereinigte Datenbank `3a258961…` (1'932 Zellen, 76 Spieltage, 146 Datenhinweise; Prüfung 0 Fehler, 35 Warnungen, 201 Hinweise) mit Änderungsprotokoll. Vollvergleich Dashboard und Sensitivitätsanalyse neu: unverändert ausser KPI 04 stark (Mehrwert positiv +10,37 → +6,45, negativ +6,70 → +5,00). Doku: Prüfprotokoll `docs/tests/pruefprotokoll_api.md`, `02` Abschnitt 4e, Spezifikation v0.4 (`06`), `01` Abschnitt 0.
+- **Carsten** · Pull Request #8 zusammengeführt (`3f44fa1`). Bereinigte Datenbank aufgespielt (direkt überschrieben statt über `upload.xlsx`; Prüfung danach auf dem Server: 0 Fehler, 35 Warnungen, 201 Hinweise, SHA-256 `3a258961…`). Vorherige Fassung `451348b6…` nachträglich aus `tests/referenz/` nach `backup/Database-Soccer-Intelligence_2026-11-15_vor_Bereinigung.xlsx` gesichert.
 
 ## 15.11.2026 – Spezifikation Datenlieferung über API-Football (v0.3, freigegeben)
 
