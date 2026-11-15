@@ -75,7 +75,8 @@ Die laufende Saison 2026/27 wird spieltagweise ergänzt (seit 31.10.2026, zuerst
 - `Season`: `JJJJ/JJJJ`, z. B. `2024/2025`
 - Ergebnisse: `H` = Heimsieg, `D` = Unentschieden, `A` = Auswärtssieg
 - `id`: eindeutig innerhalb eines Blatts (zwischen den Ligen können sich Nummern wiederholen)
-- Teamnamen: englische Schreibweise der Quelle, z. B. `Bayern Munich`, `B. Monchengladbach`, `FC Koln`. Neue Einträge müssen exakt gleich geschrieben werden.
+- Teamnamen: englische Schreibweise der Quelle, z. B. `Bayern Munich`, `B. Monchengladbach`, `FC Koln`. Neue Einträge müssen exakt gleich geschrieben werden. **Seit Version 0.14** stellt der erste übernommene Import alle Spiele auf die Namen von API-Football um (je Team-ID fest in `app/config/teamnamen.toml`, Entscheidung Carsten 15.11.2026).
+- **Neue Spiele ab dem Datenimport** (Version 0.14) haben als `id` die Spiel-ID von API-Football (über 1'000'000); bisherige Spiele behalten ihre `id` und werden vom Import nie verändert.
 
 ### Bekannte Eigenheiten
 

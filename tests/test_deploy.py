@@ -59,6 +59,15 @@ def test_data_stays_read_only(compose):
     assert "./data:/data:ro" in _service_block(compose, "football-dashboard")
 
 
+def test_import_service(compose):
+    """Version 0.14: nur der Import schreibt in data/; kein Zugang von aussen; Schlüssel nur aus .env."""
+    block = _service_block(compose, "soccer-import")
+    assert "- ./data:/data " in block and "./data:/data:ro" not in block and "traefik" not in block and "ports" not in block
+    assert "API_FOOTBALL_KEY=${API_FOOTBALL_KEY:-}" in block and 'command: ["python", "-m", "importer.dienst"]' in block
+    dash = _service_block(compose, "football-dashboard")
+    assert "./import:/import:ro" in dash and "./import/anfragen:/import/anfragen" in dash
+
+
 def test_placeholder_service_and_files(compose):
     block = _service_block(compose, "soccer-placeholder")
     assert "./placeholder:/usr/share/nginx/html:ro" in block
@@ -93,9 +102,10 @@ def test_release_scripts_touch_only_our_container(script):
     assert "set -euo pipefail" in code                               # bricht bei jedem Fehler ab
     for line in code.splitlines():
         if "docker compose" in line:
-            assert "up -d --build football-dashboard" in line, line     # nur unser Service
+            assert "up -d --build football-dashboard" in line, line     # nur unsere Services (seit 0.14 auch Import)
+            assert set(line.split("--build", 1)[1].split(">")[0].split()) <= {"football-dashboard", "soccer-import"}, line
         if "docker " in line and "inspect" in line or "docker logs" in line:
-            assert "football-dashboard" in line, line
+            assert "football-dashboard" in line or "soccer-import" in line, line
     assert "data/" not in code.replace("data/*|", "")                # data/ nur in der Sperrliste für Löschungen
 
 

@@ -13,3 +13,5 @@ backup/
 __pycache__/
 *.pyc
 .pytest_cache/
+# Datenimport (seit 0.14): Rohdaten, Läufe, Berichte, Anfragen – nur auf dem Server
+import/

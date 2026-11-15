@@ -36,10 +36,11 @@
 | `Datum bis` | ja | Excel-Datum | `30.08.2026` | spätester möglicher Spieltag; bei bekanntem Termin = `Datum von` |
 | `Heimmannschaft` | ja | Text | `FC Koln` | Schreibweise exakt wie in der Datenbank |
 | `Gastmannschaft` | ja | Text | `Hoffenheim` | Schreibweise exakt wie in der Datenbank |
-| `Status` | nein | Text | `verschoben` | leer = geplant; erlaubt: `geplant`, `verschoben`, `abgesagt` |
+| `Status` | nein | Text | `verschoben` | leer = geplant; erlaubt: `geplant`, `verschoben`, `abgesagt`, `abgebrochen` (seit 0.14, wie `abgesagt`) |
 
 - Eine Anstosszeit ist nicht nötig und wird nicht angezeigt.
-- Weitere Spalten werden ignoriert.
+- Weitere Spalten werden ignoriert (seit 0.14 schreibt der Datenimport zusätzlich `Anstoss` und `API-ID`).
+- **Seit Version 0.14 erzeugt der Datenimport den Spielplan** aus der Spielliste von API-Football (ganze laufende Saison, Hauptzeitraum und „verschoben“ nach Abschnitt 6, Status der API: PST → verschoben, CANC → abgesagt, ABD → abgebrochen; `06_Datenlieferung.md`, Abschnitt 8). Von Hand gepflegt wird er nur noch, wenn der Import ausfällt.
 
 ### Warum „Datum von“ und „Datum bis“?
 
@@ -66,7 +67,7 @@ So rechnet das Programm damit:
 
 ## 3. Teamnamen
 
-- Teamnamen müssen exakt so geschrieben sein wie in der Datenbank, z. B. `Bayern Munich`, `B. Monchengladbach`, `FC Koln`, `Schalke`.
+- Teamnamen müssen exakt so geschrieben sein wie in der Datenbank, z. B. `Bayern Munich`, `B. Monchengladbach`, `FC Koln`, `Schalke`. **Seit Version 0.14** (erster übernommener Import) gelten in Datenbank und Spielplan die Namen von API-Football, z. B. `Bayern München`, `Borussia Mönchengladbach`, `1. FC Köln`, `FC Schalke 04` (`app/config/teamnamen.toml`).
 - **Aufsteiger** ohne Spiele in der Datenbank sind erlaubt. Ihre KPIs erscheinen gemäss KPI-Regelwerk als „--“.
 - Ein Name, der in der Datenbank nicht vorkommt, kann ein Aufsteiger oder ein Schreibfehler sein. Das Programm kann das nicht unterscheiden. Deshalb gilt:
   - Unbekannte Namen werden zunächst als **Warnung** angezeigt.
