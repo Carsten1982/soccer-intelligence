@@ -1,7 +1,7 @@
 # Soccer Intelligence – Datenlieferung über API-Football (Spezifikation)
 
-**Version 0.2** · Stand 15.11.2026 · **Status: Entwurf zur Freigabe durch Carsten** · Grundlage: Entwurf v0.1 (ChatGPT,
-15.11.2026), kritisch geprüft und ergänzt von Claude; Entscheidungen Carsten vom 15.11.2026 eingearbeitet.
+**Version 0.3** · Stand 15.11.2026 · **Status: freigegeben von Carsten am 15.11.2026** · Grundlage: Entwurf v0.1 (ChatGPT,
+15.11.2026), kritisch geprüft und ergänzt von Claude (v0.2); Entscheidungen E1–E12 von Carsten am 15.11.2026 (v0.3).
 
 Diese Datei ist die einzige Stelle für die Datenlieferung: Datenquelle, Feldzuordnung, Abläufe, Abfragebudget und
 offene Entscheidungen. Der Prüfbericht des Vollvergleichs kommt später nach `docs/tests/pruefprotokoll_api.md`.
@@ -19,8 +19,9 @@ Programmiert wird erst nach Freigabe dieser Spezifikation (Arbeitsweise: Vorschl
 - **Danach Tagesbetrieb:** Montag bis Freitag um 04:00 (Europe/Zurich) neue Spiele, Statistiken und Spielplan holen;
   daraus eine **neue Fassung** der Excel-Dateien erzeugen, prüfen und tauschen. Die bestehende Datei wird nie
   verändert.
+- **Teamnamen:** künftig die Namen von API-Football (E6), je Team-ID fest hinterlegt.
 - **Rohdaten:** Jede API-Antwort wird unverändert gespeichert. Damit sind spätere Auswertungen ohne neue Abfragen
-  möglich.
+  möglich. Wettquoten und Verletzungen werden ab Phase 1 nur gesammelt (E10).
 - **Phase 2 – Anreicherung (später):** weitere Statistiken, Tabellenstände (selbst berechnet), Wettquoten,
   Verletzungen, Datensatz für Machine Learning.
 
@@ -43,7 +44,8 @@ Programmiert wird erst nach Freigabe dieser Spezifikation (Arbeitsweise: Vorschl
 - Die bestätigten Testfälle (`docs/tests/`) laufen weiter mit ihren Referenzkopien in `tests/referenz/`.
 - Fehlende API-Werte bleiben **leer**; `null` wird nie zu 0; eine echte 0 bleibt 0.
 
-**Nicht Teil von Phase 1:** neue KPIs, neue Spalten, Tabellenstände, Wettquoten, Machine Learning (siehe Abschnitt 13).
+**Nicht Teil von Phase 1:** neue KPIs, neue Spalten, Tabellenstände, Verarbeitung von Wettquoten und Verletzungen
+(nur Sammeln, E10), Machine Learning (siehe Abschnitt 13), KPI-Freigabe je Liga (geparkt, Diskussionspapier vom 14.11.2026).
 
 ## 3. Tarif, Kontingent und Grundsätze der Abfrage
 
@@ -85,7 +87,7 @@ geprüft; vorher gelten sie als „noch nicht geprüft“.
 | E `Country` | Land | `league.country` | Germany, England, Italy, Spain wie bisher | T |
 | F `League` | Liga | `league.name` | unsere Namen (Bundesliga, Premier League, Serie A, LaLiga) | T |
 | G `Season` | Saison | `league.season` | `2025` → `2025/2026` | T |
-| H, I `homeTeam`, `awayTeam` | Teams | `teams.home/away.id` | über Zuordnungstabelle auf unsere Schreibweise (E6) | T |
+| H, I `homeTeam`, `awayTeam` | Teams | `teams.home/away.id` | Name von API-Football, je Team-ID fest hinterlegt (E6) | T |
 | J `referee` | Schiedsrichter | `fixture.referee` | „Name, Land“ → „Name“; Schreibweise kann abweichen (nur Anzeige) | T |
 | K–M `FT …` | Endstand und Ergebnis | `score.fulltime` | H/D/A berechnen; Wertungsspiele siehe 6.3 | T |
 | N–P `Full-Time …` | Endstand (doppelt, beabsichtigt) | wie K–M | identisch zu K–M | T |
@@ -155,9 +157,12 @@ heute von einem KPI genutzt.
   liegen heute unter 160'000, die API-IDs über 1 Million. So bleiben es 58 Spalten.
 - **Zuordnung alter Spiele zu API-Spielen** (für Vergleich und Erzeugung): über Liga, Saison, Heimteam, Gastteam und
   Datum. Die Zuordnungstabelle (unsere `id` ↔ API-ID) wird als eigene Datei gespeichert und ist danach fest.
-- **Teamnamen:** Die Schreibweise der Datenbank bleibt massgeblich (z. B. `Bayern Munich`, `FC Koln`). Die Zuordnung
-  API-Team-ID → unser Name kommt in `app/config/teams.toml` (neues Feld `api_team_id`) und wird bei neuen Teams
-  (Aufsteiger) gemeldet, nie geraten.
+- **Teamnamen (E6, Carsten 15.11.2026): die Namen von API-Football** (z. B. statt `FC Koln` der Name der API). Sie
+  werden je Team-ID **einmal festgehalten** (`app/config/teams.toml`, Felder `api_team_id` und `team_name`), damit eine
+  spätere Namensänderung bei der API (z. B. Sponsor) nicht still alle Spiele umbenennt; eine Änderung wird gemeldet.
+  Mit der Umstellung (Phase 3) erhalten **alle** Spiele, auch die historischen, die neuen Namen; ebenso der Spielplan.
+  Die Testfälle in `docs/tests/` und `tests/referenz/` behalten ihre bisherigen Namen (eigene Referenzkopien).
+  Neue Teams (Aufsteiger) werden gemeldet, nie geraten.
 - **Doppelte Spiele** sind ausgeschlossen: Ein Spiel wird über seine Fixture-ID erkannt, auch nach einer Verlegung.
 
 ## 8. Spielplan
@@ -217,6 +222,7 @@ Montag da, Montagsspiele am Dienstag, Spiele unter der Woche am Folgetag, also i
    → data/eingang/<Datum>_Database.xlsx und <Datum>_Spielplan.xlsx
 7. Prüfen mit den bestehenden Prüfregeln (02, 04) und Vergleich mit der gültigen Fassung
 8. Tauschen (E3) oder bei Problemen nichts ändern und melden
+   Zusätzlich (E10): Wettquoten der kommenden Spiele und Verletzungen nur als Rohdaten speichern
 9. Protokoll: Abfragen, neue Spiele, Korrekturen, fehlende Werte, Meldungen
 ```
 
@@ -254,6 +260,7 @@ und Prüfregeln aus `app/core/`. Kein Eingriff in Traefik oder andere Container;
 | Tagesbetrieb: Status + Spielliste | 5 |
 | Tagesbetrieb: Mehrfachabfrage (bis 38 Spiele) | 2–3 |
 | Tagesbetrieb: Halbzeit-Statistik je Spiel | bis 38 |
+| Tagesbetrieb: Wettquoten und Verletzungen sammeln (E10) | wenige, im Test zu bestimmen |
 | **Tagesbetrieb je Lauf** | **≈ 10–50**, weit unter 500 |
 
 Mit Pro bleibt viel Reserve; die Planung „höchstens 80 pro Tag“ aus v0.1 ist damit nicht mehr nötig.
@@ -267,7 +274,7 @@ Nach dem Wechsel der Quelle, als eigener Schritt (Entscheidung Carsten 15.11.202
 - **Tabellenstände vor jedem Spieltag** selbst aus den Ergebnissen berechnet. Die API liefert nur die aktuelle Tabelle;
   für die Vergangenheit führte sie zu Wissen aus der Zukunft.
 - **Wettquoten vor dem Spiel** und **Verletzungen/Sperren:** lassen sich vermutlich nicht nachträglich für vergangene
-  Spiele abfragen (zu prüfen). Siehe E10.
+  Spiele abfragen (zu prüfen). Darum werden sie ab Phase 1 als Rohdaten gesammelt (E10) und erst hier verarbeitet.
 - **Datensatz für Machine Learning** als eigene Datei aus den Rohdaten; jedes Merkmal nur mit dem Wissen vor dem Spiel.
 
 ## 14. Tests und Abnahme
@@ -291,30 +298,32 @@ Nach dem Wechsel der Quelle, als eigener Schritt (Entscheidung Carsten 15.11.202
 
 | Phase | Inhalt | Ergebnis | Freigabe |
 |---|---|---|---|
-| 0 | Spezifikation (diese Datei) | v0.2 → freigegeben | Carsten |
+| 0 | Spezifikation (diese Datei) | v0.3, freigegeben 15.11.2026 | Carsten |
 | 1 | Zugang: Pro-Abo; Schlüssel und Netzfreigabe für Claudes Arbeitsumgebung; Test der offenen API-Fragen (Abschnitt 4) | kurzer Testbericht | – |
 | 2 | Skript A und Vollvergleich, nur in der Arbeitsumgebung, keine produktiven Dateien | `pruefprotokoll_api.md` | Carsten: Umstellung ja/nein |
 | 3 | Erzeugung der Datenbank aus API-Daten + Altbestand + Korrekturliste; Vollvergleich der Dashboard-Werte; Sensitivitätsanalyse neu | neue Datenbank, Bericht | Carsten |
 | 4 | Skript B und Container `soccer-import`, zuerst halbautomatisch | Release mit Tests | Carsten |
-| 5 | Abnahme nach 4 Wochen Betrieb; Entscheid über vollautomatischen Tausch | Eintrag CHANGELOG | Carsten |
+| 5 | Abnahme nach 2 Wochen Betrieb; Entscheid über vollautomatischen Tausch | Eintrag CHANGELOG | Carsten |
 | später | Phase 2: Anreicherung | eigene Spezifikation | Carsten |
 
 ## 16. Entscheidungen
 
 | # | Frage | Stand |
 |---|---|---|
-| E1 | Tarif | **Entschieden 15.11.2026:** Pro, 3 Monate (43,20 $). Gratis-Plan nur für erste Versuche (Saisons 2022–2024). |
-| E2 | ID neuer Spiele | Vorschlag: API-Fixture-ID als `id`; keine neue Spalte. |
-| E3 | Automatisierung | Vorschlag: 4 Wochen halbautomatisch (Carsten bestätigt den Tausch mit einem Befehl), danach automatisch. |
-| E4 | Stichtag für API-IDs | Vorschlag: erster Spieltag nach der Abnahme von Phase 3. |
-| E5 | Halbzeit-Statistik ab 2024 | Vorschlag: holen (rund 38 Abfragen je Spieltag). |
-| E6 | Teamnamen | Vorschlag: Schreibweise der Datenbank massgeblich; Zuordnung in `teams.toml`. |
-| E7 | Umfang Vergleich | Vorschlag: Vollvergleich aller Saisons statt 200 Stichproben. **Abnahme 99 % entschieden 15.11.2026.** |
-| E8 | Rhythmus | Vorschlag: Montag bis Freitag 04:00 Europe/Zurich, je Lauf „seit letztem Lauf plus 3 Tage“. |
-| E9 | Abgebrochene Spiele (`ABD`) | Vorschlag: neuer Status `abgebrochen` im Spielplan (Ergänzung `04`, Prüfregel und Anzeige wie `abgesagt`). |
-| E10 | Wettquoten und Verletzungen schon ab Phase 1 nur **sammeln** (Rohdaten, keine Verarbeitung)? | Offen. Vorteil: Später gibt es Historie. Kosten: wenige Abfragen pro Tag. Sonst beginnt die Sammlung erst in Phase 2. |
-| E11 | Altwerte, die die API nicht liefert | **Entschieden 15.11.2026:** behalten, sofern der Vergleich die übrigen Daten bestätigt. |
-| E12 | Umstellung der ganzen Datenbank auf API-Daten | **Entschieden 15.11.2026:** ja, wenn die KPI-Felder zu mindestens 99 % identisch sind. |
+| E1 | Tarif | **Entschieden:** Pro, 3 Monate (43,20 $). Gratis-Plan nur für erste Versuche (Saisons 2022–2024). |
+| E2 | ID neuer Spiele | **Entschieden:** API-Fixture-ID als `id`; keine neue Spalte. |
+| E3 | Automatisierung | **Entschieden:** 2 Wochen halbautomatisch (Carsten bestätigt den Tausch mit einem Befehl), danach automatisch. |
+| E4 | Stichtag für API-IDs | **Entschieden:** erster Spieltag nach der Abnahme von Phase 3. |
+| E5 | Halbzeit-Statistik ab 2024 | **Entschieden:** holen (rund 38 Abfragen je Spieltag). |
+| E6 | Teamnamen | **Entschieden:** Namen von API-Football, je Team-ID fest hinterlegt (Abschnitt 7). |
+| E7 | Umfang Vergleich | **Entschieden:** Vollvergleich aller Saisons statt 200 Stichproben; Abnahme bei mindestens 99 %. |
+| E8 | Rhythmus | **Entschieden:** Montag bis Freitag 04:00 Europe/Zurich, je Lauf „seit letztem Lauf plus 3 Tage“. |
+| E9 | Abgebrochene Spiele (`ABD`) | **Entschieden:** neuer Status `abgebrochen` im Spielplan (Ergänzung `04`, Prüfregel und Anzeige wie `abgesagt`). |
+| E10 | Wettquoten und Verletzungen | **Entschieden:** ab Phase 1 nur sammeln (Rohdaten), Verarbeitung in Phase 2. |
+| E11 | Altwerte, die die API nicht liefert | **Entschieden:** behalten, sofern der Vergleich die übrigen Daten bestätigt. |
+| E12 | Umstellung der ganzen Datenbank auf API-Daten | **Entschieden:** ja, wenn die KPI-Felder zu mindestens 99 % identisch sind. |
+
+Alle Entscheidungen von Carsten am 15.11.2026.
 
 ## Anhang: Vorgeschichte Footiqo (bis 07.11.2026)
 

@@ -1,12 +1,12 @@
-# Release: Doku: Spezifikation Datenlieferung über API-Football (v0.2)
+# Release: Doku: Spezifikation Datenlieferung über API-Football (v0.3, freigegeben)
 
 **Stand:** 15.11.2026 · Version bleibt 0.13 · Nur Doku, kein Code geändert · Auftrag Carsten 15.11.2026
 
-**Commit:** Doku: Spezifikation Datenlieferung über API-Football (v0.2, Entwurf)
+**Commit:** Doku: Spezifikation Datenlieferung über API-Football (v0.3, freigegeben)
 
 ## Was ändert sich?
 
-- `docs/06_Datenlieferung.md`: neue Fassung, Spezifikation v0.2 der Datenlieferung über API-Football (Entwurf zur Freigabe). Das bisherige Footiqo-Konzept steht als Anhang.
+- `docs/06_Datenlieferung.md`: neue Fassung, Spezifikation v0.3 der Datenlieferung über API-Football, freigegeben von Carsten am 15.11.2026. Das bisherige Footiqo-Konzept steht als Anhang.
 - `docs/01_Technisches_Setup.md`, Abschnitt 0: „Als Nächstes“ nachgeführt.
 - `CHANGELOG.md`: Eintrag 15.11.2026.
 

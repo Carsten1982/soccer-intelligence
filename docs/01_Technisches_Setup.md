@@ -10,7 +10,7 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 
 **In Betrieb:** Version 0.13 – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit den festgelegten Schwellen (positiv/negativ getrennt, KPI 03 je Liga), Top Anomalien, Datenqualität und Sensitivitätsanalyse; Datenbank 2018/19–2026/27 mit Referenzsaison 2018/19 (KPI-Regelwerk 1.2). Passwortschutz unter `/dashboard`, Platzhalterseite unter `/`.
 
-**Als Nächstes:** Datenlieferung über API-Football (Spezifikation v0.2 in `06_Datenlieferung.md` zur Freigabe; danach Pro-Abo, Vollvergleich aller Saisons, Umstellung bei mindestens 99 % Übereinstimmung, Tagesbetrieb; Etappe G) · Rundum-Prüfung des Codes, bevor das Frontend beginnt · KPI-Erweiterungen und Kombinationen (z. B. xG) · Gewichtung der Top Anomalien (Regelwerk, Punkt 17) · öffentliche Website.
+**Als Nächstes:** Datenlieferung über API-Football (Spezifikation v0.3 in `06_Datenlieferung.md`, freigegeben 15.11.2026; Pro-Abo, Vollvergleich aller Saisons, Umstellung bei mindestens 99 % Übereinstimmung, Tagesbetrieb; Etappe G) · Rundum-Prüfung des Codes, bevor das Frontend beginnt · KPI-Erweiterungen und Kombinationen (z. B. xG) · Gewichtung der Top Anomalien (Regelwerk, Punkt 17) · öffentliche Website.
 
 | Version | Etappe | Inhalt | Eingespielt | Git | Tests |
 |---|---|---|---|---|---|
