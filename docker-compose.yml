@@ -1,4 +1,4 @@
-# Soccer Intelligence – Container-Konfiguration (Stand 31.10.2026, Etappe E)
+# Soccer Intelligence – Container-Konfiguration (Stand 31.10.2026, Etappe E; seit 15.11.2026 mit Datenimport, Version 0.14)
 #
 #   https://soccer-intelligence.com/             -> Platzhalterseite, öffentlich (Container soccer-placeholder)
 #   https://soccer-intelligence.com/dashboard…   -> Passwortabfrage (Traefik BasicAuth) -> Streamlit-Dashboard
@@ -6,6 +6,11 @@
 # Zugangsdaten: NUR als Hash in .env auf dem Server (Variable SOCCER_DASHBOARD_AUTH), nie in Git.
 # Fehlt die Variable, bricht "docker compose" mit einer Fehlermeldung ab (statt ohne Passwortschutz zu starten).
 # Betroffen sind nur die Labels dieser beiden Container. Die Traefik-Grundkonfiguration bleibt unverändert.
+#
+# soccer-import (seit Version 0.14): holt Montag bis Freitag um 04:00 die Daten von API-Football, legt neue Fassungen in
+# ./import ab und tauscht sie nach Freigabe aus (nur er schreibt in ./data). Kein Zugang von aussen (keine Labels,
+# kein Port). Der API-Schlüssel steht NUR in .env (Variable API_FOOTBALL_KEY), nie in Git. Fehlt er, startet der
+# Container trotzdem und meldet „API-Schlüssel fehlt“ im Bereich Datenimport/API.
 
 services:
   football-dashboard:
@@ -17,6 +22,8 @@ services:
       - "127.0.0.1:8501:8501"
     volumes:
       - ./data:/data:ro
+      - ./import:/import:ro                       # Stand des Datenimports (nur lesen)
+      - ./import/anfragen:/import/anfragen        # nur hier schreibt das Dashboard: Freigabe-Anfragen
     environment:
       # Streamlit läuft unter dem Pfad /dashboard (Seiten: /dashboard/bundesliga usw.)
       - STREAMLIT_SERVER_BASE_URL_PATH=dashboard
@@ -29,6 +36,20 @@ services:
       - "traefik.http.middlewares.soccerintel-auth.basicauth.users=${SOCCER_DASHBOARD_AUTH:?SOCCER_DASHBOARD_AUTH fehlt in .env}"
       - "traefik.http.middlewares.soccerintel-noindex.headers.customresponseheaders.X-Robots-Tag=noindex, nofollow"
       - "traefik.http.services.soccer.loadbalancer.server.port=8501"
+
+  soccer-import:
+    build:
+      context: /docker/football-dashboard
+    container_name: soccer-import
+    restart: unless-stopped
+    command: ["python", "-m", "importer.dienst"]
+    volumes:
+      - ./data:/data                              # schreibt neue Fassungen erst nach Freigabe (Tausch in einem Schritt)
+      - ./import:/import                          # Rohdaten, Läufe, Berichte, Anfragen
+      - ./backup:/backup                          # ersetzte Fassungen mit Datum (die letzten 30)
+    environment:
+      - API_FOOTBALL_KEY=${API_FOOTBALL_KEY:-}
+      - TZ=Europe/Zurich
 
   soccer-placeholder:
     image: nginx:1.27-alpine

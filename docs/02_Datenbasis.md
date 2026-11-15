@@ -8,7 +8,7 @@
 
 Diese Prüfsumme steht auch in den Testfällen (`docs/tests/`). Nach jeder Änderung an der Datei ändert sie sich. Dann hier und in den Testfällen nachtragen und die Testfälle erneut laufen lassen.
 
-**Bereinigte Fassung (15.11.2026):** 1'932 Zellen korrigiert, wo API-Football und football-data.co.uk übereinstimmen und nur der Altbestand abweicht, dazu offizielle Spieltage (Abschnitt 4e). SHA-256 `3a2589616b2b0625d3a9150484bd0ce24e6340b334756b115d0d4582925822a8`. Prüfung: 0 Fehler, 35 Warnungen, 201 Hinweise. **Zum Aufspielen bereit** (Ablauf `01`, Abschnitt 6.2); aktiv ist bis dahin `451348b6…`. Die KPI-Testfälle bleiben an ihre Referenzkopien gebunden.
+**Bereinigte Fassung (15.11.2026):** 1'932 Zellen korrigiert, wo API-Football und football-data.co.uk übereinstimmen und nur der Altbestand abweicht, dazu offizielle Spieltage (Abschnitt 4e). SHA-256 `3a2589616b2b0625d3a9150484bd0ce24e6340b334756b115d0d4582925822a8`. Prüfung: 0 Fehler, 35 Warnungen, 201 Hinweise. **Aktiv in `data/` seit 15.11.2026** (Prüfung auf dem Server: 0 Fehler, 35 Warnungen, 201 Hinweise; vorherige Fassung `451348b6…` in `backup/Database-Soccer-Intelligence_2026-11-15_vor_Bereinigung.xlsx`). Die KPI-Testfälle bleiben an ihre Referenzkopien gebunden.
 
 **Neue Fassung (10.11.2026, Version 0.11):** Saisons 2018/19 und 2019/20 ergänzt, Spiele 2026/27 bis 10.11.2026 nachgetragen, geprüft und korrigiert (Abschnitt 4d). SHA-256 `451348b6550b91f4df3a26450a26d205e76f69c13ac520d080d3a427ff084904`. Eine Kopie liegt unter `tests/referenz/Database-Soccer-Intelligence_451348b6.xlsx`. **Aktiv in `data/` seit 10.11.2026** (nach dem Einspielen von Version 0.11 von Carsten aufgespielt; Prüfung auf dem Server: 0 Fehler, 24 Warnungen, 64 Hinweise; vorherige Datei in `backup/`). Die KPI-Testfälle bleiben an `6d68583c…` und `f37e36d3…` gebunden.
 
@@ -75,7 +75,8 @@ Die laufende Saison 2026/27 wird spieltagweise ergänzt (seit 31.10.2026, zuerst
 - `Season`: `JJJJ/JJJJ`, z. B. `2024/2025`
 - Ergebnisse: `H` = Heimsieg, `D` = Unentschieden, `A` = Auswärtssieg
 - `id`: eindeutig innerhalb eines Blatts (zwischen den Ligen können sich Nummern wiederholen)
-- Teamnamen: englische Schreibweise der Quelle, z. B. `Bayern Munich`, `B. Monchengladbach`, `FC Koln`. Neue Einträge müssen exakt gleich geschrieben werden.
+- Teamnamen: englische Schreibweise der Quelle, z. B. `Bayern Munich`, `B. Monchengladbach`, `FC Koln`. Neue Einträge müssen exakt gleich geschrieben werden. **Seit Version 0.14** stellt der erste übernommene Import alle Spiele auf die Namen von API-Football um (je Team-ID fest in `app/config/teamnamen.toml`, Entscheidung Carsten 15.11.2026).
+- **Neue Spiele ab dem Datenimport** (Version 0.14) haben als `id` die Spiel-ID von API-Football (über 1'000'000); bisherige Spiele behalten ihre `id` und werden vom Import nie verändert.
 
 ### Bekannte Eigenheiten
 

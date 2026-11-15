@@ -1,6 +1,6 @@
 # Soccer Intelligence – Dashboard-Briefing
 
-**Version 5.1** · Stand 14.11.2026 (Version 0.13: neue gültige Schwellen, Sensitivitätsanalyse nach Designentwurf C, 6.3 und 6.4)
+**Version 5.2** · Stand 15.11.2026 (Version 0.14: Bereich Datenimport/API, 6.5)
 
 > **Massgebliche Quelle seit 31.10.2026.** Änderungen werden nur noch in dieser Datei gemacht, mit Datum in der Änderungshistorie bzw. im `CHANGELOG.md`.
 > Das Word-Dokument *Dashboard-Briefing v4.2* liegt nur noch als Archiv im Ordner `word/` und wird nicht mehr gepflegt. Änderungen seit 31.10.2026 sind im Text als „Änderung“ mit Datum gekennzeichnet.
@@ -363,6 +363,33 @@ Siebter Bereich (ganz rechts, nur intern), Tab-Name **„Sensitivitätsanalyse�
 - Hinweis zur Eingabe: Die Felder zeigen den Dezimalpunkt des Browsers (z. B. „20.0“); die Tabelle zeigt Zahlen wie überall mit Komma.
 
 Später (eigene Schritte): Gewichtung der Top Anomalien (Regelwerk, Punkt 17); Simulations-KPIs 10–13.
+
+### 6.5 Datenimport/API (Version 0.14, Designentwurf freigegeben 15.11.2026)
+
+Achter Bereich (ganz rechts, nur intern), Tab-Name **„Datenimport/API“**, Adresse `/dashboard/datenimport`. Regeln des
+Imports: `06_Datenlieferung.md`. Das Dashboard schreibt nie in die Excel-Dateien; die Buttons legen nur eine Anfrage ab,
+den Tausch macht der Container `soccer-import`.
+
+- **Kopf:** „Soccer Intelligence“, darunter „Datenimport/API“.
+- **Statusleiste** (vier Kacheln): Quelle mit Plan und **Abo gültig bis** (rot, wenn abgelaufen; gelb unter 3 Wochen) ·
+  Kontingent heute (Rest laut API) und eigene Obergrenze · letzter Lauf (✓/✕) und nächster Lauf · Betriebsart
+  (halbautomatisch bis …, oder automatisch).
+- **Kasten „Neue Daten bereit“** (gelb; rot „Neue Fassung mit Fehlern“), nur wenn eine Fassung wartet: Lauf, Saison,
+  „letzte 2 Spieltage“ bzw. montags „alle Spiele der Saison neu geprüft“, Basis der gültigen Datenbank.
+  - Kennzahlen: neue Spiele, korrigierte Werte, Spielplan-Änderungen, Fehler, neue Warnungen.
+  - **1. Vollständigkeit:** je Liga und Spieltag der letzten 14 Tage (bis gestern): laut Spielplan fällig, Ergebnis
+    geliefert, verschoben/abgesagt, fehlt, Stand („vollständig“ oder „n offen“).
+  - **2. Qualitätsbericht:** Prüfregeln wie unter Datenqualität, gültige gegen neue Fassung (Datenbank: Fehler,
+    Warnungen, Hinweise; Spielplan: Fehler/Warnungen), unbekannte Teams, Korrekturen der API.
+  - Aufklappbar: offene und verschobene Spiele (fehlende Ergebnisse sperren nicht, nach 7 Tagen Warnung), einmalige
+    Umstellung der Teamnamen (Liste alt → neu), neue Meldungen der Prüfung, Korrekturen (alt → neu), neue Spiele je
+    Liga, Spielplan-Änderungen, unbekannte Teams, Namensänderungen der API, gewertete Spiele.
+  - Buttons **„✓ Übernehmen“** (gesperrt bei Fehlern) und **„✕ Verwerfen“**; danach Hinweis „Freigabe hinterlegt“.
+    Datenbank und Spielplan werden immer gemeinsam übernommen.
+- **Protokoll der letzten 14 Tage:** je Lauf Zeit, Abfragen, neue Spiele, Korrekturen, Spielplan-Änderungen, Prüfung,
+  Status (wartet, übernommen, verworfen, ersetzt, fehlgeschlagen mit Meldung).
+- Nach der Testphase (Datum `automatisch_ab`) verschwinden die Buttons; das Protokoll bleibt, Fassungen mit Fehlern
+  werden nie automatisch übernommen.
 
 ## 7. Verbindliche KPI-Spaltenstruktur
 

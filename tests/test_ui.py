@@ -226,3 +226,81 @@ def test_league_page_invalid_address_falls_back_to_current():
     assert not at.exception, at.exception
     text = _texts(at) + "\n".join(str(c.value) for c in at.caption)
     assert "Aktueller Spieltag" in text and "nicht verfügbar" in text
+
+
+# --- Datenimport/API (Version 0.14) -------------------------------------------------------
+
+def _datenimport():
+    from views import datenimport
+    datenimport.render()
+
+
+def _write_import_dir(base, status="wartet", fehler=0):
+    import json
+    run = "2026-11-17_040000"
+    (base / "laeufe" / run).mkdir(parents=True)
+    (base / "anfragen").mkdir()
+    rep = {"lauf": run, "start": "2026-11-17T04:00:00+01:00", "status": status, "fehler": fehler, "ganze_saison": False,
+           "basis": {"datenbank": "3a2589616b2b0625", "spielplan": "x"}, "saison": {"Bundesliga": "2026/2027"},
+           "abo": {"plan": "Pro", "bis": "2027-02-15", "aktiv": True}, "anfragen": {"verbraucht": 52, "rest": 7448},
+           "neue_spiele": {"Bundesliga": [{"id": 1, "datum": "15.11.2026", "spieltag": 11, "heim": "Bayern München",
+                                           "gast": "1. FC Köln", "endstand": "2:1", "halbzeit": "1:0", "ecken": "6:3",
+                                           "gelb": "1:2", "aufs_tor": "7:3"}]},
+           "korrekturen": [{"liga": "Bundesliga", "id": 2, "spiel": "A - B", "datum": "08.11.2026",
+                            "spalte": "Away Yellow Cards Full Time", "alt": 2, "neu": 3}],
+           "offen": [{"liga": "LaLiga", "heim": "Valencia", "gast": "Real Betis", "datum": "16.11.2026",
+                      "grund": "Statistik noch unvollständig"}],
+           "umbenennungen": [{"liga": "Bundesliga", "alt": "FC Koln", "neu": "1. FC Köln", "zeilen": 281}],
+           "spielplan_aenderungen": {"neu": 1, "entfallen": 0, "geaendert": []}, "wertungen": [],
+           "unbekannte_teams": [], "namensaenderungen_api": [],
+           "vollstaendigkeit": {"Bundesliga": [{"spieltag": 11, "faellig": 9, "geliefert": 9, "inaktiv": 0, "fehlt": 0,
+                                                "fehlende": [], "inaktive": []}]},
+           "pruefung": {"datenbank": {"gueltig": {"fehler": 0, "warnungen": 35, "hinweise": 201},
+                                      "neu": {"fehler": fehler, "warnungen": 35, "hinweise": 201}, "neue_meldungen": []},
+                        "spielplan": {"gueltig": {"fehler": 0, "warnungen": 0, "hinweise": 0},
+                                      "neu": {"fehler": 0, "warnungen": 0, "hinweise": 0}, "meldungen": []}}}
+    (base / "laeufe" / run / "bericht.json").write_text(json.dumps(rep), encoding="utf-8")
+    (base / "zustand.json").write_text(json.dumps({"wartend": run, "letzter_lauf_tag": "2026-11-17"}), encoding="utf-8")
+    return run
+
+
+@pytest.mark.skipif(AppTest is None, reason="Streamlit nicht vorhanden")
+def test_datenimport_page(tmp_path, monkeypatch):
+    """Reiter Datenimport/API: Statusleiste, Kasten „Neue Daten bereit“, Protokoll; „Übernehmen“ legt nur eine
+    Anfrage ab (das Dashboard schreibt nie in die Excel-Dateien)."""
+    from importer import einstellungen
+    monkeypatch.setattr(einstellungen, "IMPORT_DIR", tmp_path)
+    import views.datenimport as di
+    monkeypatch.setattr(di, "reports", lambda base, days: di_reports(base))
+    run = _write_import_dir(tmp_path)
+
+    def di_reports(base):
+        import json
+        return [json.loads(p.read_text(encoding="utf-8")) for p in sorted((base / "laeufe").glob("*/bericht.json"))]
+
+    at = AppTest.from_function(_datenimport, default_timeout=TIMEOUT).run()
+    assert not at.exception, at.exception
+    text = _texts(at)
+    for label in ("Datenimport/API", "API-Football · Pro", "Neue Daten bereit", "Vollständigkeit", "Qualitätsbericht",
+                  "Protokoll der letzten 14 Tage", "wartet"):
+        assert label in text, label
+    assert [b.label for b in at.button] == ["✓ Übernehmen", "✕ Verwerfen"] and not at.button[0].disabled
+    at.button[0].click().run()
+    import json
+    reqs = [json.loads(p.read_text()) for p in (tmp_path / "anfragen").glob("*.json")]
+    assert reqs and reqs[0]["lauf"] == run and reqs[0]["aktion"] == "uebernehmen"
+    assert "Freigabe hinterlegt" in "\n".join(str(i.value) for i in at.info)
+
+
+@pytest.mark.skipif(AppTest is None, reason="Streamlit nicht vorhanden")
+def test_datenimport_page_blocks_on_errors(tmp_path, monkeypatch):
+    from importer import einstellungen
+    monkeypatch.setattr(einstellungen, "IMPORT_DIR", tmp_path)
+    import views.datenimport as di
+    import json
+    monkeypatch.setattr(di, "reports", lambda base, days: [json.loads(p.read_text(encoding="utf-8"))
+                                                          for p in (base / "laeufe").glob("*/bericht.json")])
+    _write_import_dir(tmp_path, status="Fehler – nicht übernehmbar", fehler=2)
+    at = AppTest.from_function(_datenimport, default_timeout=TIMEOUT).run()
+    assert not at.exception, at.exception
+    assert "Neue Fassung mit Fehlern" in _texts(at) and at.button[0].disabled

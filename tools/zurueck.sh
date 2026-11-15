@@ -58,7 +58,14 @@ else
 fi
 ok "Code auf dem Stand vor dem Release ($(git log -1 --oneline))"
 
-docker compose up -d --build football-dashboard > "$BACKUP/zurueck_neubau.log" 2>&1 || stopp "Neubau fehlgeschlagen ($BACKUP/zurueck_neubau.log)."
+# Datenimport (seit 0.14) mitbauen, wenn der alte Stand ihn schon kennt; sonst nur ein Hinweis (er läuft weiter)
+if grep -q "^  soccer-import:" docker-compose.yml; then
+  docker compose up -d --build football-dashboard soccer-import > "$BACKUP/zurueck_neubau.log" 2>&1 || stopp "Neubau fehlgeschlagen ($BACKUP/zurueck_neubau.log)."
+else
+  docker compose up -d --build football-dashboard > "$BACKUP/zurueck_neubau.log" 2>&1 || stopp "Neubau fehlgeschlagen ($BACKUP/zurueck_neubau.log)."
+  info "Hinweis: Der alte Stand kennt den Datenimport noch nicht. Der Container soccer-import läuft weiter;"
+  info "neue Daten im Bereich Datenimport/API bis zur Klärung nicht übernehmen (01, Abschnitt 6.3)."
+fi
 P="" D=""
 for _ in $(seq 1 15); do
   sleep 2

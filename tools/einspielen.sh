@@ -11,7 +11,8 @@
 # - Weg "Paket" committet am Schluss (nach j/n) und pusht nach GitHub. Er stoppt, wenn GitHub schon weiter ist.
 # - Bei einem Fehler hält das Skript an, zeigt den Fehler und nennt den Rückweg (tools/zurueck.sh).
 #   Es setzt nie selbst etwas zurück.
-# - Es berührt nur unseren Container football-dashboard. Kein "docker compose down", keine anderen Container.
+# - Es berührt nur unsere Container football-dashboard und soccer-import (seit 0.14). Kein "docker compose down",
+#   keine anderen Container.
 # - Die Excel-Dateien in data/ werden weder gelesen noch verändert (ausser lesend von den Tests).
 # - Dateien löschen (nur Weg Paket): Enthält das Paket die Datei release_loeschen.txt (eine Datei je Zeile),
 #   werden diese Dateien mit "git rm" entfernt. Erlaubt sind nur versionierte Dateien, nie data/, backup/, .env.
@@ -146,8 +147,8 @@ grep -v "notice\]" "$BACKUP/tests.log" | tail -6 | sed 's/^/   /'
 ok "Tests bestanden: $(grep -Eo '[0-9]+ passed(, [0-9]+ skipped)?' "$BACKUP/tests.log" | tail -1)"
 
 # ── 5 Neubau und Prüfung ──────────────────────────────────────────────────────────────────────
-schritt "5/6: Neubau (nur football-dashboard) und Prüfung"
-docker compose up -d --build football-dashboard > "$BACKUP/neubau.log" 2>&1 || {
+schritt "5/6: Neubau (nur football-dashboard und soccer-import) und Prüfung"
+docker compose up -d --build football-dashboard soccer-import > "$BACKUP/neubau.log" 2>&1 || {
   tail -15 "$BACKUP/neubau.log" | sed 's/^/   /'; stopp "Neubau fehlgeschlagen."; }
 PLATZHALTER="" DASHBOARD=""
 for _ in $(seq 1 15); do
@@ -160,9 +161,11 @@ docker ps --format "table {{.Names}}\t{{.Status}}" | sed 's/^/   /'
 docker logs football-dashboard --tail 4 2>&1 | sed 's/^/   /'
 LAEUFT=$(docker inspect -f '{{.State.Running}}' football-dashboard 2>/dev/null || echo false)
 [ "$LAEUFT" = true ] || stopp "Container football-dashboard läuft nicht."
+IMPORT=$(docker inspect -f '{{.State.Running}}' soccer-import 2>/dev/null || echo false)
+[ "$IMPORT" = true ] || stopp "Container soccer-import läuft nicht (Datenimport)."
 [ "$PLATZHALTER" = 200 ] || stopp "Platzhalterseite antwortet mit $PLATZHALTER statt 200."
 [ "$DASHBOARD" = 401 ] || stopp "Dashboard antwortet mit $DASHBOARD statt 401 (Passwortschutz)."
-ok "Container läuft · / = 200 · /dashboard/ = 401"
+ok "Container laufen (Dashboard und Import) · / = 200 · /dashboard/ = 401"
 
 # ── 6 Abschluss ───────────────────────────────────────────────────────────────────────────────
 schritt "6/6: Prüfung im Browser und Abschluss"

@@ -10,10 +10,13 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 
 **In Betrieb:** Version 0.13 – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit den festgelegten Schwellen (positiv/negativ getrennt, KPI 03 je Liga), Top Anomalien, Datenqualität und Sensitivitätsanalyse; Datenbank 2018/19–2026/27 mit Referenzsaison 2018/19 (KPI-Regelwerk 1.2). Passwortschutz unter `/dashboard`, Platzhalterseite unter `/`.
 
-**Als Nächstes:** Datenlieferung über API-Football (Spezifikation v0.3 in `06_Datenlieferung.md`, freigegeben 15.11.2026; Pro-Abo aktiv bis 15.02.2027; Vollvergleich und Bereinigung erledigt, bereinigte Datenbank aufspielen; als Nächstes Tagesbetrieb, Vollvergleich aller Saisons, Umstellung bei mindestens 99 % Übereinstimmung, Tagesbetrieb; Etappe G) · Rundum-Prüfung des Codes, bevor das Frontend beginnt · KPI-Erweiterungen und Kombinationen (z. B. xG) · Gewichtung der Top Anomalien (Regelwerk, Punkt 17) · öffentliche Website.
+**Bereit zum Einspielen:** Version 0.14 – Datenimport über API-Football: Container `soccer-import` (Montag bis Freitag 04:00), Reiter „Datenimport/API“ mit Freigabe, Spielplan aus der API, Teamnamen von API-Football (Spezifikation `06_Datenlieferung.md`, Dashboard-Briefing 6.5). Vor dem Einspielen den API-Schlüssel in `.env` eintragen (Abschnitt 6.5).
+
+**Als Nächstes:** 2 Wochen halbautomatischer Betrieb, danach Datum für den automatischen Tausch festlegen (`app/config/import.toml`) · E-Mail-Benachrichtigung · Phase 2: Wettquoten, Verletzungen, Tabellenstände (rückwirkend) · Rundum-Prüfung des Codes · KPI-Erweiterungen und Freigabe je Liga · Gewichtung der Top Anomalien (Regelwerk, Punkt 17) · öffentliche Website.
 
 | Version | Etappe | Inhalt | Eingespielt | Git | Tests |
 |---|---|---|---|---|---|
+| 0.14 | Datenimport | Datenimport über API-Football: Container soccer-import, Reiter Datenimport/API mit Freigabe, Spielplan aus der API, Teamnamen der API, Status „abgebrochen“ | ausstehend | – | 438 |
 | 0.13 | Neue Schwellen | Gültige Schwellen positiv/negativ getrennt, KPI 03 je Liga; Sensitivitätsanalyse nach Entwurf C (vier Zeilen je KPI, Bewertung auch für stark) | 14.11.2026 | `89128e5` | 428 |
 | 0.12 | Sensitivitätsanalyse | Spielwiese ersetzt: vier Schwellen je KPI, Häufigkeit mit Spieltagsabdeckung, Ergebnisqualität gegen Grundquote mit Wilson-Spanne und Empfehlung | 12.11.2026 | `1482bc3` | 398 |
 | 0.11 | Neue Datenbank | Datenbank 2018/19–2026/27, Referenzsaison, neue Saisonauswahl, Warnung „Saison fehlt“ | 10.11.2026 | `034e57a` | 376 |
@@ -36,7 +39,7 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 - **Rückweg** zu einer Version: Abschnitt 6.1.
 - **Prüfprotokolle** grösserer Etappen: `docs/tests/pruefprotokoll_*.md`.
 - **Frühere Anleitungen** (`ANLEITUNG_*.md`): seit 09.11.2026 durch `RELEASE.md` und Abschnitt 6.1 ersetzt. Sie bleiben im Git-Verlauf erhalten.
-- **Daten:** Datenbank SHA-256 `451348b6…` (2018/19–2026/27, seit 10.11.2026; vorher `f37e36d3…`), `02_Datenbasis.md`; Prüfprotokoll `docs/tests/pruefprotokoll_datenbank_2018-2027.md`. **Bereinigte Fassung `3a258961…` (15.11.2026) zum Aufspielen bereit** (`02`, Abschnitt 4e; Prüfprotokoll `docs/tests/pruefprotokoll_api.md`). Spielplan mit vier Blättern (`04_Spielplan.md`).
+- **Daten:** Datenbank SHA-256 `3a258961…` (2018/19–2026/27, bereinigt mit API-Football und football-data.co.uk, aktiv seit 15.11.2026; vorher `451348b6…`), `02_Datenbasis.md` Abschnitt 4e; Prüfprotokolle `docs/tests/pruefprotokoll_api.md` und `pruefprotokoll_datenbank_2018-2027.md`. Spielplan mit vier Blättern (`04_Spielplan.md`).
 
 ---
 
@@ -98,6 +101,7 @@ Ausbaustufen:
 |---|---|---|
 | `football-dashboard` | Soccer Intelligence (Streamlit), unter `/dashboard` | **ja** |
 | `soccer-placeholder` | Platzhalterseite unter `/` (nginx, statisch), seit Etappe E | **ja** |
+| `soccer-import` | Datenimport über API-Football (Montag bis Freitag 04:00), seit Version 0.14; kein Zugang von aussen | **ja** |
 | `article-generator` | Artikeltext-Generator | nein – nicht anfassen |
 | `n8n-wxit-n8n-1` | n8n Automatisierung | nein – nicht anfassen |
 | `traefik-traefik-1` | Webserver / HTTPS für alle Anwendungen | nein – nicht anfassen |
@@ -135,15 +139,16 @@ Besucher → https://soccer-intelligence.com/dashboard…  → Traefik → Passw
 /docker/football-dashboard/
 ├── .github/workflows/tests.yml automatische Tests auf GitHub (bei Push und Pull Request)
 ├── Dockerfile                  Bauplan des Containers (Python 3.12, Streamlit)
-├── docker-compose.yml          Container-Konfiguration inkl. Traefik-Labels (Dashboard + Platzhalter)
-├── .env                        Zugang zum Dashboard (Benutzername + Passwort-Hash), nicht in Git
+├── docker-compose.yml          Container-Konfiguration inkl. Traefik-Labels (Dashboard + Platzhalter + Import)
+├── .env                        Zugang zum Dashboard (Benutzername + Passwort-Hash) und API-Schlüssel (API_FOOTBALL_KEY), nicht in Git
 ├── requirements.txt            Python-Pakete (Versionen fest); requirements-dev.txt zusätzlich pytest
 ├── app/                        Anwendung (Aufbau Abschnitt 7)
 ├── tests/                      automatische Tests; tests/referenz/ = feste Datenbank-Stände für die Testfälle
 ├── placeholder/                Platzhalterseite unter / (index.html, robots.txt)
 ├── tools/                      einspielen.sh (Release), zurueck.sh (Rückweg), dashboard_passwort.sh (Zugang)
 ├── data/                       nicht in Git: Database-Soccer-Intelligence.xlsx, Spielplan.xlsx (GÜLTIG)
-├── backup/                     Sicherungen, nicht in Git
+├── import/                     nicht in Git: Datenimport (laeufe/ mit Berichten und neuen Fassungen, roh/ mit API-Antworten, anfragen/, zustand.json)
+├── backup/                     Sicherungen, nicht in Git (auch die vor einem Import ersetzten Fassungen, die letzten 30)
 ├── docs/                       Dokumentation, massgebliche Quelle (md)
 ├── word/                       Archiv der Word-Dokumente (nicht mehr gepflegt)
 ├── CLAUDE.md                   Einstieg und Regeln für Claude
@@ -151,13 +156,15 @@ Besucher → https://soccer-intelligence.com/dashboard…  → Traefik → Passw
 └── RELEASE.md                  das aktuelle Release (wird mit jeder Änderung ersetzt)
 ```
 
-**docker-compose.yml:** Die Datei selbst ist massgeblich und wird hier nicht kopiert. Sie enthält zwei eigene Container:
+**docker-compose.yml:** Die Datei selbst ist massgeblich und wird hier nicht kopiert. Sie enthält drei eigene Container:
 - **`football-dashboard`:**
   - `./data:/data:ro`: Die Excel-Dateien sind nur lesbar.
   - Port nur lokal (`127.0.0.1:8501`), Pfad `/dashboard` (`STREAMLIT_SERVER_BASE_URL_PATH`).
   - Traefik-Labels mit Passwortschutz: Hash aus `.env`, Variable `SOCCER_DASHBOARD_AUTH`. Fehlt sie, startet Compose nicht.
   - Kopfzeile `X-Robots-Tag: noindex, nofollow`.
+  - `./import:/import:ro` und `./import/anfragen` (schreibbar, nur für Freigabe-Anfragen) seit Version 0.14.
 - **`soccer-placeholder`:** nginx 1.27, nur lesend.
+- **`soccer-import`** (seit 0.14): gleiches Image, Befehl `python -m importer.dienst`; schreibt `./data` (nur beim Tausch nach Freigabe), `./import`, `./backup`; keine Labels, kein Port; Schlüssel aus `.env` (`API_FOOTBALL_KEY`, fehlt er, meldet der Reiter „API-Schlüssel fehlt“).
 
 Die Tests in `tests/test_deploy.py` prüfen diese Punkte automatisch.
 
@@ -189,9 +196,9 @@ Erwartet: genau die drei Versionen oben. Weicht etwas ab → Ursache klären, be
 3. Kein `docker compose down`, keine globalen Docker-Befehle, keine Änderungen an gemeinsamen Netzwerken.
 4. Traefik-Labels und Ports nicht ändern (nur mit eigener Freigabe). Letzte Freigabe: Etappe E, 31.10.2026.
 5. Vor jeder Änderung: Backup der betroffenen Dateien.
-6. Neu bauen nur den eigenen Service: `docker compose up -d --build football-dashboard` (die Platzhalterseite `soccer-placeholder` gehört ebenfalls zu uns und muss bei Code-Änderungen nicht neu gestartet werden)
+6. Neu bauen nur die eigenen Services: `docker compose up -d --build football-dashboard soccer-import` (seit 0.14 mit dem Datenimport; die Platzhalterseite `soccer-placeholder` gehört ebenfalls zu uns und muss bei Code-Änderungen nicht neu gestartet werden)
 7. Danach immer prüfen: `docker ps` → alle Container laufen weiter.
-8. Keine Passwörter, Tokens oder Schlüssel in Code oder Dokumentation. Die Zugangsdaten für den Dashboard-Passwortschutz liegen nur als Hash in einer Konfigurationsdatei auf dem Server (z. B. `.env`, nicht in Git).
+8. Keine Passwörter, Tokens oder Schlüssel in Code oder Dokumentation. Die Zugangsdaten für den Dashboard-Passwortschutz liegen nur als Hash in einer Konfigurationsdatei auf dem Server (z. B. `.env`, nicht in Git); ebenso der API-Schlüssel von API-Football (`API_FOOTBALL_KEY` in `.env`).
 9. Fehlende Statistikwerte nie durch 0 oder Schätzungen ersetzen.
 10. Änderungen erst nach Freigabe durch Carsten.
 
@@ -303,8 +310,39 @@ docker compose up -d football-dashboard          # Zugang neu einlesen (kein Neu
 ### 6.4 Zustand prüfen (nur lesend)
 
 ```bash
-cd /docker/football-dashboard && git log -1 --oneline && docker ps --format "table {{.Names}}\t{{.Status}}" && docker logs football-dashboard --tail 20 && sha256sum data/*.xlsx
+cd /docker/football-dashboard && git log -1 --oneline && docker ps --format "table {{.Names}}\t{{.Status}}" && docker logs football-dashboard --tail 20 && docker logs soccer-import --tail 10 && sha256sum data/*.xlsx
 ```
+
+### 6.5 Datenimport über API-Football (seit Version 0.14)
+
+Regeln und Ablauf: `06_Datenlieferung.md`; Bereich im Dashboard: Dashboard-Briefing 6.5.
+
+**Schlüssel eintragen** (einmalig, vor dem ersten Einspielen von 0.14; der Schlüssel steht nur in `.env`):
+```bash
+( umask 077 && cd /docker/football-dashboard && cp -p .env backup/env_$(date +%F_%H%M) && read -rsp "API-Schlüssel: " K && echo && [ -n "$K" ] && { grep -v "^API_FOOTBALL_KEY=" .env || true; } > .env.neu && printf 'API_FOOTBALL_KEY=%s\n' "$K" >> .env.neu && cat .env.neu > .env && rm .env.neu && grep -c "^API_FOOTBALL_KEY=" .env )
+```
+Erwartet: `1` (der Schlüssel erscheint nicht auf dem Bildschirm; vorher kommt eine Kopie von `.env` nach `backup/`). Ein vorhandener Eintrag wird ersetzt, eine leere Eingabe ändert nichts. Neuer Schlüssel: denselben Befehl ausführen, danach `cd /docker/football-dashboard && docker compose up -d soccer-import`.
+
+**Täglich:** Montag bis Freitag um 04:00 holt `soccer-import` die Daten und legt eine neue Fassung bereit. Im Reiter
+„Datenimport/API“ prüfen und **Übernehmen** oder **Verwerfen**. Der Tausch geschieht innerhalb einer Minute; die
+bisherigen Dateien kommen nach `backup/` (`…_vor_import.xlsx`). Ab dem Datum `automatisch_ab` in
+`app/config/import.toml` wird eine fehlerfreie Fassung sofort übernommen.
+
+**Lauf sofort starten** (z. B. nach dem Einspielen oder wenn ein Lauf fehlgeschlagen ist):
+```bash
+docker exec soccer-import python -m importer.dienst --jetzt
+```
+
+**Import anhalten und wieder starten** (nur unser Container):
+```bash
+cd /docker/football-dashboard && docker compose stop soccer-import
+```
+```bash
+cd /docker/football-dashboard && docker compose up -d soccer-import
+```
+
+**Rückweg nach einer übernommenen Fassung:** wie Abschnitt 6.2, Schritt 5, mit den Dateien `backup/*_vor_import.xlsx`
+(Datenbank und Spielplan gemeinsam zurückkopieren).
 
 ---
 
@@ -319,6 +357,8 @@ app/
 ├── config/               Konfiguration, mit dem Code versioniert (Änderung -> Container neu bauen)
 │   ├── ligen.toml        aktive Ligen, Adresse, Anzahl Teams (Etappe B)
 │   ├── teams.toml        Teamliste: bekannte Teams ohne Datenbankeinträge, z. B. Aufsteiger (Etappe B)
+│   ├── teamnamen.toml    Teamnamen von API-Football je Team-ID, mit bisheriger Schreibweise (0.14)
+│   ├── import.toml       Datenimport: Datum für den automatischen Tausch (0.14)
 │   └── schwellen.toml    Schwellen der Anomalie-Einstufung je Liga und KPI (Etappe H)
 ├── core/                 Kernlogik ohne Oberfläche (testbar)
 │   ├── settings.py       Pfade, Pflichtblätter, Version
@@ -337,7 +377,9 @@ app/
 │   ├── top.py            Auswahl der Top Anomalien (Etappe D, ab H über KPI 02–09)
 │   ├── simulation.py     Ergebniskontrolle und Simulation der Schwellen (Etappe I.1)
 │   └── frequency.py      Häufigkeit der Anomalien (Etappe C)
-└── views/                Bereiche: Top Anomalien, je Liga, Datenqualität; components.py = Stil, Kopfbereich,
+├── importer/             Datenimport über API-Football (0.14): client (Abfragen, Obergrenze, Rohdaten), convert (58
+│                         Spalten), spielplan, teams, erzeugen (neue Fassung + Bericht), dienst (Zeitplan, Freigabe)
+└── views/                Bereiche: Top Anomalien, je Liga, Datenqualität, Datenimport/API (datenimport.py, 0.14); components.py = Stil, Kopfbereich,
                           Sperrhinweis; kpi_table.py = kompakte Liga-Tabelle mit Aufklappen (Etappe H);
                           simulation.py = Bereich Simulation – Spielwiese (Etappe I.1)
 tests/                    automatische Tests; gegenrechnung.py = unabhängige zweite KPI-Berechnung (Etappe F)

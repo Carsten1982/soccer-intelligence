@@ -1,0 +1,762 @@
+# Soccer Intelligence – Teamnamen von API-Football (Entscheidung Carsten 15.11.2026, E6/E14)
+#
+# Je Team: api_team_id (feste Nummer bei API-Football), name (Name von API-Football, hier festgehalten) und
+# alt (bisherige Schreibweise der Datenbank, nur für die einmalige Umbenennung beim ersten Import).
+# Ein Team, das hier fehlt (z. B. ein Aufsteiger), wird beim Import gemeldet und mit dem Namen der API übernommen.
+# Ändert die API später einen Namen, gilt weiter der Name hier; die Abweichung wird gemeldet.
+# Erzeugt am 15.11.2026 aus dem Vollvergleich (Zuordnung über Datum und Ergebnis, alle Saisons 2018/19–2026/27;
+# name = Schreibweise der API in der jüngsten Saison des Teams).
+
+# --- Bundesliga ---
+[[team]]
+liga = "Bundesliga"
+api_team_id = 180
+name = "1. FC Heidenheim"
+alt = "Heidenheim"
+
+[[team]]
+liga = "Bundesliga"
+api_team_id = 192
+name = "1. FC Köln"
+alt = "FC Koln"
+
+[[team]]
+liga = "Bundesliga"
+api_team_id = 167
+name = "1899 Hoffenheim"
+alt = "Hoffenheim"
+
+[[team]]
+liga = "Bundesliga"
+api_team_id = 188
+name = "Arminia Bielefeld"
+alt = "Arminia Bielefeld"
+
+[[team]]
+liga = "Bundesliga"
+api_team_id = 168
+name = "Bayer Leverkusen"
+alt = "Bayer Leverkusen"
+
+[[team]]
+liga = "Bundesliga"
+api_team_id = 157
+name = "Bayern München"
+alt = "Bayern Munich"
+
+[[team]]
+liga = "Bundesliga"
+api_team_id = 165
+name = "Borussia Dortmund"
+alt = "Dortmund"
+
+[[team]]
+liga = "Bundesliga"
+api_team_id = 163
+name = "Borussia Mönchengladbach"
+alt = "B. Monchengladbach"
+
+[[team]]
+liga = "Bundesliga"
+api_team_id = 169
+name = "Eintracht Frankfurt"
+alt = "Eintracht Frankfurt"
+
+[[team]]
+liga = "Bundesliga"
+api_team_id = 170
+name = "FC Augsburg"
+alt = "Augsburg"
+
+[[team]]
+liga = "Bundesliga"
+api_team_id = 171
+name = "FC Nurnberg"
+alt = "Nurnberg"
+
+[[team]]
+liga = "Bundesliga"
+api_team_id = 174
+name = "FC Schalke 04"
+alt = "Schalke"
+
+[[team]]
+liga = "Bundesliga"
+api_team_id = 186
+name = "FC St. Pauli"
+alt = "St. Pauli"
+
+[[team]]
+liga = "Bundesliga"
+api_team_id = 164
+name = "FSV Mainz 05"
+alt = "Mainz"
+
+[[team]]
+liga = "Bundesliga"
+api_team_id = 158
+name = "Fortuna Dusseldorf"
+alt = "Dusseldorf"
+
+[[team]]
+liga = "Bundesliga"
+api_team_id = 175
+name = "Hamburger SV"
+alt = "Hamburger SV"
+
+[[team]]
+liga = "Bundesliga"
+api_team_id = 166
+name = "Hannover 96"
+alt = "Hannover"
+
+[[team]]
+liga = "Bundesliga"
+api_team_id = 159
+name = "Hertha Berlin"
+alt = "Hertha Berlin"
+
+[[team]]
+liga = "Bundesliga"
+api_team_id = 191
+name = "Holstein Kiel"
+alt = "Holstein Kiel"
+
+[[team]]
+liga = "Bundesliga"
+api_team_id = 173
+name = "RB Leipzig"
+alt = "RB Leipzig"
+
+[[team]]
+liga = "Bundesliga"
+api_team_id = 160
+name = "SC Freiburg"
+alt = "Freiburg"
+
+[[team]]
+liga = "Bundesliga"
+api_team_id = 185
+name = "SC Paderborn 07"
+alt = "Paderborn"
+
+[[team]]
+liga = "Bundesliga"
+api_team_id = 181
+name = "SV Darmstadt 98"
+alt = "Darmstadt"
+
+[[team]]
+liga = "Bundesliga"
+api_team_id = 1660
+name = "SV Elversberg"
+alt = "Elversberg"
+
+[[team]]
+liga = "Bundesliga"
+api_team_id = 178
+name = "SpVgg Greuther Furth"
+alt = "Greuther Furth"
+
+[[team]]
+liga = "Bundesliga"
+api_team_id = 182
+name = "Union Berlin"
+alt = "Union Berlin"
+
+[[team]]
+liga = "Bundesliga"
+api_team_id = 172
+name = "VfB Stuttgart"
+alt = "Stuttgart"
+
+[[team]]
+liga = "Bundesliga"
+api_team_id = 161
+name = "VfL Wolfsburg"
+alt = "Wolfsburg"
+
+[[team]]
+liga = "Bundesliga"
+api_team_id = 176
+name = "VfL Bochum"
+alt = "Bochum"
+
+[[team]]
+liga = "Bundesliga"
+api_team_id = 162
+name = "Werder Bremen"
+alt = "Werder Bremen"
+
+# --- Premier League ---
+[[team]]
+liga = "Premier League"
+api_team_id = 42
+name = "Arsenal"
+alt = "Arsenal"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 66
+name = "Aston Villa"
+alt = "Aston Villa"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 35
+name = "Bournemouth"
+alt = "Bournemouth"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 55
+name = "Brentford"
+alt = "Brentford"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 51
+name = "Brighton"
+alt = "Brighton"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 44
+name = "Burnley"
+alt = "Burnley"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 43
+name = "Cardiff"
+alt = "Cardiff"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 49
+name = "Chelsea"
+alt = "Chelsea"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 1346
+name = "Coventry"
+alt = "Coventry"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 52
+name = "Crystal Palace"
+alt = "Crystal Palace"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 45
+name = "Everton"
+alt = "Everton"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 36
+name = "Fulham"
+alt = "Fulham"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 37
+name = "Huddersfield"
+alt = "Huddersfield"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 64
+name = "Hull City"
+alt = "Hull"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 57
+name = "Ipswich"
+alt = "Ipswich"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 63
+name = "Leeds"
+alt = "Leeds"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 46
+name = "Leicester"
+alt = "Leicester"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 40
+name = "Liverpool"
+alt = "Liverpool"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 1359
+name = "Luton"
+alt = "Luton"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 50
+name = "Manchester City"
+alt = "Manchester City"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 33
+name = "Manchester United"
+alt = "Manchester Utd"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 34
+name = "Newcastle"
+alt = "Newcastle"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 71
+name = "Norwich"
+alt = "Norwich"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 65
+name = "Nottingham Forest"
+alt = "Nottingham"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 62
+name = "Sheffield Utd"
+alt = "Sheffield Utd"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 41
+name = "Southampton"
+alt = "Southampton"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 746
+name = "Sunderland"
+alt = "Sunderland"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 47
+name = "Tottenham"
+alt = "Tottenham"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 38
+name = "Watford"
+alt = "Watford"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 60
+name = "West Brom"
+alt = "West Brom"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 48
+name = "West Ham"
+alt = "West Ham"
+
+[[team]]
+liga = "Premier League"
+api_team_id = 39
+name = "Wolves"
+alt = "Wolves"
+
+# --- Serie A ---
+[[team]]
+liga = "Serie A"
+api_team_id = 489
+name = "AC Milan"
+alt = "AC Milan"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 497
+name = "AS Roma"
+alt = "AS Roma"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 499
+name = "Atalanta"
+alt = "Atalanta"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 506
+name = "Benevento"
+alt = "Benevento"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 500
+name = "Bologna"
+alt = "Bologna"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 518
+name = "Brescia"
+alt = "Brescia"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 490
+name = "Cagliari"
+alt = "Cagliari"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 491
+name = "Chievo"
+alt = "Chievo"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 895
+name = "Como"
+alt = "Como"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 520
+name = "Cremonese"
+alt = "Cremonese"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 501
+name = "Crotone"
+alt = "Crotone"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 511
+name = "Empoli"
+alt = "Empoli"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 502
+name = "Fiorentina"
+alt = "Fiorentina"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 512
+name = "Frosinone"
+alt = "Frosinone"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 495
+name = "Genoa"
+alt = "Genoa"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 504
+name = "Hellas Verona"
+alt = "Verona"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 505
+name = "Inter"
+alt = "Inter"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 496
+name = "Juventus"
+alt = "Juventus"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 487
+name = "Lazio"
+alt = "Lazio"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 867
+name = "Lecce"
+alt = "Lecce"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 1579
+name = "Monza"
+alt = "Monza"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 492
+name = "Napoli"
+alt = "Napoli"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 523
+name = "Parma"
+alt = "Parma"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 801
+name = "Pisa"
+alt = "Pisa"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 514
+name = "Salernitana"
+alt = "Salernitana"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 498
+name = "Sampdoria"
+alt = "Sampdoria"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 488
+name = "Sassuolo"
+alt = "Sassuolo"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 493
+name = "Spal"
+alt = "Spal"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 515
+name = "Spezia"
+alt = "Spezia"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 503
+name = "Torino"
+alt = "Torino"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 494
+name = "Udinese"
+alt = "Udinese"
+
+[[team]]
+liga = "Serie A"
+api_team_id = 517
+name = "Venezia"
+alt = "Venezia"
+
+# --- LaLiga ---
+[[team]]
+liga = "LaLiga"
+api_team_id = 542
+name = "Alaves"
+alt = "Alaves"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 723
+name = "Almeria"
+alt = "Almeria"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 531
+name = "Athletic Club"
+alt = "Ath Bilbao"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 530
+name = "Atletico Madrid"
+alt = "Atl. Madrid"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 529
+name = "Barcelona"
+alt = "Barcelona"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 724
+name = "Cadiz"
+alt = "Cadiz CF"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 538
+name = "Celta Vigo"
+alt = "Celta Vigo"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 544
+name = "Deportivo La Coruna"
+alt = "Dep. A Coruna"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 545
+name = "Eibar"
+alt = "Eibar"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 797
+name = "Elche"
+alt = "Elche"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 540
+name = "Espanyol"
+alt = "Espanyol"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 546
+name = "Getafe"
+alt = "Getafe"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 547
+name = "Girona"
+alt = "Girona"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 715
+name = "Granada CF"
+alt = "Granada CF"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 726
+name = "Huesca"
+alt = "Huesca"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 534
+name = "Las Palmas"
+alt = "Las Palmas"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 537
+name = "Leganes"
+alt = "Leganes"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 539
+name = "Levante"
+alt = "Levante"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 535
+name = "Malaga"
+alt = "Malaga"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 798
+name = "Mallorca"
+alt = "Mallorca"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 727
+name = "Osasuna"
+alt = "Osasuna"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 718
+name = "Oviedo"
+alt = "Oviedo"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 4665
+name = "Racing Santander"
+alt = "Racing Santander"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 728
+name = "Rayo Vallecano"
+alt = "Rayo Vallecano"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 543
+name = "Real Betis"
+alt = "Betis"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 541
+name = "Real Madrid"
+alt = "Real Madrid"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 548
+name = "Real Sociedad"
+alt = "Real Sociedad"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 536
+name = "Sevilla"
+alt = "Sevilla"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 532
+name = "Valencia"
+alt = "Valencia"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 720
+name = "Valladolid"
+alt = "Valladolid"
+
+[[team]]
+liga = "LaLiga"
+api_team_id = 533
+name = "Villarreal"
+alt = "Villarreal"

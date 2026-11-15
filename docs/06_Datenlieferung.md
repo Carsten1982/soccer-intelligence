@@ -1,6 +1,6 @@
 # Soccer Intelligence – Datenlieferung über API-Football (Spezifikation)
 
-**Version 0.4** · Stand 15.11.2026 · **Status: freigegeben von Carsten am 15.11.2026; v0.4: Ergebnis des Vollvergleichs eingearbeitet** · Grundlage: Entwurf v0.1 (ChatGPT,
+**Version 0.5** · Stand 15.11.2026 · **Status: freigegeben von Carsten am 15.11.2026; v0.4: Ergebnis des Vollvergleichs; v0.5: Tagesbetrieb umgesetzt (Version 0.14)** · Grundlage: Entwurf v0.1 (ChatGPT,
 15.11.2026), kritisch geprüft und ergänzt von Claude (v0.2); Entscheidungen E1–E12 von Carsten am 15.11.2026 (v0.3).
 
 Diese Datei ist die einzige Stelle für die Datenlieferung: Datenquelle, Feldzuordnung, Abläufe, Abfragebudget und
@@ -23,7 +23,7 @@ Programmiert wird erst nach Freigabe dieser Spezifikation (Arbeitsweise: Vorschl
   verändert.
 - **Teamnamen:** künftig die Namen von API-Football (E6), je Team-ID fest hinterlegt.
 - **Rohdaten:** Jede API-Antwort wird unverändert gespeichert. Damit sind spätere Auswertungen ohne neue Abfragen
-  möglich. Wettquoten und Verletzungen werden ab Phase 1 nur gesammelt (E10).
+  möglich. Wettquoten und Verletzungen folgen in Phase 2, rückwirkend (E10, geändert 15.11.2026).
 - **Phase 2 – Anreicherung (später):** weitere Statistiken, Tabellenstände (selbst berechnet), Wettquoten,
   Verletzungen, Datensatz für Machine Learning.
 
@@ -223,15 +223,17 @@ Montag da, Montagsspiele am Dienstag, Spiele unter der Woche am Folgetag, also i
 ```
 1. Kontingent prüfen (status)
 2. Spielliste je Liga holen (4 Abfragen): Ergebnisse, Status, Spielplan der ganzen Saison
-3. Fertige Spiele seit dem letzten erfolgreichen Lauf plus 3 Tage zurück bestimmen
-   (Nachholspiele, späte Statistiken, Korrekturen)
+3. Spiele bestimmen (Entscheidung Carsten 15.11.2026, ersetzt „seit dem letzten Lauf plus 3 Tage“):
+   - jedes beendete Spiel der Saison, das noch nicht in der Datenbank steht (auch Nachholspiele, egal wie spät)
+   - Spiele mit API-ID der letzten 2 Spieltage je Liga neu holen; montags alle Spiele der Saison mit API-ID
+   - Spiele mit API-ID, deren Statistik noch unvollständig ist
 4. Details dieser Spiele per Mehrfachabfrage holen (20 Spiele je Abfrage), ab 2024 Halbzeit-Statistik je Spiel
+   (für neue Spiele und die letzten 2 Spieltage)
 5. Rohdaten speichern
 6. Neue Fassung erzeugen: Altbestand + neue Spiele (+ geänderte Werte) + eigene Korrekturliste
-   → data/eingang/<Datum>_Database.xlsx und <Datum>_Spielplan.xlsx
+   → import/laeufe/<Lauf>/Database-Soccer-Intelligence.xlsx und Spielplan.xlsx, dazu bericht.json
 7. Prüfen mit den bestehenden Prüfregeln (02, 04) und Vergleich mit der gültigen Fassung
-8. Tauschen (E3) oder bei Problemen nichts ändern und melden
-   Zusätzlich (E10): Wettquoten der kommenden Spiele und Verletzungen nur als Rohdaten speichern
+8. Tauschen nach Freigabe im Reiter „Datenimport/API“ (E3, E15) oder bei Problemen nichts ändern und melden
 9. Protokoll: Abfragen, neue Spiele, Korrekturen, fehlende Werte, Meldungen
 ```
 
@@ -241,12 +243,22 @@ Montag da, Montagsspiele am Dienstag, Spiele unter der Woche am Folgetag, also i
 - **Vergleich neu gegen bisher:** neues Spiel → übernehmen · leerer Wert jetzt gefüllt → übernehmen und melden ·
   gefüllter Wert jetzt anders → melden, Carsten entscheidet · Spiel fehlt plötzlich → Fassung ablehnen.
 - Spiele **ohne Statistik** am Morgen nach dem Spiel werden mit leeren Werten übernommen und bei den nächsten Läufen
-  nachgefüllt (höchstens 7 Tage lang, danach Meldung).
+  nachgefüllt (höchstens 7 Tage lang, danach Meldung). Sie gelten als „offen“ und sperren die Übernahme nicht; gesperrt
+  wird nur bei Fehlern (E16).
+- **Verschiebungen** brauchen kein Vormerken: Jeder Lauf holt die ganze Spielliste der Saison (4 Abfragen); Status und
+  neuer Termin stehen darin, und ein spät gespieltes Spiel wird automatisch aufgenommen. Im Spielplan wird es
+  automatisch „verschoben“ (E17).
+- **Korrekturen** der API an Spielen mit API-ID erscheinen mit altem und neuem Wert im Reiter und werden nur mit der
+  Freigabe übernommen; ein leerer API-Wert überschreibt nie einen vorhandenen.
+- Es wartet immer höchstens **eine** Fassung; ein neuer Lauf ersetzt die wartende und baut auf der gültigen auf.
+  Übernommen wird nur, wenn die gültigen Dateien seit dem Lauf unverändert sind (sonst baut der nächste Lauf neu auf).
 - Spiele vor dem Stichtag werden im Tagesbetrieb **nie** verändert.
 - Die ersetzte Fassung kommt nach `backup/`. Das Dashboard liest die neue Datei beim nächsten Aufruf automatisch.
 
-**Technik:** eigener kleiner Container `soccer-import` im Projektordner mit Zeitplan (wie im Konzept vom 07.11.2026);
-nur er schreibt in `data/eingang/` und tauscht Dateien; das Dashboard bleibt nur lesend. Wiederverwendung von Loader
+**Technik (umgesetzt in Version 0.14):** eigener kleiner Container `soccer-import` (gleiches Image, Befehl
+`python -m importer.dienst`, Code in `app/importer/`); er legt jede neue Fassung mit Bericht unter
+`import/laeufe/<lauf>/` ab und tauscht nach Freigabe (Backup `backup/*_vor_import.xlsx`, die letzten 30, Tausch in
+einem Schritt). Das Dashboard liest `import/` nur und schreibt ausschliesslich Freigabe-Anfragen nach `import/anfragen/`. Wiederverwendung von Loader
 und Prüfregeln aus `app/core/`. Kein Eingriff in Traefik oder andere Container; Einrichtung nur mit Freigabe Carsten
 (Schutzregeln `01`, Abschnitt 5).
 
@@ -269,7 +281,6 @@ und Prüfregeln aus `app/core/`. Kein Eingriff in Traefik oder andere Container;
 | Tagesbetrieb: Status + Spielliste | 5 |
 | Tagesbetrieb: Mehrfachabfrage (bis 38 Spiele) | 2–3 |
 | Tagesbetrieb: Halbzeit-Statistik je Spiel | bis 38 |
-| Tagesbetrieb: Wettquoten und Verletzungen sammeln (E10) | wenige, im Test zu bestimmen |
 | **Tagesbetrieb je Lauf** | **≈ 10–50**, weit unter 500 |
 
 Mit Pro bleibt viel Reserve; die Planung „höchstens 80 pro Tag“ aus v0.1 ist damit nicht mehr nötig.
@@ -283,7 +294,8 @@ Nach dem Wechsel der Quelle, als eigener Schritt (Entscheidung Carsten 15.11.202
 - **Tabellenstände vor jedem Spieltag** selbst aus den Ergebnissen berechnet. Die API liefert nur die aktuelle Tabelle;
   für die Vergangenheit führte sie zu Wissen aus der Zukunft.
 - **Wettquoten vor dem Spiel** und **Verletzungen/Sperren:** lassen sich vermutlich nicht nachträglich für vergangene
-  Spiele abfragen (zu prüfen). Darum werden sie ab Phase 1 als Rohdaten gesammelt (E10) und erst hier verarbeitet.
+  Spiele abfragen (zu prüfen). Entscheidung 15.11.2026 (E10): beides in Phase 2, rückwirkend; historische Wettquoten
+  gibt es für alle Saisons bei football-data.co.uk.
 - **Datensatz für Machine Learning** als eigene Datei aus den Rohdaten; jedes Merkmal nur mit dem Wissen vor dem Spiel.
 
 ## 14. Tests und Abnahme
@@ -311,7 +323,7 @@ Nach dem Wechsel der Quelle, als eigener Schritt (Entscheidung Carsten 15.11.202
 | 1 | Zugang: Pro-Abo; Schlüssel und Netzfreigabe für Claudes Arbeitsumgebung; Test der offenen API-Fragen (Abschnitt 4) | kurzer Testbericht | – |
 | 2 | Skript A und Vollvergleich, nur in der Arbeitsumgebung, keine produktiven Dateien | `pruefprotokoll_api.md` | Carsten: Umstellung ja/nein |
 | 3 | ~~Erzeugung der Datenbank aus API-Daten~~ → Bereinigung des Altbestands mit zwei Quellen; Vollvergleich der Dashboard-Werte; Sensitivitätsanalyse neu (**erledigt 15.11.2026**) | bereinigte Datenbank `3a258961…`, Prüfprotokoll | Carsten |
-| 4 | Skript B und Container `soccer-import`, zuerst halbautomatisch | Release mit Tests | Carsten |
+| 4 | Skript B und Container `soccer-import`, Reiter „Datenimport/API“, zuerst halbautomatisch (**umgesetzt in Version 0.14**) | Release mit Tests | Carsten |
 | 5 | Abnahme nach 2 Wochen Betrieb; Entscheid über vollautomatischen Tausch | Eintrag CHANGELOG | Carsten |
 | später | Phase 2: Anreicherung | eigene Spezifikation | Carsten |
 
@@ -328,11 +340,17 @@ Nach dem Wechsel der Quelle, als eigener Schritt (Entscheidung Carsten 15.11.202
 | E7 | Umfang Vergleich | **Entschieden:** Vollvergleich aller Saisons statt 200 Stichproben; Abnahme bei mindestens 99 %. |
 | E8 | Rhythmus | **Entschieden:** Montag bis Freitag 04:00 Europe/Zurich, je Lauf „seit letztem Lauf plus 3 Tage“. |
 | E9 | Abgebrochene Spiele (`ABD`) | **Entschieden:** neuer Status `abgebrochen` im Spielplan (Ergänzung `04`, Prüfregel und Anzeige wie `abgesagt`). |
-| E10 | Wettquoten und Verletzungen | **Entschieden:** ab Phase 1 nur sammeln (Rohdaten), Verarbeitung in Phase 2. |
+| E10 | Wettquoten und Verletzungen | **Geändert 15.11.2026:** erst in Phase 2, dann rückwirkend ergänzt (vorher: ab Phase 1 sammeln). |
 | E11 | Altwerte, die die API nicht liefert | **Entschieden:** behalten, sofern der Vergleich die übrigen Daten bestätigt. |
 | E12 | Umstellung der ganzen Datenbank auf API-Daten | **Entschieden:** ja, wenn die KPI-Felder zu mindestens 99 % identisch sind. **Ergebnis:** nicht erfüllt; stattdessen Bereinigung mit zwei Quellen (Entscheidung 15.11.2026). |
 | E13 | Gelbe Karten bei leerem API-Wert | **Entschieden 15.11.2026:** aus den Spielereignissen zählen (keine Karte = sichere 0). |
 | E14 | Teamnamen-Umstellung | **Entschieden 15.11.2026:** erst mit dem automatischen Spielplan (Phase 4), weil Datenbank und Spielplan gleich geschrieben sein müssen. |
+| E15 | Freigabe | **Entschieden 15.11.2026:** eigener Reiter „Datenimport/API“ mit „Übernehmen“ und „Verwerfen“, Vollständigkeit (Spielplan gegen Ergebnisse), Qualitätsbericht, Protokoll der letzten 14 Tage; Datenbank und Spielplan nur gemeinsam. |
+| E16 | Fehlende Ergebnisse | **Entschieden 15.11.2026:** gelten als „offen“, sperren die Übernahme nicht; gesperrt wird nur bei Fehlern. |
+| E17 | Verschiebungen | **Entschieden 15.11.2026:** im Spielplan automatisch eingetragen und unter „Spielplan-Änderungen“ gezeigt. |
+| E18 | Erste Übernahme | **Entschieden 15.11.2026:** stellt die Teamnamen um und zeigt die vollständige Liste alt → neu. |
+| E19 | Neu holen | **Entschieden 15.11.2026:** je Lauf die letzten 2 Spieltage, montags die ganze Saison (Spiele mit API-ID). |
+| E20 | E-Mail-Benachrichtigung | **Später**, wenn alles läuft (Wunsch Carsten). |
 
 Alle Entscheidungen von Carsten am 15.11.2026.
 

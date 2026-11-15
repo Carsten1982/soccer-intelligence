@@ -14,7 +14,7 @@ from pathlib import Path
 from . import settings
 
 URL_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
-RESERVED_URLS = {"datenqualitaet", "dashboard", "simulation", "top-anomalien"}
+RESERVED_URLS = {"datenqualitaet", "dashboard", "simulation", "top-anomalien", "datenimport"}
 
 
 class ConfigError(Exception):
