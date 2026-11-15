@@ -1,6 +1,6 @@
 # Soccer Intelligence – Datenlieferung über API-Football (Spezifikation)
 
-**Version 0.3** · Stand 15.11.2026 · **Status: freigegeben von Carsten am 15.11.2026** · Grundlage: Entwurf v0.1 (ChatGPT,
+**Version 0.4** · Stand 15.11.2026 · **Status: freigegeben von Carsten am 15.11.2026; v0.4: Ergebnis des Vollvergleichs eingearbeitet** · Grundlage: Entwurf v0.1 (ChatGPT,
 15.11.2026), kritisch geprüft und ergänzt von Claude (v0.2); Entscheidungen E1–E12 von Carsten am 15.11.2026 (v0.3).
 
 Diese Datei ist die einzige Stelle für die Datenlieferung: Datenquelle, Feldzuordnung, Abläufe, Abfragebudget und
@@ -13,9 +13,11 @@ Programmiert wird erst nach Freigabe dieser Spezifikation (Arbeitsweise: Vorschl
 
 - **Quelle:** API-Football (API v3, `v3.football.api-sports.io`). **Tarif:** Pro, 3 Monate für 43,20 $ (Entscheidung
   Carsten). Der Gratis-Plan enthält nur die Saisons 2022–2024 und reicht nicht für den Tagesbetrieb (Test 15.11.2026).
-- **Phase 1 – Datenquelle wechseln:** gleiche Datenbank mit 58 Spalten, KPI-Regelwerk unverändert. Zuerst ein
-  **Vollvergleich** aller Saisons 2018/19–2025/26. Ist er auf den Feldern zu **mindestens 99 % identisch**, wird die
-  Datenbank vollständig aus API-Daten erzeugt; Werte, die die API nicht liefert, werden aus dem Altbestand behalten.
+- **Phase 1 – Datenquelle wechseln:** gleiche Datenbank mit 58 Spalten, KPI-Regelwerk unverändert. Der **Vollvergleich**
+  aller Saisons 2018/19–2025/26 (15.11.2026) erfüllte die 99 % bei Gelben Karten und Schüssen aufs Tor nicht. Darum
+  (Entscheidung Carsten 15.11.2026): **Altbestand bleibt die Grundlage** und wurde **mit zwei Quellen bereinigt**
+  (API-Football und football-data.co.uk einig, Altbestand abweichend → korrigiert); **ab dem Stichtag kommen neue Spiele
+  nur von der API** (2025/26 stimmen alle drei Quellen zu 99–100 % überein). Abschnitt 9.
 - **Danach Tagesbetrieb:** Montag bis Freitag um 04:00 (Europe/Zurich) neue Spiele, Statistiken und Spielplan holen;
   daraus eine **neue Fassung** der Excel-Dateien erzeugen, prüfen und tauschen. Die bestehende Datei wird nie
   verändert.
@@ -160,7 +162,7 @@ heute von einem KPI genutzt.
 - **Teamnamen (E6, Carsten 15.11.2026): die Namen von API-Football** (z. B. statt `FC Koln` der Name der API). Sie
   werden je Team-ID **einmal festgehalten** (`app/config/teams.toml`, Felder `api_team_id` und `team_name`), damit eine
   spätere Namensänderung bei der API (z. B. Sponsor) nicht still alle Spiele umbenennt; eine Änderung wird gemeldet.
-  Mit der Umstellung (Phase 3) erhalten **alle** Spiele, auch die historischen, die neuen Namen; ebenso der Spielplan.
+  Mit dem automatischen Spielplan (Phase 4, E14) erhalten **alle** Spiele, auch die historischen, die neuen Namen; ebenso der Spielplan.
   Die Testfälle in `docs/tests/` und `tests/referenz/` behalten ihre bisherigen Namen (eigene Referenzkopien).
   Neue Teams (Aufsteiger) werden gemeldet, nie geraten.
 - **Doppelte Spiele** sind ausgeschlossen: Ein Spiel wird über seine Fixture-ID erkannt, auch nach einer Verlegung.
@@ -203,6 +205,13 @@ erlaubt (werden von der App ignoriert): Anstosszeit, API-Fixture-ID.
   identisch, wird umgestellt. Bei geringerer Übereinstimmung entscheidet Carsten anhand des Berichts.
 - **Danach** läuft die Sensitivitätsanalyse einmal mit den neuen Daten, um zu bestätigen, dass die gültigen
   Schwellen weiter passen.
+
+**Ergebnis 15.11.2026** (`docs/tests/pruefprotokoll_api.md`): Zuordnung 100 %; Tore, Datum, Spieltag und Ecken über
+99 %; Gelbe Karten 97,2 %, Schüsse aufs Tor 89,6 % → Abnahmeregel nicht erfüllt. Dreifachvergleich mit
+football-data.co.uk: Bei Gelben Karten weicht meist der Altbestand ab, bei Schüssen aufs Tor (Serie A 2018/19–2020/21,
+Bundesliga 2019/20–2023/24) meist die API. **Entscheidung Carsten:** keine vollständige Umstellung, sondern
+**Bereinigung des Altbestands mit zwei Quellen** (1'932 Zellen, 76 Spieltage; `02_Datenbasis.md`, Abschnitt 4e).
+Sensitivitätsanalyse danach: unverändert ausser KPI 04 stark (Mehrwert positiv +10,37 → +6,45, negativ +6,70 → +5,00).
 
 ## 10. Phase B: Tagesbetrieb (Skript B)
 
@@ -301,7 +310,7 @@ Nach dem Wechsel der Quelle, als eigener Schritt (Entscheidung Carsten 15.11.202
 | 0 | Spezifikation (diese Datei) | v0.3, freigegeben 15.11.2026 | Carsten |
 | 1 | Zugang: Pro-Abo; Schlüssel und Netzfreigabe für Claudes Arbeitsumgebung; Test der offenen API-Fragen (Abschnitt 4) | kurzer Testbericht | – |
 | 2 | Skript A und Vollvergleich, nur in der Arbeitsumgebung, keine produktiven Dateien | `pruefprotokoll_api.md` | Carsten: Umstellung ja/nein |
-| 3 | Erzeugung der Datenbank aus API-Daten + Altbestand + Korrekturliste; Vollvergleich der Dashboard-Werte; Sensitivitätsanalyse neu | neue Datenbank, Bericht | Carsten |
+| 3 | ~~Erzeugung der Datenbank aus API-Daten~~ → Bereinigung des Altbestands mit zwei Quellen; Vollvergleich der Dashboard-Werte; Sensitivitätsanalyse neu (**erledigt 15.11.2026**) | bereinigte Datenbank `3a258961…`, Prüfprotokoll | Carsten |
 | 4 | Skript B und Container `soccer-import`, zuerst halbautomatisch | Release mit Tests | Carsten |
 | 5 | Abnahme nach 2 Wochen Betrieb; Entscheid über vollautomatischen Tausch | Eintrag CHANGELOG | Carsten |
 | später | Phase 2: Anreicherung | eigene Spezifikation | Carsten |
@@ -321,7 +330,9 @@ Nach dem Wechsel der Quelle, als eigener Schritt (Entscheidung Carsten 15.11.202
 | E9 | Abgebrochene Spiele (`ABD`) | **Entschieden:** neuer Status `abgebrochen` im Spielplan (Ergänzung `04`, Prüfregel und Anzeige wie `abgesagt`). |
 | E10 | Wettquoten und Verletzungen | **Entschieden:** ab Phase 1 nur sammeln (Rohdaten), Verarbeitung in Phase 2. |
 | E11 | Altwerte, die die API nicht liefert | **Entschieden:** behalten, sofern der Vergleich die übrigen Daten bestätigt. |
-| E12 | Umstellung der ganzen Datenbank auf API-Daten | **Entschieden:** ja, wenn die KPI-Felder zu mindestens 99 % identisch sind. |
+| E12 | Umstellung der ganzen Datenbank auf API-Daten | **Entschieden:** ja, wenn die KPI-Felder zu mindestens 99 % identisch sind. **Ergebnis:** nicht erfüllt; stattdessen Bereinigung mit zwei Quellen (Entscheidung 15.11.2026). |
+| E13 | Gelbe Karten bei leerem API-Wert | **Entschieden 15.11.2026:** aus den Spielereignissen zählen (keine Karte = sichere 0). |
+| E14 | Teamnamen-Umstellung | **Entschieden 15.11.2026:** erst mit dem automatischen Spielplan (Phase 4), weil Datenbank und Spielplan gleich geschrieben sein müssen. |
 
 Alle Entscheidungen von Carsten am 15.11.2026.
 

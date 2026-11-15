@@ -1,12 +1,14 @@
 # Soccer Intelligence – Datenbasis
 
-**Stand:** 10.11.2026 (neue Datenbank mit Saisons 2018/19–2025/26 plus laufende Saison 2026/27 bis 10.11.2026, Abschnitt 4d; **Referenzsaison** 2018/19; vier Ligen: Bundesliga, Premier League, Serie A, LaLiga; je 58 Spalten inkl. `Gameday`)
+**Stand:** 15.11.2026 (Datenbank mit Saisons 2018/19–2025/26 plus laufende Saison 2026/27 bis 08.11.2026, bereinigt mit API-Football und football-data.co.uk, Abschnitt 4e; **Referenzsaison** 2018/19; vier Ligen: Bundesliga, Premier League, Serie A, LaLiga; je 58 Spalten inkl. `Gameday`)
 **Datei:** `/docker/football-dashboard/data/Database-Soccer-Intelligence.xlsx`
 **SHA-256 (aktiv seit 31.10.2026):** `6b84d8d230f61b02166bead571a72ce599ec8d230cdda8c90f9b258dc8a46014`
 
 **Referenzstand für die KPI-Testfälle:** `6d68583c2e66616e92c1bf3e8a8611b4b517bcf4c0a7a91c68101ea26a2284e2` (Saisons 2020/21–2025/26). Eine Kopie liegt unter `tests/referenz/`, damit die Testfälle unabhängig vom aktuellen Datenstand laufen.
 
 Diese Prüfsumme steht auch in den Testfällen (`docs/tests/`). Nach jeder Änderung an der Datei ändert sie sich. Dann hier und in den Testfällen nachtragen und die Testfälle erneut laufen lassen.
+
+**Bereinigte Fassung (15.11.2026):** 1'932 Zellen korrigiert, wo API-Football und football-data.co.uk übereinstimmen und nur der Altbestand abweicht, dazu offizielle Spieltage (Abschnitt 4e). SHA-256 `3a2589616b2b0625d3a9150484bd0ce24e6340b334756b115d0d4582925822a8`. Prüfung: 0 Fehler, 35 Warnungen, 201 Hinweise. **Zum Aufspielen bereit** (Ablauf `01`, Abschnitt 6.2); aktiv ist bis dahin `451348b6…`. Die KPI-Testfälle bleiben an ihre Referenzkopien gebunden.
 
 **Neue Fassung (10.11.2026, Version 0.11):** Saisons 2018/19 und 2019/20 ergänzt, Spiele 2026/27 bis 10.11.2026 nachgetragen, geprüft und korrigiert (Abschnitt 4d). SHA-256 `451348b6550b91f4df3a26450a26d205e76f69c13ac520d080d3a427ff084904`. Eine Kopie liegt unter `tests/referenz/Database-Soccer-Intelligence_451348b6.xlsx`. **Aktiv in `data/` seit 10.11.2026** (nach dem Einspielen von Version 0.11 von Carsten aufgespielt; Prüfung auf dem Server: 0 Fehler, 24 Warnungen, 64 Hinweise; vorherige Datei in `backup/`). Die KPI-Testfälle bleiben an `6d68583c…` und `f37e36d3…` gebunden.
 
@@ -194,6 +196,28 @@ Carsten hat in allen vier Ligen die Saisons 2018/19 und 2019/20 ergänzt und die
   - **Premier League 2018/19 und 2019/20: Spieltage rekonstruiert, nicht offiziell.** Einzelne Nummern können abweichen. Entscheidung Carsten 10.11.2026: so übernehmen, weil die Quelle keine offiziellen Spieltage liefert. Wirkung nur am Rand des Fensters der Ligareferenz (letzte 20 Spieltage); 2018/19 dient nur als Referenzsaison.
 - **Corona-Saisons** 2019/20 und 2020/21 zählen normal mit (Entscheidung Carsten 10.11.2026).
 - **Ergebnis der Prüfung (korrigierte Fassung `451348b6…`):** 0 Fehler, 24 Warnungen, 64 Hinweise. Neu gegenüber `f37e36d3…`: 18 Warnungen „Schüsse < aufs Tor + daneben“ (2018/19: Bundesliga 12, Premier League 4, LaLiga 2; Quelle), 1 Warnung LaLiga 2026/27 Spieltag 8 mit 9 von 10 Spielen (echtes Nachholspiel), 3 Hinweise „Mehr Tore als Schüsse aufs Tor“ (2019/20) und 1 (2026/27). Saisons 2020/21–2025/26 zellgenau gleich wie `f37e36d3…`. Neue Saisons vollständig (306 bzw. 380 Spiele, jede Paarung einmal, jedes Team einmal je Spieltag, keine fehlenden Statistikwerte), Durchschnittswerte plausibel.
+
+## 4e. Bereinigung mit API-Football und football-data.co.uk (15.11.2026)
+
+Vollvergleich aller 11'568 Spiele 2018/19–2025/26 mit API-Football und einer unabhängigen dritten Quelle
+(football-data.co.uk); Ergebnisse und Zahlen: `docs/tests/pruefprotokoll_api.md`. Entscheidung Carsten 15.11.2026:
+**Altbestand bleibt die Grundlage**; korrigiert wird nur, wo API-Football und football-data.co.uk übereinstimmen und
+nur der Altbestand abweicht.
+
+- **Gelbe Karten** 453, **Schüsse gesamt** 147, **Schüsse aufs Tor** 83, **Ecken** 35 Werte korrigiert (je Gesamtwert
+  eines Teams). Halbzeitwerte: bleiben, wenn sie zum neuen Gesamtwert passen; sonst von der API (Karten aus den
+  Spielereignissen, sonst Halbzeit-Statistik ab 2024); sonst leer (= keine Daten) und im Blatt *Datenhinweise*
+  dokumentiert (364 Zellen).
+- **LaLiga 2025/26, Spieltag 37 (17.05.2026):** Tore (Endstand und Halbzeit) waren zwischen den Spielen vertauscht, auch
+  in N–P; die Korrektur vom 07.11.2026 (Abschnitt 4c) hatte die vertauschten Werte übernommen. Jetzt nach API-Football,
+  bestätigt durch football-data.co.uk; die Statistiken waren richtig.
+- **Spieltag:** 76 rekonstruierte Spieltage durch die offiziellen ersetzt (Premier League 2018/19, Serie A 2019/20,
+  LaLiga 2020/21 und 2025/26).
+- **Unverändert:** Ergebnis auf dem Platz bei Verona – Roma (Abschnitt 4c) und Union Berlin – Bochum (4.1); Saison
+  2026/27; Teamnamen (die Namen von API-Football kommen erst mit dem automatischen Spielplan, `06`, Abschnitt 7).
+- **Bekannt:** Schüsse aufs Tor weichen bei API-Football in Serie A 2018/19–2020/21 und Bundesliga 2019/20–2023/24 oft
+  ab; dort bleibt der Altbestand (stimmt mit der dritten Quelle überein). 11 neue Warnungen „Schüsse < aufs Tor +
+  daneben“: „Schüsse daneben“ im Altbestand vermutlich falsch, nicht prüfbar, unverändert.
 
 ---
 
