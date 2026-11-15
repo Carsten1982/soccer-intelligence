@@ -35,6 +35,12 @@ COL_TO = "Datum bis"
 COL_HOME = "Heimmannschaft"
 COL_AWAY = "Gastmannschaft"
 COL_STATUS = "Status"
+# Optionale Spalten, seit 0.14/0.15 vom Datenimport geschrieben (Spezifikation Spielplan v2.1, Abschnitt 3)
+COL_KICKOFF = "Anstoss"
+COL_TERMIN = "Termin"
+COL_HINT = "Hinweis"
+COL_API_STATUS = "API-Status"
+COL_API_ID = "API-ID"
 
 REQUIRED_COLUMNS = (COL_SEASON, COL_MATCHDAY, COL_FROM, COL_TO, COL_HOME, COL_AWAY)
 
@@ -42,14 +48,23 @@ STATUS_PLANNED = "geplant"
 STATUS_POSTPONED = "verschoben"
 STATUS_CANCELLED = "abgesagt"
 STATUS_ABANDONED = "abgebrochen"          # seit Version 0.14 (Datenimport, E9): wie abgesagt behandelt
-ALLOWED_STATUS = (STATUS_PLANNED, STATUS_POSTPONED, STATUS_CANCELLED, STATUS_ABANDONED)
+STATUS_SUSPENDED = "ausgesetzt"           # seit 0.15 (S1): API SUSP, Fortsetzung an einem anderen Tag
+STATUS_AWARDED = "gewertet"               # seit 0.15 (S1): API AWD/WO, am grünen Tisch bzw. kampflos gewertet
+ALLOWED_STATUS = (STATUS_PLANNED, STATUS_POSTPONED, STATUS_CANCELLED, STATUS_ABANDONED, STATUS_SUSPENDED,
+                  STATUS_AWARDED)
 # Spiele mit diesem Status zählen nicht für „Spieltag beendet“ und erhalten keine KPI-Werte
-INACTIVE_STATUS = frozenset({STATUS_POSTPONED, STATUS_CANCELLED, STATUS_ABANDONED})
+INACTIVE_STATUS = frozenset({STATUS_POSTPONED, STATUS_CANCELLED, STATUS_ABANDONED, STATUS_SUSPENDED, STATUS_AWARDED})
+# Vermerke und Terminarten (Spalten Hinweis und Termin); leer ist immer erlaubt
+HINT_CATCHUP, HINT_EARLY = "Nachholspiel", "vorgezogen"
+ALLOWED_HINTS = (HINT_CATCHUP, HINT_EARLY)
+TERMIN_CONFIRMED, TERMIN_TIME_OPEN, TERMIN_PROVISIONAL = "bestätigt", "Zeit offen", "vorläufig"
+ALLOWED_TERMIN = (TERMIN_CONFIRMED, TERMIN_TIME_OPEN, TERMIN_PROVISIONAL)
 
 SEASON_PATTERN = re.compile(r"^\d{4}/\d{4}$")
 
 # Spalten des aufbereiteten Spielplans je Liga
-FIXTURE_COLUMNS = ["saison", "spieltag", "datum_von", "datum_bis", "heim", "gast", "status", "excel_row", "reihenfolge"]
+FIXTURE_COLUMNS = ["saison", "spieltag", "datum_von", "datum_bis", "heim", "gast", "status", "excel_row", "reihenfolge",
+                   "anstoss", "termin", "hinweis", "api_status", "api_id"]
 
 # Hinweise je Team (für Anzeige in der Datenqualität)
 NOTE_PROMOTED = "Aufsteiger ohne Daten in der Datenbank"
@@ -112,6 +127,13 @@ def _as_matchday(value) -> int | None:
     if not number.is_integer() or number < 1:
         return None
     return int(number)
+
+
+def _text(row, column: str) -> str:
+    """Optionale Textspalte: fehlt sie oder ist sie leer -> ''."""
+    if column not in row.index or _is_empty(row[column]):
+        return ""
+    return str(row[column]).strip()
 
 
 def previous_season(season: str) -> str:
@@ -185,11 +207,24 @@ def _parse_sheet(league: str, raw: pd.DataFrame) -> tuple[pd.DataFrame, list[Iss
             if status not in ALLOWED_STATUS:
                 err("Status ungültig", f"Status = '{r[COL_STATUS]}' (erlaubt: leer, {', '.join(ALLOWED_STATUS)})")
                 ok = False
+        extra = {"anstoss": _text(r, COL_KICKOFF), "termin": _text(r, COL_TERMIN), "hinweis": _text(r, COL_HINT),
+                 "api_status": _text(r, COL_API_STATUS).upper(), "api_id": None}
+        if extra["hinweis"] and extra["hinweis"] not in ALLOWED_HINTS:
+            err("Hinweis ungültig", f"Hinweis = '{extra['hinweis']}' (erlaubt: leer, {', '.join(ALLOWED_HINTS)})")
+            ok = False
+        if extra["termin"] and extra["termin"] not in ALLOWED_TERMIN:
+            err("Termin ungültig", f"Termin = '{extra['termin']}' (erlaubt: leer, {', '.join(ALLOWED_TERMIN)})")
+            ok = False
+        if COL_API_ID in raw.columns and not _is_empty(r[COL_API_ID]):
+            extra["api_id"] = _as_matchday(r[COL_API_ID])          # ganze Zahl ab 1
+            if extra["api_id"] is None:
+                err("API-ID ungültig", f"API-ID = '{r[COL_API_ID]}' (erwartet ganze Zahl)")
+                ok = False
         if ok:
             rows.append({
                 "saison": season, "spieltag": matchday, "datum_von": d_from, "datum_bis": d_to,
                 "heim": home, "gast": away, "status": status,
-                "excel_row": excel_row, "reihenfolge": len(rows),
+                "excel_row": excel_row, "reihenfolge": len(rows), **extra,
             })
     return pd.DataFrame(rows, columns=FIXTURE_COLUMNS), issues
 
@@ -232,16 +267,18 @@ def _team_checks(
     db_games: pd.DataFrame | None,
     known_extra: set[str],
 ) -> tuple[list[Issue], dict[tuple[str, str, str], str]]:
-    """Teamnamen gegen Datenbank und Teamliste, bereits gespielte Begegnungen."""
+    """Teamnamen gegen Datenbank und Teamliste.
+
+    Seit 0.15 entfällt der Hinweis „Begegnung bereits gespielt“: Der Spielplan enthält seit dem Datenimport (0.14)
+    absichtlich die ganze Saison und die Vorsaison, also auch gespielte Spiele."""
     issues: list[Issue] = []
     notes: dict[tuple[str, str, str], str] = {}
     name = league.name
 
     if db_games is not None and not db_games.empty:
         db_teams = set(db_games["homeTeam"]) | set(db_games["awayTeam"])
-        played = set(zip(db_games["Season"], db_games["homeTeam"], db_games["awayTeam"]))
     else:
-        db_teams, played = set(), set()
+        db_teams = set()
 
     for season, g in df.groupby("saison", sort=True):
         window = {season, previous_season(season)}
@@ -276,14 +313,6 @@ def _team_checks(
                     "KPIs erscheinen als „–“.",
                     excel_row=row,
                 ))
-
-    for _, r in df.iterrows():
-        if (r["saison"], r["heim"], r["gast"]) in played:
-            issues.append(Issue(
-                HINWEIS, name, "Begegnung bereits gespielt",
-                "Diese Begegnung steht schon als gespieltes Spiel in der Datenbank",
-                match=_label(r["heim"], r["gast"], r["spieltag"]), excel_row=int(r["excel_row"]),
-            ))
     return issues, notes
 
 

@@ -41,21 +41,37 @@ class Matchday:
         return self.saison, self.spieltag
 
 
+def _regular(games: pd.DataFrame) -> pd.DataFrame:
+    """Reguläre Spiele (Spielplan v2.1, 4.1): Status geplant und ohne Vermerk Nachholspiel/vorgezogen.
+
+    Sonderspiele zählen seit 0.15 nicht für das Ende eines Spieltags, sonst bliebe ein Spieltag mit einem späten
+    Nachholspiel wochenlang „aktuell“. Ältere Spielpläne ohne Spalte Hinweis verhalten sich wie bisher."""
+    keep = ~games["status"].isin(INACTIVE_STATUS)
+    if "hinweis" in games.columns:
+        keep &= games["hinweis"].fillna("").eq("")
+    return games[keep]
+
+
 def _is_ended(games: pd.DataFrame, today: date) -> bool:
-    counted = games[~games["status"].isin(INACTIVE_STATUS)]
+    counted = _regular(games)
     if counted.empty:
-        # Alle Spiele verschoben/abgesagt: Der Spieltag blockiert die Anzeige nicht.
+        # Keine regulären Spiele (alle verschoben/abgesagt oder Sonderspiele): Der Spieltag blockiert die Anzeige nicht.
         return True
     return counted["datum_bis"].max() < today
 
 
 def matchday_overview(fixtures: pd.DataFrame, today: date) -> list[Matchday]:
-    """Alle Spieltage einer Liga, sortiert nach Saison und Spieltag, mit Status."""
+    """Alle Spieltage einer Liga, sortiert nach Saison und Spieltag, mit Status.
+
+    Erstes und letztes Datum stammen aus den regulären Spielen (sonst aus allen), damit z. B. ein vorgezogenes Spiel
+    den Zeitraum des Spieltags nicht über Wochen streckt."""
     if fixtures is None or fixtures.empty:
         return []
     raw = []
     for (season, md), games in fixtures.groupby(["saison", "spieltag"], sort=True):
-        raw.append((season, int(md), games["datum_von"].min(), games["datum_bis"].max(),
+        span = _regular(games)
+        span = games if span.empty else span
+        raw.append((season, int(md), span["datum_von"].min(), span["datum_bis"].max(),
                     len(games), _is_ended(games, today)))
     current = _current_key(raw)
     return [

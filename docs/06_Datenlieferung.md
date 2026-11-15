@@ -1,6 +1,6 @@
 # Soccer Intelligence – Datenlieferung über API-Football (Spezifikation)
 
-**Version 0.5** · Stand 15.11.2026 · **Status: freigegeben von Carsten am 15.11.2026; v0.4: Ergebnis des Vollvergleichs; v0.5: Tagesbetrieb umgesetzt (Version 0.14)** · Grundlage: Entwurf v0.1 (ChatGPT,
+**Version 0.6** · Stand 15.11.2026 · **Status: freigegeben von Carsten am 15.11.2026; v0.4: Ergebnis des Vollvergleichs; v0.5: Tagesbetrieb umgesetzt (Version 0.14); v0.6: Ergebnis-Import v1.1 nach Review (R1–R9, Abschnitt 10.1) und Spielplan nach `07_Spielplan_Anzeige.md` (Version 0.15)** · Grundlage: Entwurf v0.1 (ChatGPT,
 15.11.2026), kritisch geprüft und ergänzt von Claude (v0.2); Entscheidungen E1–E12 von Carsten am 15.11.2026 (v0.3).
 
 Diese Datei ist die einzige Stelle für die Datenlieferung: Datenquelle, Feldzuordnung, Abläufe, Abfragebudget und
@@ -18,7 +18,7 @@ Programmiert wird erst nach Freigabe dieser Spezifikation (Arbeitsweise: Vorschl
   (Entscheidung Carsten 15.11.2026): **Altbestand bleibt die Grundlage** und wurde **mit zwei Quellen bereinigt**
   (API-Football und football-data.co.uk einig, Altbestand abweichend → korrigiert); **ab dem Stichtag kommen neue Spiele
   nur von der API** (2025/26 stimmen alle drei Quellen zu 99–100 % überein). Abschnitt 9.
-- **Danach Tagesbetrieb:** Montag bis Freitag um 04:00 (Europe/Zurich) neue Spiele, Statistiken und Spielplan holen;
+- **Danach Tagesbetrieb:** täglich um 04:00 (Europe/Zurich; bis 0.14 Montag bis Freitag) neue Spiele, Statistiken und Spielplan holen;
   daraus eine **neue Fassung** der Excel-Dateien erzeugen, prüfen und tauschen. Die bestehende Datei wird nie
   verändert.
 - **Teamnamen:** künftig die Namen von API-Football (E6), je Team-ID fest hinterlegt.
@@ -169,24 +169,11 @@ heute von einem KPI genutzt.
 
 ## 8. Spielplan
 
-Der Spielplan wird aus der Spielliste der Saison erzeugt (eine Abfrage je Liga). Zielformat bleibt `Spielplan.xlsx`
-nach `04_Spielplan.md`: Saison, Spieltag, Datum von, Datum bis, Heimmannschaft, Gastmannschaft, Status. Zusätzlich
-erlaubt (werden von der App ignoriert): Anstosszeit, API-Fixture-ID.
-
-- **Umfang:** alle noch nicht gespielten Spiele der laufenden Saison, mindestens die nächsten 14 Tage.
-- **Datum von / bis** je Spieltag nach der bestehenden Regel (`04`, Abschnitt 6): Hauptzeitraum des Spieltags; ein Spiel
-  mehr als 3 Tage ausserhalb erhält `verschoben`.
-- **Status der API** auf unsere Werte abgebildet:
-
-| API | Bedeutung | Spielplan |
-|---|---|---|
-| `TBD`, `NS` | angesetzt | `geplant` |
-| `1H`, `HT`, `2H`, `ET`, `BT`, `P`, `LIVE`, `SUSP`, `INT` | läuft oder unterbrochen | `geplant` (noch kein Ergebnis) |
-| `FT`, `AET`, `PEN` | beendet | Spiel kommt in die Datenbank |
-| `PST` | verschoben | `verschoben` |
-| `CANC` | abgesagt | `abgesagt` |
-| `ABD` | abgebrochen | E9 |
-| `AWD`, `WO` | gewertet | Meldung, Entscheid von Hand (6.3) |
+Der Spielplan wird aus den Spiellisten der API erzeugt (laufende Saison und Vorsaison, je eine Abfrage je Liga).
+Zielformat: `Spielplan.xlsx` nach `04_Spielplan.md`. **Regeln seit Version 0.15:** `07_Spielplan_Anzeige.md`,
+Abschnitt 3 (Status nur aus der API mit Originalcode, Datum = Termin laut API, Vermerk Nachholspiel/vorgezogen,
+Termin bestätigt/Zeit offen/vorläufig, feste Zuordnung eigene ID ↔ API-ID). Die frühere Regel „mehr als 3 Tage
+ausserhalb = verschoben“ (v0.3–v0.5) ist damit ersetzt.
 
 ## 9. Phase A: Vollvergleich (Skript A)
 
@@ -215,7 +202,7 @@ Sensitivitätsanalyse danach: unverändert ausser KPI 04 stark (Mehrwert positiv
 
 ## 10. Phase B: Tagesbetrieb (Skript B)
 
-**Rhythmus:** Montag bis Freitag um 04:00 Europe/Zurich (E8). Geprüft mit der 2-Tage-Regel: Wochenendspiele sind am
+**Rhythmus:** täglich um 04:00 Europe/Zurich (E8, geändert 15.11.2026: auch am Wochenende, synchron zu den Spieltagen). Geprüft mit der 2-Tage-Regel: Wochenendspiele sind am
 Montag da, Montagsspiele am Dienstag, Spiele unter der Woche am Folgetag, also immer vor dem nächsten Spieltag.
 
 **Ablauf je Lauf:**
@@ -261,6 +248,20 @@ Montag da, Montagsspiele am Dienstag, Spiele unter der Woche am Folgetag, also i
 einem Schritt). Das Dashboard liest `import/` nur und schreibt ausschliesslich Freigabe-Anfragen nach `import/anfragen/`. Wiederverwendung von Loader
 und Prüfregeln aus `app/core/`. Kein Eingriff in Traefik oder andere Container; Einrichtung nur mit Freigabe Carsten
 (Schutzregeln `01`, Abschnitt 5).
+
+### 10.1 Regeln seit Version 0.15 (Spezifikation Ergebnis-Import v1.1, Review ChatGPT, Entscheidungen Carsten 15.11.2026)
+
+| Nr. | Thema | Regel |
+|---|---|---|
+| R1 | Korrekturen der API | **Korrekturfenster 7 Tage:** Ändert die API bis 7 Tage nach dem Spiel einen Wert, übernimmt der Import ihn selbst (auch im Automatikbetrieb). Danach ist das Spiel **eingefroren**: Eine Änderung erscheint im Reiter als „späte Korrektur“ mit zwei Buttons (übernehmen / bisherigen Wert behalten). Ein leerer Wert, der gefüllt wird, ist keine Korrektur und wird immer übernommen. Niemand schreibt von Hand in eine Datei: Die Entscheide hält der Dienst in `import/entscheidungen.json` fest (Backup mit jeder Übernahme), jeder Lauf wendet sie an, ein entschiedener Punkt wird nie wieder gefragt. |
+| R2 | Gewertete Spiele | Die Datenbank führt das **Ergebnis auf dem Platz** (`02`). Nie ausgetragene Spiele (AWD/WO) kommen nicht in die Datenbank, stehen im Spielplan als `gewertet` und zählen bei der Vollständigkeit nicht als „fehlt“; ein Forfait-Ergebnis zählt **nicht** zur Formkurve. Die API meldet Wertungen auch als FT mit dem gewerteten Ergebnis (Verona – Roma 2020/21: FT 3:0, auf dem Platz 0:0). Darum: **Endstand muss zu den Tor-Ereignissen passen**, sonst wartet das Spiel (bzw. die Tor-Korrektur) auf einen Entscheid im Reiter: „Ergebnis auf dem Platz“ (Tore aus den Ereignissen) oder „Endstand der API“. Vollvergleich: 11'963 von 11'978 Spielen stimmen überein. |
+| R3 | Gelbe Karten | Zählweise (geprüft an 24'000 Teamwerten): **Gelb-Rot = 2 Gelbe Karten**, direkte Rote zählt nie als Gelbe; so zählen API-Statistik, Altbestand und football-data.co.uk. Ersatz aus den Ereignissen bei leerem API-Wert (E13) nur noch, wenn die Tor-Ereignisse zum Endstand passen (Ereignisse wirken vollständig). Festgehalten im KPI-Regelwerk, KPI 04. |
+| R4 | Fehlende Statistik | KPI-Regel unverändert (letzte 10 Spiele, Spiele ohne Wert fallen weg, Datenbasis und „vorläufig“). Der Bericht nennt bei offenen Spielen die fehlenden KPI-Felder. Die Variante „letzte 10 Spiele **mit** Wert“ ist für die KPI-Überarbeitung vorgemerkt (Regelwerk, Abschnitt 8). |
+| R5 | Automatikbetrieb | Automatisch übernommen wird nur eine **unkritische** Fassung: keine Fehler, keine kritischen Punkte (Endstand ≠ Tor-Ereignisse, Spiel verschwindet aus der API-Liste, Widerspruch in der Zuordnung, „noch nicht gespielt“ mit vergangenem Termin), keine Plausibilitätswarnung, keine **neue** Warnung der Prüfregeln. Bekannte Warnungen blockieren nicht. |
+| R6 | Plausibilität neuer/geänderter Spiele | **Fehler:** negative Werte, Halbzeit-Tore grösser als Endstand, Schüsse aufs Tor grösser als Schüsse gesamt, doppelte id. **Warnung:** je Team mehr als 30 Ecken, 10 Gelbe, 25 Schüsse aufs Tor, 9 Tore (Grenzen Carsten). **Hinweis:** fehlende Statistik. Gilt nur für neue und geänderte Spiele; der Altbestand behält seine bekannten Meldungen. |
+| R7 | Zwei Quellen | Nachweis 2025/26 im Prüfprotokoll (`docs/tests/pruefprotokoll_api.md`, Abschnitt 7). Keine rückwirkende Bereinigung mehr. |
+| R8 | IDs | Keine neue Spalte. Jede id nur einmal **über alle Ligen** (Fehler), feste Zuordnung eigene ID ↔ API-ID in `app/config/zuordnung_api.csv` (11'978 Spiele, geprüft über Datum und Endstand). |
+| R9 | Rohdaten | 12 Monate aufbewahren, ältere Tagesordner löscht der Dienst. |
 
 ## 11. Rohdatenspeicher
 
@@ -338,7 +339,7 @@ Nach dem Wechsel der Quelle, als eigener Schritt (Entscheidung Carsten 15.11.202
 | E5 | Halbzeit-Statistik ab 2024 | **Entschieden:** holen (rund 38 Abfragen je Spieltag). |
 | E6 | Teamnamen | **Entschieden:** Namen von API-Football, je Team-ID fest hinterlegt (Abschnitt 7). |
 | E7 | Umfang Vergleich | **Entschieden:** Vollvergleich aller Saisons statt 200 Stichproben; Abnahme bei mindestens 99 %. |
-| E8 | Rhythmus | **Entschieden:** Montag bis Freitag 04:00 Europe/Zurich, je Lauf „seit letztem Lauf plus 3 Tage“. |
+| E8 | Rhythmus | **Entschieden:** Montag bis Freitag 04:00 Europe/Zurich, je Lauf „seit letztem Lauf plus 3 Tage“. **Geändert 15.11.2026:** täglich 04:00 (Spielplan v2.1). |
 | E9 | Abgebrochene Spiele (`ABD`) | **Entschieden:** neuer Status `abgebrochen` im Spielplan (Ergänzung `04`, Prüfregel und Anzeige wie `abgesagt`). |
 | E10 | Wettquoten und Verletzungen | **Geändert 15.11.2026:** erst in Phase 2, dann rückwirkend ergänzt (vorher: ab Phase 1 sammeln). |
 | E11 | Altwerte, die die API nicht liefert | **Entschieden:** behalten, sofern der Vergleich die übrigen Daten bestätigt. |
@@ -351,6 +352,8 @@ Nach dem Wechsel der Quelle, als eigener Schritt (Entscheidung Carsten 15.11.202
 | E18 | Erste Übernahme | **Entschieden 15.11.2026:** stellt die Teamnamen um und zeigt die vollständige Liste alt → neu. |
 | E19 | Neu holen | **Entschieden 15.11.2026:** je Lauf die letzten 2 Spieltage, montags die ganze Saison (Spiele mit API-ID). |
 | E20 | E-Mail-Benachrichtigung | **Später**, wenn alles läuft (Wunsch Carsten). |
+| E21 | Review Ergebnis-Import (R1–R9) | **Entschieden 15.11.2026:** Abschnitt 10.1 (Korrekturfenster 7 Tage und Entscheide per Button statt Handarbeit, Ergebnis auf dem Platz, Gelb-Rot = 2 Gelbe, Automatik nur unkritisch, Plausibilität mit Grenzen 30/10/25/9, Zuordnungsdatei, Rohdaten 12 Monate). |
+| E22 | Spielplan v2.1 (S1–S10, O1, O2) | **Entschieden 15.11.2026:** `07_Spielplan_Anzeige.md`. Import umgesetzt in 0.15, Anzeige folgt in 0.16 nach Designentwurf. |
 
 Alle Entscheidungen von Carsten am 15.11.2026.
 

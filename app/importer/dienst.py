@@ -1,13 +1,17 @@
 """Dienst des Containers soccer-import: Zeitplan, Freigabe und Tausch (Spezifikation, Abschnitt 10).
 
-- Montag bis Freitag ab 04:00 (Europe/Zurich) ein Lauf pro Tag; montags werden alle Spiele der Saison mit API-ID neu
-  geprüft, sonst die letzten 2 Spieltage. Ein Lauf erzeugt eine neue Fassung unter /import/laeufe/<lauf>/.
+- Täglich ab 04:00 (Europe/Zurich, seit 0.15 auch am Wochenende) ein Lauf; montags werden alle Spiele der Saison mit
+  API-ID neu geprüft, sonst die letzten 2 Spieltage. Ein Lauf erzeugt eine neue Fassung unter /import/laeufe/<lauf>/.
+- Entscheide aus dem Reiter (späte Korrekturen, Endstand gegen Tor-Ereignisse) kommen ebenfalls als Anfrage und werden
+  in /import/entscheidungen.json festgehalten (entscheide.py); jeder Lauf wendet sie an.
+- Rohdaten älter als 12 Monate löscht der Dienst (R9).
 - Es wartet immer höchstens eine Fassung; ein neuer Lauf ersetzt die wartende (er baut auf der gültigen auf).
 - Freigabe: Das Dashboard legt eine Anfrage in /import/anfragen/ ab („uebernehmen“ oder „verwerfen“); der Dienst prüft
   sie innerhalb von 30 Sekunden. Übernommen wird nur ohne Fehler und nur, wenn die gültigen Dateien seit dem Lauf
   unverändert sind. Vor dem Tausch kommen beide gültigen Dateien mit Datum nach /backup (die letzten 30 bleiben);
   der Tausch selbst ist ein einziger Schritt (os.replace), die App liest nie eine halbe Datei.
-- Ab dem Datum automatisch_ab in app/config/import.toml wird eine fehlerfreie Fassung sofort übernommen (E3).
+- Ab dem Datum automatisch_ab in app/config/import.toml wird eine Fassung sofort übernommen, wenn sie unkritisch ist
+  (R5): keine Fehler, keine kritischen Punkte, keine Plausibilitätswarnung, keine neue Warnung der Prüfregeln.
 
 Aufruf: python -m importer.dienst            Dauerbetrieb im Container
         python -m importer.dienst --jetzt    sofort einen Lauf (z. B. nach dem Einspielen)
@@ -29,6 +33,7 @@ from core import settings
 from core.config import load_leagues
 
 from . import einstellungen as E
+from . import entscheide
 from .client import ApiClient, ImportFehler, used_today
 from .erzeugen import build, save_report, sha256
 from .teams import load_team_names
@@ -76,7 +81,7 @@ def run(base: Path, data_dir: Path, now: datetime, full_season: bool | None = No
     try:
         report.update(build(client, load_team_names(E.TEAM_NAMES_FILE), load_leagues(),
                             data_dir / settings.DATABASE_FILENAME, data_dir / settings.FIXTURES_FILENAME, out,
-                            now.date(), full))
+                            now.date(), full, decisions=entscheide.load(base)))
         report["status"] = "wartet" if report["fehler"] == 0 else "Fehler – nicht übernehmbar"
     except Exception as exc:                                  # Lauf fehlgeschlagen: gültige Dateien bleiben
         report["status"] = "fehlgeschlagen"
@@ -96,10 +101,24 @@ def run(base: Path, data_dir: Path, now: datetime, full_season: bool | None = No
     state["letzter_lauf"] = run_id
     save_report(report, out / "bericht.json")
     save_state(base, state)
+    _prune_raw(dirs["roh"], now.date())
     auto = E.automatic_from()
-    if report["status"] == "wartet" and auto and now.date() >= auto:
+    if report["status"] == "wartet" and auto and now.date() >= auto and (report.get("automatik") or {}).get("ok"):
         apply(base, data_dir, E.BACKUP_DIR, run_id, "uebernehmen", "automatisch", now)
     return load_report(base, run_id)
+
+
+def _prune_raw(raw: Path, today) -> None:
+    """Rohdaten-Tagesordner (JJJJ-MM-TT) älter als 12 Monate löschen (R9)."""
+    for d in raw.glob("????-??-??"):
+        try:
+            day = datetime.strptime(d.name, "%Y-%m-%d").date()
+        except ValueError:
+            continue
+        if (today - day).days > E.RAW_KEEP_DAYS and d.is_dir():
+            for f in d.iterdir():
+                f.unlink()
+            d.rmdir()
 
 
 def _set_status(base: Path, run_id: str, status: str, note: str | None = None, **extra) -> None:
@@ -139,6 +158,11 @@ def apply(base: Path, data_dir: Path, backup_dir: Path, run_id: str, action: str
         return msg
     backup_dir.mkdir(parents=True, exist_ok=True)
     tag = now.strftime("%Y-%m-%d_%H%M")
+    decisions = base / E.DECISIONS_FILE
+    if decisions.exists():                                     # Entscheide mit sichern (R1)
+        shutil.copy2(decisions, backup_dir / f"entscheidungen_{tag}_vor_import.json")
+        for old in sorted(backup_dir.glob("entscheidungen_*_vor_import.json"))[:-E.BACKUPS_KEPT]:
+            old.unlink()
     for name in files:
         src = data_dir / name
         if src.exists():
@@ -167,13 +191,20 @@ def process_requests(base: Path, data_dir: Path, backup_dir: Path, now: datetime
             if req.get("aktion") in ("uebernehmen", "verwerfen"):
                 print(now.isoformat(timespec="seconds"), "Anfrage", req["aktion"], req.get("lauf"), "->",
                       apply(base, data_dir, backup_dir, str(req.get("lauf")), req["aktion"], "Dashboard", now), flush=True)
+            elif req.get("aktion") == "entscheid":
+                entry = {k: req.get(k) for k in ("art", "id", "liga", "spiel", "spalte", "api_wert", "alt_wert", "entscheid")}
+                entry.update({"zeit": now.isoformat(timespec="seconds"), "quelle": "Dashboard"})
+                entscheide.add(base, entry)
+                print(now.isoformat(timespec="seconds"), "Entscheid", entry["art"], entry["id"], entry.get("spalte") or "",
+                      "->", entry["entscheid"], flush=True)
         except (ValueError, KeyError, OSError) as exc:
             print("Anfrage ungültig:", p.name, exc, flush=True)
         p.unlink(missing_ok=True)
 
 
 def due(state: dict, now: datetime) -> bool:
-    return now.weekday() < 5 and now.hour >= E.RUN_HOUR and state.get("letzter_lauf_tag") != now.strftime("%Y-%m-%d")
+    """Täglich ab 04:00 ein Lauf (seit 0.15 auch am Wochenende, Spielplan v2.1, 3.7)."""
+    return now.hour >= E.RUN_HOUR and state.get("letzter_lauf_tag") != now.strftime("%Y-%m-%d")
 
 
 def main(argv: list[str]) -> None:

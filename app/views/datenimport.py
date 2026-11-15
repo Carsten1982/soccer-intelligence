@@ -1,9 +1,11 @@
-"""Bereich „Datenimport/API“ (Version 0.14, Designentwurf vom 15.11.2026, Dashboard-Briefing 6.5).
+"""Bereich „Datenimport/API“ (Version 0.14, Designentwurf vom 15.11.2026, Dashboard-Briefing 6.5; seit 0.15 Entwurf 2).
 
-Zeigt den Stand des Datenimports aus /import (nur lesend): Statusleiste, die wartende neue Fassung mit Vollständigkeit
-(Spielplan gegen Ergebnisse), Qualitätsbericht, Korrekturen, neuen Spielen und Spielplan-Änderungen sowie das
-Protokoll der letzten 14 Tage. Die Buttons „Übernehmen“ und „Verwerfen“ legen nur eine Anfrage in /import/anfragen ab;
-den Tausch macht der Container soccer-import (das Dashboard schreibt nie in die Excel-Dateien).
+Zeigt den Stand des Datenimports aus /import (nur lesend): Statusleiste, die wartende neue Fassung mit
+- „Ihre Entscheidung“: späte Korrekturen der API und Endstände, die nicht zu den Tor-Ereignissen passen (je zwei Buttons),
+- Block A · Ergebnisse (Vollständigkeit, Qualität, Korrekturen, neue Spiele) und
+- Block B · Spielplan (Änderungen nach Gruppen),
+sowie das Protokoll der letzten 14 Tage. Alle Buttons legen nur eine Anfrage in /import/anfragen ab; den Tausch und das
+Festhalten der Entscheide macht der Container soccer-import (das Dashboard schreibt nie in die Excel-Dateien).
 """
 
 from __future__ import annotations
@@ -71,12 +73,9 @@ def reports(base: Path, days: int) -> list[dict]:
 
 
 def next_run(now: datetime, state: dict) -> datetime:
-    day = now
+    """Täglich um 04:00 (seit 0.15 auch am Wochenende)."""
     ran_today = state.get("letzter_lauf_tag") == now.strftime("%Y-%m-%d")
-    if ran_today or now.weekday() >= 5:
-        day = now + timedelta(days=1)
-    while day.weekday() >= 5:
-        day += timedelta(days=1)
+    day = now + timedelta(days=1) if ran_today else now
     return day.replace(hour=E.RUN_HOUR, minute=0, second=0, microsecond=0)
 
 
@@ -109,7 +108,7 @@ def status_bar(state: dict, latest: dict | None, now: datetime) -> str:
             f'<div><small>Kontingent heute (Rest laut API)</small><b>{num(rest)}</b><small>eigene Obergrenze '
             f'{E.DAILY_LIMIT} je Tag</small></div>'
             f'<div><small>Letzter Lauf</small><b class="{last_css}">{_when(last)} {"✓" if ok else "✕"}</b>'
-            f'<small>nächster: {_when(next_run(now, state).isoformat())}</small></div>'
+            f'<small>nächster: {_when(next_run(now, state).isoformat())} · täglich</small></div>'
             f'<div><small>Betriebsart</small><b>{mode}</b><small>{mode_txt}</small></div></div>')
 
 
@@ -130,8 +129,7 @@ def completeness(rep: dict) -> str:
                          m["fehlt"], tag])
     if not rows:
         return '<p class="di-note">Keine fälligen Spiele in den letzten 14 Tagen.</p>'
-    return _table(["Liga", "Spieltag", "laut Spielplan fällig", "Ergebnis geliefert", "verschoben / abgesagt", "fehlt",
-                   "Stand"], rows)
+    return _table(["Liga", "Spieltag", "fällig", "geliefert", "verschoben / abgesagt / gewertet", "fehlt", "Stand"], rows)
 
 
 def quality(rep: dict) -> str:
@@ -148,22 +146,26 @@ def quality(rep: dict) -> str:
         ["Datenbank: Hinweise", num(g.get("hinweise")), num(n.get("hinweise")), ""],
         ["Spielplan: Fehler / Warnungen", f'{num(fg.get("fehler"))} / {num(fg.get("warnungen"))}',
          f'{num(fn.get("fehler"))} / {num(fn.get("warnungen"))}', ""],
+        ["Plausibilität neuer/geänderter Spiele: Fehler / Warnungen", "–",
+         f'{num(len((rep.get("plausibilitaet") or {}).get("fehler") or []))} / '
+         f'{num(len((rep.get("plausibilitaet") or {}).get("warnungen") or []))}', "Grenzen: Ecken 30, Gelbe 10, aufs Tor 25, Tore 9 je Team"],
+        ["Zuordnung Spielplan ↔ Datenbank, doppelte IDs", "–",
+         num(len(rep.get("zuordnung") or []) + len(rep.get("doppelte_ids") or [])), "über die API-ID"],
         ["Unbekannte Teams", "–", num(len(rep.get("unbekannte_teams") or [])), "werden mit dem Namen der API übernommen"],
-        ["Korrekturen der API", "–", num(len(rep.get("korrekturen") or [])), "Einzelheiten unten"],
     ]
     return _table(["Prüfung", "gültige Fassung", "neue Fassung", "Bemerkung"], rows, left=(0, 3))
 
 
-def write_request(base: Path, run_id: str, action: str) -> None:
+def write_request(base: Path, run_id: str | None, action: str, **extra) -> None:
     folder = base / "anfragen"
     folder.mkdir(parents=True, exist_ok=True)
     now = datetime.now(ZoneInfo(E.TIMEZONE))
-    payload = {"lauf": run_id, "aktion": action, "zeit": now.isoformat(timespec="seconds")}
+    payload = {"lauf": run_id, "aktion": action, "zeit": now.isoformat(timespec="seconds"), **extra}
     # Erst unter einem Namen schreiben, den der Dienst nicht liest, dann in einem Schritt umbenennen:
     # so findet er nie eine halb geschriebene Anfrage.
-    name = f"{now:%Y%m%d_%H%M%S}_{action}.json"
+    name = f"{now:%Y%m%d_%H%M%S_%f}_{action}.json"
     tmp = folder / f".{name}.tmp"
-    tmp.write_text(json.dumps(payload), encoding="utf-8")
+    tmp.write_text(json.dumps(payload, ensure_ascii=False, default=str), encoding="utf-8")
     tmp.replace(folder / name)
 
 
@@ -171,17 +173,169 @@ def pending_requests(base: Path, run_id: str) -> list[str]:
     out = []
     for p in (base / "anfragen").glob("*.json"):
         req = _read(p) or {}
-        if req.get("lauf") == run_id:
+        if req.get("lauf") == run_id and req.get("aktion") in ("uebernehmen", "verwerfen"):
             out.append(req.get("aktion", ""))
     return out
+
+
+def _decided(base: Path) -> set[tuple]:
+    """Entscheide, die schon festgehalten sind oder als Anfrage warten: (Art, id, Spalte)."""
+    keys = set()
+    for e in _read(base / E.DECISIONS_FILE) or []:
+        keys.add((e.get("art"), int(e.get("id", -1)), e.get("spalte")))
+    for p in (base / "anfragen").glob("*.json"):
+        req = _read(p) or {}
+        if req.get("aktion") == "entscheid":
+            keys.add((req.get("art"), int(req.get("id", -1)), req.get("spalte")))
+    return keys
+
+
+LABELS = {"uebernehmen": "API-Wert übernehmen", "ablehnen": "bisherigen Wert behalten",
+          "platz": "Ergebnis auf dem Platz (Tor-Ereignisse)", "api": "Endstand der API"}
+
+
+def decisions(rep: dict, base: Path) -> None:
+    """„Ihre Entscheidung“: späte Korrekturen und Endstand gegen Tor-Ereignisse, je zwei Buttons (R1, R2)."""
+    done = _decided(base)
+    score = [k for k in rep.get("kritisch") or [] if k["art"] == "endstand"]
+    late = rep.get("spaete_korrekturen") or []
+    open_items = [("endstand", k, None) for k in score if ("endstand", int(k["id"]), None) not in done]
+    open_items += [("korrektur", k, k["spalte"]) for k in late if ("korrektur", int(k["id"]), k["spalte"]) not in done]
+    if not (score or late):
+        return
+    st.markdown('<div class="di-h">Ihre Entscheidung</div>', unsafe_allow_html=True)
+    if not open_items:
+        st.info("Alle Entscheide sind festgehalten. Sie wirken ab dem nächsten Lauf (täglich 04:00).")
+        return
+    for i, (art, k, col) in enumerate(open_items):
+        if art == "endstand":
+            text = (f"**{escape(k['liga'])}**, {escape(k['spiel'])} ({k.get('datum', '')}): Endstand der API "
+                    f"**{k['api']}**, laut Tor-Ereignissen **{k['ereignisse']}** – Wertung oder Datenfehler? "
+                    "Das Spiel wird bis zum Entscheid nicht aufgenommen bzw. nicht geändert.")
+            options = ("platz", "api")
+        else:
+            text = (f"**{escape(k['liga'])}**, {escape(k['spiel'])} ({k['datum']}): späte Änderung der API "
+                    f"(Spiel älter als {E.CORRECTION_DAYS} Tage) – {escape(k['spalte'])} "
+                    f"**{escape(str(k['alt']))} → {escape(str(k['neu']))}**" + (" · KPI-relevant" if k.get("kpi") else ""))
+            options = ("uebernehmen", "ablehnen")
+        c0, c1, c2 = st.columns([5, 2, 2], vertical_alignment="center")
+        c0.markdown(text)
+        for c, opt in zip((c1, c2), options):
+            if c.button(LABELS[opt], key=f"dec_{art}_{k['id']}_{col}_{opt}_{i}"):
+                write_request(base, rep["lauf"], "entscheid", art=art, id=k["id"], liga=k["liga"], spiel=k["spiel"],
+                              spalte=col, api_wert=k.get("neu") if art == "korrektur" else k.get("api"),
+                              alt_wert=k.get("alt"), entscheid=opt)
+                st.rerun()
+    st.caption("Ein Entscheid wird festgehalten, mit der nächsten Übernahme gesichert und nie wieder gefragt. "
+               "Er wirkt ab dem nächsten Lauf.")
+
+
+def _fx_counts(fx: dict) -> tuple[int, int]:
+    """(wichtige Änderungen, Anstosszeiten) – ältere Berichte ohne Gruppen zählen alles als wichtig."""
+    if "gruppen" in fx:
+        g = fx["gruppen"]
+        return fx.get("wichtig", 0), len(g.get("anstoss", [])) + len(g.get("festgelegt", []))
+    return fx.get("neu", 0) + fx.get("entfallen", 0) + len(fx.get("geaendert") or []), 0
+
+
+GROUP_TITLES = {"verschoben": ("t-r", "verschoben, ohne neuen Termin"), "nachholspiel": ("t-b", "Nachholspiel (neuer Termin)"),
+                "vorgezogen": ("t-w", "vorgezogen"), "termin": ("t-g", "Termin geändert"),
+                "status": ("t-r", "ausgesetzt / abgesagt / abgebrochen / gewertet"),
+                "anstoss": ("t-g", "Anstosszeit geändert"), "festgelegt": ("t-ok", "Anstosszeiten festgelegt (bisher offen)"),
+                "vermerk": ("t-g", "Vermerk geändert")}
+
+
+def _v(field: str, value) -> str:
+    """Wert einer Spielplan-Änderung zum Anzeigen: leerer Status = geplant, sonst leer = „–“."""
+    if value in (None, ""):
+        return "geplant" if field == "Status" else "–"
+    return escape(str(value))
+
+
+def block_fixtures(rep: dict) -> None:
+    fx = rep.get("spielplan_aenderungen") or {}
+    st.markdown('<div class="di-h">B · Spielplan</div><p class="di-note">Wann gespielt wird. Bestimmt, was das '
+                'Dashboard zeigt, und den Stichtag der KPIs.</p>', unsafe_allow_html=True)
+    groups = fx.get("gruppen")
+    if groups is None:                                   # Bericht aus 0.14
+        st.markdown(f"Änderungen: neu {fx.get('neu', 0)} · entfallen {fx.get('entfallen', 0)} · "
+                    f"geändert {len(fx.get('geaendert') or [])}")
+        return
+    if fx.get("neu") or fx.get("entfallen"):
+        st.markdown(f"Spiele neu im Spielplan: **{fx.get('neu', 0)}** · entfallen: **{fx.get('entfallen', 0)}**")
+    shown = False
+    for key, (css, title) in GROUP_TITLES.items():
+        items = groups.get(key) or []
+        if not items:
+            continue
+        shown = True
+        with st.expander(f"{title} ({len(items)})", expanded=key in ("verschoben", "nachholspiel", "vorgezogen", "status")):
+            for c in items:
+                st.markdown(f"- **{escape(c['liga'])}**, Sp. {c.get('spieltag', '')} · {escape(c['spiel'])}: "
+                            + "; ".join(f"{escape(k)} {_v(k, c['vorher'][k])} → {_v(k, c['neu'][k])}" for k in c["neu"]))
+    if not shown:
+        st.markdown('<p class="di-note">Keine Änderungen an bestehenden Spielen.</p>', unsafe_allow_html=True)
+    msgs = (rep.get("pruefung") or {}).get("spielplan", {}).get("meldungen") or []
+    if msgs:
+        with st.expander(f"Meldungen der Spielplan-Prüfung ({len(msgs)})"):
+            st.dataframe(pd.DataFrame(msgs), hide_index=True, width="stretch")
+
+
+def block_results(rep: dict) -> None:
+    st.markdown('<div class="di-h">A · Ergebnisse (Datenbank)</div><p class="di-note">Was gespielt wurde. Grundlage '
+                'aller KPI-Werte.</p>', unsafe_allow_html=True)
+    st.markdown(completeness(rep), unsafe_allow_html=True)
+    st.markdown(quality(rep), unsafe_allow_html=True)
+    offen = rep.get("offen") or []
+    missing = [(lg, m) for lg, mds in (rep.get("vollstaendigkeit") or {}).items() for m in mds if m["fehlende"] or m["inaktive"]]
+    if offen or missing:
+        with st.expander(f"Offen und verschoben ({len(offen) + sum(len(m['fehlende']) + len(m['inaktive']) for _, m in missing)})"):
+            for o in offen:
+                fields = ", ".join(o.get("fehlt") or [])
+                st.markdown(f"- **{escape(o['liga'])}**, {escape(o['heim'])} – {escape(o['gast'])} ({o['datum']}): "
+                            f"{escape(o['grund'])}" + (f" – fehlt: {escape(fields)}" if fields else ""))
+            for lg, m in missing:
+                for x in m["fehlende"]:
+                    st.markdown(f"- **{escape(lg)}**, Spieltag {m['spieltag']}: {escape(x)} – noch kein Ergebnis")
+                for x in m["inaktive"]:
+                    st.markdown(f"- **{escape(lg)}**, Spieltag {m['spieltag']}: {escape(x)}")
+    corr = rep.get("korrekturen") or []
+    if corr:
+        kpi = sum(1 for c in corr if c.get("kpi"))
+        with st.expander(f"Korrekturen ({len(corr)}, davon {kpi} KPI-relevant)"):
+            st.dataframe(pd.DataFrame(corr).astype(str), hide_index=True, width="stretch")
+    games = rep.get("neue_spiele") or {}
+    if any(games.values()):
+        with st.expander(f"Neue Spiele ({sum(len(v) for v in games.values())})"):
+            for league, rows in games.items():
+                if rows:
+                    st.markdown(f"**{escape(league)}**")
+                    st.dataframe(pd.DataFrame(rows).drop(columns=["id"]), hide_index=True, width="stretch")
+    plaus = rep.get("plausibilitaet") or {}
+    msgs = (plaus.get("fehler") or []) + (plaus.get("warnungen") or [])
+    msgs += [{"liga": z["liga"], "id": z.get("id"), "spiel": "", "meldung": z["meldung"]} for z in rep.get("zuordnung") or []]
+    msgs += [{"liga": d["ligen"], "id": d["id"], "spiel": "", "meldung": "id doppelt"} for d in rep.get("doppelte_ids") or []]
+    msgs += (rep.get("pruefung") or {}).get("datenbank", {}).get("neue_meldungen") or []
+    if msgs:
+        with st.expander(f"Meldungen der Prüfung ({len(msgs)})"):
+            st.dataframe(pd.DataFrame(msgs).astype(str), hide_index=True, width="stretch")
+    if rep.get("umbenennungen"):
+        with st.expander(f"Teamnamen umgestellt ({len(rep['umbenennungen'])} Teams)"):
+            st.dataframe(pd.DataFrame(rep["umbenennungen"]).rename(columns={"liga": "Liga", "alt": "bisher", "neu": "neu",
+                                                                            "zeilen": "Zeilen"}),
+                         hide_index=True, width="stretch")
+    for key, title in (("unbekannte_teams", "Unbekannte Teams"), ("namensaenderungen_api", "Namensänderungen der API"),
+                       ("wertungen", "Gewertete Spiele (nicht in der Datenbank)")):
+        if rep.get(key):
+            with st.expander(f"{title} ({len(rep[key])})"):
+                st.dataframe(pd.DataFrame(rep[key]), hide_index=True, width="stretch")
 
 
 def pending_box(rep: dict, base: Path) -> None:
     run_id, err = rep["lauf"], rep.get("fehler", 0) > 0
     new_games = sum(len(v) for v in (rep.get("neue_spiele") or {}).values())
-    fx = rep.get("spielplan_aenderungen") or {}
-    fx_count = fx.get("neu", 0) + fx.get("entfallen", 0) + len(fx.get("geaendert") or [])
-    db_new = (rep.get("pruefung") or {}).get("datenbank", {}).get("neu", {})
+    important, kickoff = _fx_counts(rep.get("spielplan_aenderungen") or {})
+    critical = rep.get("kritisch") or []
     warn_new = len((rep.get("pruefung") or {}).get("datenbank", {}).get("neue_meldungen") or [])
     saison = ", ".join(sorted(set((rep.get("saison") or {}).values())))
     st.markdown(
@@ -191,74 +345,38 @@ def pending_box(rep: dict, base: Path) -> None:
         f'aufgebaut auf der gültigen Datenbank ({escape((rep.get("basis") or {}).get("datenbank", "")[:8])})</p>'
         f'<div class="di-kp"><div><b>{new_games}</b><small>neue Spiele mit Ergebnis</small></div>'
         f'<div><b>{len(rep.get("korrekturen") or [])}</b><small>korrigierte Werte</small></div>'
-        f'<div><b>{fx_count}</b><small>Spielplan-Änderungen</small></div>'
-        f'<div><b class="{"di-bad" if err else "di-ok"}">{num(db_new.get("fehler", rep.get("fehler")))}</b><small>Fehler</small></div>'
-        f'<div><b class="{"di-wn" if warn_new else "di-ok"}">{warn_new}</b><small>neue Warnungen</small></div></div>'
-        f'<div class="di-h">1. Vollständigkeit: Spielplan gegen gelieferte Ergebnisse (Spiele der letzten 14 Tage bis gestern)</div>'
-        f'{completeness(rep)}'
-        f'<div class="di-h">2. Qualitätsbericht der neuen Fassung (Prüfregeln wie unter Datenqualität)</div>{quality(rep)}</div>',
+        f'<div><b>{important}</b><small>Spielplan: wichtige Änderungen'
+        f'{f" (+{kickoff} Anstosszeiten)" if kickoff else ""}</small></div>'
+        f'<div><b class="{"di-bad" if err else "di-ok"}">{num(rep.get("fehler"))}</b><small>Fehler</small></div>'
+        f'<div><b class="{"di-wn" if (critical or warn_new) else "di-ok"}">{len(critical) + warn_new}</b>'
+        f'<small>kritische Punkte / neue Warnungen</small></div></div></div>',
         unsafe_allow_html=True)
-    details(rep)
+    decisions(rep, base)
+    others = [k for k in critical if k["art"] != "endstand"]
+    for k in others:
+        st.warning(f"**{escape(k['liga'])}**, {escape(k['spiel'])}: {escape(k['text'])}")
+    a, b = st.columns(2, gap="medium")
+    with a:
+        block_results(rep)
+    with b:
+        block_fixtures(rep)
+    auto = rep.get("automatik") or {}
+    if auto:
+        st.caption("Im Automatikbetrieb: " + ("würde ohne Rückfrage übernommen" if auto.get("ok")
+                                              else "würde auf Ihre Freigabe warten – " + "; ".join(auto.get("gruende") or [])))
     asked = pending_requests(base, run_id)
     if asked:
         st.info(f"Freigabe hinterlegt („{asked[0]}“). Der Import führt sie innerhalb einer Minute aus – Seite neu laden.")
         return
-    c1, c2, c3 = st.columns([1, 1, 4])
-    if c1.button("✓ Übernehmen", type="primary", disabled=err, key="di_ok"):
+    c1, c2, c3 = st.columns([2, 1, 4])
+    if c1.button("✓ Übernehmen (Ergebnisse und Spielplan)", type="primary", disabled=err, key="di_ok"):
         write_request(base, run_id, "uebernehmen")
         st.rerun()
     if c2.button("✕ Verwerfen", key="di_no"):
         write_request(base, run_id, "verwerfen")
         st.rerun()
-    c3.markdown('<p class="di-note">Datenbank und Spielplan werden gemeinsam übernommen; die bisherige Fassung kommt '
-                'mit Datum ins Backup. Bei Fehlern ist „Übernehmen“ gesperrt.</p>', unsafe_allow_html=True)
-
-
-def details(rep: dict) -> None:
-    offen = rep.get("offen") or []
-    missing = [(lg, m) for lg, mds in (rep.get("vollstaendigkeit") or {}).items() for m in mds if m["fehlende"] or m["inaktive"]]
-    if offen or missing:
-        with st.expander(f"Offen und verschoben ({len(offen) + sum(len(m['fehlende']) + len(m['inaktive']) for _, m in missing)})"):
-            for o in offen:
-                st.markdown(f"- **{escape(o['liga'])}**, {escape(o['heim'])} – {escape(o['gast'])} ({o['datum']}): {escape(o['grund'])}")
-            for lg, m in missing:
-                for x in m["fehlende"]:
-                    st.markdown(f"- **{escape(lg)}**, Spieltag {m['spieltag']}: {escape(x)} – noch kein Ergebnis")
-                for x in m["inaktive"]:
-                    st.markdown(f"- **{escape(lg)}**, Spieltag {m['spieltag']}: {escape(x)}")
-    if rep.get("umbenennungen"):
-        with st.expander(f"Teamnamen umgestellt auf API-Football ({len(rep['umbenennungen'])} Teams) – einmalig"):
-            st.dataframe(pd.DataFrame(rep["umbenennungen"]).rename(columns={"liga": "Liga", "alt": "bisher", "neu": "neu",
-                                                                            "zeilen": "Zeilen"}),
-                         hide_index=True, width="stretch")
-    msgs = (rep.get("pruefung") or {}).get("datenbank", {}).get("neue_meldungen") or []
-    msgs += (rep.get("pruefung") or {}).get("spielplan", {}).get("meldungen") or []
-    if msgs:
-        with st.expander(f"Neue Meldungen der Prüfung ({len(msgs)})"):
-            st.dataframe(pd.DataFrame(msgs), hide_index=True, width="stretch")
-    corr = rep.get("korrekturen") or []
-    if corr:
-        with st.expander(f"Korrekturen ({len(corr)})"):
-            st.dataframe(pd.DataFrame(corr).astype(str), hide_index=True, width="stretch")
-    games = rep.get("neue_spiele") or {}
-    if any(games.values()):
-        with st.expander(f"Neue Spiele ({sum(len(v) for v in games.values())})"):
-            for league, rows in games.items():
-                if rows:
-                    st.markdown(f"**{escape(league)}**")
-                    st.dataframe(pd.DataFrame(rows).drop(columns=["id"]), hide_index=True, width="stretch")
-    fx = rep.get("spielplan_aenderungen") or {}
-    if fx.get("neu") or fx.get("entfallen") or fx.get("geaendert"):
-        with st.expander(f"Spielplan-Änderungen (neu {fx.get('neu', 0)} · entfallen {fx.get('entfallen', 0)} · "
-                         f"geändert {len(fx.get('geaendert') or [])})"):
-            for c in fx.get("geaendert") or []:
-                st.markdown(f"- **{escape(c['liga'])}**, {escape(c['spiel'])}: "
-                            + "; ".join(f"{escape(k)} {escape(str(c['vorher'][k]))} → {escape(str(c['neu'][k]))}" for k in c["neu"]))
-    for key, title in (("unbekannte_teams", "Unbekannte Teams"), ("namensaenderungen_api", "Namensänderungen der API"),
-                       ("wertungen", "Gewertete Spiele (von Hand entscheiden)")):
-        if rep.get(key):
-            with st.expander(f"{title} ({len(rep[key])})"):
-                st.dataframe(pd.DataFrame(rep[key]), hide_index=True, width="stretch")
+    c3.markdown('<p class="di-note">A und B stammen aus derselben Abfrage und werden gemeinsam übernommen; die bisherige '
+                'Fassung kommt mit Datum ins Backup. Bei Fehlern ist „Übernehmen“ gesperrt.</p>', unsafe_allow_html=True)
 
 
 def history(reps: list[dict]) -> None:
@@ -270,18 +388,20 @@ def history(reps: list[dict]) -> None:
     for r in reps:
         db = ((r.get("pruefung") or {}).get("datenbank") or {}).get("neu") or {}
         fx = r.get("spielplan_aenderungen") or {}
+        important, kickoff = _fx_counts(fx)
         st_txt = r.get("status", "–")
         note = r.get("meldung", "")
         tag = f'<span class="di-tag {TAG.get(st_txt, "t-g")}">{escape(st_txt)}{(": " + escape(note)) if note else ""}</span>'
         rows.append([_when(r.get("start")), num((r.get("anfragen") or {}).get("verbraucht")),
                      num(sum(len(v) for v in (r.get("neue_spiele") or {}).values())) if "neue_spiele" in r else "–",
                      num(len(r.get("korrekturen") or [])) if "korrekturen" in r else "–",
-                     num(fx.get("neu", 0) + fx.get("entfallen", 0) + len(fx.get("geaendert") or [])) if fx else "–",
+                     f"{num(important)} · {num(kickoff)}" if fx else "–",
                      f'{num(db.get("fehler"))} Fehler · {num(db.get("warnungen"))} Warnungen' if db else "–", tag])
-    st.markdown(_table(["Lauf", "Abfragen", "neue Spiele", "Korrekturen", "Spielplan", "Prüfung", "Status"], rows,
-                       left=(0, 6)), unsafe_allow_html=True)
-    st.markdown('<p class="di-note">Nach der Testphase verschwinden die Buttons; das Protokoll bleibt. Lieferungen mit '
-                'Fehlern werden nie automatisch übernommen.</p>', unsafe_allow_html=True)
+    st.markdown(_table(["Lauf", "Abfragen", "neue Spiele", "Korrekturen", "Spielplan (wichtig · Anstosszeiten)", "Prüfung",
+                        "Status"], rows, left=(0, 6)), unsafe_allow_html=True)
+    st.markdown('<p class="di-note">Nach der Testphase verschwinden die Buttons; das Protokoll bleibt. Fassungen mit '
+                'Fehlern, kritischen Punkten oder neuen Warnungen werden nie automatisch übernommen.</p>',
+                unsafe_allow_html=True)
 
 
 def render() -> None:
@@ -292,7 +412,7 @@ def render() -> None:
     state = _read(base / "zustand.json") or {}
     reps = reports(base, E.HISTORY_DAYS)
     if not state and not reps:
-        st.info("Noch kein Import gelaufen. Der Container soccer-import holt die Daten Montag bis Freitag um 04:00; "
+        st.info("Noch kein Import gelaufen. Der Container soccer-import holt die Daten täglich um 04:00; "
                 "ein erster Lauf lässt sich auf dem Server mit `docker exec soccer-import python -m importer.dienst "
                 "--jetzt` starten.")
         ui.footer()

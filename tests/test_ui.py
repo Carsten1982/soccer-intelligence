@@ -251,7 +251,19 @@ def _write_import_dir(base, status="wartet", fehler=0):
            "offen": [{"liga": "LaLiga", "heim": "Valencia", "gast": "Real Betis", "datum": "16.11.2026",
                       "grund": "Statistik noch unvollständig"}],
            "umbenennungen": [{"liga": "Bundesliga", "alt": "FC Koln", "neu": "1. FC Köln", "zeilen": 281}],
-           "spielplan_aenderungen": {"neu": 1, "entfallen": 0, "geaendert": []}, "wertungen": [],
+           "spielplan_aenderungen": {"neu": 1, "entfallen": 0, "wichtig": 1, "geaendert": [],
+                                     "gruppen": {"verschoben": [], "nachholspiel": [
+                                         {"liga": "Bundesliga", "spieltag": 9, "spiel": "Mainz - Bremen", "gruppe": "nachholspiel",
+                                          "vorher": {"Datum von": "07.11.2026"}, "neu": {"Datum von": "09.12.2026"}}],
+                                                 "vorgezogen": [], "termin": [], "status": [], "anstoss": [],
+                                                 "festgelegt": [], "vermerk": []}},
+           "wertungen": [],
+           "kritisch": [{"art": "endstand", "liga": "Serie A", "id": 77, "spiel": "Verona - Roma", "datum": "19.09.2026",
+                         "api": "3:0", "ereignisse": "0:0", "text": "x"}],
+           "spaete_korrekturen": [{"liga": "Bundesliga", "id": 5, "spiel": "C - D", "datum": "01.11.2026",
+                                   "spalte": "Home Corners Full Time", "alt": 6, "neu": 7, "kpi": True}],
+           "plausibilitaet": {"fehler": [], "warnungen": []}, "zuordnung": [], "doppelte_ids": [],
+           "automatik": {"ok": False, "gruende": ["1 kritische Punkte"]},
            "unbekannte_teams": [], "namensaenderungen_api": [],
            "vollstaendigkeit": {"Bundesliga": [{"spieltag": 11, "faellig": 9, "geliefert": 9, "inaktiv": 0, "fehlt": 0,
                                                 "fehlende": [], "inaktive": []}]},
@@ -281,15 +293,36 @@ def test_datenimport_page(tmp_path, monkeypatch):
     at = AppTest.from_function(_datenimport, default_timeout=TIMEOUT).run()
     assert not at.exception, at.exception
     text = _texts(at)
-    for label in ("Datenimport/API", "API-Football · Pro", "Neue Daten bereit", "Vollständigkeit", "Qualitätsbericht",
-                  "Protokoll der letzten 14 Tage", "wartet"):
+    for label in ("Datenimport/API", "API-Football · Pro", "Neue Daten bereit", "A · Ergebnisse", "B · Spielplan",
+                  "Ihre Entscheidung", "Protokoll der letzten 14 Tage", "wartet", "täglich"):
         assert label in text, label
-    assert [b.label for b in at.button] == ["✓ Übernehmen", "✕ Verwerfen"] and not at.button[0].disabled
-    at.button[0].click().run()
+    labels = [b.label for b in at.button]
+    assert labels == ["Ergebnis auf dem Platz (Tor-Ereignisse)", "Endstand der API", "API-Wert übernehmen",
+                      "bisherigen Wert behalten", "✓ Übernehmen (Ergebnisse und Spielplan)", "✕ Verwerfen"]
+    ok = at.button[labels.index("✓ Übernehmen (Ergebnisse und Spielplan)")]
+    assert not ok.disabled
+    ok.click().run()
     import json
     reqs = [json.loads(p.read_text()) for p in (tmp_path / "anfragen").glob("*.json")]
     assert reqs and reqs[0]["lauf"] == run and reqs[0]["aktion"] == "uebernehmen"
     assert "Freigabe hinterlegt" in "\n".join(str(i.value) for i in at.info)
+
+
+@pytest.mark.skipif(AppTest is None, reason="Streamlit nicht vorhanden")
+def test_datenimport_decision_buttons(tmp_path, monkeypatch):
+    """R1/R2: Ein Entscheid-Button legt nur eine Anfrage ab; danach ist der Punkt nicht mehr offen."""
+    from importer import einstellungen
+    monkeypatch.setattr(einstellungen, "IMPORT_DIR", tmp_path)
+    import views.datenimport as di
+    import json
+    monkeypatch.setattr(di, "reports", lambda base, days: [json.loads(p.read_text(encoding="utf-8"))
+                                                          for p in (base / "laeufe").glob("*/bericht.json")])
+    _write_import_dir(tmp_path)
+    at = AppTest.from_function(_datenimport, default_timeout=TIMEOUT).run()
+    at.button[0].click().run()                                    # „Ergebnis auf dem Platz“
+    reqs = [json.loads(p.read_text()) for p in (tmp_path / "anfragen").glob("*.json")]
+    assert reqs[0]["aktion"] == "entscheid" and (reqs[0]["art"], reqs[0]["id"], reqs[0]["entscheid"]) == ("endstand", 77, "platz")
+    assert "Ergebnis auf dem Platz (Tor-Ereignisse)" not in [b.label for b in at.button]
 
 
 @pytest.mark.skipif(AppTest is None, reason="Streamlit nicht vorhanden")
@@ -303,4 +336,5 @@ def test_datenimport_page_blocks_on_errors(tmp_path, monkeypatch):
     _write_import_dir(tmp_path, status="Fehler – nicht übernehmbar", fehler=2)
     at = AppTest.from_function(_datenimport, default_timeout=TIMEOUT).run()
     assert not at.exception, at.exception
-    assert "Neue Fassung mit Fehlern" in _texts(at) and at.button[0].disabled
+    ok = [b for b in at.button if b.label.startswith("✓ Übernehmen")][0]
+    assert "Neue Fassung mit Fehlern" in _texts(at) and ok.disabled

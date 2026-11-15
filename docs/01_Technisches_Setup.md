@@ -10,13 +10,14 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 
 **In Betrieb:** Version 0.14 – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit den festgelegten Schwellen (positiv/negativ getrennt, KPI 03 je Liga), Top Anomalien, Datenqualität und Sensitivitätsanalyse; Datenbank 2018/19–2026/27 mit Referenzsaison 2018/19 (KPI-Regelwerk 1.2). Seit 15.11.2026 **Datenimport über API-Football**: Container `soccer-import` (Montag bis Freitag 04:00), Reiter „Datenimport/API“ mit Freigabe (halbautomatisch), Spielplan der ganzen Saison aus der API, Teamnamen von API-Football (Abschnitt 6.5). Passwortschutz unter `/dashboard`, Platzhalterseite unter `/`.
 
-**Bereit zum Einspielen:** Version 0.14.1 – Teamnamen mit ü und Akzenten (z. B. Fortuna Düsseldorf, Atlético Madrid), Einspiel-Skript macht nach einem Abbruch weiter, Statustext im Protokoll.
+**Bereit zum Einspielen:** Version 0.15 – Datenimport nach den Reviews: Spielplan nach `07_Spielplan_Anzeige.md` (Status nur aus der API, Nachholspiele und vorgezogene Spiele mit KPIs, Termin bestätigt/Zeit offen/vorläufig, Vorsaison), Ergebnis-Import nach `06`, Abschnitt 10.1 (Korrekturfenster 7 Tage, Entscheide per Button, Endstand gegen Tor-Ereignisse, Plausibilität, feste Zuordnung eigene ID ↔ API-ID), täglicher Lauf, Reiter mit Blöcken A/B.
 
-**Als Nächstes:** 2 Wochen halbautomatischer Betrieb, danach Datum für den automatischen Tausch festlegen (`app/config/import.toml`) · E-Mail-Benachrichtigung · Phase 2: Wettquoten, Verletzungen, Tabellenstände (rückwirkend) · Rundum-Prüfung des Codes · KPI-Erweiterungen und Freigabe je Liga · Gewichtung der Top Anomalien (Regelwerk, Punkt 17) · öffentliche Website.
+**Als Nächstes:** Designentwurf und Version 0.16 – Anzeige kommender Spieltage (`07`, Abschnitt 4) · 2 Wochen halbautomatischer Betrieb, danach Datum für den automatischen Tausch festlegen (`app/config/import.toml`) · E-Mail-Benachrichtigung · Phase 2: Wettquoten, Verletzungen, Tabellenstände (rückwirkend) · Rundum-Prüfung des Codes · KPI-Erweiterungen und Freigabe je Liga · Gewichtung der Top Anomalien (Regelwerk, Punkt 17) · öffentliche Website.
 
 | Version | Etappe | Inhalt | Eingespielt | Git | Tests |
 |---|---|---|---|---|---|
-| 0.14.1 | Datenimport, Nachtrag | Teamnamen mit ü und Akzenten (10 Teams), Einspiel-Skript macht nach Abbruch weiter, Statustext | ausstehend | – | 440 |
+| 0.15 | Datenimport nach Reviews | Spielplan v2.1 (Status nur aus der API, Nachholspiele mit KPIs, Termin, Vorsaison), Ergebnis-Import R1–R9 (Korrekturfenster, Entscheide, Endstand gegen Tor-Ereignisse, Plausibilität, Zuordnungsdatei), täglich, Reiter Blöcke A/B | ausstehend | – | 459 |
+| 0.14.1 | Datenimport, Nachtrag | Teamnamen mit ü und Akzenten (10 Teams), Einspiel-Skript macht nach Abbruch weiter, Statustext | 15.11.2026 | `1408c50` | 442 |
 | 0.14 | Datenimport | Datenimport über API-Football: Container soccer-import, Reiter Datenimport/API mit Freigabe, Spielplan aus der API, Teamnamen der API, Status „abgebrochen“ | 15.11.2026 | `8260056` | 441 |
 | 0.13 | Neue Schwellen | Gültige Schwellen positiv/negativ getrennt, KPI 03 je Liga; Sensitivitätsanalyse nach Entwurf C (vier Zeilen je KPI, Bewertung auch für stark) | 14.11.2026 | `89128e5` | 428 |
 | 0.12 | Sensitivitätsanalyse | Spielwiese ersetzt: vier Schwellen je KPI, Häufigkeit mit Spieltagsabdeckung, Ergebnisqualität gegen Grundquote mit Wilson-Spanne und Empfehlung | 12.11.2026 | `1482bc3` | 398 |
@@ -102,7 +103,7 @@ Ausbaustufen:
 |---|---|---|
 | `football-dashboard` | Soccer Intelligence (Streamlit), unter `/dashboard` | **ja** |
 | `soccer-placeholder` | Platzhalterseite unter `/` (nginx, statisch), seit Etappe E | **ja** |
-| `soccer-import` | Datenimport über API-Football (Montag bis Freitag 04:00), seit Version 0.14; kein Zugang von aussen | **ja** |
+| `soccer-import` | Datenimport über API-Football (täglich 04:00, bis 0.14 Montag bis Freitag), seit Version 0.14; kein Zugang von aussen | **ja** |
 | `article-generator` | Artikeltext-Generator | nein – nicht anfassen |
 | `n8n-wxit-n8n-1` | n8n Automatisierung | nein – nicht anfassen |
 | `traefik-traefik-1` | Webserver / HTTPS für alle Anwendungen | nein – nicht anfassen |
@@ -329,10 +330,12 @@ Regeln und Ablauf: `06_Datenlieferung.md`; Bereich im Dashboard: Dashboard-Brief
 ```
 Erwartet: `1` (der Schlüssel erscheint nicht auf dem Bildschirm; vorher kommt eine Kopie von `.env` nach `backup/`). Ein vorhandener Eintrag wird ersetzt, eine leere Eingabe ändert nichts. Neuer Schlüssel: denselben Befehl ausführen, danach `cd /docker/football-dashboard && docker compose up -d soccer-import`.
 
-**Täglich:** Montag bis Freitag um 04:00 holt `soccer-import` die Daten und legt eine neue Fassung bereit. Im Reiter
-„Datenimport/API“ prüfen und **Übernehmen** oder **Verwerfen**. Der Tausch geschieht innerhalb einer Minute; die
-bisherigen Dateien kommen nach `backup/` (`…_vor_import.xlsx`). Ab dem Datum `automatisch_ab` in
-`app/config/import.toml` wird eine fehlerfreie Fassung sofort übernommen.
+**Täglich:** Jeden Tag um 04:00 (seit 0.15 auch am Wochenende) holt `soccer-import` die Daten und legt eine neue
+Fassung bereit. Im Reiter „Datenimport/API“ prüfen und **Übernehmen** oder **Verwerfen**; eine Freigabe am Wochenende
+ist nicht nötig (der nächste Lauf ersetzt die wartende Fassung). Der Tausch geschieht innerhalb einer Minute; die
+bisherigen Dateien kommen nach `backup/` (`…_vor_import.xlsx`, dazu `entscheidungen_…json`). Erscheint „Ihre
+Entscheidung“, im Reiter einen der beiden Buttons wählen; der Entscheid wirkt ab dem nächsten Lauf (`06`, Abschnitt
+10.1). Ab dem Datum `automatisch_ab` in `app/config/import.toml` wird eine **unkritische** Fassung sofort übernommen.
 
 **Lauf sofort starten** (z. B. nach dem Einspielen oder wenn ein Lauf fehlgeschlagen ist):
 ```bash
@@ -364,6 +367,7 @@ app/
 │   ├── ligen.toml        aktive Ligen, Adresse, Anzahl Teams (Etappe B)
 │   ├── teams.toml        Teamliste: bekannte Teams ohne Datenbankeinträge, z. B. Aufsteiger (Etappe B)
 │   ├── teamnamen.toml    Teamnamen von API-Football je Team-ID, mit bisheriger Schreibweise (0.14)
+│   ├── zuordnung_api.csv feste Zuordnung eigene Spiel-ID ↔ API-ID, 11'978 Spiele (0.15)
 │   ├── import.toml       Datenimport: Datum für den automatischen Tausch (0.14)
 │   └── schwellen.toml    Schwellen der Anomalie-Einstufung je Liga und KPI (Etappe H)
 ├── core/                 Kernlogik ohne Oberfläche (testbar)
@@ -384,7 +388,8 @@ app/
 │   ├── simulation.py     Ergebniskontrolle und Simulation der Schwellen (Etappe I.1)
 │   └── frequency.py      Häufigkeit der Anomalien (Etappe C)
 ├── importer/             Datenimport über API-Football (0.14): client (Abfragen, Obergrenze, Rohdaten), convert (58
-│                         Spalten), spielplan, teams, erzeugen (neue Fassung + Bericht), dienst (Zeitplan, Freigabe)
+│                         Spalten, Tor-Ereignisse), spielplan, teams, erzeugen (neue Fassung + Bericht), dienst (Zeitplan,
+│                         Freigabe), entscheide (Entscheide aus dem Reiter, 0.15); core/zuordnung.py = eigene ID ↔ API-ID
 └── views/                Bereiche: Top Anomalien, je Liga, Datenqualität, Datenimport/API (datenimport.py, 0.14); components.py = Stil, Kopfbereich,
                           Sperrhinweis; kpi_table.py = kompakte Liga-Tabelle mit Aufklappen (Etappe H);
                           simulation.py = Bereich Simulation – Spielwiese (Etappe I.1)

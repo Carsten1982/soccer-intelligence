@@ -6,6 +6,12 @@ Regeln:
 - Tore: Endstand (K/L = N/O), Halbzeit, 2. Halbzeit = Endstand − Halbzeit, Ergebnisbuchstaben H/D/A.
 - Statistik: leerer Wert bleibt leer (nie 0). Ausnahme Gelbe Karten (E13): ist der Wert leer, aber das Spiel hat
   Statistik und Ereignisse, werden die Karten aus den Ereignissen gezählt (keine Karte = sichere 0).
+  Seit 0.15 (R3) nur, wenn die Ereignisse vollständig wirken: Die Tor-Ereignisse müssen zum Endstand passen.
+  Zählweise (geprüft an 24'000 Teamwerten, R3): Gelb-Rot = 2 Gelbe Karten (die API führt beide als „Yellow Card“,
+  ihre Statistik zählt sie mit, ebenso Altbestand und football-data.co.uk); eine direkte Rote zählt nie als Gelbe.
+- Endstand gegen Tor-Ereignisse (R2): passt der Endstand nicht zu den Toren (z. B. Wertung am grünen Tisch, die API
+  meldet dann FT mit dem gewerteten Ergebnis), entscheidet Carsten im Reiter; mit „Ergebnis auf dem Platz“ wird der
+  Stand aus den Tor-Ereignissen genommen (score_from_events).
 - Halbzeitwerte aus der Halbzeit-Statistik (ab 2024); Gelbe Karten sonst aus den Ereignissen (Minute ≤ 45 = 1. HZ,
   auch Nachspielzeit der 1. Halbzeit).
 """
@@ -60,6 +66,41 @@ def number(value):
             return None
 
 
+def goal_events(fixture: dict) -> dict[str, tuple[int, int]] | None:
+    """Tore je Team aus den Ereignissen: {"Full Time": (heim, gast), "First Half": (heim, gast)}; None ohne Ereignisse.
+    Gezählt werden Tore (auch Elfmeter und Eigentore, die die API dem begünstigten Team zuschreibt), nicht verschossene
+    Elfmeter. Minute ≤ 45 (auch Nachspielzeit der 1. Halbzeit) = 1. Halbzeit."""
+    events = fixture.get("events") or []
+    if not events:
+        return None
+    hid, aid = fixture["teams"]["home"]["id"], fixture["teams"]["away"]["id"]
+    out = {"Full Time": [0, 0], "First Half": [0, 0]}
+    for e in events:
+        if e.get("type") != "Goal" or e.get("detail") == "Missed Penalty":
+            continue
+        side = 0 if (e.get("team") or {}).get("id") == hid else 1 if (e.get("team") or {}).get("id") == aid else None
+        if side is None:
+            continue
+        out["Full Time"][side] += 1
+        if ((e.get("time") or {}).get("elapsed") or 0) <= 45:
+            out["First Half"][side] += 1
+    return {k: (v[0], v[1]) for k, v in out.items()}
+
+
+def final_score(fixture: dict) -> tuple:
+    ft = (fixture.get("score") or {}).get("fulltime") or {}
+    fth, fta = ft.get("home"), ft.get("away")
+    if fth is None or fta is None:
+        fth, fta = fixture["goals"]["home"], fixture["goals"]["away"]
+    return fth, fta
+
+
+def score_matches_events(fixture: dict) -> bool | None:
+    """True/False: Endstand passt zu den Tor-Ereignissen; None: keine Ereignisse (nicht prüfbar)."""
+    goals = goal_events(fixture)
+    return None if goals is None else goals["Full Time"] == final_score(fixture)
+
+
 def yellow_from_events(fixture: dict, team_id: int) -> dict[str, int]:
     out = {"Full Time": 0, "First Half": 0, "Second Half": 0}
     for e in fixture.get("events") or []:
@@ -70,17 +111,20 @@ def yellow_from_events(fixture: dict, team_id: int) -> dict[str, int]:
     return out
 
 
-def fixture_row(fixture: dict, league: str, names: TeamNames, half: dict | None = None) -> dict:
+def fixture_row(fixture: dict, league: str, names: TeamNames, half: dict | None = None,
+                score_from_events: bool = False) -> dict:
     """fixture: Spiel aus fixtures?ids=… (mit statistics und events); half: Antwort von fixtures/statistics?half=true
-    (Liste je Team mit statistics_1h/statistics_2h) oder None. Gibt {Spalte: Wert} für alle 58 Spalten zurück."""
+    (Liste je Team mit statistics_1h/statistics_2h) oder None. Gibt {Spalte: Wert} für alle 58 Spalten zurück.
+    score_from_events: Endstand und Halbzeit aus den Tor-Ereignissen (Entscheid „Ergebnis auf dem Platz“, R2)."""
     fx, sc, lg = fixture["fixture"], fixture["score"], fixture["league"]
     when = datetime.fromisoformat(fx["date"])
     home, away = fixture["teams"]["home"], fixture["teams"]["away"]
-    ft, ht = sc.get("fulltime") or {}, sc.get("halftime") or {}
-    fth, fta = ft.get("home"), ft.get("away")
-    if fth is None or fta is None:
-        fth, fta = fixture["goals"]["home"], fixture["goals"]["away"]
+    ht = sc.get("halftime") or {}
+    fth, fta = final_score(fixture)
     hth, hta = ht.get("home"), ht.get("away")
+    goals = goal_events(fixture)
+    if score_from_events and goals is not None:
+        (fth, fta), (hth, hta) = goals["Full Time"], goals["First Half"]
     sh = fth - hth if None not in (fth, hth) else None
     sa = fta - hta if None not in (fta, hta) else None
     referee = (fx.get("referee") or "").split(",")[0].strip() or None
@@ -100,7 +144,8 @@ def fixture_row(fixture: dict, league: str, names: TeamNames, half: dict | None 
     for t in half or []:
         halves[t["team"]["id"]] = {p: {x["type"]: x["value"] for x in t.get(key) or []}
                                    for p, key in PERIOD.items() if p != "Full Time"}
-    has_events = bool(fixture.get("events"))
+    # Gelbe Karten aus Ereignissen nur bei vollständig wirkenden Ereignissen (R3): Tore passen zum Endstand
+    has_events = goals is not None and goals["Full Time"] == (fth, fta)
     for side, team in (("Home", home), ("Away", away)):
         tid = team["id"]
         st, hv = stats.get(tid), halves.get(tid)

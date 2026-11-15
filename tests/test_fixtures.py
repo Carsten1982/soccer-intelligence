@@ -191,10 +191,11 @@ def test_team_outside_season_window_is_hint(tmp_path):
     assert "Keine Ligadaten im Zeitfenster" in checks(fx, HINWEIS)
 
 
-def test_already_played_is_hint(tmp_path):
+def test_already_played_is_no_longer_reported(tmp_path):
+    """Seit 0.15: Der Spielplan enthält absichtlich gespielte Spiele (ganze Saison und Vorsaison) - keine Meldung."""
     db = {"Bundesliga": db_frame(season="2026/2027"), "Premier League": db_frame()}
     fx = load(write_plan(tmp_path / "s.xlsx", {"Bundesliga": plan_rows(), "Premier League": plan_rows()}), db=db)
-    assert "Begegnung bereits gespielt" in checks(fx, HINWEIS)
+    assert "Begegnung bereits gespielt" not in checks(fx, HINWEIS)
 
 
 def test_inactive_league_sheet(tmp_path):

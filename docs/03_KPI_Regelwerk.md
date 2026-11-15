@@ -310,6 +310,10 @@ Relative Abweichung      = (Erwartete gelbe Karten − Ligareferenz) / Ligarefer
 - Nur **eigene** gelbe Karten des Teams, gegnerische Karten zählen nicht.
 - Datenquelle: Spalte **AC „Home Yellow Cards Full Time“**, wenn das Team Heimteam ist, Spalte **AD „Away Yellow Cards Full Time“**, wenn es Auswärtsteam ist.
 - Zählweise der Quelle wird **unverändert übernommen** (auch bei Gelb-Rot, Ersatzspielern, Offiziellen).
+- **Gelb-Rot = 2 Gelbe Karten, eine direkte Rote zählt nie als Gelbe** (ausdrücklich festgehalten 15.11.2026, Review
+  R3; keine Formeländerung): So zählen API-Football (Statistik und Ereignisse), der Altbestand und football-data.co.uk,
+  geprüft an 24'000 Teamwerten. Gilt auch für den Ersatz aus den Spielereignissen bei leerem API-Wert
+  (`06_Datenlieferung.md`, Abschnitt 10.1).
 - **Rote Karten zählen nicht.**
 - Neue Datenquellen müssen vorab auf gleiche Zählweise geprüft werden.
 
@@ -390,6 +394,10 @@ Diese Punkte sollten vor der Umsetzung im Code geklärt werden:
 14. **Schüsse aufs Tor (KPI 09, 12, 13):** Zählweise der Datenquelle (gehaltene, geblockte Schüsse, Tore) bei einem Lieferantenwechsel (Footiqo) vorab vergleichen, wie bei den Gelben Karten.
 15. **Nachkommastellen auf der öffentlichen Website** (08.11.2026): Im Dashboard haben alle KPIs zwei Nachkommastellen (2.3). Für Frontend/Website entscheidet Carsten später (z. B. zwei Nachkommastellen oder eine einfachere Darstellung).
 16. **KPI 08 „Angriff gegen Abwehr“ und Aussagekraft** (08.11.2026): Carsten fragt, ob KPI 08 einen Mehrwert für die Prognose bietet. Auswertung Claude (6'182 Spiele 2021/22–2025/26, vier Ligen, beide Teams mit 10 Spielen; BTTS im Schnitt 55 %): Im Fünftel mit dem niedrigsten KPI-08-Wert trafen beide in 48 % der Spiele, im höchsten Fünftel in 63 %. Varianten (Trefferquote des einen gegen Kassierquote des anderen Teams, Heim-/Auswärtsspiele getrennt, Tore statt ja/nein) trennen nicht besser. Teams mit 10 von 10 Spielen mit Tor treffen im nächsten Spiel zu 84 % (bei 5 oder weniger von 10: 66 %); gegen einen Gegner, der höchstens in 5 von 10 Spielen kassiert, nur zu 73 %. **Entscheidung Carsten:** KPI 08 bleibt wie definiert (Stimmungsbild, keine Prognose). „Heim trifft / Gast trifft“ und die Stärke des Gegners werden in Etappe I mit der Ergebniskontrolle (Punkt 13) geprüft; Ergebnisse sind zugleich Stoff für spätere Blog-Beiträge.
+18. **Variante „letzte 10 Spiele mit Wert“** (vorgemerkt 15.11.2026, Review R4, Vorschlag Carsten): Fehlt bei einem
+    gespielten Spiel ein Statistikwert, würde ein älteres Spiel nachgezogen (innerhalb Saison und Vorsaison), statt mit
+    9 Spielen und „vorläufig“ zu rechnen. Heute praktisch ohne Wirkung (2025/26 und 2026/27: kein Spiel mit fehlendem
+    Wert bei Ecken, Gelben oder Schüssen aufs Tor). Für die KPI-Überarbeitung vorgemerkt; erfordert neue Testfälle.
 17. **Gewichtung der Top-Anomalien** (08.11.2026): Mit der bisherigen Rangfolge (Stufe, dann Prozent) kommen KPIs mit grossen relativen Ausschlägen (KPI 03, 06, 08) fast immer nach oben, KPI 02, 05 und 09 nie. Probelauf Claude (2025/26, vier Ligen, Anteil an den Top-4-Einträgen): bisherige Regel KPI 03 39 % · 08 27 % · 06 18 % · 04 10 % · 07 7 % · 02/05/09 0 %; mit „höchstens 1 Eintrag je KPI“ 03 24 % · 06 25 % · 08 24 % · 04 19 % · 07 7 % · 02/05/09 0 %; Rang nach **Seltenheit** (wie ungewöhnlich ist die Abweichung für diesen KPI in dieser Liga, verglichen mit der Vorsaison) plus höchstens 1 je KPI: 04 20 % · 08 18 % · 06 15 % · 07 13 % · 09 12 % · 02 11 % · 05 6 % · 03 4 %, im Schnitt 4 verschiedene KPIs je Spieltag. **Entscheidung Carsten:** vorerst bisherige Regel über KPI 02–09; die Gewichtung wird mit der Schwellen-Analyse (Etappe I) erarbeitet. Ziel: ein schöner Mix je Spieltag.
 
 Für die Umsetzung blockierend ist keiner dieser Punkte: Die Testfälle legen für 2, 6, 9 und 10 jeweils eine Annahme fest. Wird eine Annahme geändert, sind die betroffenen Testfälle anzupassen.

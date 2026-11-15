@@ -126,3 +126,21 @@ negativ +6,70 → **+5,00** (Funktioniert → Funktioniert leicht); KPI 04 leich
 +6,25 → +5,87 (beide weiter Funktioniert). Ein Teil der früheren Wirkung der starken Kartenschwelle beruhte auf
 fehlerhaften Kartenwerten. Die gültigen Schwellen bleiben unverändert (Entscheidung Carsten: KPI-Anpassungen erst,
 wenn die neue Datenbasis steht).
+
+## 7. Nachweis „zwei Quellen gemischt“ für 2025/26 (R7, Version 0.15)
+
+Die KPIs nutzen Saison und Vorsaison: 2025/26 (Altbestand, bereinigt) und ab 2026/27 die API. Übereinstimmung aller drei
+Quellen je Teamwert in 2025/26 (vor der Bereinigung; „Altbestand weicht ab“ wurde danach korrigiert):
+
+| Liga | Gelbe Karten | Schüsse aufs Tor | Ecken |
+|---|---|---|---|
+| Bundesliga | 99,3 % | 99,3 % | 99,7 % |
+| Premier League | 96,8 % | 99,0 % | 98,0 % |
+| Serie A | 98,6 % | 99,7 % | 99,7 % |
+| LaLiga | 96,3 % | 99,1 % | 99,9 % |
+
+Nach der Bereinigung weichen Datenbank und API in 2025/26 nur noch dort ab, wo die API allein abweicht (höchstens 20 von
+700 Werten, LaLiga Gelbe Karten). Tore, Datum und Spieltag: über 99,9 %. Feste Zuordnung eigene ID ↔ API-ID für alle
+11'978 Spiele (Datum gleich, Endstand gleich ausser Verona – Roma 2020/21, Wertung). Tor-Ereignisse passen bei 11'963 von
+11'978 Spielen zum Endstand (Grundlage der Prüfung R2). Entscheidung Carsten 15.11.2026: reicht als Nachweis; keine
+rückwirkende Bereinigung mehr.

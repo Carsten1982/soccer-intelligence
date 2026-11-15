@@ -36,11 +36,15 @@
 | `Datum bis` | ja | Excel-Datum | `30.08.2026` | spätester möglicher Spieltag; bei bekanntem Termin = `Datum von` |
 | `Heimmannschaft` | ja | Text | `FC Koln` | Schreibweise exakt wie in der Datenbank |
 | `Gastmannschaft` | ja | Text | `Hoffenheim` | Schreibweise exakt wie in der Datenbank |
-| `Status` | nein | Text | `verschoben` | leer = geplant; erlaubt: `geplant`, `verschoben`, `abgesagt`, `abgebrochen` (seit 0.14, wie `abgesagt`) |
+| `Status` | nein | Text | `verschoben` | leer = geplant; erlaubt: `geplant`, `verschoben`, `abgesagt`, `abgebrochen` (seit 0.14), `ausgesetzt`, `gewertet` (seit 0.15); alle ausser `geplant` zählen nicht für das Ende des Spieltags und bekommen keine KPI-Werte |
+| `Anstoss` | nein | Text `HH:MM` | `20:30` | Anstosszeit (Europe/Zurich) |
+| `Termin` | nein | Text | `bestätigt` | seit 0.15: `bestätigt`, `Zeit offen` (API-Status TBD), `vorläufig` (Platzhalter der API: alle Spiele des Spieltags zur selben Zeit und mehr als 14 Tage entfernt) |
+| `Hinweis` | nein | Text | `Nachholspiel` | seit 0.15: `Nachholspiel` / `vorgezogen` (Termin mehr als 3 Tage nach bzw. vor dem Hauptzeitraum); nur Anzeige |
+| `API-Status` | nein | Text | `NS` | seit 0.15: Originalcode der API (NS, TBD, FT, PST, SUSP, AWD …) |
+| `API-ID` | nein | ganze Zahl | `1570410` | Spiel-ID bei API-Football; Verknüpfung mit der Datenbank über `app/config/zuordnung_api.csv` |
 
-- Eine Anstosszeit ist nicht nötig und wird nicht angezeigt.
-- Weitere Spalten werden ignoriert (seit 0.14 schreibt der Datenimport zusätzlich `Anstoss` und `API-ID`).
-- **Seit Version 0.14 erzeugt der Datenimport den Spielplan** aus der Spielliste von API-Football (ganze laufende Saison, Hauptzeitraum und „verschoben“ nach Abschnitt 6, Status der API: PST → verschoben, CANC → abgesagt, ABD → abgebrochen; `06_Datenlieferung.md`, Abschnitt 8). Von Hand gepflegt wird er nur noch, wenn der Import ausfällt.
+- Weitere Spalten werden ignoriert.
+- **Seit Version 0.14 erzeugt der Datenimport den Spielplan** aus den Spiellisten von API-Football, seit 0.15 nach `07_Spielplan_Anzeige.md` (Spezifikation v2.1, Abschnitt 3): **laufende Saison und Vorsaison**, **Status nur aus der API** (PST → verschoben, CANC → abgesagt, ABD → abgebrochen, SUSP → ausgesetzt, AWD/WO → gewertet, sonst geplant), **`Datum von` = `Datum bis` = Termin laut API** für jedes Spiel, Vermerk Nachholspiel/vorgezogen. Von Hand gepflegt wird er nur noch, wenn der Import ausfällt.
 
 ### Warum „Datum von“ und „Datum bis“?
 
@@ -52,7 +56,7 @@ Zu Saisonbeginn steht oft nur der Zeitraum eines Spieltags fest, nicht der genau
 So rechnet das Programm damit:
 
 - **Stichtag für die KPIs ist `Datum von`** (2-Tage-Regel im KPI-Regelwerk, `03_KPI_Regelwerk.md`, Abschnitt 1). Damit fliessen nie Daten aus der Zukunft ein.
-- **Ein Spieltag ist beendet**, wenn das späteste `Datum bis` seiner Spiele vor dem heutigen Datum liegt.
+- **Ein Spieltag ist beendet**, wenn das späteste `Datum bis` seiner **regulären** Spiele vor dem heutigen Datum liegt (seit 0.15 ohne Nachholspiele und vorgezogene Spiele, Abschnitt 4).
 - Beide Spalten müssen echte Excel-Datumswerte sein, kein Text wie „28.08-30.08“.
 
 ### Beispiel (Blatt `Bundesliga`)
@@ -86,7 +90,7 @@ Der aktuelle Spieltag wird **für jede Liga separat** bestimmt:
 1. Ein Spieltag gilt als beendet, sobald das späteste `Datum bis` seiner Spiele vor dem heutigen Datum liegt (Zeitzone Europe/Zurich). Die Anzeige wechselt am Tag nach dem letzten Spiel.
 2. Angezeigt wird der Spieltag mit der niedrigsten Nummer, der noch nicht beendet ist.
 3. Sind alle Spieltage der Datei beendet, wird der letzte Spieltag der Datei angezeigt.
-4. Spiele mit Status `verschoben` oder `abgesagt` zählen nicht für die Frage, ob ein Spieltag beendet ist. Sie werden mit ihrem Status, aber ohne KPI-Werte angezeigt. *Ergänzt 31.10.2026:* Sind **alle** Spiele eines Spieltags verschoben oder abgesagt, gilt der Spieltag als beendet, damit er die Anzeige nicht dauerhaft blockiert.
+4. Spiele mit einem Status (`verschoben`, `abgesagt`, `abgebrochen`, `ausgesetzt`, `gewertet`) und seit 0.15 auch Spiele mit Vermerk `Nachholspiel` oder `vorgezogen` zählen nicht für die Frage, ob ein Spieltag beendet ist. Nachhol- und vorgezogene Spiele bekommen aber KPI-Werte (Stichtag = ihr echter Termin). Spiele mit Status werden mit ihrem Status, aber ohne KPI-Werte angezeigt. *Ergänzt 31.10.2026:* Sind **alle** Spiele eines Spieltags verschoben oder abgesagt, gilt der Spieltag als beendet, damit er die Anzeige nicht dauerhaft blockiert.
 5. Die KPIs jeder Begegnung werden immer so berechnet, als wäre das Spiel noch nicht gespielt. Stichtag ist `Datum von` der Begegnung.
 6. Sortierung innerhalb eines Spieltags: nach `Datum von`, danach in der Reihenfolge der Datei.
 
@@ -108,7 +112,7 @@ Die Ergebnisse erscheinen auf der Seite **Datenqualität**, getrennt von den Pr�
 - `Datum bis` liegt vor `Datum von`
 - `Spieltag` ist keine ganze Zahl ab 1
 - `Saison` nicht im Format `JJJJ/JJJJ`
-- `Status` enthält einen nicht erlaubten Wert
+- `Status`, `Termin` oder `Hinweis` enthält einen nicht erlaubten Wert; `API-ID` ist keine ganze Zahl (seit 0.15)
 
 ### Warnung – Spielplan wird verwendet, sollte aber geprüft werden
 
@@ -123,7 +127,6 @@ Die Ergebnisse erscheinen auf der Seite **Datenqualität**, getrennt von den Pr�
 
 - Bekannter Aufsteiger ohne Daten in der Datenbank
 - Team ohne Ligaspiele in der Saison des Spiels und der Vorsaison, z. B. Schalke (*ergänzt und bestätigt 31.10.2026*); KPIs erscheinen als „–“
-- Begegnung ist bereits als gespieltes Spiel in der Datenbank vorhanden
 - Leeres Tabellenblatt einer noch nicht aktiven Liga
 
 ---
@@ -137,7 +140,9 @@ Die Ergebnisse erscheinen auf der Seite **Datenqualität**, getrennt von den Pr�
 
 ---
 
-### Pflegeregel für verlegte Spiele (beschlossen 07.11.2026)
+### Pflegeregel für verlegte Spiele (beschlossen 07.11.2026, **ersetzt seit Version 0.15**)
+
+> **Seit 0.15 gilt diese Regel nicht mehr** (Entscheidung Carsten 15.11.2026, `07_Spielplan_Anzeige.md`): Der Status kommt nur noch von der API. Spiele mehr als 3 Tage ausserhalb des Hauptzeitraums sind **nicht** mehr `verschoben`, sondern geplant mit Vermerk `Nachholspiel` bzw. `vorgezogen`, mit ihrem echten Termin als Stichtag und **mit KPI-Werten**. Grund: Bei LaLiga 2026/27 bekamen so 8 tatsächlich gespielte bzw. angesetzte Spiele keine KPIs. Der Text unten bleibt zur Nachvollziehbarkeit stehen.
 
 `Datum von` / `Datum bis` beschreiben den **Hauptzeitraum** eines Spieltags (z. B. Freitag bis Montag). Spiele, die **mehr als 3 Tage ausserhalb** dieses Zeitraums stattfinden (vorgezogen oder nachgeholt), erhalten den Status **`verschoben`** und behalten den Zeitraum des Spieltags.
 
