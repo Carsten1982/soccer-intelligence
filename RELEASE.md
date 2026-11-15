@@ -1,37 +1,29 @@
-# Release: Version 0.14 – Datenimport über API-Football
+# Release: Version 0.14.1 – Teamnamen mit Akzenten, Einspielen nach Abbruch
 
-**Stand:** 15.11.2026 · Version 0.14 · Spezifikation `06_Datenlieferung.md` v0.5 und Designentwurf „Datenimport/API“ (Freigabe Carsten 15.11.2026)
+**Stand:** 15.11.2026 · Version 0.14.1 · Auftrag Carsten 15.11.2026 („Düsseldorf mit ü“, „Teams darfst Du umschreiben“)
 
-**Commit:** Version 0.14: Datenimport über API-Football (Container soccer-import, Reiter Datenimport/API)
+**Commit:** Version 0.14.1: Teamnamen mit ü und Akzenten, Einspielen nach Abbruch
 
 ## Was ändert sich?
 
-- **Neuer Container `soccer-import`:** holt Montag bis Freitag um 04:00 die Spiele und den Spielplan von API-Football und legt eine **neue Fassung** von Datenbank und Spielplan bereit. Die gültigen Dateien ändern sich erst nach Ihrer Freigabe.
-- **Neuer Reiter „Datenimport/API“** (ganz rechts): Statusleiste (Abo, Kontingent, letzter/nächster Lauf, Betriebsart), Kasten „Neue Daten bereit“ mit Vollständigkeit, Qualitätsbericht, Korrekturen, neuen Spielen, Spielplan-Änderungen, Buttons **Übernehmen** und **Verwerfen**, Protokoll der letzten 14 Tage.
-- **Erste Übernahme:** stellt Datenbank und Spielplan auf die **Teamnamen von API-Football** um (z. B. „Bayern München“, „1. FC Köln“) und erzeugt den Spielplan der ganzen Saison aus der API.
-- Spielplan kennt den Status **„abgebrochen“**.
-- `einspielen.sh` baut jetzt beide Container (`football-dashboard` und `soccer-import`).
-
-## Vor dem Einspielen (einmalig): API-Schlüssel in `.env`
-
-Befehl in `01`, Abschnitt 6.5 („Schlüssel eintragen“). Erwartet: `1`; der Schlüssel erscheint nicht auf dem Bildschirm.
+- **Teamnamen:** 10 Teams mit ü bzw. Akzent – Fortuna Düsseldorf, 1. FC Nürnberg, SpVgg Greuther Fürth, Alavés, Almería, Atlético Madrid, Cádiz, Deportivo La Coruña, Leganés, Málaga. Die Umbenennung macht der nächste Lauf des Imports; sie wird erst mit „Übernehmen“ gültig.
+- **Einspielen:** Bricht ein Lauf nach dem Holen von GitHub ab, macht der nächste Aufruf mit Tests und Neubau weiter (statt „Nichts Neues“). Einspielen künftig immer in `tmux` (`01`, Abschnitt 6.1).
+- **Protokoll im Reiter:** Status ohne Doppelung, z. B. „übernommen: 15.11.2026 14:37 (Dashboard)“.
 
 ## Erwartungswerte
 
-- Git-Stand vorher: `3f44fa1`. Der Pull Request enthält auch die Doku „bereinigte Datenbank aktiv“.
-- Tests beim Einspielen: **438 bestanden, 15 übersprungen** (bisher 428 / 12).
-- Schritt 5 meldet: „Container laufen (Dashboard und Import)“; `docker ps` zeigt zusätzlich `soccer-import`.
-- **Erster Lauf von Hand** (sonst Montag 04:00):
+- Git-Stand vorher: `8260056`.
+- Tests beim Einspielen: rund **443 bestanden, 12 übersprungen** (Server zuletzt 441 / 12), keine Fehler.
+- Schritt 5: „Container laufen (Dashboard und Import)“.
+- Danach Lauf von Hand:
   ```bash
   docker exec soccer-import python -m importer.dienst --jetzt
   ```
-  Erwartet nach rund 30–60 Sekunden: `Lauf <Datum> -> wartet`.
+  Erwartet: `Lauf … -> wartet`.
 
 ## Im Browser prüfen
 
-1. **Reiter „Datenimport/API“:** Statusleiste „API-Football · Pro, Abo gültig bis 15.02.2027“, Betriebsart „halbautomatisch“.
-2. **Kasten „Neue Daten bereit“:** 0 Fehler; aufklappbar „Teamnamen umgestellt auf API-Football (rund 30 Teams) – einmalig“; Spielplan-Änderungen (beim ersten Lauf viele, weil der Spielplan jetzt die ganze Saison aus der API enthält); Vollständigkeit je Liga „vollständig“.
-3. **Übernehmen** klicken → Hinweis „Freigabe hinterlegt“. Nach einer Minute Seite neu laden: „Keine neuen Daten zur Freigabe“, im Protokoll Status „übernommen“.
-4. **Ligaseite Bundesliga:** neue Teamnamen (z. B. „Bayern München“, „1. FC Köln“), aktueller Spieltag aus dem neuen Spielplan, KPIs wie gewohnt.
-5. **Datenqualität:** Datenbank 0 Fehler; Spielplan 0 Fehler.
-6. Falls etwas nicht stimmt: **Verwerfen** statt Übernehmen; nach einer Übernahme Rückweg mit `backup/*_vor_import.xlsx` (`01`, Abschnitt 6.5).
+1. **Datenimport/API → Neue Daten bereit:** 0 Fehler; aufklappbar „Teamnamen umgestellt auf API-Football“ mit den Teams oben, deren Spiele in der Datenbank stehen (bisher ohne Akzent → neu mit Akzent). Spielplan-Änderungen nur bei diesen Teams (Atlético Madrid, Alavés, Deportivo La Coruña, Málaga, Leganés usw. in LaLiga 2026/27), entfallen 0.
+2. **Übernehmen**, nach einer Minute neu laden: Status „übernommen“.
+3. **LaLiga, aktueller Spieltag:** „Atlético Madrid“, „Alavés“, „Deportivo La Coruña“, „Málaga“ mit Akzent; KPI-Werte unverändert.
+4. **Fusszeile:** „Version 0.14.1 – Datenimport“.

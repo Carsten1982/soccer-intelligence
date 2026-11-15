@@ -128,6 +128,22 @@ def test_github_weg_ohne_neues_aendert_nichts(u):
     assert u.kopf(u.server) == vorher and not (u.server / "backup").exists()
 
 
+def test_github_weg_macht_nach_abbruch_weiter(u):
+    """15.11.2026: Verbindung nach Schritt 3 weg -> beim nächsten Aufruf nicht „Nichts Neues“, sondern Tests und Neubau."""
+    vorher = u.kopf(u.server)
+    u.neu_auf_github("app/app.py", "print('v2')\n")
+    r = u.lauf("einspielen.sh", "github", TESTS_ROT="1")               # bricht in Schritt 4 ab
+    assert r.returncode == 1 and (u.server / "backup" / "EINSPIELEN_OFFEN").exists()
+    r = u.lauf("einspielen.sh", "github")
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "noch nicht fertig eingespielt" in r.stdout and "Nichts Neues" not in r.stdout
+    assert "Tests bestanden" in r.stdout and "Container laufen" in r.stdout
+    assert not (u.server / "backup" / "EINSPIELEN_OFFEN").exists()
+    assert f"Stand davor: {vorher[:7]}" in r.stdout                   # Rückweg zeigt den Stand vor dem Abbruch
+    r = u.lauf("einspielen.sh", "github")                               # danach wirklich nichts mehr zu tun
+    assert "Nichts Neues auf GitHub" in r.stdout
+
+
 def test_github_weg_stoppt_bei_eigenen_commits_auf_dem_server(u):
     u.neu_auf_github("docs/neu.md", "x\n")
     (u.server / "docs" / "lokal.md").write_text("lokal\n")

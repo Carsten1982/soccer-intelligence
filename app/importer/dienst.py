@@ -121,7 +121,7 @@ def apply(base: Path, data_dir: Path, backup_dir: Path, run_id: str, action: str
     if rep is None or state.get("wartend") != run_id:
         return "Lauf wartet nicht (mehr) – nichts getan"
     if action == "verwerfen":
-        _set_status(base, run_id, "verworfen", f"verworfen {stamp} ({by})")
+        _set_status(base, run_id, "verworfen", f"{stamp} ({by})")
         _drop_files(base, run_id)
         state["wartend"] = None
         save_state(base, state)
@@ -152,7 +152,7 @@ def apply(base: Path, data_dir: Path, backup_dir: Path, run_id: str, action: str
         shutil.copy2(staged / name, tmp)
         os.replace(tmp, data_dir / name)
     _set_status(base, run_id, "übernommen" if by != "automatisch" else "übernommen (automatisch)",
-                f"übernommen {stamp} ({by})")
+                f"{stamp} ({by})")
     _drop_files(base, run_id)
     state["wartend"] = None
     save_state(base, state)

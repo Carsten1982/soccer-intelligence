@@ -3,6 +3,8 @@
 # Je Team: api_team_id (feste Nummer bei API-Football), name (Name von API-Football, hier festgehalten) und
 # alt (bisherige Schreibweise der Datenbank, nur für die einmalige Umbenennung beim ersten Import).
 # Ein Team, das hier fehlt (z. B. ein Aufsteiger), wird beim Import gemeldet und mit dem Namen der API übernommen.
+# alt darf auch eine Liste sein. Seit 15.11.2026 (Entscheidung Carsten) mit ü und Akzenten, wo die API sie weglässt
+# (z. B. Fortuna Düsseldorf, Atlético Madrid); alt enthält dann auch die Schreibweise der API.
 # Ändert die API später einen Namen, gilt weiter der Name hier; die Abweichung wird gemeldet.
 # Erzeugt am 15.11.2026 aus dem Vollvergleich (Zuordnung über Datum und Ergebnis, alle Saisons 2018/19–2026/27;
 # name = Schreibweise der API in der jüngsten Saison des Teams).
@@ -71,8 +73,8 @@ alt = "Augsburg"
 [[team]]
 liga = "Bundesliga"
 api_team_id = 171
-name = "FC Nurnberg"
-alt = "Nurnberg"
+name = "1. FC Nürnberg"
+alt = ["Nurnberg", "FC Nurnberg"]
 
 [[team]]
 liga = "Bundesliga"
@@ -95,8 +97,8 @@ alt = "Mainz"
 [[team]]
 liga = "Bundesliga"
 api_team_id = 158
-name = "Fortuna Dusseldorf"
-alt = "Dusseldorf"
+name = "Fortuna Düsseldorf"
+alt = ["Dusseldorf", "Fortuna Dusseldorf"]
 
 [[team]]
 liga = "Bundesliga"
@@ -155,8 +157,8 @@ alt = "Elversberg"
 [[team]]
 liga = "Bundesliga"
 api_team_id = 178
-name = "SpVgg Greuther Furth"
-alt = "Greuther Furth"
+name = "SpVgg Greuther Fürth"
+alt = ["Greuther Furth", "SpVgg Greuther Furth"]
 
 [[team]]
 liga = "Bundesliga"
@@ -578,14 +580,14 @@ alt = "Venezia"
 [[team]]
 liga = "LaLiga"
 api_team_id = 542
-name = "Alaves"
-alt = "Alaves"
+name = "Alavés"
+alt = ["Alaves"]
 
 [[team]]
 liga = "LaLiga"
 api_team_id = 723
-name = "Almeria"
-alt = "Almeria"
+name = "Almería"
+alt = ["Almeria"]
 
 [[team]]
 liga = "LaLiga"
@@ -596,8 +598,8 @@ alt = "Ath Bilbao"
 [[team]]
 liga = "LaLiga"
 api_team_id = 530
-name = "Atletico Madrid"
-alt = "Atl. Madrid"
+name = "Atlético Madrid"
+alt = ["Atl. Madrid", "Atletico Madrid"]
 
 [[team]]
 liga = "LaLiga"
@@ -608,8 +610,8 @@ alt = "Barcelona"
 [[team]]
 liga = "LaLiga"
 api_team_id = 724
-name = "Cadiz"
-alt = "Cadiz CF"
+name = "Cádiz"
+alt = ["Cadiz CF", "Cadiz"]
 
 [[team]]
 liga = "LaLiga"
@@ -620,8 +622,8 @@ alt = "Celta Vigo"
 [[team]]
 liga = "LaLiga"
 api_team_id = 544
-name = "Deportivo La Coruna"
-alt = "Dep. A Coruna"
+name = "Deportivo La Coruña"
+alt = ["Dep. A Coruna", "Deportivo La Coruna"]
 
 [[team]]
 liga = "LaLiga"
@@ -674,8 +676,8 @@ alt = "Las Palmas"
 [[team]]
 liga = "LaLiga"
 api_team_id = 537
-name = "Leganes"
-alt = "Leganes"
+name = "Leganés"
+alt = ["Leganes"]
 
 [[team]]
 liga = "LaLiga"
@@ -686,8 +688,8 @@ alt = "Levante"
 [[team]]
 liga = "LaLiga"
 api_team_id = 535
-name = "Malaga"
-alt = "Malaga"
+name = "Málaga"
+alt = ["Malaga"]
 
 [[team]]
 liga = "LaLiga"
