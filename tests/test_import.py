@@ -3,7 +3,7 @@
 Ohne Netz: Die API wird durch einen Ersatz mit gespeicherten Antworten ersetzt (tests/referenz/api: Spielliste
 Bundesliga 2026/27, Details und Halbzeit-Statistik von Spieltag 9, ohne Spielerdaten).
 - Umwandlung eines Spiels in die 58 Spalten (Tore, Halbzeiten, Statistik, leere Karten aus Ereignissen, Zeitzone)
-- Spielplan: Hauptzeitraum, „verschoben“ ausserhalb von 3 Tagen, Status der API
+- Spielplan: Hauptzeitraum, Status nur aus der API (seit 0.15; Fälle in test_import_015.py)
 - Teamnamen: feste Namen je ID, Umbenennung, unbekannte Teams
 - Abfragen: Obergrenze, höchstens 3 Versuche, kein Schlüssel im Protokoll
 - Ende zu Ende: Spieltag 9 aus der Datenbank entfernen -> der Lauf nimmt ihn wieder auf; Freigabe tauscht beide Dateien
@@ -107,25 +107,31 @@ def _fx(fid, rnd, day, status="NS", home=1, away=2):
             "teams": {"home": {"id": home, "name": f"T{home}"}, "away": {"id": away, "name": f"T{away}"}}}
 
 
-def test_main_period_and_postponed_rule():
+def test_main_period_and_api_status():
+    """Seit 0.15 (Spielplan v2.1, S1): Status nur aus der API; ein späterer Termin ist ein Nachholspiel, nicht verschoben."""
     assert main_period([date(2026, 11, d) for d in (20, 21, 21, 22, 22, 29)]) == (date(2026, 11, 20), date(2026, 11, 22))
     names = TeamNames({}, {})
     rows = fixture_rows([_fx(1, 10, 20), _fx(2, 10, 21), _fx(3, 10, 22), _fx(4, 10, 25), _fx(5, 10, 26),
                          _fx(6, 10, 21, "PST"), _fx(7, 10, 21, "CANC"), _fx(8, 10, 21, "ABD"),
-                         {**_fx(9, 1, 21), "league": {"season": 2026, "round": "Final"}}], names)
+                         {**_fx(9, 1, 21), "league": {"season": 2026, "round": "Final"}}], names, date(2026, 11, 15))
     by = {r["API-ID"]: r for r in rows}
     assert 9 not in by                                               # Relegation („Final“) gehört nicht dazu
     assert by[1]["Datum von"] == by[1]["Datum bis"] == datetime(2026, 11, 20) and by[1]["Status"] == ""
-    assert by[4]["Status"] == "" and by[4]["Datum von"] == datetime(2026, 11, 25)       # 3 Tage danach: bleibt
-    assert by[5]["Status"] == "verschoben" and by[5]["Datum von"] == datetime(2026, 11, 20)  # 4 Tage danach
+    assert by[4]["Status"] == "" and by[4]["Hinweis"] == "" and by[4]["Datum von"] == datetime(2026, 11, 25)  # 3 Tage
+    assert by[5]["Status"] == "" and by[5]["Hinweis"] == "Nachholspiel" and by[5]["Datum von"] == datetime(2026, 11, 26)
     assert (by[6]["Status"], by[7]["Status"], by[8]["Status"]) == ("verschoben", "abgesagt", "abgebrochen")
-    assert by[6]["Datum bis"] == datetime(2026, 11, 22)
+    assert by[6]["Datum von"] == by[6]["Datum bis"] == datetime(2026, 11, 21)      # PST: Termin laut API
+    assert by[6]["API-Status"] == "PST" and by[1]["API-Status"] == "NS"
 
 
 def test_fixture_plan_from_real_season_list(season_list):
-    rows = fixture_rows(season_list, load_team_names(NAMES_FILE))
+    rows = fixture_rows(season_list, load_team_names(NAMES_FILE), date(2026, 11, 15))
     assert len(rows) == 306 and {r["Spieltag"] for r in rows} == set(range(1, 35))
-    assert all(r["Datum von"] <= r["Datum bis"] for r in rows)
+    assert all(r["Datum von"] == r["Datum bis"] for r in rows)
+    # Platzhalter-Termine (alle Spiele „Sa 15:30“) ab Spieltag 19 sind vorläufig, frühere Spieltage bestätigt (S2)
+    assert {r["Termin"] for r in rows if r["Spieltag"] >= 19} == {"vorläufig"}
+    assert {r["Termin"] for r in rows if r["Spieltag"] <= 18} == {"bestätigt"}
+    assert {r["Hinweis"] for r in rows} == {""} and {r["Status"] for r in rows} == {""}
 
 
 # --- Teamnamen -------------------------------------------------------------------------------------------------------
@@ -206,8 +212,8 @@ class FakeApi:
             return {"response": [{"seasons": [{"year": 2026, "current": True}]}]}
         if endpoint == "fixtures" and "ids" in params:
             return {"response": [self.details[int(i)] for i in params["ids"].split("-") if int(i) in self.details]}
-        if endpoint == "fixtures":
-            return {"response": self.season_list if params["league"] == 78 else []}
+        if endpoint == "fixtures":                                 # Vorsaison (2025) ohne gespeicherte Antwort
+            return {"response": self.season_list if params["league"] == 78 and params["season"] == 2026 else []}
         if endpoint == "fixtures/statistics":
             return {"response": self.halves.get(int(params["fixture"]), [])}
         raise AssertionError(endpoint)
@@ -287,4 +293,4 @@ def test_due_schedule():
     st = {"letzter_lauf_tag": "2026-11-16"}
     assert not dienst.due(st, datetime(2026, 11, 16, 9, 0))           # heute schon gelaufen
     assert dienst.due(st, datetime(2026, 11, 17, 4, 0)) and not dienst.due(st, datetime(2026, 11, 17, 3, 59))
-    assert not dienst.due({}, datetime(2026, 11, 21, 9, 0))           # Samstag
+    assert dienst.due({}, datetime(2026, 11, 21, 9, 0))               # seit 0.15 auch am Samstag (täglich)

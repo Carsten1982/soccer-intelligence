@@ -28,7 +28,8 @@ Schritt kurz erklären, was gemacht wurde.
 | docs/03_KPI_Regelwerk.md | Berechnungsregeln KPI 01–13, Anomalie-Logik, Top Anomalien, Texte, Ergebniskontrolle (Abschnitt 11) |
 | docs/04_Spielplan.md | Aufbau des Spielplans (`Datum von` / `Datum bis`), aktueller Spieltag, Prüfregeln |
 | docs/05_Dashboard.md | Dashboard-Briefing: Aufbau, Navigation, Darstellung, Abnahmekriterien |
-| docs/06_Datenlieferung.md | Konzept Datenlieferung / Import, Footiqo (Entwurf) |
+| docs/06_Datenlieferung.md | Datenlieferung über API-Football: Feldzuordnung, Tagesbetrieb, Regeln des Ergebnis-Imports (10.1), Entscheidungen |
+| docs/07_Spielplan_Anzeige.md | Spielplan aus der API (Status, Termin, Nachholspiele, Zuordnung) und Anzeige kommender Spieltage (Spezifikation v2.1) |
 | docs/tests/test_kpi*.md | Bestätigte Testfälle mit erwarteten Ergebnissen (JSON) – Referenz für die Korrektheit |
 | docs/tests/pruefprotokoll_*.md | Prüfprotokolle grösserer Etappen (Gegenrechnung, Vollvergleich) |
 | CHANGELOG.md | Änderungsprotokoll: jede Änderung mit Datum und wer |

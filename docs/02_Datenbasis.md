@@ -250,6 +250,11 @@ nur der Altbestand abweicht.
 - `Date` passt nicht zu `matchDate`, negativer Wert
 - `Gameday` ausserhalb 1 bis 2 × (Teams − 1), Spieltag mit falscher Anzahl Spiele, Team mehrfach im selben Spieltag
 
+**Zusätzlich beim Datenimport** (seit Version 0.15, `06_Datenlieferung.md`, Abschnitt 10.1): id über **alle** Ligen
+eindeutig (Fehler); Plausibilität neuer und geänderter Spiele (Fehler: negative Werte, Halbzeit-Tore grösser als
+Endstand, Schüsse aufs Tor grösser als Schüsse gesamt; Warnung: je Team mehr als 30 Ecken, 10 Gelbe, 25 Schüsse aufs
+Tor, 9 Tore); Endstand gegen Tor-Ereignisse. Für den Altbestand gelten weiter nur die Regeln dieses Abschnitts.
+
 ### Hinweis – kein Handlungsbedarf
 
 - mehr Tore als Schüsse aufs Tor (meist Eigentore)
