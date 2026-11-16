@@ -9,5 +9,6 @@ COPY app/ /app/
 
 EXPOSE 8501
 
-CMD ["streamlit", "run", "app.py", "--server.address=0.0.0.0", "--server.port=8501"]
+# Seit 0.15.1: start.py startet Streamlit wie bisher und dazu den Vorlade-Helfer (app/vorladen.py)
+CMD ["python", "start.py", "--server.address=0.0.0.0", "--server.port=8501"]
 

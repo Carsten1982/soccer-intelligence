@@ -1,35 +1,31 @@
-# Release: Version 0.15 – Datenimport nach den Reviews
+# Release: Version 0.15.1 – Massnahmen aus der Code-Prüfung
 
-**Stand:** 15.11.2026 · Version 0.15 · Spezifikation Spielplan v2.1 (`docs/07_Spielplan_Anzeige.md`, Abschnitt 3) und Ergebnis-Import v1.1 (`docs/06_Datenlieferung.md`, Abschnitt 10.1), Entscheidungen Carsten 15.11.2026
+**Stand:** 16.11.2026 · Version 0.15.1 · Code-Prüfbericht vom 16.11.2026 (ChatGPT), Entscheidungen Carsten 16.11.2026 (F1–F7)
 
-**Commit:** Version 0.15: Datenimport nach den Reviews (Spielplan v2.1, Ergebnis-Import v1.1)
+**Commit:** Version 0.15.1: Massnahmen aus der Code-Prüfung (Übergabe-Protokoll, Prüfsummen, negative Werte, Vorladen)
 
 ## Was ändert sich?
 
-- **Spielplan aus der API, genauer:** Status nur noch von der API. Nachholspiele und vorgezogene Spiele sind nicht mehr „verschoben“, sondern geplant mit Vermerk und **bekommen KPI-Werte** (LaLiga 2026/27: 8 Spiele). Der Spielplan enthält jetzt auch die **Vorsaison**. Neue Spalten `Termin`, `Hinweis`, `API-Status`.
-- **Import täglich** um 04:00, auch am Wochenende.
-- **Korrekturen ohne Handarbeit:** Bis 7 Tage nach dem Spiel übernimmt der Import Korrekturen der API selbst. Danach (und wenn der Endstand nicht zu den Toren passt) erscheint im Reiter **„Ihre Entscheidung“** mit zwei Buttons.
-- **Neue Prüfungen:** Plausibilität neuer Spiele, IDs über alle Ligen, Spiel verschwunden, feste Zuordnung eigene ID ↔ API-ID.
-- **Reiter „Datenimport/API“:** Blöcke **A · Ergebnisse** und **B · Spielplan** (Änderungen nach Gruppen), Hinweis zum Automatikbetrieb.
-- Die Anzeige kommender Spieltage (Abschnitte, Pausen, Datumsspalte) folgt in **Version 0.16** nach dem Designentwurf.
+- **Übernahme abgesichert:** Datenbank und Spielplan werden mit einem Übergabe-Protokoll getauscht. Bricht der Import mitten im Tausch ab, führt er ihn beim nächsten Start zu Ende; ein Mischstand bleibt nie bestehen. Vor dem Tausch werden beide Dateien gegen die Prüfsummen im Bericht geprüft.
+- **Backups** heissen jetzt mit Sekunden und Lauf, z. B. `Database-Soccer-Intelligence_2026-11-17_073012_lauf-2026-11-17_040000_vor_import.xlsx`, und werden nie überschrieben.
+- **Negative Werte:** Ein negativer Statistikwert gilt als fehlend (Warnung), negative Tore sind ein Fehler. Heute gibt es keinen solchen Wert, die KPIs bleiben gleich.
+- **Vorladen:** Das Dashboard rechnet nach jeder Datenänderung, jedem neuen Tag und beim Start alle Seiten im Hintergrund vor. Danach öffnen sich alle Seiten sofort, auch die Sensitivitätsanalyse.
+- **Liste offener Bereinigungen** in `01`, Abschnitt 8.1; schneller Testlauf für zwischendurch.
 
 ## Erwartungswerte
 
-- Git-Stand vorher: `1408c50`.
-- Tests beim Einspielen: rund **461 bestanden, 13 übersprungen** (zuletzt 442 / 13), keine Fehler. Einspielen in `tmux` (`01`, Abschnitt 6.1).
+- Git-Stand vorher: `a4367eb`.
+- Tests beim Einspielen: rund **470 bestanden, 13 übersprungen** (zuletzt rund 461 / 13), keine Fehler. Einspielen in `tmux`.
 - Schritt 5: „Container laufen (Dashboard und Import)“.
-- Danach ein Lauf von Hand:
+- **Vorladen:** 2–3 Minuten nach dem Einspielen zeigt
   ```bash
-  docker exec soccer-import python -m importer.dienst --jetzt
+  docker logs football-dashboard --tail 5
   ```
-  Erwartet: `Lauf … -> wartet` (rund 56 Abfragen).
+  eine Zeile `Vorladen: … Sekunden`.
 
 ## Im Browser prüfen
 
-1. **Datenimport/API → Neue Daten bereit:** 0 Fehler, 0 kritische Punkte; Kachel „Spielplan: wichtige Änderungen“ **9**; „Im Automatikbetrieb: würde ohne Rückfrage übernommen“.
-2. **Block B · Spielplan:** „Spiele neu im Spielplan: 1'446“ (Vorsaison); aufgeklappt **Nachholspiel (5)** (LaLiga Sp. 1: Valencia – Betis, Real Madrid – Real Sociedad, Celta – Osasuna, Barcelona – Athletic; Sp. 6: Levante – Athletic), **vorgezogen (3)** (LaLiga Sp. 23: Real Sociedad – Real Madrid und Barcelona – Atlético am 02.12.; Sp. 6: Real Sociedad – Celta), Termin geändert (1, Rayo – Athletic, abgebrochen). Jeweils „Status verschoben → geplant“.
-3. **Block A · Ergebnisse:** Vollständigkeit „vollständig“, Qualität 0 Fehler / 35 Warnungen / 201 Hinweise wie bisher.
-4. **Übernehmen** klicken, nach einer Minute neu laden: Status „übernommen“.
-5. **LaLiga, Pfeil zurück bis Spieltag 1:** Die vier Nachholspiele zeigen jetzt KPI-Werte (bisher leer). Zeitraum „15.08. – 19.08.2026“.
-6. **Datenqualität → Spielplan:** 0 Fehler, 0 Warnungen, 0 Hinweise (der Hinweis „Begegnung bereits gespielt“ entfällt).
-7. **Fusszeile:** „Version 0.15 – Datenimport“.
+1. **Etwa 3 Minuten nach dem Einspielen** das Dashboard öffnen: Top Anomalien, die Ligaseiten, Datenqualität und **Sensitivitätsanalyse** erscheinen ohne Wartezeit (bisher rund 40 Sekunden beim ersten Aufruf).
+2. **Datenqualität:** Datenbank 0 Fehler, Warnungen und Hinweise wie bisher (35 / 201).
+3. **Datenimport/API:** wie bisher. Nach dem nächsten „Übernehmen“ (morgen früh) erscheinen die neuen Backup-Namen in `backup/`.
+4. **Fusszeile:** „Version 0.15.1 – Datenimport“.

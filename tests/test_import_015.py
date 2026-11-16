@@ -257,6 +257,7 @@ def db_value(e, fid, column):
     return "fehlt"
 
 
+@pytest.mark.langsam
 def test_correction_window_late_decision_and_empty_values(base_db, season_list, details, halves, tmp_path):
     """R1: Korrekturen bis 7 Tage selbst; danach Entscheid per Button; ein leerer API-Wert überschreibt nie."""
     e = env(tmp_path, base_db)
@@ -296,6 +297,7 @@ def test_correction_window_late_decision_and_empty_values(base_db, season_list, 
     assert not [c for c in r5["spaete_korrekturen"] + r5["korrekturen"] if c["id"] == f0]
 
 
+@pytest.mark.langsam
 def test_score_against_goal_events_waits_for_decision(base_db, season_list, details, halves, tmp_path, monkeypatch):
     """R2 und R5: Endstand ≠ Tor-Ereignisse -> Spiel wartet, kein Automatik-Tausch; „platz“ bzw. „api“ entscheiden."""
     monkeypatch.setattr(E, "automatic_from", lambda: date(2026, 1, 1))     # Automatikbetrieb
@@ -321,6 +323,7 @@ def test_score_against_goal_events_waits_for_decision(base_db, season_list, deta
     assert new[f0]["endstand"] == events and new[f1]["endstand"] == "3:0" and not r2["kritisch"]
 
 
+@pytest.mark.langsam
 def test_awarded_unknown_team_status_open_and_vanished(base_db, season_list, details, halves, tmp_path):
     """R2 (gewertet), unbekanntes Team, NS mit vergangenem Termin, verschwundenes Spiel (alle im Bericht)."""
     e = env(tmp_path, base_db)
@@ -348,6 +351,7 @@ def test_awarded_unknown_team_status_open_and_vanished(base_db, season_list, det
     assert [k["id"] for k in r2["kritisch"] if k["art"] == "verschwunden"] == [f4]
 
 
+@pytest.mark.langsam
 def test_plausibility_errors_warnings_and_open_fields(base_db, season_list, details, halves, tmp_path):
     """R6 (Grenzen Carsten: Ecken 30, aufs Tor 25) und R4 (offene Spiele nennen die fehlenden KPI-Felder)."""
     e = env(tmp_path, base_db)
@@ -367,6 +371,7 @@ def test_plausibility_errors_warnings_and_open_fields(base_db, season_list, deta
     assert offen and offen[0]["fehlt"] == ["Ecken"]
 
 
+@pytest.mark.langsam
 def test_duplicate_id_across_leagues_blocks(base_db, season_list, details, halves, tmp_path):
     """R8: Jede id nur einmal über alle Ligen; eine Kollision ist ein Fehler und sperrt die Übernahme."""
     target = sorted(details)[0]

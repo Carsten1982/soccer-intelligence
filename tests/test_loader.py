@@ -134,6 +134,26 @@ def test_decimal_in_count_stat_is_warning_and_missing(tmp_path, valid_sheets):
     assert pd.isna(bl.loc[1, "Home Corners Full Time"]) and bl.loc[2, "Home Corners Full Time"] == 5
 
 
+def test_negative_stat_is_warning_and_missing(tmp_path, valid_sheets):
+    """0.15.1 (F3, Carsten 16.11.2026): negativer Statistikwert -> Warnung, gilt als fehlend und geht nicht in die KPIs."""
+    df = valid_sheets["Bundesliga"]
+    df.loc[0, "Home Corners Full Time"] = -3
+    db = load_database(write_workbook(tmp_path / "db.xlsx", valid_sheets))
+    assert not db.has_errors
+    msgs = [i.message for i in db.issues if i.level == WARNUNG and i.check == "Negativer Wert"]
+    assert len(msgs) == 1 and "wird als fehlender Wert behandelt" in msgs[0]
+    bl = db.leagues["Bundesliga"].set_index("id")
+    assert pd.isna(bl.loc[1, "Home Corners Full Time"]) and bl.loc[2, "Home Corners Full Time"] == 5
+
+
+def test_negative_goals_are_error(tmp_path, valid_sheets):
+    """0.15.1 (F3): negative Tore sind ein Fehler (bisher nur eine Warnung) – die Datenbank wird nicht verwendet."""
+    df = valid_sheets["Bundesliga"]
+    df.loc[0, "Second-Half Home Goals"] = -1
+    db = load_database(write_workbook(tmp_path / "db.xlsx", valid_sheets))
+    assert "Negativer Wert" in checks(db, FEHLER) and db.has_errors
+
+
 def test_decimal_possession_is_allowed(tmp_path, valid_sheets):
     """Ballbesitz in Prozent darf Kommastellen haben."""
     df = valid_sheets["Bundesliga"]

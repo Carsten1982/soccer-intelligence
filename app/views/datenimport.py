@@ -418,6 +418,9 @@ def render() -> None:
         ui.footer()
         return
     st.markdown(status_bar(state, reps[0] if reps else None, now), unsafe_allow_html=True)
+    if (base / "uebergabe.json").exists():               # Übergabe-Protokoll (0.15.1, F1)
+        st.warning("Eine Übernahme läuft gerade oder wurde unterbrochen. Der Import führt sie selbst zu Ende "
+                   "(spätestens beim nächsten Start bzw. Lauf); die bisherigen Dateien liegen im Backup.")
     waiting = state.get("wartend")
     rep = next((r for r in reps if r.get("lauf") == waiting), None)
     if rep:

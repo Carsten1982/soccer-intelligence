@@ -8,15 +8,16 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 
 ## 0. Stand und Versionen
 
-**In Betrieb:** Version 0.14 – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit den festgelegten Schwellen (positiv/negativ getrennt, KPI 03 je Liga), Top Anomalien, Datenqualität und Sensitivitätsanalyse; Datenbank 2018/19–2026/27 mit Referenzsaison 2018/19 (KPI-Regelwerk 1.2). Seit 15.11.2026 **Datenimport über API-Football**: Container `soccer-import` (Montag bis Freitag 04:00), Reiter „Datenimport/API“ mit Freigabe (halbautomatisch), Spielplan der ganzen Saison aus der API, Teamnamen von API-Football (Abschnitt 6.5). Passwortschutz unter `/dashboard`, Platzhalterseite unter `/`.
+**In Betrieb:** Version 0.15 (seit 16.11.2026) – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit den festgelegten Schwellen (positiv/negativ getrennt, KPI 03 je Liga), Top Anomalien, Datenqualität und Sensitivitätsanalyse; Datenbank 2018/19–2026/27 mit Referenzsaison 2018/19 (KPI-Regelwerk 1.2). Seit 15.11.2026 **Datenimport über API-Football**: Container `soccer-import` (täglich 04:00), Reiter „Datenimport/API“ mit Freigabe (halbautomatisch) und Entscheiden, Spielplan der laufenden Saison und der Vorsaison aus der API (Status nur aus der API, Nachholspiele mit KPIs), Ergebnis-Import nach `06`, Abschnitt 10.1, Teamnamen von API-Football (Abschnitt 6.5). Passwortschutz unter `/dashboard`, Platzhalterseite unter `/`.
 
-**Bereit zum Einspielen:** Version 0.15 – Datenimport nach den Reviews: Spielplan nach `07_Spielplan_Anzeige.md` (Status nur aus der API, Nachholspiele und vorgezogene Spiele mit KPIs, Termin bestätigt/Zeit offen/vorläufig, Vorsaison), Ergebnis-Import nach `06`, Abschnitt 10.1 (Korrekturfenster 7 Tage, Entscheide per Button, Endstand gegen Tor-Ereignisse, Plausibilität, feste Zuordnung eigene ID ↔ API-ID), täglicher Lauf, Reiter mit Blöcken A/B.
+**Bereit zum Einspielen:** Version 0.15.1 – Massnahmen aus der Code-Prüfung vom 16.11.2026: Übernahme mit Übergabe-Protokoll (Datenbank und Spielplan nie gemischt), Prüfsummen der Fassung vor dem Tausch, eindeutige Backup-Namen, negative Statistikwerte gelten als fehlend und negative Tore als Fehler, Vorladen aller Seiten im Hintergrund, schneller Testlauf, Liste offener Bereinigungen (Abschnitt 8.1).
 
-**Als Nächstes:** Designentwurf und Version 0.16 – Anzeige kommender Spieltage (`07`, Abschnitt 4) · 2 Wochen halbautomatischer Betrieb, danach Datum für den automatischen Tausch festlegen (`app/config/import.toml`) · E-Mail-Benachrichtigung · Phase 2: Wettquoten, Verletzungen, Tabellenstände (rückwirkend) · Rundum-Prüfung des Codes · KPI-Erweiterungen und Freigabe je Liga · Gewichtung der Top Anomalien (Regelwerk, Punkt 17) · öffentliche Website.
+**Als Nächstes:** Version 0.16 – Anzeige kommender Spieltage nach dem freigegebenen Designentwurf (`07`, Abschnitt 4) · 2 Wochen halbautomatischer Betrieb, danach Datum für den automatischen Tausch festlegen (`app/config/import.toml`) · E-Mail-Benachrichtigung · Phase 2: Wettquoten, Verletzungen, Tabellenstände (rückwirkend) · Rundum-Prüfung des Codes · KPI-Erweiterungen und Freigabe je Liga · Gewichtung der Top Anomalien (Regelwerk, Punkt 17) · öffentliche Website.
 
 | Version | Etappe | Inhalt | Eingespielt | Git | Tests |
 |---|---|---|---|---|---|
-| 0.15 | Datenimport nach Reviews | Spielplan v2.1 (Status nur aus der API, Nachholspiele mit KPIs, Termin, Vorsaison), Ergebnis-Import R1–R9 (Korrekturfenster, Entscheide, Endstand gegen Tor-Ereignisse, Plausibilität, Zuordnungsdatei), täglich, Reiter Blöcke A/B | ausstehend | – | 459 |
+| 0.15.1 | Code-Prüfung | Übergabe-Protokoll und Prüfsummen bei der Übernahme, eindeutige Backups, negative Werte, Vorladen im Hintergrund, schneller Testlauf, Bereinigungsliste | ausstehend | – | 468 |
+| 0.15 | Datenimport nach Reviews | Spielplan v2.1 (Status nur aus der API, Nachholspiele mit KPIs, Termin, Vorsaison), Ergebnis-Import R1–R9 (Korrekturfenster, Entscheide, Endstand gegen Tor-Ereignisse, Plausibilität, Zuordnungsdatei), täglich, Reiter Blöcke A/B | 16.11.2026 | `a4367eb` | 459 |
 | 0.14.1 | Datenimport, Nachtrag | Teamnamen mit ü und Akzenten (10 Teams), Einspiel-Skript macht nach Abbruch weiter, Statustext | 15.11.2026 | `1408c50` | 442 |
 | 0.14 | Datenimport | Datenimport über API-Football: Container soccer-import, Reiter Datenimport/API mit Freigabe, Spielplan aus der API, Teamnamen der API, Status „abgebrochen“ | 15.11.2026 | `8260056` | 441 |
 | 0.13 | Neue Schwellen | Gültige Schwellen positiv/negativ getrennt, KPI 03 je Liga; Sensitivitätsanalyse nach Entwurf C (vier Zeilen je KPI, Bewertung auch für stark) | 14.11.2026 | `89128e5` | 428 |
@@ -251,6 +252,8 @@ Fragt vorher nach. Schon übernommen oder committet: Ein Gegen-Commit stellt gen
    - `tests` am Ende ist wichtig, sonst sammelt pytest auch `backup/`.
    - `SI_DATA_DIR=/src/data` ist wichtig, sonst finden die Seitentests die Excel-Dateien nicht.
    - Bei Fehlern: **Stopp**, Ausgabe an Claude.
+   - Beim Einspielen und auf GitHub laufen immer **alle** Tests. Für die Arbeit zwischendurch gibt es seit 0.15.1
+     einen schnellen Lauf ohne die Ende-zu-Ende-Tests (Marker `langsam`): `python -m pytest -q -m "not langsam" tests`.
    ```bash
    cd /docker/football-dashboard && docker run --rm -v "$PWD":/src:ro -e SI_DATA_DIR=/src/data -e PYTHONDONTWRITEBYTECODE=1 -w /src python:3.12-slim sh -c "pip install -q --root-user-action=ignore -r requirements-dev.txt && python -m pytest -q -p no:cacheprovider tests" 2>&1 | tail -15
    ```
@@ -405,7 +408,6 @@ CHANGELOG.md              Änderungsprotokoll
 ## 8. Offene Punkte
 
 - [ ] Ablauf: Knopf „Run workflow“ auf GitHub zum Einspielen (GitHub als einzige Quelle und automatische Tests erledigt 09.11.2026)
-- [ ] Spielplan LaLiga 2026/27, Spieltag 1: späte Spiele mit Status `verschoben` pflegen (Pflegeregel `04_Spielplan.md`, Abschnitt 6). Prüfen, ob erledigt.
 - [ ] Spielplan Premier League, Spieltag 1 (16.–20.08. statt gespielt 21.–24.08.): prüft Carsten
 - [ ] Warnung zu Spiel-ID 11344 (Schusssumme): Wert korrigieren oder als Hinweis herabstufen?
 - [ ] Offene Fragen an Footiqo, u. a. Spielplan, Spalte `Gameday`, Nutzungsrechte (`06_Datenlieferung.md`)
@@ -417,6 +419,21 @@ CHANGELOG.md              Änderungsprotokoll
 - [ ] Offene KPI-Punkte im Regelwerk, Abschnitt 8 (nicht blockierend)
 
 Erledigte Punkte stehen im CHANGELOG.
+
+### 8.1 Offene Bereinigungen im Code (seit 16.11.2026)
+
+Regel (CLAUDE.md, Arbeitsweise): Vor jeder Änderung diese Liste prüfen. Betrifft ein Punkt eine Datei, die ohnehin
+geändert wird, die Bereinigung mit erledigen und hier abhaken (mit Version). Spätestens bei der Rundum-Prüfung des Codes
+werden alle offenen Punkte abgearbeitet. Bedingung jeder Bereinigung: KPI-Ergebnisse und Meldungen bleiben gleich
+(Vollvergleich bzw. bestehende Tests).
+
+| Nr. | Datei, Stelle | Bereinigung | Herkunft | Status |
+|---|---|---|---|---|
+| B1 | `app/core/simulation.py` `build_cases()`, `app/core/kpis.py` `team_games()`/`reference_games()` | Sensitivitätsanalyse beschleunigen: Teamspiele und Referenzspiele über vorbereitete Indizes statt wiederholter Filter über die ganze Liga. Vorher Benchmark aller vier Ligen, nachher Vollvergleich aller Fälle | Code-Prüfung 16.11.2026, P2 | offen (vorerst gelöst durch Vorladen, 0.15.1) |
+| B2 | `app/core/loader.py` `_read_notes()` | IDs je Liga einmal als Menge bilden statt für jeden Datenhinweis neu zu suchen | Code-Prüfung 16.11.2026, P3a | **erledigt 0.15.1** |
+| B3 | `app/importer/spielplan.py` `main_period()` | Gleitendes Fenster statt Neufiltern je Starttag; Regel „früheres Fenster gewinnt“ ist durch Tests abgesichert | Code-Prüfung 16.11.2026, P3b | offen |
+| B4 | `app/core/validation.py`, Prüfung „Team mehrfach im Spieltag“ | `groupby`/`duplicated` statt zeilenweiser Prüfung, Meldungen unverändert | Code-Prüfung 16.11.2026, P3c | offen |
+| B5 | `app/core/fixtures.py` `_parse_sheet()`, `_plausibility()` | `itertuples()` statt `iterrows()` (nur mit Messung) | Code-Prüfung 16.11.2026, P3d | offen |
 
 ---
 

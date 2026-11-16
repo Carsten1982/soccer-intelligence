@@ -128,6 +128,7 @@ def test_split_entry_errors(tmp_path, entry, message):
 
 # --- 4. Dashboard mit den gültigen Schwellen = Gegenrechnung ----------------------------------------------------------
 
+@pytest.mark.langsam
 @pytest.mark.parametrize("league", list(LEAGUE_TEAMS))
 def test_dashboard_levels_match_counter_calculation(league):
     if not REFERENCE_DATABASE_2018.exists():

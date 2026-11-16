@@ -192,6 +192,7 @@ def test_new_database_loads_without_errors(db_2018):
         assert last_complete_season(prepare_league(df), League(name, "x", teams, True)) == "2025/2026"
 
 
+@pytest.mark.langsam
 def test_new_database_simulation_seasons(cases_2018):
     for name in LEAGUE_TEAMS:
         seasons = set(cases_2018.loc[cases_2018["league"] == name, "season"])
@@ -204,6 +205,7 @@ def test_new_database_simulation_seasons(cases_2018):
 
 # --- T5: Vollvergleich alte gegen neue Datenbank, Gegenrechnung der neu ausgewerteten Saisons -------------------
 
+@pytest.mark.langsam
 def test_simulation_cases_unchanged_from_2021_22(cases_h, cases_2018):
     """Für alle Spiele, die schon in der alten Datenbank ausgewertet wurden (2021/22 bis 1. Spieltag 2026/27), sind
     Abweichung und „eingetroffen“ in jeder Liga und jedem KPI identisch. Neu dazu kommen 2019/20 und 2020/21."""
@@ -296,6 +298,7 @@ def _pages(path) -> dict:
     return out
 
 
+@pytest.mark.langsam
 def test_league_pages_and_top_unchanged():
     if not (REFERENCE_DATABASE_H.exists() and REFERENCE_DATABASE_2018.exists()):
         pytest.skip("Referenz-Datenbanken nicht vorhanden")
