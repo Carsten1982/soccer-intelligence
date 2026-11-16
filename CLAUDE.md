@@ -48,9 +48,12 @@ Befehle zum Einspielen nur in `01`, Abschnitt 6; das Release-spezifische in `REL
 3. Allgemeine Regeln zentral umsetzen (Stichtag `Datum von`, Saisonfenster, 2-Tage-Regel, fehlende Werte,
    Ligareferenz über `Gameday`, Rundung kaufmännisch mit zwei Nachkommastellen und Dezimalarithmetik, Schwellen aus
    `app/config/schwellen.toml`).
-4. Jeder gefundene Fehler bekommt einen Test. Rechnungen werden mit der unabhängigen Gegenrechnung
+4. **Offene Bereinigungen** (`01`, Abschnitt 8.1): Vor jeder Änderung die Liste prüfen. Betrifft ein Punkt eine
+   Datei, die ohnehin geändert wird, die Bereinigung mit erledigen und abhaken. Spätestens bei der Rundum-Prüfung des
+   Codes werden alle offenen Punkte abgearbeitet (Entscheidung Carsten 16.11.2026).
+5. Jeder gefundene Fehler bekommt einen Test. Rechnungen werden mit der unabhängigen Gegenrechnung
    (`tests/gegenrechnung.py`) geprüft; bei Umbauten Vollvergleich vorher/nachher.
-5. **GitHub ist die einzige Quelle** (`Carsten1982/soccer-intelligence`, Ablauf in `01`, Abschnitt 6.1):
+6. **GitHub ist die einzige Quelle** (`Carsten1982/soccer-intelligence`, Ablauf in `01`, Abschnitt 6.1):
    - Arbeiten auf einem eigenen Zweig `claude/…`, nie direkt auf `main`. Carsten prüft den Pull Request und führt
      ihn zusammen („Squash and merge“), erst wenn die automatischen Tests grün sind.
    - Jede Änderung bringt eine neue `RELEASE.md` mit (`**Commit:**`-Zeile, `## Erwartungswerte`, `## Im Browser prüfen`)

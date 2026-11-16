@@ -106,11 +106,18 @@ def _prepare_league(sheet: str, raw: pd.DataFrame) -> tuple[pd.DataFrame, list[I
                 )
                 if not required:
                     converted = converted.mask(fraction)
+        # Negative Werte (seit 0.15.1, Code-Prüfung F3, Entscheidung Carsten 16.11.2026):
+        # Pflichtzahlen (Tore, Gameday, id) -> Fehler; Statistikwerte -> Warnung, der Wert gilt als fehlend (nie 0)
+        negative = converted < 0
+        if negative.any():
+            required = col in schema.INTEGER_REQUIRED
+            issues += row_issues(
+                FEHLER if required else WARNUNG, sheet, "Negativer Wert", df[negative],
+                lambda r, c=col, req=required: f"Spalte '{c}' = {r[c]}" + ("" if req else " (wird als fehlender Wert behandelt)"),
+            )
+            if not required:
+                converted = converted.mask(negative)
         df[col] = converted
-        neg = df[df[col] < 0]
-        if len(neg):
-            issues += row_issues(WARNUNG, sheet, "Negativer Wert", neg,
-                                 lambda r, c=col: f"Spalte '{c}' = {r[c]}")
 
     # Ergebnis-Buchstaben
     for col in schema.RESULT_COLUMNS:
@@ -178,10 +185,12 @@ def _read_notes(raw: pd.DataFrame, leagues: dict[str, pd.DataFrame]) -> tuple[pd
         issues.append(Issue(WARNUNG, sheet, "Spaltenstruktur", "fehlende Spalten: " + ", ".join(missing)))
         return raw, issues
     notes = raw.dropna(how="all").copy()
+    # IDs je Liga einmal als Menge statt für jeden Hinweis neu zu suchen (Bereinigung B2, 0.15.1). 123,5 trifft
+    # weiterhin kein Spiel 123: 123.5 ist nicht in der Menge, 123.0 aber schon (gleich wie der frühere Vergleich).
+    ids = {name: set(df["id"].dropna().tolist()) for name, df in leagues.items()}
     for _, r in notes.iterrows():
         liga, mid = r["Liga"], pd.to_numeric(r["id"], errors="coerce")
-        df = leagues.get(liga)
-        if df is None or pd.isna(mid) or not (df["id"] == mid).any():
+        if liga not in ids or pd.isna(mid) or mid not in ids[liga]:
             issues.append(Issue(WARNUNG, sheet, "Hinweis ohne Spiel",
                                 f"Kein Spiel mit id {r['id']} im Blatt '{liga}' gefunden"))
     return notes, issues

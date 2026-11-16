@@ -16,6 +16,8 @@ from views import components as ui
 from views import datenimport, datenqualitaet, liga, simulation, top_anomalien
 from views.registry import PAGES
 
+import vorladen
+
 st.set_page_config(page_title="Soccer Intelligence", page_icon="⚽", layout="wide")
 ui.inject_css()
 
@@ -27,6 +29,8 @@ except ConfigError as exc:
     ui.header()
     st.error(f"**Konfiguration ungültig:** {exc}", icon="⛔")
     st.stop()
+
+vorladen.start()                       # Hintergrund-Helfer: rechnet nach jeder Datenänderung alles vor (0.15.1, F4)
 
 
 def _league_page(league):

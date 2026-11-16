@@ -233,6 +233,7 @@ nur der Altbestand abweicht.
 - Text statt Zahl, Ergebnis nicht H/D/A, ungültiges Datum oder Saisonformat. Auch eine **Zahl in der Spalte `Date`** (z. B. 45800, wenn die Zelle nicht als Datum formatiert ist) gilt als ungültiges Datum (seit H.2), statt still als 01.01.1970 gelesen zu werden.
 - Kommazahl bei Toren, `Gameday` oder `id` (nur ganze Zahlen erlaubt; seit H.1, 08.11.2026)
 - doppelte id innerhalb eines Blatts
+- **negativer Wert bei Toren, `Gameday` oder `id`** (seit 0.15.1, Code-Prüfung 16.11.2026, Entscheidung Carsten; vorher nur Warnung)
 
 ### Warnung – wahrscheinlich ein Datenfehler
 
@@ -247,7 +248,8 @@ nur der Altbestand abweicht.
 - fehlende Statistik, die nicht in Datenhinweise dokumentiert ist (je Stufe höchstens 50 Einzelmeldungen, danach eine Sammelzeile „… und n weitere Zeilen“)
 - Saison unvollständig (n Teams → n × (n−1) Spiele), doppelte Paarung
 - **Saison fehlt** zwischen zwei vorhandenen Saisons (seit Version 0.11): Die Saison danach wird ohne Vorsaison berechnet (Teamwerte zu Saisonbeginn, Ligareferenz über das Saisonende) und trotzdem ausgewertet
-- `Date` passt nicht zu `matchDate`, negativer Wert
+- `Date` passt nicht zu `matchDate`
+- **negativer Statistikwert** (Ecken, Karten, Schüsse, Ballbesitz; seit 0.15.1): Der Wert gilt als **fehlend** und geht nicht in die KPIs ein – wie eine Kommazahl, nie als 0. Stand 16.11.2026: kein einziger negativer Wert in der Datenbank.
 - `Gameday` ausserhalb 1 bis 2 × (Teams − 1), Spieltag mit falscher Anzahl Spiele, Team mehrfach im selben Spieltag
 
 **Zusätzlich beim Datenimport** (seit Version 0.15, `06_Datenlieferung.md`, Abschnitt 10.1): id über **alle** Ligen

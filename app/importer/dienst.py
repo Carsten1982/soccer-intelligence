@@ -72,6 +72,7 @@ def run(base: Path, data_dir: Path, now: datetime, full_season: bool | None = No
     dirs = _dirs(base)
     for d in dirs.values():
         d.mkdir(parents=True, exist_ok=True)
+    recover(base, data_dir, now)                                   # nie auf einem halben Tausch aufbauen (F1)
     run_id = now.strftime("%Y-%m-%d_%H%M%S")
     out = dirs["laeufe"] / run_id
     client = client or ApiClient(key=os.environ.get(E.KEY_ENV), raw_dir=dirs["roh"],
@@ -132,8 +133,83 @@ def _set_status(base: Path, run_id: str, status: str, note: str | None = None, *
     save_report(rep, _dirs(base)["laeufe"] / run_id / "bericht.json")
 
 
+HANDOVER = "uebergabe.json"      # Übergabe-Protokoll (0.15.1, Code-Prüfung F1): steht nur während des Tauschs
+
+
+def _files() -> dict[str, str]:
+    return {settings.DATABASE_FILENAME: "datenbank", settings.FIXTURES_FILENAME: "spielplan"}
+
+
+def _target(backup_dir: Path, stem: str, tag: str, suffix: str) -> Path:
+    """Backup-Ziel, das es noch nicht gibt (F2: ein vorhandenes Backup wird nie überschrieben).
+    Bei Gleichstand wird vor „_vor_import“ _2, _3 … angehängt, damit das Aufräumen die Datei weiter erkennt."""
+    n = 1
+    while (path := backup_dir / f"{stem}_{tag}{'' if n == 1 else f'_{n}'}_vor_import{suffix}").exists():
+        n += 1
+    return path
+
+
+def _backup(base: Path, data_dir: Path, backup_dir: Path, run_id: str, now: datetime) -> None:
+    """Gültige Dateien und Entscheide mit Datum (Sekunden) und Lauf ins Backup; die letzten 30 bleiben."""
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    tag = f"{now:%Y-%m-%d_%H%M%S}_lauf-{run_id}"
+    sources = [(base / E.DECISIONS_FILE, "entscheidungen", ".json")] + [
+        (data_dir / name, Path(name).stem, Path(name).suffix) for name in _files()]
+    for src, stem, suffix in sources:
+        if src.exists():
+            shutil.copy2(src, _target(backup_dir, stem, tag, suffix))
+        for old in sorted(backup_dir.glob(f"{stem}_*_vor_import{suffix}"))[:-E.BACKUPS_KEPT]:
+            old.unlink()
+
+
+def _finish(base: Path, run_id: str, by: str, stamp: str) -> None:
+    """Abschluss nach dem Tausch: Bericht, Fassung aufräumen, Zustand – erst danach fällt das Protokoll weg."""
+    _set_status(base, run_id, "übernommen" if by != "automatisch" else "übernommen (automatisch)", f"{stamp} ({by})")
+    _drop_files(base, run_id)
+    state = load_state(base)
+    if state.get("wartend") == run_id:
+        state["wartend"] = None
+        save_state(base, state)
+    (base / HANDOVER).unlink(missing_ok=True)
+
+
+def _swap(base: Path, data_dir: Path, handover: dict) -> None:
+    """Beide Dateien aus der geprüften Fassung tauschen (je Datei in einem Schritt). Eine Datei, die schon den
+    Zielstand hat, wird übersprungen – so kann ein abgebrochener Tausch einfach wiederholt werden."""
+    staged = _dirs(base)["laeufe"] / handover["lauf"]
+    for name, target in handover["dateien"].items():
+        live = data_dir / name
+        if live.exists() and sha256(live) == target:
+            continue
+        if not (staged / name).exists() or sha256(staged / name) != target:
+            raise ImportFehler(f"Fassung {handover['lauf']}: {name} fehlt oder stimmt nicht mit der Prüfsumme überein")
+        tmp = data_dir / f".{name}.tmp"
+        shutil.copy2(staged / name, tmp)
+        os.replace(tmp, live)
+
+
+def recover(base: Path, data_dir: Path, now: datetime) -> str | None:
+    """Abgebrochenen Tausch zu Ende führen (F1). Läuft beim Start des Dienstes und vor jedem Lauf.
+    Ohne Übergabe-Protokoll: nichts zu tun (None)."""
+    p = base / HANDOVER
+    if not p.exists():
+        return None
+    handover = json.loads(p.read_text(encoding="utf-8"))
+    _swap(base, data_dir, handover)
+    _finish(base, handover["lauf"], handover.get("von", "Dashboard"), handover.get("stempel", now.strftime("%d.%m.%Y %H:%M")))
+    return f"Abgebrochene Übernahme {handover['lauf']} zu Ende geführt"
+
+
 def apply(base: Path, data_dir: Path, backup_dir: Path, run_id: str, action: str, by: str, now: datetime) -> str:
-    """Freigabe ausführen. Gibt eine kurze Meldung zurück (steht auch im Bericht)."""
+    """Freigabe ausführen. Gibt eine kurze Meldung zurück (steht auch im Bericht).
+
+    Ablauf der Übernahme (seit 0.15.1, Code-Prüfung F1/F2):
+    1. Prüfungen: Fassung wartet, ohne Fehler, gültige Dateien unverändert (Basis), **beide Dateien der Fassung
+       vorhanden und mit den Prüfsummen aus dem Bericht** – sonst wird nichts getauscht.
+    2. Backup mit eindeutigem Namen (Sekunden und Lauf, nie überschrieben).
+    3. Übergabe-Protokoll schreiben (welche Fassung, welche Prüfsummen), dann beide Dateien tauschen.
+    4. Abschluss; das Protokoll wird zuletzt gelöscht. Bricht der Dienst zwischen 3 und 4 ab, führt recover() den
+       Tausch beim nächsten Start zu Ende – ein Mischstand aus alter und neuer Datei bleibt nie bestehen."""
     state = load_state(base)
     rep = load_report(base, run_id)
     stamp = now.strftime("%d.%m.%Y %H:%M")
@@ -147,7 +223,7 @@ def apply(base: Path, data_dir: Path, backup_dir: Path, run_id: str, action: str
         return "verworfen"
     if rep.get("fehler", 1) > 0:
         return "Fassung hat Fehler – Übernahme gesperrt"
-    files = {settings.DATABASE_FILENAME: "datenbank", settings.FIXTURES_FILENAME: "spielplan"}
+    files = _files()
     current = {k: sha256(data_dir / name) if (data_dir / name).exists() else None for name, k in files.items()}
     if current != rep.get("basis"):
         msg = "Gültige Dateien wurden seit dem Lauf geändert – nicht übernommen; nächster Lauf baut darauf auf"
@@ -156,30 +232,24 @@ def apply(base: Path, data_dir: Path, backup_dir: Path, run_id: str, action: str
         state["wartend"] = None
         save_state(base, state)
         return msg
-    backup_dir.mkdir(parents=True, exist_ok=True)
-    tag = now.strftime("%Y-%m-%d_%H%M")
-    decisions = base / E.DECISIONS_FILE
-    if decisions.exists():                                     # Entscheide mit sichern (R1)
-        shutil.copy2(decisions, backup_dir / f"entscheidungen_{tag}_vor_import.json")
-        for old in sorted(backup_dir.glob("entscheidungen_*_vor_import.json"))[:-E.BACKUPS_KEPT]:
-            old.unlink()
-    for name in files:
-        src = data_dir / name
-        if src.exists():
-            shutil.copy2(src, backup_dir / f"{Path(name).stem}_{tag}_vor_import{Path(name).suffix}")
-        kept = sorted(backup_dir.glob(f"{Path(name).stem}_*_vor_import{Path(name).suffix}"))
-        for old in kept[:-E.BACKUPS_KEPT]:
-            old.unlink()
     staged = _dirs(base)["laeufe"] / run_id
-    for name in files:
-        tmp = data_dir / f".{name}.tmp"
-        shutil.copy2(staged / name, tmp)
-        os.replace(tmp, data_dir / name)
-    _set_status(base, run_id, "übernommen" if by != "automatisch" else "übernommen (automatisch)",
-                f"{stamp} ({by})")
-    _drop_files(base, run_id)
-    state["wartend"] = None
-    save_state(base, state)
+    expected = rep.get("dateien") or {}
+    for name, key in files.items():                       # F2: Fassung unverändert seit dem Lauf?
+        f = staged / name
+        if not f.exists() or sha256(f) != expected.get(key):
+            msg = f"Fassung beschädigt oder verändert ({name}) – nicht übernommen, gültige Dateien unverändert"
+            _set_status(base, run_id, "Fehler – nicht übernehmbar", msg)
+            state["wartend"] = None
+            save_state(base, state)
+            return msg
+    _backup(base, data_dir, backup_dir, run_id, now)
+    handover = {"lauf": run_id, "von": by, "stempel": stamp, "zeit": now.isoformat(timespec="seconds"),
+                "dateien": {name: expected[key] for name, key in files.items()}}
+    tmp = base / f".{HANDOVER}.tmp"
+    tmp.write_text(json.dumps(handover, ensure_ascii=False), encoding="utf-8")
+    os.replace(tmp, base / HANDOVER)
+    _swap(base, data_dir, handover)
+    _finish(base, run_id, by, stamp)
     return "übernommen"
 
 
@@ -212,6 +282,9 @@ def main(argv: list[str]) -> None:
     base, data_dir = E.IMPORT_DIR, settings.DATA_DIR
     for d in _dirs(base).values():
         d.mkdir(parents=True, exist_ok=True)
+    done = recover(base, data_dir, datetime.now(tz))               # abgebrochenen Tausch zu Ende führen (F1)
+    if done:
+        print(done, flush=True)
     if "--jetzt" in argv:
         rep = run(base, data_dir, datetime.now(tz))
         print("Lauf", rep["lauf"], "->", rep["status"], rep.get("meldung", ""), flush=True)

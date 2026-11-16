@@ -5,6 +5,19 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 16.11.2026 – Version 0.15 eingespielt, Version 0.15.1: Massnahmen aus der Code-Prüfung
+
+- **Carsten** · Version 0.15 eingespielt (`a4367eb`), Lauf von Hand, Fassung übernommen (Vorsaison, 5 Nachholspiele und 3 vorgezogene Spiele mit KPIs). Designentwurf 0.16 (Anzeige kommender Spieltage) freigegeben: Datumsspalte zwischen Spiel und Form, gespielte Spiele grau, Pausen-Box. Code-Prüfung durch ChatGPT eingebracht; Entscheidungen: F1 Variante B (Übergabe-Protokoll statt Generationen-Ordner), F2 umsetzen, F3 Variante B (negative Statistik = fehlend, negative Tore = Fehler), F4 Vorladen im Hintergrund statt Umbau des Rechenkerns, F5 Liste offener Bereinigungen mit Regel in CLAUDE.md, F6 schneller Testlauf.
+- **Claude** · Prüfbericht am Code nachgeprüft (Befunde zutreffend; keine negativen Werte im Bestand; Testsuite vollständig grün). Umsetzung 0.15.1:
+  - **F1** `importer/dienst.py`: Übernahme mit Übergabe-Protokoll (`import/uebergabe.json`). `recover()` beim Start und vor jedem Lauf führt einen abgebrochenen Tausch zu Ende; ein Mischstand bleibt nie bestehen. Hinweis im Reiter, solange ein Protokoll besteht.
+  - **F2** Prüfsummen beider Dateien der Fassung vor dem Tausch; Backups mit Sekunden und Lauf im Namen, nie überschrieben.
+  - **F3** `core/loader.py`: negativer Statistikwert → Warnung und fehlend; negative Tore, `Gameday`, `id` → Fehler.
+  - **F4** `app/vorladen.py` und `app/start.py` (Dockerfile startet über `start.py`): Hintergrund-Helfer rechnet nach jeder Datenänderung, jedem neuen Tag und beim Containerstart alle Seiten vor (Test: Vorladen rund 100 s, danach Sensitivitätsanalyse in 1,9 s statt rund 40 s Rechenzeit).
+  - **F5** Liste „Offene Bereinigungen“ (`01`, 8.1), Regel in CLAUDE.md; B2 (Datenhinweise in `loader.py`) gleich erledigt.
+  - **F6** Marker `langsam` für Ende-zu-Ende-Tests, schneller Lauf `-m "not langsam"`.
+  - Tests: `tests/test_import_0151.py` (Abbruch mitten im Tausch, veränderte und fehlende Fassung, eindeutige Backups), `tests/test_vorladen.py`, zwei Loader-Tests. Gesamt 468 bestanden, 15 übersprungen; schneller Lauf ohne die 16 langsamen Tests 3½ statt rund 12 Minuten.
+- **Claude** · Doku: `01` (Abschnitt 0, Tests, 8.1), `02` (Prüfregeln negative Werte), `03` (fehlende Werte), CLAUDE.md, RELEASE.md. Zusammenfassung „Anzeige kommender Spieltage für das Frontend“ an Carsten geliefert.
+
 ## 15.11.2026 – Version 0.15: Datenimport nach den Reviews (Spielplan v2.1, Ergebnis-Import v1.1)
 
 - **Carsten** · Version 0.14.1 eingespielt (`1408c50`, Tests 442 bestanden / 13 übersprungen, in `tmux`); 10 Teamnamen mit Akzent übernommen. Spezifikation „Spielplan und Anzeige kommender Spieltage“ mit ChatGPT erstellt; Reviews von ChatGPT zur Spielplan-Spezifikation v2.0 und zum Ergebnis-Import eingebracht. Entscheidungen S1–S10, O1, O2 (Spielplan) und R1–R9 (Ergebnisse): u. a. Status nur aus der API, Nachholspiele mit KPIs, Termin „vorläufig“ nur bei mehr als 14 Tagen, feste Zuordnungsdatei, Top Anomalien nur vor Anpfiff, Sommer-/Winter-/Spielpause, täglicher Lauf; keine Handarbeit bei Korrekturen (Korrekturfenster 7 Tage, danach Buttons), Ergebnis auf dem Platz, Gelb-Rot = 2 Gelbe, Grenzen Ecken 30 / aufs Tor 25, Variante „10 Spiele mit Wert“ für die KPI-Überarbeitung vorgemerkt.

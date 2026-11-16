@@ -12,6 +12,14 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "app"))
+os.environ.setdefault("SI_VORLADEN", "0")      # kein Vorladen im Hintergrund während der Tests (0.15.1, F4)
+
+
+def pytest_configure(config):
+    """Marker „langsam“ (0.15.1, F6): Ende-zu-Ende-Läufe mit der ganzen Referenz-Datenbank.
+    Schneller Lauf für zwischendurch: python -m pytest -q -m "not langsam" tests
+    Vollständiger Lauf (Einspielen, GitHub): python -m pytest -q tests"""
+    config.addinivalue_line("markers", "langsam: Ende-zu-Ende-Test mit der ganzen Datenbank (mehrere Sekunden)")
 
 from core import schema  # noqa: E402
 

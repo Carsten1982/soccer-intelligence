@@ -245,6 +245,7 @@ def setup(tmp_path_factory, season_list, details, halves):
     return {"data": data, "base": base, "backup": backup, "rep": rep, "api": api, "removed": len(gone), "now": now}
 
 
+@pytest.mark.langsam
 def test_run_adds_missing_matchday_and_reports(setup):
     rep, api = setup["rep"], setup["api"]
     assert setup["removed"] == 9 and rep["status"] == "wartet" and rep["fehler"] == 0
@@ -264,6 +265,7 @@ def test_run_adds_missing_matchday_and_reports(setup):
     assert md9 == [] or md9[0]["fehlt"] == 0
 
 
+@pytest.mark.langsam
 def test_apply_swaps_with_backup_and_refuses_changed_base(setup, season_list, details, halves):
     data, base, backup = setup["data"], setup["base"], setup["backup"]
     before = sha256(data / "Database-Soccer-Intelligence.xlsx")
