@@ -1,0 +1,172 @@
+/* Soccer Intelligence – Website (seit 0.17). Farben, Masse und Schriften nach der Übergabe der Frontend-Entwürfe,
+   Abschnitt 3, und dem Entwurf „1d · Startseite“ (Main_P1). Mobile first: alles läuft bis 360 px, Tippflächen ≥ 44 px. */
+
+@font-face { font-family: "Inter"; font-style: normal; font-display: swap; font-weight: 100 900;
+  src: url(schriften/inter-latin-wght-normal.woff2) format("woff2-variations");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Inter"; font-style: normal; font-display: swap; font-weight: 100 900;
+  src: url(schriften/inter-latin-ext-wght-normal.woff2) format("woff2-variations");
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "Outfit"; font-style: normal; font-display: swap; font-weight: 100 900;
+  src: url(schriften/outfit-latin-wght-normal.woff2) format("woff2-variations");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Outfit"; font-style: normal; font-display: swap; font-weight: 100 900;
+  src: url(schriften/outfit-latin-ext-wght-normal.woff2) format("woff2-variations");
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+
+:root {
+  --bg: #F4F7F2;
+  --gruen: #0B3D2E;
+  --akzent: #C6F26B;
+  --text: #0E2A1F;
+  --text2: #3E5247;
+  --text3: #5B6B61;
+  --rand: #D3DED5;
+  --rand2: #E1EAE2;
+  --hinweis: #E6F0E8;
+  --hinweis-rand: #BFD4C5;
+  --warn: #FFF4D6;
+  --warn-rand: #E8C46A;
+  --warn-text: #4A3000;
+  --warn-icon: #B7791F;
+  --grau: #ECEFEC;
+  --grau-text: #6F7D74;
+  --pos: #0A6B45;
+  --neg: #B03A2E;
+  --titel: "Outfit", system-ui, sans-serif;
+  --fliess: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; font-family: var(--fliess); color: var(--text); background: var(--bg); line-height: 1.5; }
+a { color: inherit; text-decoration: none; }
+a:hover { text-decoration: underline; }
+button { font-family: inherit; }
+:focus-visible { outline: 3px solid var(--pos); outline-offset: 2px; border-radius: 6px; }
+.unsichtbar { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 clamp(16px, 5vw, 48px); }
+
+/* Vorschau-Leiste (nur Vorschau, Annahme A9) */
+.vorschau { background: var(--warn); border-bottom: 1px solid var(--warn-rand); color: var(--warn-text); font-size: 14px; }
+.vorschau .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding-top: 8px; padding-bottom: 8px; }
+.vorschau strong { font-weight: 700; }
+.vorschau form { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.vorschau input { min-height: 36px; padding: 0 8px; border: 1.5px solid var(--warn-icon); border-radius: 8px; font: inherit; color: var(--warn-text); background: #fff; }
+.vorschau button, .vorschau a.knopf { display: inline-flex; align-items: center; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1.5px solid var(--warn-icon); background: #fff; color: var(--warn-text); font-weight: 600; font-size: 14px; cursor: pointer; }
+.vorschau .fehler { font-weight: 700; }
+
+/* Kopf */
+.kopf { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px; padding: 14px 0; }
+.logo { display: flex; align-items: center; gap: 10px; min-height: 44px; color: var(--text); }
+.logo span { font-family: var(--titel); font-weight: 700; font-size: 20px; letter-spacing: -0.01em; }
+.kopf nav { display: flex; flex-wrap: wrap; gap: 0 8px; }
+.kopf nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px; font-size: 16px; font-weight: 500; }
+.kopf nav a[aria-current="page"] { font-weight: 700; text-decoration: underline; text-underline-offset: 6px; text-decoration-thickness: 2px; }
+
+/* Seitenkopf */
+.zurueck { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: 15px; font-weight: 500; color: var(--text2); }
+h1 { margin: 4px 0 0; font-family: var(--titel); font-weight: 700; font-size: clamp(30px, 6vw, 46px); line-height: 1.05; letter-spacing: -0.01em; }
+.intro { margin: 10px 0 0; font-size: 17px; line-height: 1.5; color: var(--text2); max-width: 720px; }
+
+/* Liga-Auswahl */
+.ligen { list-style: none; margin: 24px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 12px; }
+.ligen a { display: flex; flex-direction: column; justify-content: center; min-height: 76px; padding: 14px 18px; border-radius: 20px; background: #fff; border: 1px solid var(--rand); color: var(--text); text-decoration: none; }
+.ligen a:hover { border-color: var(--gruen); }
+.ligen a[aria-current="page"] { background: var(--akzent); border-color: var(--akzent); }
+.ligen .name { font-family: var(--titel); font-weight: 600; font-size: 20px; line-height: 1.2; }
+.ligen .info { margin-top: 2px; font-size: 15px; font-weight: 500; color: var(--text2); }
+.datenstand { margin-top: 12px; font-size: 14px; color: var(--text2); }
+
+/* Liga-Titel und Zusammenfassung */
+.liga-titel { margin: clamp(32px, 6vw, 56px) 0 0; font-family: var(--titel); font-weight: 700; font-size: clamp(28px, 5.5vw, 40px); line-height: 1.1; }
+.zusammenfassung { margin: 8px 0 0; font-size: 16px; line-height: 1.5; color: var(--text2); }
+.zusammenfassung b { color: var(--text); font-weight: 600; }
+
+/* Legende und „Wie lese ich das?“ */
+.legende { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 16px; font-size: 15px; color: var(--text2); }
+.legende .eintrag { display: inline-flex; align-items: center; gap: 8px; }
+.muster { display: inline-block; width: 22px; height: 22px; border-radius: 6px; border: 1px solid var(--rand); background: #fff; }
+.muster--stark { background: #E3F1B6; border-color: #C5DC84; box-shadow: inset 4px 0 0 var(--gruen); }
+.muster--leicht { background: #F3F9DF; border-color: #D9E7B2; box-shadow: inset 4px 0 0 #9BC53D; }
+details.lesen { flex-basis: 100%; }
+details.lesen > summary { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; cursor: pointer; list-style: none; color: var(--text2); font-weight: 500; }
+details.lesen > summary::-webkit-details-marker { display: none; }
+details.lesen > summary span { text-decoration: underline; text-underline-offset: 3px; }
+details.lesen > summary svg { transition: transform .15s; }
+details.lesen[open] > summary svg { transform: rotate(180deg); }
+.hinweisbox { margin-top: 8px; padding: 6px 16px 14px; background: var(--hinweis); border: 1px solid var(--hinweis-rand); border-radius: 14px; }
+.hinweisbox ul { list-style: none; margin: 0; padding: 0; font-size: 15px; line-height: 1.5; color: var(--text); }
+.hinweisbox li { margin-top: 6px; }
+.hinweisbox b { font-weight: 600; }
+
+/* Warnbox (Datenstand veraltet) */
+.warnbox { margin-top: 16px; display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; background: var(--warn); border: 1px solid var(--warn-rand); border-radius: 14px; color: var(--warn-text); font-size: 16px; line-height: 1.5; }
+.warnbox svg { flex: 0 0 auto; margin-top: 1px; color: var(--warn-icon); }
+
+/* Pausen-Karte */
+.pausenkarte { margin-top: 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 20px 24px; background: #fff; border: 1px solid var(--rand); border-radius: 24px; padding: clamp(20px, 4vw, 32px); }
+.pausenkarte .icon { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: 50%; background: var(--gruen); color: var(--akzent); }
+.pausenkarte .inhalt { flex: 1 1 260px; min-width: 0; }
+.pausenkarte .zeile { font-size: 14px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3); }
+.pausenkarte h3 { margin: 6px 0 0; font-family: var(--titel); font-weight: 700; font-size: clamp(24px, 4.6vw, 32px); line-height: 1.1; }
+.pausenkarte p { margin: 10px 0 0; font-size: 17px; line-height: 1.55; color: var(--text2); }
+
+/* Tabs (englische Woche) */
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+.tabs[hidden] { display: none; }
+.tabs button { display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 999px; border: 1.5px solid var(--gruen); background: #fff; color: var(--gruen); font-size: 16px; font-weight: 600; cursor: pointer; }
+.tabs button[aria-pressed="true"] { background: var(--gruen); color: #F4F7F2; }
+.panel { margin-top: 20px; }
+.panel[hidden] { display: none; }
+.panel + .panel { margin-top: 36px; }
+.panel h3 { margin: 0; font-family: var(--titel); font-weight: 700; font-size: 22px; }
+.satz { margin: 12px 0 0; font-size: 16px; color: var(--text2); }
+
+/* Kacheln der Partien (Übergabe 6.2) */
+.partien { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.kachel { position: relative; display: flex; align-items: center; gap: 16px; min-height: 88px; padding: 16px 20px; border-radius: 20px; background: #fff; border: 1px solid var(--rand); color: var(--text); text-decoration: none; overflow: hidden; }
+a.kachel:hover { text-decoration: none; border-color: var(--gruen); }
+.kachel--stark { min-height: 104px; background: #E3F1B6; border-color: #C5DC84; }
+.kachel--leicht { min-height: 104px; background: #F3F9DF; border-color: #D9E7B2; }
+.kachel--stark::before, .kachel--leicht::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--gruen); }
+.kachel--leicht::before { background: #9BC53D; }
+.kachel--status { background: var(--grau); border: 1.5px dashed #B3C2B8; color: var(--grau-text); }
+.kachel--gespielt { background: var(--grau); border: 1.5px solid #C9D2CB; color: var(--grau-text); }
+.kachel .teams { flex: 1 1 auto; min-width: 0; }
+.kachel .team { display: block; font-family: var(--titel); font-weight: 600; font-size: 18px; line-height: 1.25; overflow-wrap: anywhere; }
+.kachel .gegen { display: block; margin: 1px 0; font-size: 14px; color: var(--text3); }
+.kachel--status .gegen, .kachel--gespielt .gegen { color: var(--grau-text); }
+.kachel .termin { display: block; margin-top: 6px; font-size: 14px; font-weight: 500; color: var(--text3); }
+.kachel--status .termin, .kachel--gespielt .termin { color: var(--grau-text); }
+.kachel .rechts { flex: 0 1 auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
+.chips { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.chip { display: inline-flex; align-items: center; min-height: 28px; padding: 0 10px; border-radius: 8px; font-size: 14px; font-weight: 600; line-height: 1.2; text-align: center; }
+.chip--stark { background: var(--gruen); color: var(--akzent); }
+.chip--leicht { border: 1.5px solid var(--gruen); color: var(--gruen); }
+.chip--status { border: 1.5px dashed var(--grau-text); color: var(--grau-text); }
+.chip--sonder { border: 1.5px dashed var(--text3); color: var(--text2); }
+.chip--ergebnis { border: 1.5px solid #9AA9A0; color: var(--text2); background: #fff; font-family: var(--titel); font-size: 16px; }
+.pfeil { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: var(--gruen); }
+.kachel--status .pfeil, .kachel--gespielt .pfeil { background: #9AA9A0; }
+
+/* Hinweis-Seiten */
+.leer { margin: clamp(32px, 6vw, 56px) 0; }
+.knopf-gruen { display: inline-flex; align-items: center; gap: 10px; min-height: 56px; margin-top: 20px; padding: 0 26px; border-radius: 999px; background: var(--gruen); color: var(--akzent); font-size: 17px; font-weight: 600; }
+
+/* Fusszeile */
+main { padding-bottom: clamp(48px, 7vw, 88px); }
+.fuss { background: var(--gruen); color: #C4DACD; }
+.fuss .wrap { display: flex; flex-wrap: wrap; gap: 24px 48px; padding-top: 36px; padding-bottom: 36px; }
+.fuss .marke { font-family: var(--titel); font-weight: 700; font-size: 19px; color: #F4F7F2; }
+.fuss p { margin: 10px 0 0; font-size: 15px; line-height: 1.55; }
+.fuss .spalte { flex: 1 1 260px; min-width: 0; font-size: 15px; line-height: 1.55; }
+.fuss nav { display: flex; flex-wrap: wrap; gap: 0 16px; margin-top: 6px; }
+.fuss nav a { display: inline-flex; align-items: center; min-height: 44px; color: #F4F7F2; }
+
+@media (max-width: 520px) {
+  .kachel { flex-wrap: wrap; padding: 14px 16px; }
+  .kachel .rechts { flex: 1 1 100%; justify-content: space-between; }
+  .chips { justify-content: flex-start; }
+}

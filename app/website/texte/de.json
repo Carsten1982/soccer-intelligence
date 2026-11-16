@@ -1,0 +1,136 @@
+{
+  "_hinweis": "Sprachdatei Deutsch (Website, seit 0.17). Schreibweise mit ß (Entscheidung T5). Platzhalter in {geschweiften Klammern}; Mehrzahl als eigene Varianten (null/eins/mehr). Texte wörtlich aus der Übergabe der Frontend-Entwürfe.",
+  "allgemein": {
+    "marke": "Soccer Intelligence",
+    "sprache": "de"
+  },
+  "kopf": {
+    "startseite": "Startseite",
+    "navigation": "Hauptnavigation",
+    "spieltag": "Spieltag",
+    "methodik": "Methodik",
+    "impressum": "Impressum"
+  },
+  "fuss": {
+    "pflicht": "Statistische Auswertungen, keine Wettberatung. Keine Verbindung zu Ligen oder Vereinen.",
+    "stand": "Stand: {stand}",
+    "navigation": "Weitere Seiten",
+    "impressum": "Impressum",
+    "datenschutz": "Datenschutz",
+    "methodik": "Methodik"
+  },
+  "liga": {
+    "bundesliga": "Bundesliga",
+    "la_liga": "La Liga",
+    "premier_league": "Premier League",
+    "serie_a": "Serie A"
+  },
+  "spieltag": {
+    "seitentitel": "{liga} – Alle Spiele im Überblick – Soccer Intelligence",
+    "beschreibung": "Alle Spiele der {liga} im Überblick: statistische Auffälligkeiten bei Toren, Ecken, Karten und weiteren Kennzahlen.",
+    "h1": "Alle Spiele im Überblick",
+    "intro": "Wähle deine Liga und sieh, bei welchen Partien die Zahlen aus der Reihe fallen.",
+    "ligen": "Liga auswählen",
+    "nummer": "{n}. Spieltag",
+    "datenstand": "Aktueller Datenstand: {datum}",
+    "partien": {"eins": "1 Partie", "mehr": "{n} Partien"},
+    "auffaellig": {"null": "keine mit Auffälligkeit", "mehr": "{n} mit Auffälligkeit"},
+    "nachholspiel": {"eins": "plus 1 Nachholspiel", "mehr": "plus {n} Nachholspiele"},
+    "vorgezogen": {"eins": "plus 1 vorgezogenes Spiel", "mehr": "plus {n} vorgezogene Spiele"},
+    "tabs": "Spieltage",
+    "tab": "{n}. Spieltag · ab {datum}",
+    "keine_abweichungen": "Bei diesem Spieltag weicht kein Wert deutlich vom Ligaschnitt ab.",
+    "gegen": "gegen",
+    "zum_spiel": "Zum Spiel {heim} gegen {gast}",
+    "legende": "Legende",
+    "wie_lesen": "Wie lese ich das?",
+    "erklaerung_gruen_titel": "Grüne Kacheln:",
+    "erklaerung_gruen": "Bei diesen Partien weicht mindestens eine Kennzahl deutlich vom Ligaschnitt der letzten 20 Spieltage ab.",
+    "erklaerung_stufe_titel": "Stark oder Leicht:",
+    "erklaerung_stufe": "Zeigt die Stärke der Abweichung.",
+    "erklaerung_weiss_titel": "Weiße Kacheln:",
+    "erklaerung_weiss": "Keine Auffälligkeit bei dieser Partie."
+  },
+  "stufe": {
+    "stark": "Stark",
+    "leicht": "Leicht",
+    "ohne": "Ohne Auffälligkeit"
+  },
+  "chip": {
+    "stark": "Stark",
+    "leicht": "Leicht",
+    "nicht_gewertet": "Nicht gewertet",
+    "verschoben": "Verschoben",
+    "abgesagt": "Abgesagt",
+    "abgebrochen": "Abgebrochen",
+    "ausgesetzt": "Ausgesetzt",
+    "gewertet": "Am grünen Tisch gewertet",
+    "nachholspiel": "Nachholspiel",
+    "vorgezogen": "Vorgezogen",
+    "ergebnis_folgt": "Ergebnis folgt"
+  },
+  "termin": {
+    "zeit_offen": "Zeit offen",
+    "termin_offen": "Termin offen",
+    "wochenende": "Wochenende {tage}"
+  },
+  "pause": {
+    "spielpause": {
+      "zeile": "Spielpause",
+      "titel": "Nächster Spieltag am {datum}",
+      "text": "In der {liga} ruht der Spielbetrieb. Ab dem nächsten Spieltag siehst du hier wieder alle Partien."
+    },
+    "winterpause": {
+      "zeile": "Winterpause",
+      "titel": "Nächster Spieltag am {datum}",
+      "text": "In der {liga} ruht der Spielbetrieb. Ab dem nächsten Spieltag siehst du hier wieder alle Partien."
+    },
+    "sommerpause": {
+      "zeile": "Sommerpause",
+      "titel": "Die Saison ist beendet",
+      "text": "Alle Spiele sind gespielt. Sobald der Spielplan der neuen Saison steht, siehst du hier wieder alle Partien."
+    },
+    "saisonstart": {
+      "zeile": "Sommerpause",
+      "titel": "Saisonstart am {datum}",
+      "text": "Ab dem Saisonstart siehst du hier wieder alle Partien der {liga}."
+    },
+    "unbekannt": {
+      "zeile": "Nächster Spieltag",
+      "titel": "Nächster Spieltag am {datum}",
+      "text": "Sobald der Spielplan wieder aktuell ist, siehst du hier alle Partien."
+    },
+    "keine": {
+      "zeile": "Spielplan",
+      "titel": "Keine anstehenden Spiele",
+      "text": "Für die {liga} sind gerade keine Spiele angesetzt."
+    }
+  },
+  "veraltet": {
+    "titel": "Spielplan zuletzt aktualisiert am {datum}.",
+    "text": "Neue Spiele und Termine fehlen deshalb eventuell."
+  },
+  "folgt": {
+    "seitentitel": "Folgt später – Soccer Intelligence",
+    "titel": "Diese Seite folgt später.",
+    "text": "Sie ist noch in Arbeit.",
+    "zurueck": "Zum Spieltag"
+  },
+  "fehler": {
+    "seitentitel": "Nicht gefunden – Soccer Intelligence",
+    "titel": "Diese Seite gibt es nicht.",
+    "text": "Vielleicht hat sich die Adresse geändert.",
+    "daten_titel": "Die Daten werden gerade geprüft.",
+    "daten_text": "Bitte versuche es in ein paar Minuten noch einmal.",
+    "zurueck": "Zum Spieltag"
+  },
+  "vorschau": {
+    "leiste": "Vorschau – nicht öffentlich",
+    "zeitpunkt": "Zeitpunkt",
+    "anzeigen": "Anzeigen",
+    "jetzt": "Jetzt",
+    "zeitreise": "Zeitreise: {zeit} (Import an diesem Tag angenommen)",
+    "aktuell": "aktueller Stand",
+    "ungueltig": "Ungültiges Datum – angezeigt wird der aktuelle Stand."
+  }
+}

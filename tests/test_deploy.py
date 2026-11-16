@@ -86,6 +86,26 @@ def test_import_service(compose):
     assert "./import:/import:ro" in dash and "./import/anfragen:/import/anfragen" in dash
 
 
+def test_preview_service_only_under_vorschau_with_password(compose):
+    """Seit 0.17: Vorschau der Website nur unter /vorschau, mit Passwortabfrage (Hash nur in .env), Anfragebremse und
+    noindex; liest data/ und import/ nur; kein Port nach aussen."""
+    block = _service_block(compose, "soccer-vorschau")
+    assert 'command: ["python", "-m", "website.vorschau"]' in block
+    assert "Host(`soccer-intelligence.com`) && PathPrefix(`/vorschau`)" in block
+    assert "routers.soccervorschau.middlewares=soccervorschau-auth,soccerintel-ratelimit,soccerintel-noindex" in block
+    assert "soccervorschau-auth.basicauth.users=${SOCCER_VORSCHAU_AUTH:-}" in block
+    assert "./data:/data:ro" in block and "./import:/import:ro" in block and "ports" not in block
+    assert "loadbalancer.server.port=8080" in block and "SI_VORSCHAU_PORT=8080" in block
+
+
+def test_preview_password_script_stores_only_hash():
+    script = (ROOT / "tools" / "vorschau_passwort.sh").read_text(encoding="utf-8")
+    assert "read -rsp" in script and "htpasswd -niB" in script
+    assert 'echo "SOCCER_VORSCHAU_AUTH=\'$H\'"' in script and "grep -v '^SOCCER_VORSCHAU_AUTH='" in script
+    assert "unset P1 P2" in script and "$P1" not in script.split("unset P1 P2")[1]
+    assert "set -euo pipefail" in script and "backup/env_" in script
+
+
 def test_placeholder_service_and_files(compose):
     block = _service_block(compose, "soccer-placeholder")
     assert "./placeholder:/usr/share/nginx/html:ro" in block
@@ -121,6 +141,7 @@ def test_password_script_hash_matches_app():
 # --- Einspiel-Skripte (seit 09.11.2026): nur unser Container, nie data/ ---------------------------------------
 
 SCRIPTS = [ROOT / "tools" / "einspielen.sh", ROOT / "tools" / "zurueck.sh"]
+OUR_SERVICES = {"football-dashboard", "soccer-import", "soccer-vorschau"}      # seit 0.17 auch die Vorschau
 
 
 @pytest.mark.parametrize("script", SCRIPTS, ids=lambda p: p.name)
@@ -134,9 +155,9 @@ def test_release_scripts_touch_only_our_container(script):
     for line in code.splitlines():
         if "docker compose" in line:
             assert "up -d --build football-dashboard" in line, line     # nur unsere Services (seit 0.14 auch Import)
-            assert set(line.split("--build", 1)[1].split(">")[0].split()) <= {"football-dashboard", "soccer-import"}, line
+            assert set(line.split("--build", 1)[1].split(">")[0].split()) <= OUR_SERVICES, line
         if "docker " in line and "inspect" in line or "docker logs" in line:
-            assert "football-dashboard" in line or "soccer-import" in line, line
+            assert any(name in line for name in OUR_SERVICES), line
     assert "data/" not in code.replace("data/*|", "")                # data/ nur in der Sperrliste für Löschungen
 
 

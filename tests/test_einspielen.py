@@ -35,7 +35,7 @@ esac
     # Platzhalter 200, Dashboard 200 (Anmeldemaske seit 0.15.2; mit DASHBOARD_CODE=401 wie bis 0.15.1)
     "curl": """#!/usr/bin/env bash
 for a in "$@"; do last="$a"; done
-case "$last" in */dashboard/) printf "${DASHBOARD_CODE:-200}";; *) printf 200;; esac
+case "$last" in */dashboard/) printf "${DASHBOARD_CODE:-200}";; */vorschau/) printf "${VORSCHAU_CODE:-401}";; *) printf 200;; esac
 """,
     "sleep": "#!/usr/bin/env bash\nexit 0\n",
 }
