@@ -7,7 +7,7 @@
 - Prüfung von Code und echten API-Daten durch Claude
 
 **Geplante Versionen:** 0.15 (Import) und 0.16 (Anzeige)
-**Status:** freigegeben von Carsten am 15.11.2026. **Abschnitt 3 (Import) umgesetzt in Version 0.15**; Abschnitt 4 und 5 (Anzeige) folgen in Version 0.16 nach Designentwurf. Gewertete Spiele: `06_Datenlieferung.md`, Abschnitt 10.1 (R2).
+**Status:** freigegeben von Carsten am 15.11.2026. **Abschnitt 3 (Import) umgesetzt in Version 0.15; Abschnitte 4 und 5 (Anzeige) umgesetzt in Version 0.16** nach dem Designentwurf vom 16.11.2026 (Festlegungen bei der Umsetzung: Abschnitt 4.8). Gewertete Spiele: `06_Datenlieferung.md`, Abschnitt 10.1 (R2).
 
 **Änderungen gegenüber v2.0:**
 - Originalstatus der API (S1)
@@ -151,7 +151,7 @@ Neue Spalte **`API-Status`** im Spielplan, mit dem Kurzcode der API unverändert
 
 ## 4. Anzeige (Ligaseiten, Top Anomalien, später öffentliche Website)
 
-Die ganze Logik steht als reine Funktionen in `app/core/matchday.py`, mit „heute“ und „jetzt“ als Parameter. Dashboard und Website verwenden **dieselben Funktionen**.
+Die ganze Logik steht als reine Funktionen in `app/core/anzeige.py` (anstehender Spieltag auch in `app/core/matchday.py`), mit „jetzt“ und dem Tag des letzten erfolgreichen Importlaufs als Parameter. Dashboard und Website verwenden **dieselben Funktionen**.
 
 ### 4.1 Begriffe
 
@@ -229,6 +229,24 @@ Dazu kommen die Vermerke „Nachholspiel“ und „vorgezogen“ am Spiel.
 - Eine Liga nimmt teil, wenn ihr Block **höchstens 14 Tage** entfernt ist. Sonst steht in der Kopfzeile z. B. „Bundesliga: Winterpause bis 07.01.“.
 - Spiele ohne Werte (4.5) nehmen nicht teil. Jedes Spiel kommt genau einmal vor.
 
+### 4.8 Festlegungen bei der Umsetzung (Version 0.16)
+
+Wo die Abschnitte 4.1–4.7 offen liessen, wie etwas genau gilt, ist es so umgesetzt (Tests `tests/test_anzeige.py`):
+
+| Punkt | Umsetzung |
+|---|---|
+| Pause | Abstand zwischen dem Ende des letzten beendeten Spieltags und dem ersten Tag des nächsten **mehr als 14 Tage**. Die Box steht während der ganzen Pause, ab 14 Tagen vor dem Spieltag zusammen mit ihm (Entwurf C) |
+| Sonderspiele | erscheinen im selben Fenster wie weitere Spieltage: Termin heute bis heute + 6. Ohne weiteren regulären Spieltag der Saison (4.3, „ein Spiel noch offen“) erscheinen sie unabhängig vom Abstand |
+| „Gespielt“ | ab dem geplanten Anstoss; ohne bekannte Uhrzeit (Zeit offen, alter Spielplan) ab Tagesende. Mit Ergebnis in der Datenbank immer „gespielt“. „Status offen“ (3.1) erscheint nur im Bericht des Imports; die Ligaseite zeigt „Ergebnis folgt“ |
+| „Werte ab“ | genannt werden nur Teams, deren Vorspiel heute oder später ist; beide im selben Spieltag: „beide Teams spielen vorher noch (Spieltag N)“. Lag das fehlende Vorspiel an einem früheren Tag: „Werte folgen, sobald das Ergebnis vom … übernommen ist“. Verschobene, abgesagte, abgebrochene, ausgesetzte und gewertete Spiele zählen nicht als Vorspiel. Ergebnis gesucht über Saison + Heim + Gast |
+| Letzter erfolgreicher Importlauf (S9) | neuester Lauf in `/import/laeufe/`, dessen Status nicht „fehlgeschlagen“ oder „Fehler – nicht übernehmbar“ ist. Ohne Lauf: Box „Spielplan zuletzt aktualisiert am unbekannt“ |
+| „Ein Spiel der Saison noch offen“ (4.3) | angesetzt heute oder später, oder verschoben bzw. ausgesetzt |
+| Pfeile ohne Auswahl | ◀ zum Spieltag vor dem anstehenden; ▶ zum anstehenden, wenn er (noch) nicht als Abschnitt erscheint, sonst zum nächsten. Schaltfläche „Zu den kommenden Spielen“ zurück |
+| Top Anomalien, Sonderspiele davor | Block = die Sonderspiele des frühesten Tages; Kopfzeile bis Tagesende, nach dem letzten Anpfiff „alle Spiele angepfiffen“ (ebenso beim Spieltag) |
+| Kopfzeile in der Pause | „Winterpause bis 07.01.“ bzw. „Spielpause bis …“, „Sommerpause“; bei altem Datenstand „nächster Spieltag am …“ |
+| Termin „vorläufig“ | „Wochenende 06./07.02. · Termin offen“ für Samstag/Sonntag, sonst „Di 12.01. · Termin offen“ |
+| Abschnitt mit nicht gezeigten Spielen | Hinweis in der Kopfzeile, z. B. „(1 Spiel verschoben – beim Blättern sichtbar)“ |
+
 ---
 
 ## 5. Reiter „Datenimport/API“ (Entwurf 2 vom 15.11.2026)
@@ -237,7 +255,7 @@ Dazu kommen die Vermerke „Nachholspiel“ und „vorgezogen“ am Spiel.
 - **Kasten „Neue Daten bereit“** mit zwei Blöcken:
   - **A · Ergebnisse (Datenbank):** Vollständigkeit, Korrekturen alt → neu, neue Spiele, Qualität.
   - **B · Spielplan**, gruppiert: verschoben · Nachholspiel (neuer Termin) · vorgezogen · Termin geändert · ausgesetzt/abgesagt/abgebrochen/gewertet · neu oder entfallen · Anstosszeit geändert · **Anstosszeiten festgelegt** (eingeklappt, zählt nicht als wichtige Änderung).
-- **„So sieht das Dashboard nach der Übernahme aus“:** je Liga der angezeigte Spieltag, Spiele, Block für Top Anomalien, sichtbar bis.
+- **„So sieht das Dashboard nach der Übernahme aus“:** je Liga der angezeigte Spieltag, Spiele, Block für Top Anomalien, sichtbar bis (seit 0.16; berechnet mit dem neuen Spielplan und denselben Funktionen wie die Ligaseite).
 - **Ein Button „Übernehmen (Ergebnisse und Spielplan)“** und „Verwerfen“.
 - **Protokoll:** Spielplan als „wichtig · Anstosszeiten“. Das Datum des letzten erfolgreichen Laufs ist die Grundlage für S9.
 

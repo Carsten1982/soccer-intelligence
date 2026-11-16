@@ -19,7 +19,9 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 import streamlit as st
 
-from core import settings
+from core import anzeige, settings
+from core.files import file_key
+from core.fixtures import load_fixtures
 from importer import einstellungen as E
 from views import components as ui
 
@@ -331,6 +333,36 @@ def block_results(rep: dict) -> None:
                 st.dataframe(pd.DataFrame(rep[key]), hide_index=True, width="stretch")
 
 
+@st.cache_data(show_spinner=False, max_entries=2)
+def _staged_fixtures(path: str, key: tuple):  # noqa: ARG001 - key ist Teil des Cache-Schlüssels
+    from state import get_database, get_leagues, get_teams
+    return load_fixtures(path, get_leagues(), get_database().leagues, get_teams())
+
+
+def preview(rep: dict, base: Path, now: datetime) -> None:
+    """„So sieht das Dashboard nach der Übernahme aus“ (Entwurf 2, seit 0.16): je Liga, was Ligaseite und Top
+    Anomalien mit dem neuen Spielplan zeigen würden."""
+    path = base / "laeufe" / rep["lauf"] / settings.FIXTURES_FILENAME
+    if not path.exists():
+        return
+    fx = _staged_fixtures(str(path), file_key(path))
+    st.markdown(f"##### So sieht das Dashboard nach der Übernahme aus (heute {anzeige.day_text_year(now.date())})")
+    if fx.has_errors:
+        st.markdown('<p class="di-note">Der neue Spielplan enthält Fehler – keine Vorschau.</p>', unsafe_allow_html=True)
+        return
+    from state import get_active_leagues
+    at = now.replace(tzinfo=None)
+    rows = []
+    for league in get_active_leagues():
+        fixtures = fx.leagues.get(league.name)
+        if fixtures is None or fixtures.empty:
+            continue
+        pv = anzeige.preview(fixtures, at)
+        rows.append([escape(league.name), escape(pv.shown), escape(pv.games), escape(pv.top), escape(pv.until)])
+    st.markdown(_table(["Liga", "Angezeigt (Kommende Spiele)", "Spiele", "Top Anomalien", "sichtbar bis"], rows,
+                       left=(0, 1, 3, 4)), unsafe_allow_html=True)
+
+
 def pending_box(rep: dict, base: Path) -> None:
     run_id, err = rep["lauf"], rep.get("fehler", 0) > 0
     new_games = sum(len(v) for v in (rep.get("neue_spiele") or {}).values())
@@ -360,6 +392,7 @@ def pending_box(rep: dict, base: Path) -> None:
         block_results(rep)
     with b:
         block_fixtures(rep)
+    preview(rep, base, datetime.now(ZoneInfo(E.TIMEZONE)))
     auto = rep.get("automatik") or {}
     if auto:
         st.caption("Im Automatikbetrieb: " + ("würde ohne Rückfrage übernommen" if auto.get("ok")

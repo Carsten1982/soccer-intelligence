@@ -3,7 +3,8 @@
 Regeln: Dashboard-Briefing (docs/05_Dashboard.md), Kapitel 4.4, und docs/04_Spielplan.md, Abschnitt 4.
 
 1. Ein Spieltag ist beendet, sobald das späteste „Datum bis“ seiner Spiele vor dem heutigen Datum liegt.
-2. Angezeigt wird der Spieltag mit der niedrigsten Nummer, der noch nicht beendet ist.
+2. Aktuell („anstehend“) ist der nicht beendete Spieltag mit dem frühesten Termin (erstes reguläres Spiel), bei
+   gleichem Termin die kleinere Nummer (seit 0.16, Spielplan v2.1, 4.1; bis 0.15.2: die niedrigste Nummer).
 3. Sind alle Spieltage beendet, wird der letzte Spieltag der Datei angezeigt.
 4. Spiele mit Status „verschoben“ oder „abgesagt“ zählen nicht für die Frage, ob ein Spieltag beendet ist.
 8. Sortierung innerhalb eines Spieltags: nach „Datum von“, danach Reihenfolge der Datei.
@@ -84,9 +85,10 @@ def matchday_overview(fixtures: pd.DataFrame, today: date) -> list[Matchday]:
 def _current_key(raw: list[tuple]) -> tuple[str, int] | None:
     if not raw:
         return None
-    for season, md, *_rest, ended in raw:          # raw ist nach (Saison, Spieltag) sortiert
-        if not ended:
-            return season, md                       # Regel 2
+    pending = [(first, season, md) for season, md, first, _last, _n, ended in raw if not ended]
+    if pending:
+        _first, season, md = min(pending)           # Regel 2: frühester Termin, dann Saison und Nummer
+        return season, md
     return raw[-1][0], raw[-1][1]                   # Regel 3
 
 

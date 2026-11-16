@@ -88,7 +88,7 @@ Massgeblich ist das Dashboard-Briefing (v4.2), Kapitel 4.4. Hier zur Information
 Der aktuelle Spieltag wird **für jede Liga separat** bestimmt:
 
 1. Ein Spieltag gilt als beendet, sobald das späteste `Datum bis` seiner Spiele vor dem heutigen Datum liegt (Zeitzone Europe/Zurich). Die Anzeige wechselt am Tag nach dem letzten Spiel.
-2. Angezeigt wird der Spieltag mit der niedrigsten Nummer, der noch nicht beendet ist.
+2. Aktuell („anstehend“) ist der nicht beendete Spieltag mit dem **frühesten Termin** (erstes reguläres Spiel), bei gleichem Termin die kleinere Nummer (seit 0.16; bis 0.15.2: die niedrigste Nummer). Was die Ligaseite daraus zeigt (Abschnitte, Pausen, Navigation), regelt `07_Spielplan_Anzeige.md`, Abschnitt 4.
 3. Sind alle Spieltage der Datei beendet, wird der letzte Spieltag der Datei angezeigt.
 4. Spiele mit einem Status (`verschoben`, `abgesagt`, `abgebrochen`, `ausgesetzt`, `gewertet`) und seit 0.15 auch Spiele mit Vermerk `Nachholspiel` oder `vorgezogen` zählen nicht für die Frage, ob ein Spieltag beendet ist. Nachhol- und vorgezogene Spiele bekommen aber KPI-Werte (Stichtag = ihr echter Termin). Spiele mit Status werden mit ihrem Status, aber ohne KPI-Werte angezeigt. *Ergänzt 31.10.2026:* Sind **alle** Spiele eines Spieltags verschoben oder abgesagt, gilt der Spieltag als beendet, damit er die Anzeige nicht dauerhaft blockiert.
 5. Die KPIs jeder Begegnung werden immer so berechnet, als wäre das Spiel noch nicht gespielt. Stichtag ist `Datum von` der Begegnung.

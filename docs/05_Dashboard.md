@@ -1,6 +1,6 @@
 # Soccer Intelligence – Dashboard-Briefing
 
-**Version 5.4** · Stand 16.11.2026 (Version 0.14: Bereich Datenimport/API, 6.5; Version 0.15: Entwurf 2 mit Blöcken A/B und Entscheiden; Version 0.15.2: Anmeldemaske, 2.4)
+**Version 5.5** · Stand 16.11.2026 (Version 0.14: Bereich Datenimport/API, 6.5; Version 0.15: Entwurf 2 mit Blöcken A/B und Entscheiden; Version 0.15.2: Anmeldemaske, 2.4; Version 0.16: kommende Spieltage, 4, 4.4, 5)
 
 > **Massgebliche Quelle seit 31.10.2026.** Änderungen werden nur noch in dieser Datei gemacht, mit Datum in der Änderungshistorie bzw. im `CHANGELOG.md`.
 > Das Word-Dokument *Dashboard-Briefing v4.2* liegt nur noch als Archiv im Ordner `word/` und wird nicht mehr gepflegt. Änderungen seit 31.10.2026 sind im Text als „Änderung“ mit Datum gekennzeichnet.
@@ -166,11 +166,11 @@ Die Tabs müssen mit der oben definierten URL-Struktur verknüpft sein.
 
 ## 4. Liga-Bereiche (Bundesliga, Premier League, Serie A, LaLiga)
 
-Die Liga-Bereiche zeigen jeweils alle Begegnungen des **aktuellen** Spieltags (siehe 4.4).
+Die Liga-Bereiche zeigen jeweils die **kommenden Spiele nach Spieltag** (seit 0.16, siehe 4.4; bis 0.15.2: alle Begegnungen des aktuellen Spieltags).
 
-Die Darstellung erfolgt in einer breiten Tabelle.
+Die Darstellung erfolgt in einer breiten Tabelle, je Spieltag ein Abschnitt.
 
-Es sollen keine Anstosszeiten und keine Stadioninformationen angezeigt werden.
+*Änderung 16.11.2026 (Version 0.16, Designentwurf freigegeben):* Die Spalte **„Datum“** zwischen „Spiel“ und „Form“ zeigt Wochentag, Datum und Anstosszeit bzw. das Ergebnis (Spielplan-Spezifikation `07`, Abschnitt 4.6). Stadioninformationen werden weiterhin nicht angezeigt.
 
 ### 4.1 Tabellenstruktur
 
@@ -238,19 +238,21 @@ Stattdessen:
 
 Die ersten beiden Spalten bleiben dabei fixiert.
 
-### 4.4 Spielplan und aktueller Spieltag
+### 4.4 Spielplan und kommende Spieltage
 
-Welche Begegnungen angezeigt werden, steht ausschliesslich in der Datei data/Spielplan.xlsx (ein Tabellenblatt pro Liga, Blattname = Liganame). Die historische Datenbank wird dafür nicht verwendet. Der Aufbau der Datei ist in 04_Spielplan.md beschrieben.
+Welche Begegnungen angezeigt werden, steht ausschliesslich in der Datei data/Spielplan.xlsx (ein Tabellenblatt pro Liga, Blattname = Liganame). Die historische Datenbank wird dafür nicht verwendet, ausser für das Ergebnis gespielter Spiele und für „Werte ab“. Der Aufbau der Datei ist in 04_Spielplan.md beschrieben.
 
-Der aktuelle Spieltag wird **für jede Liga separat** bestimmt:
+*Änderung 16.11.2026 (Version 0.16):* Was die Ligaseite zeigt, regelt die Spielplan-Spezifikation `07_Spielplan_Anzeige.md`, **Abschnitt 4** (Sichtbarkeit, Abschnitte, Pausen, Navigation, „Werte ab“, Spalte Datum; Festlegungen 4.8). Kurz:
 
-1.  Ein Spieltag gilt als beendet, sobald das späteste „Datum bis“ seiner Spiele vor dem heutigen Datum liegt (Zeitzone Europe/Zurich). Die Anzeige wechselt am Tag nach dem letzten Spiel.
+1.  Ein Spieltag ist beendet am Tagesende seines letzten regulären Spiels (Zeitzone Europe/Zurich). **Anstehend** ist der nicht beendete Spieltag mit dem frühesten Termin.
 
-2.  Angezeigt wird der Spieltag mit der niedrigsten Nummer, der noch nicht beendet ist.
+2.  Ohne Auswahl („Kommende Spiele“) erscheinen als **Abschnitte**: der anstehende Spieltag (höchstens 14 Tage entfernt), weitere Spieltage, die heute bis heute + 6 beginnen, und Nachhol- oder vorgezogene Spiele unter ihrer offiziellen Nummer. Gespielte Spiele bleiben grau mit Ergebnis stehen.
 
-3.  Sind alle Spieltage der Datei beendet, wird der letzte Spieltag der Datei angezeigt.
+3.  Pausen über 14 Tage zeigen eine Box („Winterpause“, „Spielpause“, „Sommerpause“), nur wenn der letzte Importlauf höchstens 3 Tage alt ist; sonst „Spielplan zuletzt aktualisiert am …“.
 
-4.  Spiele mit Status „verschoben“ oder „abgesagt“ zählen nicht für die Frage, ob ein Spieltag beendet ist. Sie werden mit ihrem Status, aber ohne KPI-Werte angezeigt. Nachholspiele werden in Version 1 nicht separat angezeigt. *Ergänzt 07.11.2026:* Spiele, die mehr als 3 Tage ausserhalb des Hauptzeitraums ihres Spieltags liegen, werden im Spielplan bewusst als „verschoben“ gepflegt (Pflegeregel in `04_Spielplan.md`, Abschnitt 6). Die bestehende Logik bleibt unverändert.
+4.  Spiele mit Status (verschoben, abgesagt, abgebrochen, ausgesetzt, gewertet) erscheinen nicht unter den kommenden Spielen. Beim Blättern stehen sie in ihrem Spieltag mit dem Status in der Spalte Datum, ohne KPI-Werte. Die 3-Tage-Pflegeregel von 07.11.2026 ist seit 0.15 ersetzt (`04_Spielplan.md`, Abschnitt 6).
+
+*Pfeile:* zurück alle Spieltage der Saison und der Vorsaison, vorwärts höchstens 2 über den anstehenden hinaus (bis 0.15.2 nur bis zum aktuellen). KPI-Werte erscheinen erst, wenn beide Teams ihr vorheriges Spiel gespielt haben („Werte ab …“).
 
 5.  Die KPIs jeder Begegnung werden immer so berechnet, als wäre das Spiel noch nicht gespielt. Stichtag ist „Datum von“ der Begegnung im Spielplan (KPI-Regelwerk, Abschnitt 1). Das gilt auch, wenn der angezeigte Spieltag bereits gespielt ist.
 
@@ -264,17 +266,17 @@ Der aktuelle Spieltag wird **für jede Liga separat** bestimmt:
 
 ## 5. Bereich Top Anomalien
 
-Der Bereich Top Anomalien (/dashboard) zeigt die auffälligsten Anomalien des aktuellen Spieltags aller aktiven Ligen. Er ist die Grundlage für die spätere Startseite der öffentlichen Website. Die Auswahl erfolgt deshalb zentral in der Berechnungslogik und nicht in der Oberfläche.
+Der Bereich Top Anomalien (/dashboard) zeigt die auffälligsten Anomalien der anstehenden Spiele aller aktiven Ligen (seit 0.16 je Liga der zeitlich nächste Block, `07`, Abschnitt 4.7; bis 0.15.2 der aktuelle Spieltag). Er ist die Grundlage für die spätere Startseite der öffentlichen Website. Die Auswahl erfolgt deshalb zentral in der Berechnungslogik und nicht in der Oberfläche.
 
 ### 5.1 Auswahl-Logik
 
-1.  Grundlage sind die Begegnungen des aktuellen Spieltags jeder aktiven Liga gemäss 4.4.
+1.  Grundlage ist je aktiver Liga der zeitlich nächste Block (*Änderung 16.11.2026, Version 0.16*): der anstehende Spieltag samt Nachhol- und vorgezogenen Spielen an seinen Tagen; Sonderspiele davor bilden einen eigenen Block. Eine Liga nimmt teil, wenn ihr Block höchstens 14 Tage entfernt ist. Nur Spiele **vor dem Anpfiff** und **mit Werten** („Werte ab“, 4.4).
 
 2.  Berücksichtigt werden **KPI02 bis KPI09** mit leichter oder starker Anomalie (**Änderung 08.11.2026, Carsten – gilt ab Etappe H**; bis dahin nur KPI02 und KPI04).
 
 3.  Die Rangfolge bleibt vorerst wie bisher (Punkt 5). Weil damit KPIs mit grossen relativen Ausschlägen (v. a. KPI03, 06, 08) bevorzugt werden, wird die Gewichtung zusammen mit der Schwellen-Analyse überarbeitet. Ziel: ein ausgewogener Mix je Spieltag (KPI-Regelwerk, offener Punkt 17).
 
-4.  Vorläufige Werte sowie Spiele mit Status «verschoben» oder «abgesagt» werden nicht berücksichtigt.
+4.  Vorläufige Werte sowie Spiele mit Status (verschoben, abgesagt, abgebrochen, ausgesetzt, gewertet) werden nicht berücksichtigt.
 
 5.  Rangfolge: Starke Anomalien kommen vor leichten. Bei gleicher Stärke entscheidet der Betrag der relativen Abweichung, der grösste zuerst. Bei Gleichstand entscheidet das frühere Spieldatum, danach die Reihenfolge im Spielplan.
 
@@ -282,7 +284,7 @@ Der Bereich Top Anomalien (/dashboard) zeigt die auffälligsten Anomalien des ak
 
 7.  Angezeigt werden höchstens vier Einträge. Gibt es weniger Anomalien, werden nur diese angezeigt. Es wird nicht aufgefüllt.
 
-8.  Gibt es keine Anomalie, erscheint der Hinweis «Für den aktuellen Spieltag liegen keine Anomalien vor.»
+8.  Gibt es keine Anomalie, erscheint der Hinweis «Für die anstehenden Spiele liegen keine Anomalien vor.» (bis 0.15.2: «Für den aktuellen Spieltag …»)
 
 Die Auswahl-Logik wird zusätzlich im KPI-Regelwerk festgehalten (Abschnitt 2.6), da sie später auch für die öffentliche Startseite gilt.
 
@@ -292,7 +294,7 @@ Jeder Eintrag zeigt:
 
 - Rang (1 bis 4)
 
-- Liga und Spieltag
+- Liga und Spieltag, seit 0.16 mit Datum und Anstoss
 
 - Begegnung (Heim – Gast)
 
@@ -304,9 +306,9 @@ Jeder Eintrag zeigt:
 
 - Überschrift und Beschreibung exakt gemäss KPI-Regelwerk
 
-Ein Klick auf einen Eintrag öffnet den Bereich der jeweiligen Liga. Im Kopfbereich wird der Spieltag pro Liga angezeigt (siehe 3.2).
+Ein Klick auf einen Eintrag öffnet den Bereich der jeweiligen Liga. Im Kopfbereich steht je Liga ein Kästchen, z. B. „Bundesliga: Spieltag 10 · noch 4 Spiele“ bzw. „Bundesliga: Winterpause bis 07.01.“ (seit 0.16; vorher der Spieltag pro Liga, siehe 3.2).
 
-*Umgesetzt in Etappe D (31.10.2026): Karten in zwei Spalten, darunter der Link „Zur Liga“ (`app/views/top_anomalien.py`); die Auswahl selbst steht in `app/core/top.py`. Die Spieltag-Pfeile der Liga-Bereiche wirken hier nicht: Top Anomalien zeigt immer den aktuellen Spieltag.*
+*Umgesetzt in Etappe D (31.10.2026): Karten in zwei Spalten, darunter der Link „Zur Liga“ (`app/views/top_anomalien.py`); die Auswahl selbst steht in `app/core/top.py`, die Blöcke seit 0.16 in `app/core/anzeige.py`. Die Spieltag-Pfeile der Liga-Bereiche wirken hier nicht.*
 
 ## 6. Bereich Datenqualität
 
@@ -392,6 +394,8 @@ Festhalten der Entscheide macht der Container `soccer-import`.
 - **Block B · Spielplan** (rechts): Spiele neu/entfallen und Änderungen nach Gruppen: verschoben · Nachholspiel (neuer
   Termin) · vorgezogen · Termin geändert · ausgesetzt/abgesagt/abgebrochen/gewertet · Anstosszeit geändert ·
   Anstosszeiten festgelegt · Vermerk geändert (die wichtigen Gruppen aufgeklappt).
+- **„So sieht das Dashboard nach der Übernahme aus“** (seit 0.16): je Liga, was die Ligaseite (Abschnitte bzw. Hinweis),
+  die Spiele, der Block der Top Anomalien und „sichtbar bis“ mit dem neuen Spielplan zeigen würden.
 - Zeile „Im Automatikbetrieb: würde ohne Rückfrage übernommen“ bzw. „würde auf Ihre Freigabe warten – Gründe“.
 - Buttons **„✓ Übernehmen (Ergebnisse und Spielplan)“** (gesperrt bei Fehlern) und **„✕ Verwerfen“**; danach Hinweis
   „Freigabe hinterlegt“. A und B werden immer gemeinsam übernommen.

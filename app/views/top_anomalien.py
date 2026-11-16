@@ -1,19 +1,23 @@
-"""Bereich Top Anomalien (Dashboard-Briefing, Kapitel 5): die auffälligsten Begegnungen des aktuellen
-Spieltags aller aktiven Ligen. Die Auswahl erfolgt zentral in core/top.py (Regelwerk, Abschnitt 2.6).
-Zeigt immer den aktuellen Spieltag, unabhängig von den Spieltag-Pfeilen in den Liga-Bereichen.
+"""Bereich Top Anomalien (Dashboard-Briefing, Kapitel 5): die auffälligsten anstehenden Begegnungen aller aktiven
+Ligen. Seit 0.16 (Spielplan v2.1, 4.7, Designentwurf 16.11.2026) je Liga der zeitlich nächste Block, nur Spiele vor
+dem Anpfiff und mit Werten; die Blöcke bildet core/anzeige.py, die Auswahl core/top.py (Regelwerk, Abschnitt 2.6).
+Unabhängig von den Spieltag-Pfeilen in den Liga-Bereichen.
 """
 
 from __future__ import annotations
 
+from datetime import datetime
 from html import escape
 
 import streamlit as st
 
+from core import anzeige as A
 from core.config import League
 from core.kpis import de_signed
-from core.matchday import Matchday, current_matchday, matchday_games
 from core.top import NO_ANOMALIES_TEXT, TOP_KPIS, Candidate, TopEntry, select_top
-from state import get_active_leagues, get_database, get_fixtures, get_matchday_kpis, today
+from state import (
+    get_active_leagues, get_database, get_fixtures, get_results, get_round_kpis, last_import_day, now,
+)
 from views import components as ui
 from views.kpi_table import ANOMALY_LABEL, anomaly_cell, value_text
 from views.registry import PAGES
@@ -22,10 +26,11 @@ from views.registry import PAGES
 def card_html(e: TopEntry) -> str:
     c, r = e.candidate, e.result
     text = f"<br>{escape(r.text)}" if r.text else ""
+    when = f" · <b>{escape(c.when)}</b>" if c.when else ""
     return (
         '<div class="si-card">'
         f'<div class="si-card-top"><span class="si-rank">{e.rank}</span>'
-        f'<span class="si-card-meta">{escape(c.league)} · Spieltag {c.matchday}</span></div>'
+        f'<span class="si-card-meta">{escape(c.league)} · Spieltag {c.matchday}{when}</span></div>'
         f'<div class="si-card-match">{escape(c.home)} – {escape(c.away)}</div>'
         f'<div class="si-card-kpi">{escape(e.kpi_name)}</div>'
         f'<div class="si-card-value">{anomaly_cell(r.anomalie)} <strong>{value_text(r, r.hauptwert_rund)}</strong> · '
@@ -35,37 +40,47 @@ def card_html(e: TopEntry) -> str:
     )
 
 
-def current_matchdays() -> list[tuple[League, Matchday | None]]:
-    """Aktueller Spieltag je aktiver Liga (None: kein Spieltag im Spielplan)."""
+def league_blocks(at: datetime) -> list[tuple[League, A.Block | None]]:
+    """Der zeitlich nächste Block je aktiver Liga (None: kein Spiel im Spielplan)."""
     fx = get_fixtures()
-    heute = today()
+    last_import = last_import_day()
     out = []
     for league in get_active_leagues():
         fixtures = fx.leagues.get(league.name)
-        out.append((league, current_matchday(fixtures, heute) if fixtures is not None else None))
+        out.append((league, A.top_block(fixtures, at, last_import) if fixtures is not None else None))
     return out
 
 
-def collect_candidates(current: list[tuple[League, Matchday | None]]) -> list[Candidate]:
-    """Begegnungen des aktuellen Spieltags je aktiver Liga, mit KPI-Ergebnissen (aus dem Zwischenspeicher)."""
+def collect_candidates(blocks: list[tuple[League, A.Block | None]], at: datetime) -> list[Candidate]:
+    """Spiele der teilnehmenden Blöcke, die noch nicht angepfiffen sind und Werte haben (Spielplan v2.1, 4.5)."""
     fx = get_fixtures()
     candidates = []
-    for order, (league, md) in enumerate(current):
-        if md is None:
+    for order, (league, block) in enumerate(blocks):
+        if block is None or not block.takes_part:
             continue
-        games = matchday_games(fx.leagues[league.name], md.saison, md.spieltag)
-        for g, k in zip(games.itertuples(), get_matchday_kpis(league, md.saison, md.spieltag)):
-            candidates.append(Candidate(league.name, order, md.saison, md.spieltag, g.datum_von, int(g.reihenfolge),
-                                        g.heim, g.gast, g.status, k))
+        fxp = A.prepare(fx.leagues[league.name])
+        results = get_results(league)
+        kpis: dict = {}
+        for g in block.games.itertuples():
+            if A.values_gate(fxp, g, at, results) is not None:
+                continue
+            key = (g.saison, int(g.spieltag))
+            if key not in kpis:
+                kpis[key] = get_round_kpis(league, *key)
+            when = A.date_cell(g, at, results)
+            candidates.append(Candidate(league.name, order, g.saison, int(g.spieltag), g.datum_von,
+                                        int(g.reihenfolge), g.heim, g.gast, g.status,
+                                        kpis[key].get(int(g.reihenfolge)), when.text + when.strong))
     return candidates
 
 
 def render() -> None:
     db = get_database()
     fx = get_fixtures()
-    current = current_matchdays()
-    header_parts = [f"{lg.name}: Spieltag {md.spieltag}" if md else f"{lg.name}: –" for lg, md in current]
-    ui.header("Aktueller Spieltag", header_parts)          # eine Zeile je Liga, kompakt (Etappe F)
+    at = now()
+    blocks = league_blocks(at)
+    ui.header(subtitle="KPI-Übersicht pro Spiel – je Liga die nächsten Spiele vor dem Anpfiff")
+    st.markdown(ui.chips_html([(lg.name, b.header if b else "–") for lg, b in blocks]), unsafe_allow_html=True)
 
     if db.has_errors or fx.has_errors:                     # erst danach rechnen (H.1)
         ui.blocked_notice(db.has_errors, fx.has_errors, PAGES.get("datenqualitaet"))
@@ -73,7 +88,7 @@ def render() -> None:
         return
 
     st.markdown("### Top Anomalien")
-    entries = select_top(collect_candidates(current))
+    entries = select_top(collect_candidates(blocks, at))
     if not entries:
         st.info(NO_ANOMALIES_TEXT, icon="ℹ️")
     else:
@@ -88,8 +103,10 @@ def render() -> None:
                         st.page_link(page, label=f"Zur {e.candidate.league} →")
                     except Exception:  # noqa: BLE001 - ausserhalb der Navigation (Tests)
                         pass
-    st.caption(f"Berücksichtigt: KPI 02–09 ({len(TOP_KPIS)} KPIs) mit leichter oder starker Anomalie, ohne vorläufige "
-               "Werte und ohne verschobene oder abgesagte Spiele. Höchstens vier Einträge, pro Begegnung einer. "
-               "Rangfolge: stark vor leicht, dann grösste Abweichung (Gewichtung wird mit der Schwellen-Analyse "
-               "überarbeitet).")
+    st.caption(f"Berücksichtigt: je Liga der zeitlich nächste Block – der anstehende Spieltag samt Nachhol- und "
+               f"vorgezogenen Spielen an seinen Tagen (Sonderspiele davor als eigener Block) –, wenn er höchstens "
+               f"{A.PAUSE_DAYS} Tage entfernt ist. Nur Spiele vor dem Anpfiff und mit Werten. KPI 02–09 "
+               f"({len(TOP_KPIS)} KPIs) mit leichter oder starker Anomalie, ohne vorläufige Werte. Höchstens vier "
+               "Einträge, pro Begegnung einer. Rangfolge: stark vor leicht, dann grösste Abweichung (Gewichtung wird "
+               "mit der Schwellen-Analyse überarbeitet).")
     ui.footer()
