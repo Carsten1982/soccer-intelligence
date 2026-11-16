@@ -15,8 +15,8 @@ Schritt kurz erklären, was gemacht wurde.
 - Streamlit-App im Docker-Container `football-dashboard` auf einem Hostinger-VPS, Projektordner `/docker/football-dashboard/`.
 - Python 3.12, streamlit 1.66.1, pandas 3.1.0, openpyxl 3.1.5.
 - Excel-Dateien in `data/`, im Container nur lesbar (`/data`, read-only).
-- `https://soccer-intelligence.com/` = öffentliche Platzhalterseite; `/dashboard` = Dashboard mit Passwort (Traefik
-  BasicAuth, Hash nur in `.env`). Bereiche: Top Anomalien, je aktive Liga ein Bereich, Datenqualität, Sensitivitätsanalyse
+- `https://soccer-intelligence.com/` = öffentliche Platzhalterseite; `/dashboard` = Dashboard mit Anmeldemaske (seit
+  0.15.2; Benutzername und Passwort-Hash nur in `.env`). Bereiche: Top Anomalien, je aktive Liga ein Bereich, Datenqualität, Sensitivitätsanalyse
   (intern), Datenimport/API (intern). Seit Version 0.14 holt der Container `soccer-import` die Daten von API-Football
   (Schlüssel nur in `.env`); nur er schreibt nach Freigabe in `data/`.
 

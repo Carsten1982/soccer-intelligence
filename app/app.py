@@ -4,6 +4,8 @@ Bereiche (Tabs oben):
   Top Anomalien (Startbereich)  ·  je aktive Liga ein Bereich  ·  Datenqualität  ·  Sensitivitätsanalyse (intern)  ·
   Datenimport/API (intern, ganz rechts, seit Version 0.14)
 
+Zugang (seit 0.15.2): Anmeldemaske mit Benutzername und Passwort (anmeldung.py) statt der Passwortabfrage des Browsers.
+
 Welche Ligen aktiv sind, steht in config/ligen.toml, nicht im Programmcode. Ist eine der Konfigurationsdateien
 (ligen.toml, teams.toml, schwellen.toml) ungültig, zeigt die App nur eine klare Meldung.
 """
@@ -16,10 +18,13 @@ from views import components as ui
 from views import datenimport, datenqualitaet, liga, simulation, top_anomalien
 from views.registry import PAGES
 
+import anmeldung
 import vorladen
 
 st.set_page_config(page_title="Soccer Intelligence", page_icon="⚽", layout="wide")
 ui.inject_css()
+vorladen.start()                       # Hintergrund-Helfer: rechnet nach jeder Datenänderung alles vor (0.15.1, F4)
+anmeldung.require_login()              # Anmeldemaske; ohne gültige Anmeldung endet die Seite hier (0.15.2)
 
 try:                                   # alle drei Konfigurationsdateien vorab prüfen (H.1)
     leagues = get_active_leagues()     # ligen.toml
@@ -29,8 +34,6 @@ except ConfigError as exc:
     ui.header()
     st.error(f"**Konfiguration ungültig:** {exc}", icon="⛔")
     st.stop()
-
-vorladen.start()                       # Hintergrund-Helfer: rechnet nach jeder Datenänderung alles vor (0.15.1, F4)
 
 
 def _league_page(league):
@@ -54,3 +57,4 @@ PAGES["datenimport"] = st.Page(datenimport.render, title="Datenimport/API", url_
 nav = st.navigation([PAGES["top"], *league_pages, PAGES["datenqualitaet"], PAGES["simulation"], PAGES["datenimport"]],
                     position="top")
 nav.run()
+anmeldung.logout_button()              # „Abmelden“ unten auf jeder Seite (0.15.2)

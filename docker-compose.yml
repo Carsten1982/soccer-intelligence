@@ -1,13 +1,14 @@
 # Soccer Intelligence – Container-Konfiguration (Stand 31.10.2026, Etappe E; seit 15.11.2026 mit Datenimport, Version 0.14)
 #
 #   https://soccer-intelligence.com/             -> Platzhalterseite, öffentlich (Container soccer-placeholder)
-#   https://soccer-intelligence.com/dashboard…   -> Passwortabfrage (Traefik BasicAuth) -> Streamlit-Dashboard
+#   https://soccer-intelligence.com/dashboard…   -> Streamlit-Dashboard mit Anmeldemaske (seit 0.15.2; bis 0.15.1 Traefik BasicAuth)
 #
-# Zugangsdaten: NUR als Hash in .env auf dem Server (Variable SOCCER_DASHBOARD_AUTH), nie in Git.
-# Fehlt die Variable, bricht "docker compose" mit einer Fehlermeldung ab (statt ohne Passwortschutz zu starten).
+# Zugangsdaten: Benutzername und Passwort-Hash NUR in .env auf dem Server (SI_LOGIN_USER, SI_LOGIN_HASH), nie in Git.
+# Fehlen sie, bleibt das Dashboard gesperrt (Hinweis statt Inhalt). SOCCER_DASHBOARD_AUTH (BasicAuth bis 0.15.1) bleibt in
+# .env stehen, damit ein Rückweg auf eine ältere Version funktioniert.
 # Betroffen sind nur die Labels dieser beiden Container. Die Traefik-Grundkonfiguration bleibt unverändert.
 #
-# soccer-import (seit Version 0.14): holt Montag bis Freitag um 04:00 die Daten von API-Football, legt neue Fassungen in
+# soccer-import (seit Version 0.14): holt täglich um 04:00 die Daten von API-Football, legt neue Fassungen in
 # ./import ab und tauscht sie nach Freigabe aus (nur er schreibt in ./data). Kein Zugang von aussen (keine Labels,
 # kein Port). Der API-Schlüssel steht NUR in .env (Variable API_FOOTBALL_KEY), nie in Git. Fehlt er, startet der
 # Container trotzdem und meldet „API-Schlüssel fehlt“ im Bereich Datenimport/API.
@@ -27,13 +28,19 @@ services:
     environment:
       # Streamlit läuft unter dem Pfad /dashboard (Seiten: /dashboard/bundesliga usw.)
       - STREAMLIT_SERVER_BASE_URL_PATH=dashboard
+      # Anmeldemaske (seit 0.15.2): Benutzername und Passwort-Hash NUR in .env, nie in Git (01, Abschnitt 6.6)
+      - SI_LOGIN_USER=${SI_LOGIN_USER:-}
+      - SI_LOGIN_HASH=${SI_LOGIN_HASH:-}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.soccer.rule=Host(`soccer-intelligence.com`) && PathPrefix(`/dashboard`)"
       - "traefik.http.routers.soccer.entrypoints=websecure"
       - "traefik.http.routers.soccer.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.soccer.middlewares=soccerintel-auth,soccerintel-noindex"
-      - "traefik.http.middlewares.soccerintel-auth.basicauth.users=${SOCCER_DASHBOARD_AUTH:?SOCCER_DASHBOARD_AUTH fehlt in .env}"
+      # Seit 0.15.2 ohne Passwortabfrage des Browsers (BasicAuth): Die Anmeldung macht das Dashboard selbst.
+      # Anfragebremse je Besucher-Adresse gegen Durchprobieren (eine Seite lädt rund 30 Dateien auf einmal).
+      - "traefik.http.routers.soccer.middlewares=soccerintel-ratelimit,soccerintel-noindex"
+      - "traefik.http.middlewares.soccerintel-ratelimit.ratelimit.average=30"
+      - "traefik.http.middlewares.soccerintel-ratelimit.ratelimit.burst=100"
       - "traefik.http.middlewares.soccerintel-noindex.headers.customresponseheaders.X-Robots-Tag=noindex, nofollow"
       - "traefik.http.services.soccer.loadbalancer.server.port=8501"
 

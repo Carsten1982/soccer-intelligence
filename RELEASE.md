@@ -1,31 +1,31 @@
-# Release: Version 0.15.1 – Massnahmen aus der Code-Prüfung
+# Release: Version 0.15.2 – Anmeldemaske und kürzeres Einspielen
 
-**Stand:** 16.11.2026 · Version 0.15.1 · Code-Prüfbericht vom 16.11.2026 (ChatGPT), Entscheidungen Carsten 16.11.2026 (F1–F7)
+**Stand:** 16.11.2026 · Version 0.15.2 · Entscheidungen Carsten 16.11.2026 (L1–L4, kürzeres Einspielen)
 
-**Commit:** Version 0.15.1: Massnahmen aus der Code-Prüfung (Übergabe-Protokoll, Prüfsummen, negative Werte, Vorladen)
+**Commit:** Version 0.15.2: Anmeldemaske statt Browser-Passwortabfrage, Einspielen mit schnellen Tests
 
 ## Was ändert sich?
 
-- **Übernahme abgesichert:** Datenbank und Spielplan werden mit einem Übergabe-Protokoll getauscht. Bricht der Import mitten im Tausch ab, führt er ihn beim nächsten Start zu Ende; ein Mischstand bleibt nie bestehen. Vor dem Tausch werden beide Dateien gegen die Prüfsummen im Bericht geprüft.
-- **Backups** heissen jetzt mit Sekunden und Lauf, z. B. `Database-Soccer-Intelligence_2026-11-17_073012_lauf-2026-11-17_040000_vor_import.xlsx`, und werden nie überschrieben.
-- **Negative Werte:** Ein negativer Statistikwert gilt als fehlend (Warnung), negative Tore sind ein Fehler. Heute gibt es keinen solchen Wert, die KPIs bleiben gleich.
-- **Vorladen:** Das Dashboard rechnet nach jeder Datenänderung, jedem neuen Tag und beim Start alle Seiten im Hintergrund vor. Danach öffnen sich alle Seiten sofort, auch die Sensitivitätsanalyse.
-- **Liste offener Bereinigungen** in `01`, Abschnitt 8.1; schneller Testlauf für zwischendurch.
+- **Anmeldemaske:** Statt der Passwortabfrage des Browsers zeigt das Dashboard eine eigene Maske mit **Benutzername** und **Passwort**. Danach bleiben Sie **12 Stunden** angemeldet; unten auf jeder Seite gibt es **„Abmelden“**. Nach 5 falschen Versuchen ist die Anmeldung 15 Minuten gesperrt.
+- **Zugangsdaten** stehen nur in `.env` auf dem Server (Benutzername und Passwort-Hash), nie im Code oder auf GitHub.
+- **Einspielen kürzer:** Auf dem Server laufen nur noch die schnellen Tests (rund 5 statt 25 Minuten). Die langsamen laufen weiterhin bei jedem Pull Request auf GitHub.
+
+## Vor dem Einspielen (einmalig): Zugang setzen
+
+Nach dem Zusammenführen auf GitHub, **vor** dem Einspielen: Befehl aus `01`, Abschnitt 6.3 („Vor dem ersten Einspielen von 0.15.2“). Er fragt Benutzername und Passwort (verdeckt, zweimal, mindestens 10 Zeichen). Erwartet: „Gespeichert in .env (Benutzer: …, Passwort nur als Hash).“ Ohne diesen Schritt bleibt das Dashboard nach dem Einspielen gesperrt (Hinweis „Anmeldung nicht eingerichtet“) – dann den Schritt nachholen und `docker compose up -d football-dashboard`.
 
 ## Erwartungswerte
 
-- Git-Stand vorher: `a4367eb`.
-- Tests beim Einspielen: rund **470 bestanden, 13 übersprungen** (zuletzt rund 461 / 13), keine Fehler. Einspielen in `tmux`.
-- Schritt 5: „Container laufen (Dashboard und Import)“.
-- **Vorladen:** 2–3 Minuten nach dem Einspielen zeigt
-  ```bash
-  docker logs football-dashboard --tail 5
-  ```
-  eine Zeile `Vorladen: … Sekunden`.
+- Git-Stand vorher: `88a3066`.
+- Tests beim Einspielen: **nur die schnellen**, rund **464 bestanden, 13 übersprungen, 16 ausgelassen** (langsame Tests), keine Fehler; Dauer rund 5 Minuten.
+- Schritt 5 meldet: „Container laufen (Dashboard und Import) · / = 200 · /dashboard/ = 200 (Anmeldemaske)“.
 
 ## Im Browser prüfen
 
-1. **Etwa 3 Minuten nach dem Einspielen** das Dashboard öffnen: Top Anomalien, die Ligaseiten, Datenqualität und **Sensitivitätsanalyse** erscheinen ohne Wartezeit (bisher rund 40 Sekunden beim ersten Aufruf).
-2. **Datenqualität:** Datenbank 0 Fehler, Warnungen und Hinweise wie bisher (35 / 201).
-3. **Datenimport/API:** wie bisher. Nach dem nächsten „Übernehmen“ (morgen früh) erscheinen die neuen Backup-Namen in `backup/`.
-4. **Fusszeile:** „Version 0.15.1 – Datenimport“.
+1. `https://soccer-intelligence.com/dashboard` öffnen: **keine** Passwortabfrage des Browsers mehr, sondern die Maske „Soccer Intelligence – Internes Dashboard – bitte anmelden“.
+2. Mit falschem Passwort: „Benutzername oder Passwort falsch.“
+3. Mit richtigem Benutzernamen und Passwort: Top Anomalien erscheinen; unten auf der Seite „Abmelden“.
+4. Seite neu laden: Sie bleiben angemeldet.
+5. „Abmelden“ klicken: wieder die Maske.
+6. Fusszeile: „Version 0.15.2 – Anmeldung“.
+7. Wenn möglich auf dem Bank-Arbeitsrechner ausprobieren.

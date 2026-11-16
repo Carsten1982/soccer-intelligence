@@ -71,9 +71,10 @@ for _ in $(seq 1 15); do
   sleep 2
   P=$(curl -s -o /dev/null -w "%{http_code}" "$URL/" || true)
   D=$(curl -s -o /dev/null -w "%{http_code}" "$URL/dashboard/" || true)
-  [ "$P" = 200 ] && [ "$D" = 401 ] && break
+  [ "$P" = 200 ] && { [ "$D" = 200 ] || [ "$D" = 401 ]; } && break
 done
-[ "$P" = 200 ] && [ "$D" = 401 ] || stopp "Nach dem Rückweg: / = $P, /dashboard/ = $D (erwartet 200 und 401)."
-ok "Alter Stand läuft · / = 200 · /dashboard/ = 401"
+# /dashboard/: 200 = Anmeldemaske (ab 0.15.2), 401 = Passwortabfrage des Browsers (bis 0.15.1)
+[ "$P" = 200 ] && { [ "$D" = 200 ] || [ "$D" = 401 ]; } || stopp "Nach dem Rückweg: / = $P, /dashboard/ = $D (erwartet 200 und 200 bzw. 401)."
+ok "Alter Stand läuft · / = 200 · /dashboard/ = $D"
 exit 0
 }

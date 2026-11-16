@@ -30,4 +30,4 @@ LEAGUE_SHEETS = REQUIRED_LEAGUE_SHEETS + OPTIONAL_LEAGUE_SHEETS
 # Anzeige-Zeitzone
 TIMEZONE = "Europe/Zurich"  # massgeblich für „heute“ (aktueller Spieltag)
 
-APP_VERSION = "0.15.1 – Datenimport"
+APP_VERSION = "0.15.2 – Anmeldung"

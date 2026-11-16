@@ -32,10 +32,10 @@ case "$1" in
   inspect) echo true;;
 esac
 """,
-    # Platzhalter 200, Dashboard 401
+    # Platzhalter 200, Dashboard 200 (Anmeldemaske seit 0.15.2; mit DASHBOARD_CODE=401 wie bis 0.15.1)
     "curl": """#!/usr/bin/env bash
 for a in "$@"; do last="$a"; done
-case "$last" in */dashboard/) printf 401;; *) printf 200;; esac
+case "$last" in */dashboard/) printf "${DASHBOARD_CODE:-200}";; *) printf 200;; esac
 """,
     "sleep": "#!/usr/bin/env bash\nexit 0\n",
 }
@@ -180,6 +180,21 @@ def test_rueckweg_nach_github_weg_auch_mit_merge_commit(u):
     assert u.kopf(u.server) == u.kopf(u.github, "main")              # Gegen-Commit ist auf GitHub
     assert not (u.server / "app" / "neu.py").exists()
     assert u.git(u.server, "rev-list", "--count", "HEAD") == "4"      # nichts verloren: Start, Änderung, Merge, Rückweg
+
+
+def test_rueckweg_auf_version_mit_browser_passwort(u):
+    """0.15.2: Der Rückweg auf eine Version vor der Anmeldemaske (Dashboard antwortet mit 401) gilt als gelungen."""
+    u.neu_auf_github("app/neu.py", "neu\n")
+    assert u.lauf("einspielen.sh", "github").returncode == 0
+    r = u.lauf("zurueck.sh", DASHBOARD_CODE="401")
+    assert r.returncode == 0 and "/dashboard/ = 401" in r.stdout, r.stdout + r.stderr
+
+
+def test_einspielen_stoppt_ohne_anmeldemaske(u):
+    """0.15.2: Antwortet das Dashboard nach dem Neubau nicht mit der Anmeldemaske (200), stoppt das Skript."""
+    u.neu_auf_github("app/neu.py", "neu\n")
+    r = u.lauf("einspielen.sh", "github", DASHBOARD_CODE="502")
+    assert r.returncode == 1 and "statt 200 (Anmeldemaske" in r.stdout
 
 
 def test_rueckweg_fragt_vorher(u):
