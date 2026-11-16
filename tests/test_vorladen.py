@@ -18,8 +18,8 @@ def test_switched_off_in_tests():
 
 
 def test_warm_up_prepares_all_pages(monkeypatch):
-    """Vorgeladen wird genau das, was die Seiten brauchen: Datenbank, Spielplan, Häufigkeit, KPIs des aktuellen
-    Spieltags je Liga, Sensitivitätsanalyse."""
+    """Vorgeladen wird genau das, was die Seiten brauchen: Datenbank, Spielplan, Häufigkeit, Ergebnisse, KPIs der
+    Abschnitte je Liga (seit 0.16; ein Spieltag mit zwei Abschnitten nur einmal), Sensitivitätsanalyse."""
     calls = []
     league = SimpleNamespace(name="Bundesliga")
     fx = SimpleNamespace(has_errors=False, leagues={"Bundesliga": "plan"})
@@ -32,10 +32,14 @@ def test_warm_up_prepares_all_pages(monkeypatch):
     monkeypatch.setattr(st, "get_active_leagues", lambda: [league])
     monkeypatch.setattr(st, "get_frequency", lambda lg: calls.append("frequency"))
     monkeypatch.setattr(st, "get_matchday_kpis", lambda lg, s, m: calls.append(("kpis", s, m)))
-    monkeypatch.setattr(vorladen, "current_matchday", lambda f, d: SimpleNamespace(saison="2026/2027", spieltag=11))
+    monkeypatch.setattr(st, "get_results", lambda lg: calls.append("results"))
+    monkeypatch.setattr(st, "last_import_day", lambda: None)
+    sections = [SimpleNamespace(key=("2026/2027", 11)), SimpleNamespace(key=("2026/2027", 23)),
+                SimpleNamespace(key=("2026/2027", 11))]
+    monkeypatch.setattr(vorladen, "upcoming", lambda f, at, imp: SimpleNamespace(sections=sections))
     vorladen.warm_up()
-    assert calls == ["db", "fx", "get_prepared", "get_thresholds", "frequency", ("kpis", "2026/2027", 11),
-                     "get_closed_matchdays", "get_simulation_cases"]
+    assert calls == ["db", "fx", "get_prepared", "get_thresholds", "frequency", "results", ("kpis", "2026/2027", 11),
+                     ("kpis", "2026/2027", 23), "get_closed_matchdays", "get_simulation_cases"]
 
 
 def test_blocked_data_is_not_computed(monkeypatch):

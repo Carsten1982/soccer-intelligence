@@ -1,6 +1,8 @@
 """Auswahl der Top-Anomalien (KPI-Regelwerk, Abschnitt 2.6; Dashboard-Briefing, Kapitel 5.1).
 
-- Grundlage: Begegnungen des aktuellen Spieltags aller aktiven Ligen.
+- Grundlage: je aktiver Liga der zeitlich nächste Block (seit 0.16, Spielplan v2.1, 4.7: anstehender Spieltag samt
+  Sonderspielen an seinen Tagen bzw. Sonderspiele davor), nur Spiele vor dem Anpfiff und mit Werten
+  (Auswahl der Spiele in core/anzeige.py).
 - KPI 02–09 mit leichter oder starker Anomalie (seit Etappe H, Entscheidung 08.11.2026; vorher nur KPI 02 und 04).
   Die Gewichtung (bisherige Rangfolge nach Prozent) wird mit der Schwellen-Analyse überarbeitet (Regelwerk, Punkt 17).
 - Ausgeschlossen: vorläufige Werte, Begegnungen mit Status „verschoben“ oder „abgesagt“.
@@ -27,7 +29,7 @@ TOP_KPIS = {
     "kpi08": "KPI 08 – Beide Teams treffen", "kpi09": "KPI 09 – Schüsse aufs Tor",
 }
 MAX_ENTRIES = 4
-NO_ANOMALIES_TEXT = "Für den aktuellen Spieltag liegen keine Anomalien vor."
+NO_ANOMALIES_TEXT = "Für die anstehenden Spiele liegen keine Anomalien vor."
 
 
 @dataclass(frozen=True)
@@ -43,6 +45,7 @@ class Candidate:
     away: str
     status: str
     kpis: MatchKpis | None   # None bei verschobenen/abgesagten Spielen
+    when: str = ""           # Datum und Anstoss für die Karte („Sa 21.11. · 18:30“, seit 0.16)
 
 
 @dataclass(frozen=True)

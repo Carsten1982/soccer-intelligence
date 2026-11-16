@@ -8,15 +8,16 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 
 ## 0. Stand und Versionen
 
-**In Betrieb:** Version 0.15.1 (seit 16.11.2026) – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit den festgelegten Schwellen (positiv/negativ getrennt, KPI 03 je Liga), Top Anomalien, Datenqualität und Sensitivitätsanalyse; Datenbank 2018/19–2026/27 mit Referenzsaison 2018/19 (KPI-Regelwerk 1.2). Seit 15.11.2026 **Datenimport über API-Football**: Container `soccer-import` (täglich 04:00), Reiter „Datenimport/API“ mit Freigabe (halbautomatisch) und Entscheiden, Spielplan der laufenden Saison und der Vorsaison aus der API (Status nur aus der API, Nachholspiele mit KPIs), Ergebnis-Import nach `06`, Abschnitt 10.1, Teamnamen von API-Football (Abschnitt 6.5). Passwortschutz unter `/dashboard`, Platzhalterseite unter `/`.
+**In Betrieb:** Version 0.15.2 (seit 16.11.2026) – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit den festgelegten Schwellen (positiv/negativ getrennt, KPI 03 je Liga), Top Anomalien, Datenqualität und Sensitivitätsanalyse; Datenbank 2018/19–2026/27 mit Referenzsaison 2018/19 (KPI-Regelwerk 1.2). Seit 15.11.2026 **Datenimport über API-Football**: Container `soccer-import` (täglich 04:00), Reiter „Datenimport/API“ mit Freigabe (halbautomatisch) und Entscheiden, Spielplan der laufenden Saison und der Vorsaison aus der API (Status nur aus der API, Nachholspiele mit KPIs), Ergebnis-Import nach `06`, Abschnitt 10.1, Teamnamen von API-Football (Abschnitt 6.5). Anmeldemaske unter `/dashboard` (Benutzername und Passwort-Hash in `.env`, 12 Stunden angemeldet), Platzhalterseite unter `/`.
 
-**Bereit zum Einspielen:** Version 0.15.2 – Anmeldemaske mit Benutzername und Passwort statt der Passwortabfrage des Browsers (Abschnitt 3, Zugang; einmalig vorher Abschnitt 6.3), Einspielen nur mit den schnellen Tests (rund 8 statt 20 Minuten). Nachtrag 16.11.2026: Der Seitentest der Startseite meldet sich an (erster Einspielversuch an diesem Test gestoppt, nichts in Betrieb genommen).
+**Bereit zum Einspielen:** Version 0.16 – Anzeige kommender Spieltage nach dem freigegebenen Designentwurf (`07`, Abschnitt 4): Ligaseiten mit Abschnitten je Spieltag, Spalte Datum, gespielte Spiele grau mit Ergebnis, „Werte ab …“, Hinweis-Boxen für Pausen und Datenstand, Pfeile vorwärts bis 2 Spieltage; Top Anomalien je Liga der nächste Block, nur vor dem Anpfiff; Vorschau im Reiter Datenimport/API.
 
-**Als Nächstes:** Version 0.16 – Anzeige kommender Spieltage nach dem freigegebenen Designentwurf (`07`, Abschnitt 4) · 2 Wochen halbautomatischer Betrieb, danach Datum für den automatischen Tausch festlegen (`app/config/import.toml`) · E-Mail-Benachrichtigung · Phase 2: Wettquoten, Verletzungen, Tabellenstände (rückwirkend) · Rundum-Prüfung des Codes · KPI-Erweiterungen und Freigabe je Liga · Gewichtung der Top Anomalien (Regelwerk, Punkt 17) · öffentliche Website.
+**Als Nächstes:** 2 Wochen halbautomatischer Betrieb, danach Datum für den automatischen Tausch festlegen (`app/config/import.toml`) · E-Mail-Benachrichtigung · Phase 2: Wettquoten, Verletzungen, Tabellenstände (rückwirkend) · Rundum-Prüfung des Codes · KPI-Erweiterungen und Freigabe je Liga · Gewichtung der Top Anomalien (Regelwerk, Punkt 17) · öffentliche Website.
 
 | Version | Etappe | Inhalt | Eingespielt | Git | Tests |
 |---|---|---|---|---|---|
-| 0.15.2 | Anmeldemaske | Anmeldemaske statt Browser-Passwortabfrage (Benutzername, Passwort-Hash in .env, 12 h, Sperre nach Fehlversuchen, Anfragebremse), Einspielen mit schnellen Tests; Nachtrag: Seitentest mit Anmeldung | ausstehend | – | 479 |
+| 0.16 | Kommende Spieltage | Ligaseiten mit Abschnitten je Spieltag, Spalte Datum, gespielte Spiele grau, „Werte ab“, Pausen-Boxen, Datenstand, Pfeile vorwärts 2; Top Anomalien je Liga der nächste Block vor dem Anpfiff; Vorschau im Reiter Datenimport/API | ausstehend | – | 563 |
+| 0.15.2 | Anmeldemaske | Anmeldemaske statt Browser-Passwortabfrage (Benutzername, Passwort-Hash in .env, 12 h, Sperre nach Fehlversuchen, Anfragebremse), Einspielen mit schnellen Tests; Nachtrag: Seitentest mit Anmeldung | 16.11.2026 | `47d54ca` | 479 |
 | 0.15.1 | Code-Prüfung | Übergabe-Protokoll und Prüfsummen bei der Übernahme, eindeutige Backups, negative Werte, Vorladen im Hintergrund, schneller Testlauf, Bereinigungsliste | 16.11.2026 | `88a3066` | 470 |
 | 0.15 | Datenimport nach Reviews | Spielplan v2.1 (Status nur aus der API, Nachholspiele mit KPIs, Termin, Vorsaison), Ergebnis-Import R1–R9 (Korrekturfenster, Entscheide, Endstand gegen Tor-Ereignisse, Plausibilität, Zuordnungsdatei), täglich, Reiter Blöcke A/B | 16.11.2026 | `a4367eb` | 459 |
 | 0.14.1 | Datenimport, Nachtrag | Teamnamen mit ü und Akzenten (10 Teams), Einspiel-Skript macht nach Abbruch weiter, Statustext | 15.11.2026 | `1408c50` | 442 |
@@ -399,6 +400,7 @@ app/
 │   ├── config.py         Einlesen der Konfiguration (Etappe B)
 │   ├── fixtures.py       Spielplan einlesen und prüfen (Etappe B)
 │   ├── matchday.py       aktueller Spieltag, Spieltagsübersicht (Etappe B)
+│   ├── anzeige.py        kommende Spieltage: Abschnitte, Pausen, Navigation, „Werte ab“, Top-Block, Vorschau (0.16)
 │   ├── overview.py       Übersicht der Datenbank (Spiele je Saison)
 │   ├── kpis.py           KPI 01–09 gemäss Regelwerk (Etappen C und H)
 │   ├── thresholds.py     Schwellen aus schwellen.toml (Etappe H)
@@ -450,6 +452,7 @@ werden alle offenen Punkte abgearbeitet. Bedingung jeder Bereinigung: KPI-Ergebn
 | B3 | `app/importer/spielplan.py` `main_period()` | Gleitendes Fenster statt Neufiltern je Starttag; Regel „früheres Fenster gewinnt“ ist durch Tests abgesichert | Code-Prüfung 16.11.2026, P3b | offen |
 | B4 | `app/core/validation.py`, Prüfung „Team mehrfach im Spieltag“ | `groupby`/`duplicated` statt zeilenweiser Prüfung, Meldungen unverändert | Code-Prüfung 16.11.2026, P3c | offen |
 | B5 | `app/core/fixtures.py` `_parse_sheet()`, `_plausibility()` | `itertuples()` statt `iterrows()` (nur mit Messung) | Code-Prüfung 16.11.2026, P3d | offen |
+| B6 | `app/anmeldung.py` `_set_cookie()` | `st.components.v1.html` durch `st.iframe` ersetzen (Streamlit meldet im Protokoll: „will be removed after 2026-06-01“). Mit streamlit 1.66.1 noch lauffähig; spätestens vor einem Streamlit-Update, mit Browser-Test der Anmeldung | Umsetzung 0.16 (Protokoll der Probe) | offen |
 
 ---
 

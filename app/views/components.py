@@ -39,7 +39,23 @@ CSS = f"""
 .si-grid .si-grid-item {{white-space:nowrap;}}
 @media (max-width: 640px) {{ .si-matchday .si-box.si-grid {{grid-template-columns:auto;}} }}
 .si-badge {{display:inline-block; margin-top:.2rem; padding:0 .4rem; border-radius:.3rem; font-size:.75rem;
-  background:#fde8e8; color:#9b1c1c;}}
+  background:#e9edf3; color:{SLATE};}}
+/* Kommende Spieltage (0.16, Designentwurf 16.11.2026): Vermerke, Abschnitte, Hinweis-Boxen */
+.si-tag {{display:inline-block; padding:0 .45rem; border-radius:.3rem; font-size:.75rem; font-weight:600;
+  background:#e9edf3; color:{SLATE}; vertical-align:middle;}}
+.si-tag-early {{background:#fff3cd; color:#7a5b00;}}
+.si-tag-catchup {{background:#e3ecf8; color:#1f4e8c;}}
+.si-cg .si-tag {{margin-top:.15rem; margin-right:.25rem;}}
+.si-sec {{display:flex; align-items:baseline; gap:.55rem; flex-wrap:wrap; margin:1.1rem 0 .4rem 0; color:{NAVY};}}
+.si-sec-t {{font-size:1.2rem; font-weight:800;}}
+.si-sec-m {{color:{SLATE}; font-size:.92rem;}}
+.si-note {{border:1px solid {LINE}; border-radius:.5rem; background:#f5f7fb; color:{NAVY}; padding:.75rem 1rem;
+  font-size:1.05rem; margin:.4rem 0 .8rem 0;}}
+.si-note small {{color:{SLATE}; font-size:.85rem;}}
+.si-note-stale {{border-color:#f0d58a; background:#fff8e6;}}
+.si-chips {{display:flex; flex-wrap:wrap; gap:.45rem; margin:.2rem 0 1rem 0;}}
+.si-chip {{border:1px solid {LINE}; border-radius:.4rem; padding:.2rem .6rem; font-size:.88rem; color:{NAVY};
+  background:#fff; white-space:nowrap;}}
 .si-footer {{color:{SLATE}; font-size:.75rem; margin-top:2rem;}}
 .si-desc strong {{color:{NAVY};}}
 .si-dot {{display:inline-block; width:.8rem; height:.8rem; border-radius:50%; vertical-align:middle; margin:0 .08rem;}}
@@ -60,10 +76,14 @@ CSS = f"""
    Die Spalten # und Spiel bleiben beim seitlichen Schieben stehen. */
 .si-cwrap {{overflow-x:auto; border:1px solid {LINE}; border-radius:.5rem; margin-bottom:.5rem;
   scrollbar-width:auto; scrollbar-color:#9aa6b8 {HEAD_BG};}}
-.si-cgrid {{min-width:1060px; color:{NAVY};}}
-.si-crow {{display:grid; grid-template-columns:2.4rem 12.5rem 5.6rem repeat(8, minmax(5.9rem, 1fr)) 1.8rem;
+.si-cgrid {{min-width:1230px; color:{NAVY};}}
+.si-crow {{display:grid; grid-template-columns:2.4rem 12.5rem 10.6rem 5.6rem repeat(8, minmax(5.9rem, 1fr)) 1.8rem;
   align-items:center; border-bottom:1px solid {LINE}; font-size:.9rem; background:#fff;}}
 .si-crow.si-alt {{background:{ROW_ALT};}}
+.si-cd {{font-size:.86rem; line-height:1.3;}}
+.si-crow.si-grey, .si-crow.si-grey .si-ckv {{color:#8a96a8;}}
+.si-crow.si-grey .si-cd b {{color:{NAVY};}}
+.si-cgate {{grid-column:span 8; text-align:center; font-style:italic; color:{SLATE}; font-size:.86rem;}}
 .si-chead {{background:{HEAD_BG}; font-weight:700; font-size:.82rem; line-height:1.15;}}
 .si-chead small {{display:block; font-weight:500; color:{SLATE}; font-size:.7rem;}}
 details.si-cdet {{margin:0;}}
@@ -101,7 +121,7 @@ details.si-cdet[open] .si-chev {{transform:rotate(90deg);}}
 .si-kc-x {{line-height:1.35;}}
 @media (max-width: 700px) {{
   .si-cgrid {{min-width:0; width:max-content;}}
-  .si-crow {{grid-template-columns:2rem 9.2rem 5rem repeat(8, 5.6rem) 1.4rem; font-size:.84rem;}}
+  .si-crow {{grid-template-columns:2rem 9.2rem 8.6rem 5rem repeat(8, 5.6rem) 1.4rem; font-size:.84rem;}}
   .si-cs2 {{left:2rem;}}
   .si-cdetail-in {{grid-template-columns:1fr;}}
 }}
@@ -112,6 +132,7 @@ details.si-cdet[open] .si-chev {{transform:rotate(90deg);}}
 .si-rank {{display:inline-flex; align-items:center; justify-content:center; width:1.8rem; height:1.8rem; border-radius:50%;
   background:{NAVY}; color:#fff; font-weight:700;}}
 .si-card-meta {{color:{SLATE}; font-size:.85rem;}}
+.si-card-meta b {{color:{NAVY};}}
 .si-card-match {{font-size:1.15rem; font-weight:700; margin:.1rem 0 .3rem 0;}}
 .si-card-kpi {{color:{SLATE}; font-size:.85rem;}}
 .si-card-value {{font-size:1rem; margin:.3rem 0 .5rem 0;}}
@@ -141,6 +162,7 @@ def inject_css() -> None:
 
 TITLE = "Soccer Intelligence"
 SUBTITLE = "KPI-Übersicht pro Spiel – alle Begegnungen eines Spieltags"
+SUBTITLE_UPCOMING = "KPI-Übersicht pro Spiel – kommende Spiele nach Spieltag"   # Ligaseite ohne Auswahl (0.16)
 
 
 def header_html(right_label: str, right_value: str | list[str], subtitle: str = SUBTITLE) -> str:
@@ -158,8 +180,14 @@ def header_html(right_label: str, right_value: str | list[str], subtitle: str = 
             f"{right}</div>")
 
 
-def title_html() -> str:
-    return f'<div class="si-header"><div><h1>{TITLE}</h1><div class="si-sub">{escape(SUBTITLE)}</div></div></div>'
+def title_html(subtitle: str = SUBTITLE) -> str:
+    return f'<div class="si-header"><div><h1>{TITLE}</h1><div class="si-sub">{escape(subtitle)}</div></div></div>'
+
+
+def chips_html(items: list[tuple[str, str]]) -> str:
+    """Kopfzeile der Top Anomalien (0.16): je Liga ein Kästchen „<b>Bundesliga</b>: Spieltag 10 · noch 4 Spiele“."""
+    chips = "".join(f'<span class="si-chip"><b>{escape(name)}</b>: {escape(text)}</span>' for name, text in items)
+    return f'<div class="si-chips">{chips}</div>'
 
 
 def matchday_box_html(label: str, value: str) -> str:

@@ -1,6 +1,6 @@
 """Kompakte Liga-Tabelle mit KPI 01–09 (Dashboard-Briefing 4.1, Design abgenommen am 08.11.2026).
 
-Je Begegnung eine Zeile: Nummer, Spiel, Formkurve und je KPI 02–09 der Hauptwert mit Anomalie-Punkt
+Je Begegnung eine Zeile: Nummer, Spiel, Datum (seit 0.16), Formkurve und je KPI 02–09 der Hauptwert mit Anomalie-Punkt
 (KPI 03: Abweichung zur 2,5-Tore-Marke, weil sein Hauptwert dem von KPI 02 entspricht). Ein Klick auf die
 Zeile klappt alle Details auf (HTML <details>, ohne JavaScript): je KPI Einstufung, Hauptwert, Abweichung,
 Ligareferenz, Teamwerte, Datenbasis, Überschrift und Text.
@@ -42,6 +42,26 @@ COLUMNS = [
     KpiColumn("kpi09", "KPI 09", "Aufs Tor", "Schüsse aufs Tor"),
 ]
 assert [c.key for c in COLUMNS] == list(TOP_KPIS)
+
+
+@dataclass(frozen=True)
+class TableRow:
+    """Eine Zeile der Tabelle (seit 0.16 mit Datum, grauer Darstellung und „Werte ab“)."""
+    home: str
+    away: str
+    status: str = ""
+    kpis: MatchKpis | None = None
+    date_html: str = ""          # Spalte „Datum“, bereits maskiert
+    grey: bool = False           # gespielt oder nicht aktiv: ganze Zeile grau
+    gate: str | None = None      # Text statt der KPI-Werte („Werte ab …“)
+    tag: str = ""                # Vermerk am Spiel: „Nachholspiel“ / „vorgezogen“
+
+
+TAG_CSS = {"Nachholspiel": "si-tag-catchup", "vorgezogen": "si-tag-early"}
+
+
+def tag_html(tag: str) -> str:
+    return f'<span class="si-tag {TAG_CSS.get(tag, "")}">{escape(tag)}</span>' if tag else ""
 
 
 # --- kleine Bausteine -----------------------------------------------------------------
@@ -140,37 +160,50 @@ def _head() -> str:
     cells = "".join(f'<div class="si-cc si-ckv" title="{c.number} – {escape(c.name)}"><small>{c.number}</small>'
                     f'{escape(c.short)}</div>' for c in COLUMNS)
     return ('<div class="si-crow si-chead"><div class="si-cc si-cn si-cs1">#</div>'
-            '<div class="si-cc si-cg si-cs2">Spiel</div><div class="si-cc si-cf">Form</div>'
-            f'{cells}<div class="si-cc si-cx"></div></div>')
+            '<div class="si-cc si-cg si-cs2">Spiel</div><div class="si-cc si-cd">Datum</div>'
+            f'<div class="si-cc si-cf">Form</div>{cells}<div class="si-cc si-cx"></div></div>')
 
 
-def _names(home: str, away: str, status: str) -> str:
+def _names(home: str, away: str, status: str, tag: str = "") -> str:
     badge = f'<span class="si-badge">{escape(status)}</span>' if status and status != "geplant" else ""
     return (f'<div class="si-cc si-cg si-cs2"><span class="si-team">{escape(home)}</span>'
-            f'<span class="si-team">{escape(away)}</span>{badge}</div>')
+            f'<span class="si-team">{escape(away)}</span>{tag_html(tag)}{badge}</div>')
 
 
-def match_row(n: int, home: str, away: str, status: str, k: MatchKpis | None) -> str:
-    """Eine Begegnung. Ohne KPIs (verschoben/abgesagt): Zeile ohne Werte und ohne Details (Briefing 4.4, Regel 4)."""
-    alt = " si-alt" if n % 2 == 0 else ""
-    number = f'<div class="si-cc si-cn si-cs1">{n}</div>'
+def _form(k: MatchKpis | None) -> str:
     if k is None:
-        empty = "".join(f'<div class="si-cc si-ckv">{PLACEHOLDER}</div>' for _ in COLUMNS)
-        return (f'<div class="si-crow si-cplain{alt}">{number}{_names(home, away, status)}'
-                f'<div class="si-cc si-cf">{PLACEHOLDER}</div>{empty}<div class="si-cc si-cx"></div></div>')
-    form = (f'<div class="si-cc si-cf"><span class="si-fline">{form_marks(k.form_home)}</span>'
+        return f'<div class="si-cc si-cf">{PLACEHOLDER}</div>'
+    return (f'<div class="si-cc si-cf"><span class="si-fline">{form_marks(k.form_home)}</span>'
             f'<span class="si-fline">{form_marks(k.form_away)}</span></div>')
+
+
+def match_row(n: int, row: TableRow) -> str:
+    """Eine Begegnung.
+    - ohne KPIs (verschoben/abgesagt …): Zeile ohne Werte und ohne Details (Briefing 4.4, Regel 4)
+    - mit „Werte ab …“ (seit 0.16, Spielplan v2.1, 4.5): Text über alle KPI-Spalten, ohne Details
+    - gespielt (seit 0.16): grau, Werte und Details bleiben (vor dem Spiel berechnet)"""
+    cls = "si-crow" + (" si-alt" if n % 2 == 0 else "") + (" si-grey" if row.grey else "")
+    start = (f'<div class="si-cc si-cn si-cs1">{n}</div>{_names(row.home, row.away, row.status, row.tag)}'
+             f'<div class="si-cc si-cd">{row.date_html}</div>')
+    k = row.kpis
+    if k is None or row.gate:
+        if row.gate:
+            values = f'<div class="si-cc si-cgate">{escape(row.gate)}</div>'
+        else:
+            values = "".join(f'<div class="si-cc si-ckv">{PLACEHOLDER}</div>' for _ in COLUMNS)
+        return f'<div class="{cls} si-cplain">{start}{_form(k)}{values}<div class="si-cc si-cx"></div></div>'
     cells = "".join(compact_cell(c, getattr(k, c.key)) for c in COLUMNS)
-    summary = (f'<summary class="si-crow{alt}">{number}{_names(home, away, status)}{form}{cells}'
+    summary = (f'<summary class="{cls}">{start}{_form(k)}{cells}'
                '<div class="si-cc si-cx"><span class="si-chev">›</span></div></summary>')
     cards = form_card(k) + "".join(detail_card(c, getattr(k, c.key), k) for c in COLUMNS)
     detail = f'<div class="si-cdetail"><div class="si-cdetail-in">{cards}</div></div>'
     return f'<details class="si-cdet">{summary}{detail}</details>'
 
 
-def compact_table_html(rows: list[tuple[str, str, str, MatchKpis | None]]) -> str:
-    """rows: (Heim, Gast, Status, KPIs oder None) in der Reihenfolge des Spielplans."""
-    body = "".join(match_row(i, h, a, s, k) for i, (h, a, s, k) in enumerate(rows, start=1))
+def compact_table_html(rows: list[TableRow | tuple[str, str, str, MatchKpis | None]]) -> str:
+    """rows: TableRow oder (Heim, Gast, Status, KPIs oder None), in der Reihenfolge der Anzeige."""
+    rows = [r if isinstance(r, TableRow) else TableRow(*r) for r in rows]
+    body = "".join(match_row(i, r) for i, r in enumerate(rows, start=1))
     return f'<div class="si-cwrap"><div class="si-cgrid">{_head()}{body}</div></div>'
 
 

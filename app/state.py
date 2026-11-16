@@ -7,6 +7,7 @@ automatisch neu ein – ohne Neustart des Containers, auch bei gleicher Grösse 
 
 from __future__ import annotations
 
+import json
 from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
@@ -21,6 +22,7 @@ from core.frequency import anomaly_frequency
 from core.issues import FEHLER, HINWEIS, WARNUNG
 from core.kpis import MatchKpis, prepare_league
 from core.loader import DatabaseLoad, load_database
+from core.anzeige import results_index
 from core.matchday import matchday_games
 from core.results import matchday_kpis
 from core.simulation import build_cases, closed_matchdays
@@ -32,6 +34,11 @@ TZ = ZoneInfo(settings.TIMEZONE)
 def today() -> date:
     """Heutiges Datum in der Zeitzone Europe/Zurich (massgeblich für den aktuellen Spieltag)."""
     return datetime.now(TZ).date()
+
+
+def now() -> datetime:
+    """Jetzt in Europe/Zurich, ohne Zeitzonenangabe (wie die Anstosszeiten im Spielplan; seit 0.16)."""
+    return datetime.now(TZ).replace(tzinfo=None)
 
 
 # --- Datenbank ---------------------------------------------------------------
@@ -124,6 +131,42 @@ def get_matchday_kpis(league: League, season: str, matchday: int) -> list[MatchK
     files_key = tuple(_file_key(f) for f in (settings.DATABASE_FILE, settings.FIXTURES_FILE, settings.THRESHOLDS_FILE,
                                              settings.LEAGUES_FILE, settings.TEAMS_FILE))
     return _cached_matchday_kpis(league.name, season, matchday, files_key)
+
+
+def get_round_kpis(league: League, season: str, matchday: int) -> dict[int, MatchKpis | None]:
+    """Wie get_matchday_kpis, aber je Spiel über die Reihenfolge im Spielplan-Blatt ansprechbar (seit 0.16:
+    Abschnitte und Top-Anomalien-Blöcke mischen Spiele verschiedener Spieltage)."""
+    games = matchday_games(get_fixtures().leagues[league.name], season, matchday)
+    return dict(zip(games["reihenfolge"].astype(int), get_matchday_kpis(league, season, matchday)))
+
+
+# --- Ergebnisse und Datenstand für die Anzeige kommender Spieltage (seit 0.16) ----------------------
+
+@st.cache_data(show_spinner=False, max_entries=2)
+def _cached_results(path: str, key: tuple) -> dict:  # noqa: ARG001 - key ist Teil des Cache-Schlüssels
+    return {name: results_index(df) for name, df in _cached_prepared(path, key).items()}
+
+
+def get_results(league: League) -> dict:
+    """Ergebnisse der Datenbank je (Saison, Heim, Gast) einer Liga (Spalte „Datum“, „Werte ab“)."""
+    path = settings.DATABASE_FILE
+    return _cached_results(str(path), _file_key(path)).get(league.name, {})
+
+
+FAILED_RUNS = ("fehlgeschlagen", "Fehler – nicht übernehmbar")
+
+
+def last_import_day() -> date | None:
+    """Tag des letzten erfolgreichen Importlaufs (Spielplan v2.1, S9), None ohne Lauf. Liest nur /import."""
+    from importer.einstellungen import IMPORT_DIR
+    for report in sorted((IMPORT_DIR / "laeufe").glob("*/bericht.json"), reverse=True):
+        try:
+            rep = json.loads(report.read_text(encoding="utf-8"))
+            if rep.get("status") not in FAILED_RUNS and rep.get("start"):
+                return datetime.fromisoformat(rep["start"]).date()
+        except (OSError, ValueError, TypeError, AttributeError):
+            continue
+    return None
 
 
 # --- Schwellenwerte (app/config/schwellen.toml) ------------------------------------------

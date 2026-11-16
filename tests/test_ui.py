@@ -72,9 +72,9 @@ def test_app_start_page_top_anomalien(monkeypatch):
     assert not at.exception, at.exception
     text = _texts(at)
     assert "Soccer Intelligence" in text
-    for name in ("Bundesliga", "Premier League", "Serie A", "LaLiga"):     # Kopf: Spieltag je Liga (Etappe F)
-        assert f"{name}: Spieltag" in text, name
-    assert "si-grid" in text
+    for name in ("Bundesliga", "Premier League", "Serie A", "LaLiga"):     # Kopf: Block je Liga (seit 0.16)
+        assert f"<b>{name}</b>: " in text, name
+    assert "si-chips" in text
     assert "Top Anomalien" in text
     from core.top import NO_ANOMALIES_TEXT
     assert "si-card" in text or NO_ANOMALIES_TEXT in text + "\n".join(str(i.value) for i in at.info)
@@ -115,9 +115,13 @@ def test_league_pages(script):
     at = AppTest.from_function(script, default_timeout=TIMEOUT).run()
     assert not at.exception, at.exception
     text = _texts(at)
-    assert "Aktueller Spieltag" in text and 'class="si-cgrid"' in text               # kompakte Tabelle (Etappe H)
-    assert "KPI 02" in text and "Erwartete Tore" in text and "si-anom-" in text      # KPI-Spalten befüllt
-    assert "KPI 09" in text and "Schüsse aufs Tor" in text and "<details" in text    # KPI 05–09 und Details
+    assert "Kommende Spiele" in text                                                 # seit 0.16
+    if 'class="si-cgrid"' not in text:                # Pause (z. B. Winterpause): nur der Hinweis, je nach Datum
+        assert 'class="si-note' in text
+        return
+    assert "KPI 02" in text and "Erwartete Tore" in text and "si-anom-" in text      # KPI-Spalten (Etappe H)
+    assert "KPI 09" in text and "Schüsse aufs Tor" in text                           # KPI 05–09
+    assert "<details" in text or "si-cgate" in text   # Details, oder „Werte ab …“ wenn ein Vorspiel noch fehlt
 
 
 def _simulation():
@@ -227,15 +231,14 @@ def test_form_marks():
 def test_league_page_arrow_back_and_address():
     at = AppTest.from_function(_liga_bundesliga, default_timeout=TIMEOUT).run()
     assert not at.exception, at.exception
+    assert "Kommende Spiele" in _texts(at)
     prev = at.button(key="prev_bundesliga")
-    nxt = at.button(key="next_bundesliga")
-    assert nxt.disabled                                   # vom aktuellen Spieltag nicht in die Zukunft
     if prev.disabled:
         pytest.skip("im Spielplan gibt es nur einen auswählbaren Spieltag")
     prev.click().run()
     assert not at.exception, at.exception
     assert "Ausgewählter Spieltag" in _texts(at)
-    assert at.button(key="current_bundesliga") is not None   # „Zum aktuellen Spieltag“
+    assert at.button(key="current_bundesliga") is not None   # „Zu den kommenden Spielen“
     if hasattr(at, "query_params"):
         assert "spieltag" in at.query_params
 
@@ -249,7 +252,162 @@ def test_league_page_invalid_address_falls_back_to_current():
     at.run()
     assert not at.exception, at.exception
     text = _texts(at) + "\n".join(str(c.value) for c in at.caption)
-    assert "Aktueller Spieltag" in text and "nicht verfügbar" in text
+    assert "Kommende Spiele" in text and "nicht verfügbar" in text
+
+
+# --- Kommende Spieltage (Version 0.16): Tabelle, Ligaseite und Top Anomalien ohne echte Dateien -----------------
+
+def test_table_row_date_grey_gate_and_tag():
+    from views.kpi_table import COLUMNS, TableRow, compact_table_html
+    k = _match_kpis()
+    html = compact_table_html([
+        TableRow("A", "B", "", k, "Fr 20.11. · <b>2:1</b>", grey=True),                     # gespielt: grau, mit Details
+        TableRow("C", "D", "", k, "<b>Sa 21.11. · 18:30</b>", gate="Werte ab So 22.11. – C spielt vorher noch"),
+        TableRow("E", "F", "", None, "Sa 21.11. · verschoben", grey=True),
+        TableRow("G", "<i>H</i>", "", k, "<b>So 22.11. · 15:30</b>", tag="Nachholspiel"),
+    ])
+    assert '<div class="si-cc si-cd">Datum</div>' in html                                    # Spalte zwischen Spiel und Form
+    assert html.index("si-cd") < html.index("si-cf")
+    assert html.count("<details") == 2                                                       # gespielt + normal
+    assert html.count("si-grey") == 2 and html.count('class="si-cc si-cgate"') == 1
+    assert "Werte ab So 22.11. – C spielt vorher noch" in html
+    assert 'class="si-tag si-tag-catchup">Nachholspiel<' in html and "&lt;i&gt;H&lt;/i&gt;" in html
+    gate_row = html.split("si-cgate")[0].rsplit("si-crow", 1)[1]
+    assert "si-cplain" in gate_row and html.count('class="si-kc"') == 2 * (1 + len(COLUMNS))
+
+
+def test_liga_address_and_arrows():
+    pytest.importorskip("streamlit")
+    from core import anzeige as A
+    from views import liga
+    keys = [("2025/2026", 34), ("2026/2027", 1), ("2026/2027", 2), ("2026/2027", 3), ("2026/2027", 4)]
+    anchor = ("2026/2027", 2)
+    assert liga.requested({}, keys, anchor) == (None, False)
+    assert liga.requested({"spieltag": "1"}, keys, anchor) == (("2026/2027", 1), False)
+    assert liga.requested({"spieltag": "34", "saison": "2025-26"}, keys, anchor) == (("2025/2026", 34), False)
+    assert liga.requested({"spieltag": "5"}, keys, anchor) == (None, True)                 # weiter als 2 vorwärts
+    assert liga.requested({"spieltag": "x"}, keys, anchor) == (None, True)
+    assert liga.params_for(("2025/2026", 34), anchor) == {"spieltag": "34", "saison": "2025-26"}
+    assert liga.params_for(("2026/2027", 3), anchor) == {"spieltag": "3"} and liga.params_for(None, anchor) == {}
+    shown = A.Upcoming([], None, anchor, True, False)
+    assert liga.arrows(None, keys, shown) == (("2026/2027", 1), ("2026/2027", 3))
+    pause = A.Upcoming([], None, anchor, False, False)                                     # Winterpause: nur Hinweis
+    assert liga.arrows(None, keys, pause) == (("2026/2027", 1), ("2026/2027", 2))
+    assert liga.arrows(("2026/2027", 4), keys, shown) == (("2026/2027", 3), None)
+    assert liga.arrows(("2025/2026", 34), keys, shown) == (None, ("2026/2027", 1))
+
+
+def test_liga_notice_and_section_head():
+    pytest.importorskip("streamlit")
+    from datetime import date
+    import pandas as pd
+    from core import anzeige as A
+    from views import liga
+    html = liga.notice_html(A.Notice(A.WINTER, "Winterpause", "nächster Spieltag am Fr 08.01.2027", "(Spieltag 15)"))
+    assert html == ('<div class="si-note"><b>Winterpause</b> – nächster Spieltag am Fr 08.01.2027 (Spieltag 15)'
+                    "</div>")
+    stale = liga.notice_html(A.Notice(A.STALE, "Spielplan zuletzt aktualisiert am", "Do 19.11.2026", "<x>"))
+    assert "si-note-stale" in stale and "<b>Do 19.11.2026</b>" in stale and "&lt;x&gt;" in stale
+    games = pd.DataFrame({"datum_von": [date(2026, 12, 2), date(2026, 12, 2)]})
+    sec = A.Section("2026/2027", 23, "vorgezogen", games, rest="übrige Spiele des Spieltags im Februar")
+    head = liga.section_head_html(sec, single=False)
+    assert "Spieltag 23</span>" in head and "si-tag-early" in head
+    assert "Mi 02.12. · 2 Spiele (übrige Spiele des Spieltags im Februar)" in head
+    sec = A.Section("2026/2027", 10, "", games, hidden=("verschoben", "verschoben", "abgesagt"))
+    assert "(2 Spiele verschoben, 1 Spiel abgesagt – beim Blättern sichtbar)" in liga.section_head_html(sec, False)
+    assert "beim Blättern" not in liga.section_head_html(sec, single=True)
+
+
+def _liga_test_league():
+    from core.config import League
+    from views import liga
+    liga.render(League("Bundesliga", "bundesliga", 4, True))
+
+
+def _top_page():
+    from views import top_anomalien
+    top_anomalien.render()
+
+
+def _patch_display(monkeypatch, module, now, fx, imported):
+    from types import SimpleNamespace
+    monkeypatch.setattr(module, "get_database", lambda: SimpleNamespace(has_errors=False))
+    monkeypatch.setattr(module, "get_fixtures", lambda: SimpleNamespace(has_errors=False, leagues={"Bundesliga": fx}))
+    monkeypatch.setattr(module, "get_results", lambda lg: {("2026/2027", "A", "B"): (2, 1)})
+    monkeypatch.setattr(module, "get_round_kpis", lambda lg, s, m: {})
+    monkeypatch.setattr(module, "last_import_day", lambda: imported)
+    monkeypatch.setattr(module, "now", lambda: now)
+
+
+@pytest.mark.skipif(AppTest is None, reason="Streamlit nicht vorhanden")
+def test_league_page_sections_and_forward_two(monkeypatch):
+    """Ligaseite mit festem Spielplan: zwei Abschnitte (englische Woche), gespielt grau mit Ergebnis, ▶ höchstens
+    2 Spieltage über den anstehenden hinaus, „Zu den kommenden Spielen“ zurück."""
+    from datetime import date, datetime
+    from test_anzeige import plan, rnd
+    import views.liga as liga
+    fx = plan(*[rnd(n, date(2026, 11, 6 + 7 * (n - 1)), date(2026, 11, 8 + 7 * (n - 1))) for n in range(1, 4)],
+              rnd(4, date(2026, 11, 24), date(2026, 11, 25)), rnd(5, date(2026, 11, 29), date(2026, 11, 29)),
+              rnd(6, date(2026, 12, 4), date(2026, 12, 6)), rnd(7, date(2026, 12, 11), date(2026, 12, 13)))
+    _patch_display(monkeypatch, liga, datetime(2026, 11, 22, 12, 0), fx, date(2026, 11, 22))
+    at = AppTest.from_function(_liga_test_league, default_timeout=TIMEOUT).run()
+    assert not at.exception, at.exception
+    text = _texts(at)
+    assert "Kommende Spiele" in text and "Saison 2026/27 · ab So 22.11." in text
+    assert text.count('class="si-sec"') == 2 and "Spieltag 3</span>" in text and "Spieltag 4</span>" in text
+    assert "Fr 20.11. · <b>2:1</b>" in text and "si-grey" in text                          # A–B gespielt (2:1)
+    nxt = at.button(key="next_bundesliga")
+    nxt.click().run()
+    assert "Ausgewählter Spieltag" in _texts(at) and "Saison 2026/27 · Spieltag 4" in _texts(at)
+    at.button(key="next_bundesliga").click().run()
+    assert "Spieltag 5" in _texts(at) and at.button(key="next_bundesliga").disabled      # 3 + 2 = 5
+    at.button(key="current_bundesliga").click().run()
+    assert "Kommende Spiele" in _texts(at)
+
+
+@pytest.mark.skipif(AppTest is None, reason="Streamlit nicht vorhanden")
+def test_league_page_winter_break_notice_only(monkeypatch):
+    from datetime import date, datetime
+    from test_anzeige import plan, rnd
+    import views.liga as liga
+    fx = plan(rnd(14, date(2026, 12, 18), date(2026, 12, 20)), rnd(15, date(2027, 1, 8), date(2027, 1, 10)))
+    _patch_display(monkeypatch, liga, datetime(2026, 12, 23, 10, 0), fx, date(2026, 12, 23))
+    at = AppTest.from_function(_liga_test_league, default_timeout=TIMEOUT).run()
+    assert not at.exception, at.exception
+    text = _texts(at)
+    assert "<b>Winterpause</b> – nächster Spieltag am Fr 08.01.2027 (Spieltag 15)" in text
+    assert 'class="si-sec"' not in text
+    assert not at.button(key="prev_bundesliga").disabled and not at.button(key="next_bundesliga").disabled
+    _patch_display(monkeypatch, liga, datetime(2026, 12, 23, 10, 0), fx, date(2026, 12, 19))   # Import 4 Tage alt
+    at = AppTest.from_function(_liga_test_league, default_timeout=TIMEOUT).run()
+    assert "Spielplan zuletzt aktualisiert am <b>Sa 19.12.2026</b>" in _texts(at) and "Winterpause" not in _texts(at)
+
+
+@pytest.mark.skipif(AppTest is None, reason="Streamlit nicht vorhanden")
+def test_top_page_headers_per_league(monkeypatch):
+    from datetime import date, datetime
+    from test_anzeige import plan, rnd
+    import views.top_anomalien as top
+    fx = plan(rnd(10, date(2026, 11, 20), date(2026, 11, 22)), rnd(11, date(2026, 11, 27), date(2026, 11, 29)))
+    _patch_display(monkeypatch, top, datetime(2026, 11, 21, 16, 0), fx, date(2026, 11, 21))
+    from core.config import League
+    monkeypatch.setattr(top, "get_active_leagues", lambda: [League("Bundesliga", "bundesliga", 4, True)])
+    at = AppTest.from_function(_top_page, default_timeout=TIMEOUT).run()
+    assert not at.exception, at.exception
+    from core.top import NO_ANOMALIES_TEXT
+    assert "<b>Bundesliga</b>: Spieltag 10 · noch 1 Spiel" in _texts(at)
+    assert NO_ANOMALIES_TEXT in "\n".join(str(i.value) for i in at.info)
+
+
+def test_top_card_shows_date_and_kickoff():
+    pytest.importorskip("streamlit")
+    from datetime import date
+    from core.top import Candidate, TopEntry
+    from views.top_anomalien import card_html
+    k = _match_kpis()
+    c = Candidate("Bundesliga", 0, "2026/2027", 10, date(2026, 11, 21), 0, "A", "B", "geplant", k, "Sa 21.11. · 18:30")
+    html = card_html(TopEntry(1, c, "kpi02", "KPI 02 – Erwartete Tore", k.kpi02))
+    assert "Bundesliga · Spieltag 10 · <b>Sa 21.11. · 18:30</b>" in html
 
 
 # --- Datenimport/API (Version 0.14) -------------------------------------------------------
