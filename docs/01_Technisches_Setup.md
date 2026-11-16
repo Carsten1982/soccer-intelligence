@@ -10,13 +10,13 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 
 **In Betrieb:** Version 0.15.1 (seit 16.11.2026) – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit den festgelegten Schwellen (positiv/negativ getrennt, KPI 03 je Liga), Top Anomalien, Datenqualität und Sensitivitätsanalyse; Datenbank 2018/19–2026/27 mit Referenzsaison 2018/19 (KPI-Regelwerk 1.2). Seit 15.11.2026 **Datenimport über API-Football**: Container `soccer-import` (täglich 04:00), Reiter „Datenimport/API“ mit Freigabe (halbautomatisch) und Entscheiden, Spielplan der laufenden Saison und der Vorsaison aus der API (Status nur aus der API, Nachholspiele mit KPIs), Ergebnis-Import nach `06`, Abschnitt 10.1, Teamnamen von API-Football (Abschnitt 6.5). Passwortschutz unter `/dashboard`, Platzhalterseite unter `/`.
 
-**Bereit zum Einspielen:** Version 0.15.2 – Anmeldemaske mit Benutzername und Passwort statt der Passwortabfrage des Browsers (Abschnitt 3, Zugang; einmalig vorher Abschnitt 6.3), Einspielen nur mit den schnellen Tests (rund 5 statt 25 Minuten).
+**Bereit zum Einspielen:** Version 0.15.2 – Anmeldemaske mit Benutzername und Passwort statt der Passwortabfrage des Browsers (Abschnitt 3, Zugang; einmalig vorher Abschnitt 6.3), Einspielen nur mit den schnellen Tests (rund 8 statt 20 Minuten). Nachtrag 16.11.2026: Der Seitentest der Startseite meldet sich an (erster Einspielversuch an diesem Test gestoppt, nichts in Betrieb genommen).
 
 **Als Nächstes:** Version 0.16 – Anzeige kommender Spieltage nach dem freigegebenen Designentwurf (`07`, Abschnitt 4) · 2 Wochen halbautomatischer Betrieb, danach Datum für den automatischen Tausch festlegen (`app/config/import.toml`) · E-Mail-Benachrichtigung · Phase 2: Wettquoten, Verletzungen, Tabellenstände (rückwirkend) · Rundum-Prüfung des Codes · KPI-Erweiterungen und Freigabe je Liga · Gewichtung der Top Anomalien (Regelwerk, Punkt 17) · öffentliche Website.
 
 | Version | Etappe | Inhalt | Eingespielt | Git | Tests |
 |---|---|---|---|---|---|
-| 0.15.2 | Anmeldemaske | Anmeldemaske statt Browser-Passwortabfrage (Benutzername, Passwort-Hash in .env, 12 h, Sperre nach Fehlversuchen, Anfragebremse), Einspielen mit schnellen Tests | ausstehend | – | 478 |
+| 0.15.2 | Anmeldemaske | Anmeldemaske statt Browser-Passwortabfrage (Benutzername, Passwort-Hash in .env, 12 h, Sperre nach Fehlversuchen, Anfragebremse), Einspielen mit schnellen Tests; Nachtrag: Seitentest mit Anmeldung | ausstehend | – | 479 |
 | 0.15.1 | Code-Prüfung | Übergabe-Protokoll und Prüfsummen bei der Übernahme, eindeutige Backups, negative Werte, Vorladen im Hintergrund, schneller Testlauf, Bereinigungsliste | 16.11.2026 | `88a3066` | 470 |
 | 0.15 | Datenimport nach Reviews | Spielplan v2.1 (Status nur aus der API, Nachholspiele mit KPIs, Termin, Vorsaison), Ergebnis-Import R1–R9 (Korrekturfenster, Entscheide, Endstand gegen Tor-Ereignisse, Plausibilität, Zuordnungsdatei), täglich, Reiter Blöcke A/B | 16.11.2026 | `a4367eb` | 459 |
 | 0.14.1 | Datenimport, Nachtrag | Teamnamen mit ü und Akzenten (10 Teams), Einspiel-Skript macht nach Abbruch weiter, Statustext | 15.11.2026 | `1408c50` | 442 |
@@ -232,7 +232,8 @@ Erwartet: genau die drei Versionen oben. Weicht etwas ab → Ursache klären, be
    ```
    Nach einem Verbindungsabbruch: neu anmelden und `tmux attach -t einspielen` (der Lauf geht dort weiter); fertig: `exit`.
    Wurde der Lauf trotzdem nach dem Holen abgebrochen, merkt sich das Skript das (`backup/EINSPIELEN_OFFEN`) und macht beim nächsten Aufruf mit Tests und Neubau weiter, statt „Nichts Neues“ zu melden.
-   Das Skript zeigt, was neu ist, macht ein Backup, übernimmt genau den Stand von GitHub (nur „fast-forward“, kein eigener Commit), testet mit den echten Excel-Dateien (seit 0.15.2 nur die schnellen Tests, rund 5 Minuten; die langsamen laufen bei jedem Pull Request auf GitHub), baut nur `football-dashboard` und `soccer-import` neu und prüft `200`/`200` (Platzhalter, Anmeldemaske). Danach im Browser prüfen, was in `RELEASE.md` steht, und mit `j` bestätigen.
+   Bringt ein Release eine neue Fassung von `einspielen.sh` selbst mit, gilt sie erst ab dem **nächsten** Aufruf: Der laufende Aufruf arbeitet mit der Fassung zu Ende, mit der er gestartet wurde (so liefen beim ersten Einspielen von 0.15.2 noch alle Tests).
+   Das Skript zeigt, was neu ist, macht ein Backup, übernimmt genau den Stand von GitHub (nur „fast-forward“, kein eigener Commit), testet mit den echten Excel-Dateien (seit 0.15.2 nur die schnellen Tests, rund 8 Minuten; die langsamen laufen bei jedem Pull Request auf GitHub), baut nur `football-dashboard` und `soccer-import` neu und prüft `200`/`200` (Platzhalter, Anmeldemaske). Danach im Browser prüfen, was in `RELEASE.md` steht, und mit `j` bestätigen.
 
 Das Skript stoppt, wenn auf dem Server etwas geändert wurde, das nicht auf GitHub ist (`git status` nicht leer oder eigene Commits). Bei einem Fehler hält es an, setzt nichts selbst zurück und nennt den Rückweg. Protokolle (Tests, Neubau) liegen im Backup-Ordner. Die automatischen Tests auf GitHub laufen ohne die Excel-Dateien aus `data/` (die liegen nur auf dem Server); dafür prüfen sie auch die Einspiel-Skripte in einem Probelauf (`tests/test_einspielen.py`, im Test-Container auf dem Server übersprungen, weil dort `git` fehlt).
 
@@ -260,8 +261,9 @@ Fragt vorher nach. Schon übernommen oder committet: Ein Gegen-Commit stellt gen
    - `tests` am Ende ist wichtig, sonst sammelt pytest auch `backup/`.
    - `SI_DATA_DIR=/src/data` ist wichtig, sonst finden die Seitentests die Excel-Dateien nicht.
    - Bei Fehlern: **Stopp**, Ausgabe an Claude.
-   - Beim Einspielen und auf GitHub laufen immer **alle** Tests. Für die Arbeit zwischendurch gibt es seit 0.15.1
-     einen schnellen Lauf ohne die Ende-zu-Ende-Tests (Marker `langsam`): `python -m pytest -q -m "not langsam" tests`.
+   - Auf GitHub laufen immer **alle** Tests. Beim Einspielen mit dem Skript (seit 0.15.2) und für die Arbeit
+     zwischendurch genügt der schnelle Lauf ohne die Ende-zu-Ende-Tests (Marker `langsam`): `-m "not langsam"`.
+     Der Befehl unten macht den vollständigen Lauf (rund 20 Minuten).
    ```bash
    cd /docker/football-dashboard && docker run --rm -v "$PWD":/src:ro -e SI_DATA_DIR=/src/data -e PYTHONDONTWRITEBYTECODE=1 -w /src python:3.12-slim sh -c "pip install -q --root-user-action=ignore -r requirements-dev.txt && python -m pytest -q -p no:cacheprovider tests" 2>&1 | tail -15
    ```
