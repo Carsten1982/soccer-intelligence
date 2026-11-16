@@ -58,8 +58,11 @@ else
 fi
 ok "Code auf dem Stand vor dem Release ($(git log -1 --oneline))"
 
-# Datenimport (seit 0.14) mitbauen, wenn der alte Stand ihn schon kennt; sonst nur ein Hinweis (er läuft weiter)
-if grep -q "^  soccer-import:" docker-compose.yml; then
+# Datenimport (seit 0.14) und Vorschau (seit 0.17) mitbauen, wenn der alte Stand sie schon kennt; sonst nur ein
+# Hinweis (sie laufen weiter: die Vorschau bleibt hinter ihrem Passwort, der Import holt weiter Daten)
+if grep -q "^  soccer-vorschau:" docker-compose.yml; then
+  docker compose up -d --build football-dashboard soccer-import soccer-vorschau > "$BACKUP/zurueck_neubau.log" 2>&1 || stopp "Neubau fehlgeschlagen ($BACKUP/zurueck_neubau.log)."
+elif grep -q "^  soccer-import:" docker-compose.yml; then
   docker compose up -d --build football-dashboard soccer-import > "$BACKUP/zurueck_neubau.log" 2>&1 || stopp "Neubau fehlgeschlagen ($BACKUP/zurueck_neubau.log)."
 else
   docker compose up -d --build football-dashboard > "$BACKUP/zurueck_neubau.log" 2>&1 || stopp "Neubau fehlgeschlagen ($BACKUP/zurueck_neubau.log)."

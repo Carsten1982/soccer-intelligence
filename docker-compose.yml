@@ -2,6 +2,9 @@
 #
 #   https://soccer-intelligence.com/             -> Platzhalterseite, öffentlich (Container soccer-placeholder)
 #   https://soccer-intelligence.com/dashboard…   -> Streamlit-Dashboard mit Anmeldemaske (seit 0.15.2; bis 0.15.1 Traefik BasicAuth)
+#   https://soccer-intelligence.com/vorschau…    -> Vorschau der öffentlichen Website (seit 0.17, Container soccer-vorschau),
+#                                                  mit Passwortabfrage des Browsers (Traefik BasicAuth, Hash in .env als
+#                                                  SOCCER_VORSCHAU_AUTH; fehlt er, ist die Vorschau nicht erreichbar)
 #
 # Zugangsdaten: Benutzername und Passwort-Hash NUR in .env auf dem Server (SI_LOGIN_USER, SI_LOGIN_HASH), nie in Git.
 # Fehlen sie, bleibt das Dashboard gesperrt (Hinweis statt Inhalt). SOCCER_DASHBOARD_AUTH (BasicAuth bis 0.15.1) bleibt in
@@ -57,6 +60,30 @@ services:
     environment:
       - API_FOOTBALL_KEY=${API_FOOTBALL_KEY:-}
       - TZ=Europe/Zurich
+
+  soccer-vorschau:
+    # Vorschau der öffentlichen Website (seit 0.17, docs/08_Website.md): erzeugt die Seiten bei jedem Aufruf neu,
+    # auch für ein anderes Datum (?datum=…, Zeitreise). Liest data/ und import/ nur. Kein Port nach aussen.
+    build:
+      context: /docker/football-dashboard
+    container_name: soccer-vorschau
+    restart: unless-stopped
+    command: ["python", "-m", "website.vorschau"]
+    volumes:
+      - ./data:/data:ro
+      - ./import:/import:ro
+    environment:
+      - TZ=Europe/Zurich
+      - SI_VORSCHAU_PORT=8080
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.soccervorschau.rule=Host(`soccer-intelligence.com`) && PathPrefix(`/vorschau`)"
+      - "traefik.http.routers.soccervorschau.entrypoints=websecure"
+      - "traefik.http.routers.soccervorschau.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.soccervorschau.middlewares=soccervorschau-auth,soccerintel-ratelimit,soccerintel-noindex"
+      # Passwortabfrage des Browsers; Benutzer und bcrypt-Hash NUR in .env (tools/vorschau_passwort.sh), nie in Git
+      - "traefik.http.middlewares.soccervorschau-auth.basicauth.users=${SOCCER_VORSCHAU_AUTH:-}"
+      - "traefik.http.services.soccervorschau.loadbalancer.server.port=8080"
 
   soccer-placeholder:
     image: nginx:1.27-alpine

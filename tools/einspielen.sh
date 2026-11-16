@@ -167,14 +167,15 @@ grep -v "notice\]" "$BACKUP/tests.log" | tail -6 | sed 's/^/   /'
 ok "Tests bestanden: $(grep -Eo '[0-9]+ passed(, [0-9]+ skipped)?' "$BACKUP/tests.log" | tail -1)"
 
 # ── 5 Neubau und Prüfung ──────────────────────────────────────────────────────────────────────
-schritt "5/6: Neubau (nur football-dashboard und soccer-import) und Prüfung"
-docker compose up -d --build football-dashboard soccer-import > "$BACKUP/neubau.log" 2>&1 || {
+schritt "5/6: Neubau (football-dashboard, soccer-import, soccer-vorschau) und Prüfung"
+docker compose up -d --build football-dashboard soccer-import soccer-vorschau > "$BACKUP/neubau.log" 2>&1 || {
   tail -15 "$BACKUP/neubau.log" | sed 's/^/   /'; stopp "Neubau fehlgeschlagen."; }
-PLATZHALTER="" DASHBOARD=""
+PLATZHALTER="" DASHBOARD="" VORSCHAU=""
 for _ in $(seq 1 15); do
   sleep 2
   PLATZHALTER=$(curl -s -o /dev/null -w "%{http_code}" "$URL/" || true)
   DASHBOARD=$(curl -s -o /dev/null -w "%{http_code}" "$URL/dashboard/" || true)
+  VORSCHAU=$(curl -s -o /dev/null -w "%{http_code}" "$URL/vorschau/" || true)
   [ "$PLATZHALTER" = 200 ] && [ "$DASHBOARD" = 200 ] && break
 done
 docker ps --format "table {{.Names}}\t{{.Status}}" | sed 's/^/   /'
@@ -183,9 +184,16 @@ LAEUFT=$(docker inspect -f '{{.State.Running}}' football-dashboard 2>/dev/null |
 [ "$LAEUFT" = true ] || stopp "Container football-dashboard läuft nicht."
 IMPORT=$(docker inspect -f '{{.State.Running}}' soccer-import 2>/dev/null || echo false)
 [ "$IMPORT" = true ] || stopp "Container soccer-import läuft nicht (Datenimport)."
+WEBSEITE=$(docker inspect -f '{{.State.Running}}' soccer-vorschau 2>/dev/null || echo false)
+[ "$WEBSEITE" = true ] || stopp "Container soccer-vorschau läuft nicht (Vorschau der Website, seit 0.17)."
 [ "$PLATZHALTER" = 200 ] || stopp "Platzhalterseite antwortet mit $PLATZHALTER statt 200."
 [ "$DASHBOARD" = 200 ] || stopp "Dashboard antwortet mit $DASHBOARD statt 200 (Anmeldemaske, seit 0.15.2)."
-ok "Container laufen (Dashboard und Import) · / = 200 · /dashboard/ = 200 (Anmeldemaske)"
+ok "Container laufen (Dashboard, Import, Vorschau) · / = 200 · /dashboard/ = 200 (Anmeldemaske)"
+if [ "$VORSCHAU" = 401 ]; then
+  ok "/vorschau/ = 401 (Passwortabfrage der Vorschau)"
+else
+  info "Hinweis: /vorschau/ antwortet mit $VORSCHAU statt 401. Passwort der Vorschau setzen (01, Abschnitt 6.3)."
+fi
 rm -f "$OFFEN"
 
 # ── 6 Abschluss ───────────────────────────────────────────────────────────────────────────────

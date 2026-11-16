@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="{{ t('allgemein.sprache') }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ seitentitel }}</title>
+{% if beschreibung %}<meta name="description" content="{{ beschreibung }}">{% endif %}
+{% if vorschau %}<meta name="robots" content="noindex, nofollow">{% endif %}
+<link rel="preload" href="{{ statisch('schriften/inter-latin-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="{{ statisch('schriften/outfit-latin-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="{{ statisch('site.css') }}">
+</head>
+<body>
+{% if vorschau %}
+<div class="vorschau">
+  <div class="wrap">
+    <strong>{{ t('vorschau.leiste') }}</strong>
+    <span>{% if zeitreise %}{{ t('vorschau.zeitreise', zeit=zeitreise) }}{% else %}{{ t('vorschau.aktuell') }}{% endif %}</span>
+    <form method="get" action="">
+      <label for="vorschau-datum">{{ t('vorschau.zeitpunkt') }}</label>
+      <input id="vorschau-datum" type="datetime-local" name="datum" value="{{ datum_wert }}">
+      <button type="submit">{{ t('vorschau.anzeigen') }}</button>
+      <a class="knopf" href="?">{{ t('vorschau.jetzt') }}</a>
+    </form>
+    {% if ungueltig %}<span class="fehler">{{ t('vorschau.ungueltig') }}</span>{% endif %}
+  </div>
+</div>
+{% endif %}
+<header class="wrap">
+  <div class="kopf">
+    <a class="logo" href="{{ url('/') }}">
+      <svg width="30" height="30" viewBox="0 0 28 28" fill="none" aria-hidden="true"><rect width="28" height="28" rx="8" fill="#0B3D2E"/><rect x="6" y="15" width="3.6" height="7" rx="1.2" fill="#C6F26B"/><rect x="12.2" y="10" width="3.6" height="12" rx="1.2" fill="#F4F7F2"/><rect x="18.4" y="6" width="3.6" height="16" rx="1.2" fill="#F4F7F2"/></svg>
+      <span>{{ t('allgemein.marke') }}</span>
+    </a>
+    <nav aria-label="{{ t('kopf.navigation') }}">
+      <a href="{{ url('/spieltag/' ~ standard_liga) }}"{% if aktiv == 'spieltag' %} aria-current="page"{% endif %}>{{ t('kopf.spieltag') }}</a>
+      <a href="{{ url('/methodik') }}"{% if aktiv == 'methodik' %} aria-current="page"{% endif %}>{{ t('kopf.methodik') }}</a>
+      <a href="{{ url('/impressum') }}"{% if aktiv == 'impressum' %} aria-current="page"{% endif %}>{{ t('kopf.impressum') }}</a>
+    </nav>
+  </div>
+</header>
+<main class="wrap">
+{% block inhalt %}{% endblock %}
+</main>
+<footer class="fuss">
+  <div class="wrap">
+    <div class="spalte">
+      <div class="marke">{{ t('allgemein.marke') }}</div>
+      <p>{{ t('fuss.pflicht') }}</p>
+    </div>
+    <div class="spalte">
+      <div>{{ t('fuss.stand', stand=stand_text) }}</div>
+      <nav aria-label="{{ t('fuss.navigation') }}">
+        <a href="{{ url('/impressum') }}">{{ t('fuss.impressum') }}</a>
+        <a href="{{ url('/datenschutz') }}">{{ t('fuss.datenschutz') }}</a>
+        <a href="{{ url('/methodik') }}">{{ t('fuss.methodik') }}</a>
+      </nav>
+    </div>
+  </div>
+</footer>
+{% block skript %}{% endblock %}
+</body>
+</html>

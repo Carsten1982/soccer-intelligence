@@ -19,6 +19,8 @@ Schritt kurz erklären, was gemacht wurde.
   0.15.2; Benutzername und Passwort-Hash nur in `.env`). Bereiche: Top Anomalien, je aktive Liga ein Bereich, Datenqualität, Sensitivitätsanalyse
   (intern), Datenimport/API (intern). Seit Version 0.14 holt der Container `soccer-import` die Daten von API-Football
   (Schlüssel nur in `.env`); nur er schreibt nach Freigabe in `data/`.
+- Öffentliche Website (seit 0.17, `docs/08_Website.md`): bis zum Livegang nur als Vorschau unter `/vorschau` mit
+  Passwortabfrage (Container `soccer-vorschau`, Hash nur in `.env` als `SOCCER_VORSCHAU_AUTH`); Zeitreise `?datum=…`.
 
 ## Quellen (verbindlich)
 | Datei | Inhalt |
@@ -30,6 +32,7 @@ Schritt kurz erklären, was gemacht wurde.
 | docs/05_Dashboard.md | Dashboard-Briefing: Aufbau, Navigation, Darstellung, Abnahmekriterien |
 | docs/06_Datenlieferung.md | Datenlieferung über API-Football: Feldzuordnung, Tagesbetrieb, Regeln des Ergebnis-Imports (10.1), Entscheidungen |
 | docs/07_Spielplan_Anzeige.md | Spielplan aus der API (Status, Termin, Nachholspiele, Zuordnung) und Anzeige kommender Spieltage (Spezifikation v2.1) |
+| docs/08_Website.md | Öffentliche Website: Entscheidungen, Technik, Seiten, Zeitreise, Annahmen, Testfälle |
 | docs/tests/test_kpi*.md | Bestätigte Testfälle mit erwarteten Ergebnissen (JSON) – Referenz für die Korrektheit |
 | docs/tests/pruefprotokoll_*.md | Prüfprotokolle grösserer Etappen (Gegenrechnung, Vollvergleich) |
 | CHANGELOG.md | Änderungsprotokoll: jede Änderung mit Datum und wer |
@@ -71,4 +74,5 @@ Befehle zum Einspielen nur in `01`, Abschnitt 6; das Release-spezifische in `REL
 - Die Excel-Dateien werden nur gelesen, nie verändert.
 - Keine Passwörter, Tokens, Schlüssel oder geheimen Links in Code, Logs, Doku oder Git.
 - Keine Vereinslogos (rechtliche Gründe).
-- Benutzeroberfläche und Texte auf Deutsch (Schweizer Schreibweise mit „ss“).
+- Benutzeroberfläche und Texte auf Deutsch (Schweizer Schreibweise mit „ss“). Ausnahme: die öffentliche Website
+  schreibt mit „ß“ (Entscheidung Carsten 16.11.2026, `docs/08_Website.md`, T5).

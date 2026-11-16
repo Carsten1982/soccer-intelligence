@@ -1,0 +1,119 @@
+{% extends "basis.html" %}
+{#- Seite Spieltag (Konzept 08, Abschnitt 5; Übergabe 6). Alle Texte aus der Sprachdatei, alle Werte aus dem
+    Datensatz website.spieltag.spieltag_daten (Codes). -#}
+
+{% macro chips(s) -%}
+<span class="chips">
+  {%- if s.art in ('stark', 'leicht') %}<span class="chip chip--{{ s.art }}">{{ t('chip.' ~ s.art) }}</span>{% endif %}
+  {%- if s.art == 'nicht_gewertet' %}<span class="chip chip--status">{{ t('chip.nicht_gewertet') }}</span>{% endif %}
+  {%- if s.art == 'status' %}<span class="chip chip--status">{{ t('chip.' ~ s.status) }}</span>{% endif %}
+  {%- if s.art == 'gespielt' %}{% if s.ergebnis %}<span class="chip chip--ergebnis">{{ ergebnis(s.ergebnis) }}</span>{% else %}<span class="chip chip--status">{{ t('chip.ergebnis_folgt') }}</span>{% endif %}{% endif %}
+  {%- if s.sonderspiel %}<span class="chip chip--sonder">{{ t('chip.' ~ s.sonderspiel) }}</span>{% endif %}
+</span>
+{%- endmacro %}
+
+{% macro kachel(s) -%}
+{% set art = 'status' if s.art in ('status', 'nicht_gewertet') else s.art %}
+{% set innen %}
+  <span class="teams">
+    <span class="team">{{ s.heim }}</span>
+    <span class="gegen">{{ t('spieltag.gegen') }}</span>
+    <span class="team">{{ s.gast }}</span>
+    <span class="termin">{{ termin(s) }}</span>
+  </span>
+  <span class="rechts">
+    {{ chips(s) }}
+    {% if s.link %}<span class="pfeil" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C6F26B" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span>{% endif %}
+  </span>
+{% endset %}
+{% if s.link %}
+<a class="kachel kachel--{{ art }}" href="{{ url('/spiel/' ~ s.id) }}" aria-label="{{ t('spieltag.zum_spiel', heim=s.heim, gast=s.gast) }}">{{ innen }}</a>
+{% else %}
+<div class="kachel kachel--{{ art }}">{{ innen }}</div>
+{% endif %}
+{%- endmacro %}
+
+{% macro zusammenfassung(tab) -%}
+<b>{{ t('spieltag.nummer', n=tab.spieltag) }}</b>
+{%- if tab.von %} · {{ zeitraum(tab.von, tab.bis) }}{% endif %}
+ · {{ tn('spieltag.partien', tab.partien) }} · {{ tn('spieltag.auffaellig', tab.auffaellig) }}
+{%- if tab.sonderspiele.nachholspiel %} · {{ tn('spieltag.nachholspiel', tab.sonderspiele.nachholspiel) }}{% endif %}
+{%- if tab.sonderspiele.vorgezogen %} · {{ tn('spieltag.vorgezogen', tab.sonderspiele.vorgezogen) }}{% endif %}
+{%- endmacro %}
+
+{% block inhalt %}
+<a class="zurueck" href="{{ url('/') }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>{{ t('kopf.startseite') }}</a>
+<h1>{{ t('spieltag.h1') }}</h1>
+<p class="intro">{{ t('spieltag.intro') }}</p>
+
+<nav aria-label="{{ t('spieltag.ligen') }}">
+  <ul class="ligen">
+  {% for lg in seite.ligen %}
+    <li><a href="{{ url('/spieltag/' ~ lg.liga) }}"{% if lg.liga == seite.liga %} aria-current="page"{% endif %}>
+      <span class="name">{{ t('liga.' ~ lg.key) }}</span>
+      <span class="info">{% if lg.pause %}{{ t('pause.' ~ lg.pause ~ '.zeile') }}{% elif lg.spieltag %}{{ t('spieltag.nummer', n=lg.spieltag) }}{% else %}–{% endif %}</span>
+    </a></li>
+  {% endfor %}
+  </ul>
+</nav>
+<div class="datenstand">{{ t('spieltag.datenstand', datum=datenstand_text) }}</div>
+
+<h2 class="liga-titel">{{ t('liga.' ~ seite.liga_key) }}</h2>
+
+{% if seite.veraltet %}
+<div class="warnbox" role="alert">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5L21.5 20H2.5z"/><path d="M12 10v4.5M12 17.2v.1"/></svg>
+  <div><strong>{{ t('veraltet.titel', datum=veraltet_text) }}</strong> {{ t('veraltet.text') }}</div>
+</div>
+{% endif %}
+
+{% if seite.zustand == 'gesperrt' %}
+<div class="pausenkarte"><div class="inhalt"><h3>{{ t('fehler.daten_titel') }}</h3><p>{{ t('fehler.daten_text') }}</p></div></div>
+{% elif seite.zustand == 'pause' %}
+<div class="pausenkarte">
+  <span class="icon"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
+  <div class="inhalt">
+    <div class="zeile">{{ t('pause.' ~ seite.pause.art ~ '.zeile') }}</div>
+    <h3>{{ t('pause.' ~ seite.pause.art ~ '.titel', datum=pause_datum) }}</h3>
+    <p>{{ t('pause.' ~ seite.pause.art ~ '.text', liga=t('liga.' ~ seite.liga_key)) }}</p>
+  </div>
+</div>
+{% else %}
+<div class="legende" aria-label="{{ t('spieltag.legende') }}">
+  <span class="eintrag"><span class="muster muster--stark" aria-hidden="true"></span>{{ t('stufe.stark') }}</span>
+  <span class="eintrag"><span class="muster muster--leicht" aria-hidden="true"></span>{{ t('stufe.leicht') }}</span>
+  <span class="eintrag"><span class="muster" aria-hidden="true"></span>{{ t('stufe.ohne') }}</span>
+  <details class="lesen">
+    <summary><span>{{ t('spieltag.wie_lesen') }}</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+    <div class="hinweisbox"><ul>
+      <li><b>{{ t('spieltag.erklaerung_gruen_titel') }}</b> {{ t('spieltag.erklaerung_gruen') }}</li>
+      <li><b>{{ t('spieltag.erklaerung_stufe_titel') }}</b> {{ t('spieltag.erklaerung_stufe') }}</li>
+      <li><b>{{ t('spieltag.erklaerung_weiss_titel') }}</b> {{ t('spieltag.erklaerung_weiss') }}</li>
+    </ul></div>
+  </details>
+</div>
+
+<div data-tabs>
+  {% if seite.tabs|length > 1 %}
+  <div class="tabs" role="group" aria-label="{{ t('spieltag.tabs') }}" hidden>
+    {% for tab in seite.tabs %}
+    <button type="button" data-tab aria-pressed="{{ 'true' if loop.first else 'false' }}" aria-controls="tab-{{ loop.index }}">{{ t('spieltag.tab', n=tab.spieltag, datum=datum_kurz(tab.von)) }}</button>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% for tab in seite.tabs %}
+  <section class="panel" id="tab-{{ loop.index }}" data-panel aria-label="{{ t('spieltag.nummer', n=tab.spieltag) }}">
+    <p class="zusammenfassung">{{ zusammenfassung(tab) }}</p>
+    {% if tab.auffaellig == 0 and tab.bewertet > 0 %}<p class="satz">{{ t('spieltag.keine_abweichungen') }}</p>{% endif %}
+    <ul class="partien">
+      {% for s in tab.spiele %}<li>{{ kachel(s) }}</li>{% endfor %}
+    </ul>
+  </section>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block skript %}
+{% if seite.tabs|length > 1 %}<script src="{{ statisch('site.js') }}" defer></script>{% endif %}
+{% endblock %}
