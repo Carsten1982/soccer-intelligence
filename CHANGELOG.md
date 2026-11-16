@@ -5,6 +5,11 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 16.11.2026 – Version 0.15.2, Nachtrag: Seitentest mit Anmeldung
+
+- **Carsten** · Zugang für die Anmeldemaske in `.env` gesetzt (`dashboard_passwort.sh`). Erster Einspielversuch von 0.15.2 (`9a3d0ff`) in Schritt 4 gestoppt: 477 bestanden, 1 Fehler (`test_app_start_page_top_anomalien`), 15 übersprungen nach 20 Minuten; nichts in Betrieb genommen (weiter 0.15.1).
+- **Claude** · Ursache: Der Seitentest startet das ganze Dashboard mit den echten Excel-Dateien (läuft nur auf dem Server) und stand seit 0.15.2 vor der Anmeldemaske. Korrektur in `tests/test_ui.py`: Hilfe `_app_logged_in` mit Test-Zugang; neuer Test, dass sie an der Maske vorbeikommt (läuft auch ohne Excel-Dateien, schlägt ohne Anmeldung fehl). Dass alle Tests liefen: Der laufende Aufruf von `einspielen.sh` arbeitet mit seiner alten Fassung zu Ende – in `01`, 6.1 vermerkt; Dauerangabe für Schritt 4 auf rund 8 Minuten angepasst (gemessen: alle Tests 20 Minuten auf dem Server). `01` 6.1 „Ohne Skript“, Schritt 3: veralteten Satz „beim Einspielen immer alle Tests“ berichtigt. Gesamt 479 Tests.
+
 ## 16.11.2026 – Version 0.15.1 eingespielt, Version 0.15.2: Anmeldemaske und kürzeres Einspielen
 
 - **Carsten** · Version 0.15.1 eingespielt (`88a3066`; erster Lauf durch Verbindungsabbruch unterbrochen, das Skript hat beim zweiten Aufruf weitergemacht; Tests 470 bestanden / 13 übersprungen nach 24 Minuten, Neubau von Hand, Vorladen 115 s). Wunsch: Einspielen verkürzen; Anmeldemaske statt Passwortabfrage des Browsers (auf Bank-Arbeitsrechnern gesperrt). Entscheidungen L1–L4: ein Konto mit Benutzername und Passwort, 12 Stunden angemeldet, kein Designentwurf nötig, eigenes Release vor 0.16.

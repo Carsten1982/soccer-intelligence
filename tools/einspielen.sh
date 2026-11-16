@@ -154,7 +154,7 @@ fi
 # ── 4 Tests ───────────────────────────────────────────────────────────────────────────────────
 # Seit 0.15.2 nur die schnellen Tests: Die langsamen Ende-zu-Ende-Tests (Marker „langsam“) laufen bei jedem Pull Request
 # vollständig auf GitHub; ohne grünen Haken wird nicht zusammengeführt (Entscheidung Carsten 16.11.2026).
-schritt "4/6: Tests (rund 5 Minuten, Wegwerf-Container)"
+schritt "4/6: Tests (rund 8 Minuten, Wegwerf-Container)"
 info "Bitte warten und nichts drücken (Ctrl+C bricht die Tests ab)."
 set +e
 docker run --rm -v "$PWD":/src:ro -e SI_DATA_DIR=/src/data -e PYTHONDONTWRITEBYTECODE=1 -w /src python:3.12-slim \

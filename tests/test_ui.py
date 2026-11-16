@@ -1,7 +1,8 @@
 """Oberfläche: Bausteine (ohne Streamlit) und Rauchtests der Seiten (mit Streamlit AppTest).
 
 Die AppTest-Tests laufen nur, wenn Streamlit installiert ist (z. B. im Test-Container auf dem Server)
-und die echten Dateien vorhanden sind. Sie prüfen, dass jede Seite ohne Fehler aufgebaut wird.
+und die echten Dateien vorhanden sind. Sie prüfen, dass jede Seite ohne Fehler aufgebaut wird. Ausnahme: der Test,
+dass die Hilfe `_app_logged_in` an der Anmeldemaske vorbeikommt, läuft auch ohne echte Dateien (seit 0.15.2).
 """
 
 from pathlib import Path
@@ -42,9 +43,32 @@ def _texts(at) -> str:
     return "\n".join(str(m.value) for m in at.markdown)
 
 
+def _app_logged_in(monkeypatch):
+    """Ganze App starten, schon angemeldet. Seit 0.15.2 steht vor dem Dashboard die Anmeldemaske; ohne Test-Zugang
+    zeigte der Seitentest nur „Anmeldung … nicht eingerichtet“ (Fehler beim Einspielen von 0.15.2, 16.11.2026 – der
+    Test läuft nur auf dem Server, weil er die echten Excel-Dateien braucht). Der Zugang hier ist nur für den Test."""
+    import anmeldung
+    monkeypatch.setenv("SI_LOGIN_USER", "test")
+    monkeypatch.setenv("SI_LOGIN_HASH", anmeldung.make_hash("test-passwort-1", iterations=1_000))
+    at = AppTest.from_file(str(APP), default_timeout=TIMEOUT)
+    at.session_state[anmeldung.SESSION_KEY] = True
+    return at.run()
+
+
+@pytest.mark.skipif(AppTest is None, reason="Streamlit nicht vorhanden")
+def test_app_logged_in_passes_login_mask(monkeypatch):
+    """Läuft auch ohne echte Dateien (lokal, GitHub): Die Hilfe oben kommt an der Anmeldemaske vorbei."""
+    at = _app_logged_in(monkeypatch)
+    assert not at.exception, at.exception
+    assert not any(t.label in ("Benutzername", "Passwort") for t in at.text_input)
+    assert "nicht eingerichtet" not in "\n".join(str(e.value) for e in at.error)
+    assert "Soccer Intelligence" in _texts(at)
+    assert [b.label for b in at.button].count("Abmelden") == 1
+
+
 @needs_files
-def test_app_start_page_top_anomalien():
-    at = AppTest.from_file(str(APP), default_timeout=TIMEOUT).run()
+def test_app_start_page_top_anomalien(monkeypatch):
+    at = _app_logged_in(monkeypatch)
     assert not at.exception, at.exception
     text = _texts(at)
     assert "Soccer Intelligence" in text
