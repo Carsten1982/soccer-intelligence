@@ -1,6 +1,6 @@
 # Soccer Intelligence – Dashboard-Briefing
 
-**Version 5.3** · Stand 15.11.2026 (Version 0.14: Bereich Datenimport/API, 6.5; Version 0.15: Entwurf 2 mit Blöcken A/B und Entscheiden)
+**Version 5.4** · Stand 16.11.2026 (Version 0.14: Bereich Datenimport/API, 6.5; Version 0.15: Entwurf 2 mit Blöcken A/B und Entscheiden; Version 0.15.2: Anmeldemaske, 2.4)
 
 > **Massgebliche Quelle seit 31.10.2026.** Änderungen werden nur noch in dieser Datei gemacht, mit Datum in der Änderungshistorie bzw. im `CHANGELOG.md`.
 > Das Word-Dokument *Dashboard-Briefing v4.2* liegt nur noch als Archiv im Ordner `word/` und wird nicht mehr gepflegt. Änderungen seit 31.10.2026 sind im Text als „Änderung“ mit Datum gekennzeichnet.
@@ -84,7 +84,8 @@ Die Navigation zeigt einen Tab pro Bereich, zu Beginn: Top Anomalien, Bundesliga
 
 Das gesamte Dashboard, also alle Adressen unter /dashboard, ist passwortgeschützt. Die Platzhalterseite unter soccer-intelligence.com bleibt öffentlich.
 
-- Der Schutz erfolgt serverseitig vor der Anwendung (Passwortschutz über Traefik). Wer nicht angemeldet ist, erreicht weder die Seiten noch die Daten, auch nicht über den direkten Aufruf einer URL.
+- **Seit 0.15.2 (Entscheidung Carsten 16.11.2026): Anmeldemaske im Dashboard** statt der Passwortabfrage des Browsers (Traefik BasicAuth, auf manchen Arbeitsrechnern gesperrt). Die Maske zeigt „Soccer Intelligence“, „Internes Dashboard – bitte anmelden“, die Felder **Benutzername** und **Passwort** und den Button **„Anmelden“**; bei falscher Eingabe „Benutzername oder Passwort falsch.“, nach 5 Fehlversuchen 15 Minuten Sperre. Wer nicht angemeldet ist, sieht auf jeder Adresse unter /dashboard nur die Maske, keine Seiten, keine Daten und keine Buttons.
+- Angemeldet bleibt man **12 Stunden** (signiertes Cookie); unten auf jeder Seite **„Abmelden“**. Ein neues Passwort meldet alle Browser ab.
 
 - Das Ausblenden von Menüpunkten oder nicht verlinkte Adressen gelten nicht als Schutz.
 
@@ -98,7 +99,7 @@ Das gesamte Dashboard, also alle Adressen unter /dashboard, ist passwortgeschüt
 
 - Suchmaschinen: Alle Antworten unter /dashboard tragen zusätzlich den Hinweis „noindex, nofollow“.
 
-*Umgesetzt in Etappe E (31.10.2026), freigegeben von Carsten. Technische Details: `docs/01_Technisches_Setup.md`, Abschnitte 3 und 4.*
+*Umgesetzt in Etappe E (31.10.2026), Anmeldemaske seit Version 0.15.2 (16.11.2026), freigegeben von Carsten. Technische Details: `docs/01_Technisches_Setup.md`, Abschnitte 3 und 4.*
 
 ## 3. Dashboard-Navigation und Design
 

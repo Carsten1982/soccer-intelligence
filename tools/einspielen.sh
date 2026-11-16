@@ -152,10 +152,13 @@ ok "Neuer Stand liegt bereit"
 fi
 
 # ── 4 Tests ───────────────────────────────────────────────────────────────────────────────────
-schritt "4/6: Tests (rund 4 Minuten, Wegwerf-Container)"
+# Seit 0.15.2 nur die schnellen Tests: Die langsamen Ende-zu-Ende-Tests (Marker „langsam“) laufen bei jedem Pull Request
+# vollständig auf GitHub; ohne grünen Haken wird nicht zusammengeführt (Entscheidung Carsten 16.11.2026).
+schritt "4/6: Tests (rund 5 Minuten, Wegwerf-Container)"
+info "Bitte warten und nichts drücken (Ctrl+C bricht die Tests ab)."
 set +e
 docker run --rm -v "$PWD":/src:ro -e SI_DATA_DIR=/src/data -e PYTHONDONTWRITEBYTECODE=1 -w /src python:3.12-slim \
-  sh -c "pip install -q --root-user-action=ignore -r requirements-dev.txt && python -m pytest -q -p no:cacheprovider tests" \
+  sh -c "pip install -q --root-user-action=ignore -r requirements-dev.txt && python -m pytest -q -p no:cacheprovider -m 'not langsam' tests" \
   > "$BACKUP/tests.log" 2>&1
 TESTS=$?
 set -e
@@ -172,7 +175,7 @@ for _ in $(seq 1 15); do
   sleep 2
   PLATZHALTER=$(curl -s -o /dev/null -w "%{http_code}" "$URL/" || true)
   DASHBOARD=$(curl -s -o /dev/null -w "%{http_code}" "$URL/dashboard/" || true)
-  [ "$PLATZHALTER" = 200 ] && [ "$DASHBOARD" = 401 ] && break
+  [ "$PLATZHALTER" = 200 ] && [ "$DASHBOARD" = 200 ] && break
 done
 docker ps --format "table {{.Names}}\t{{.Status}}" | sed 's/^/   /'
 docker logs football-dashboard --tail 4 2>&1 | sed 's/^/   /'
@@ -181,8 +184,8 @@ LAEUFT=$(docker inspect -f '{{.State.Running}}' football-dashboard 2>/dev/null |
 IMPORT=$(docker inspect -f '{{.State.Running}}' soccer-import 2>/dev/null || echo false)
 [ "$IMPORT" = true ] || stopp "Container soccer-import läuft nicht (Datenimport)."
 [ "$PLATZHALTER" = 200 ] || stopp "Platzhalterseite antwortet mit $PLATZHALTER statt 200."
-[ "$DASHBOARD" = 401 ] || stopp "Dashboard antwortet mit $DASHBOARD statt 401 (Passwortschutz)."
-ok "Container laufen (Dashboard und Import) · / = 200 · /dashboard/ = 401"
+[ "$DASHBOARD" = 200 ] || stopp "Dashboard antwortet mit $DASHBOARD statt 200 (Anmeldemaske, seit 0.15.2)."
+ok "Container laufen (Dashboard und Import) · / = 200 · /dashboard/ = 200 (Anmeldemaske)"
 rm -f "$OFFEN"
 
 # ── 6 Abschluss ───────────────────────────────────────────────────────────────────────────────

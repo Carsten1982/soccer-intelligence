@@ -36,11 +36,28 @@ def test_dashboard_only_under_dashboard_path(compose):
     assert "Host(`soccer-intelligence.com`) && PathPrefix(`/dashboard`)" in block
 
 
-def test_dashboard_router_uses_password_and_noindex(compose):
+def test_dashboard_router_login_ratelimit_noindex(compose):
+    """Seit 0.15.2: keine Passwortabfrage des Browsers mehr (BasicAuth), dafür Anmeldemaske im Dashboard mit
+    Zugangsdaten aus .env und eine Anfragebremse je Adresse; „noindex“ bleibt."""
     block = _service_block(compose, "football-dashboard")
-    assert "routers.soccer.middlewares=soccerintel-auth,soccerintel-noindex" in block
-    assert "middlewares.soccerintel-auth.basicauth.users=${SOCCER_DASHBOARD_AUTH:?" in block
+    assert "routers.soccer.middlewares=soccerintel-ratelimit,soccerintel-noindex" in block
+    assert "basicauth" not in block
+    assert "soccerintel-ratelimit.ratelimit.average=30" in block and "ratelimit.burst=100" in block
+    assert "SI_LOGIN_USER=${SI_LOGIN_USER:-}" in block and "SI_LOGIN_HASH=${SI_LOGIN_HASH:-}" in block
     assert "X-Robots-Tag=noindex, nofollow" in block
+
+
+def test_app_requires_login_before_navigation():
+    app = (ROOT / "app" / "app.py").read_text(encoding="utf-8")
+    assert app.index("anmeldung.require_login()") < app.index("st.navigation(")
+
+
+def test_server_runs_fast_tests_github_all():
+    """0.15.2: Beim Einspielen nur die schnellen Tests; GitHub prüft bei jedem Pull Request alle."""
+    script = (ROOT / "tools" / "einspielen.sh").read_text(encoding="utf-8")
+    assert "-m 'not langsam' tests" in script
+    wf = (ROOT / ".github" / "workflows" / "tests.yml").read_text(encoding="utf-8")
+    assert "python -m pytest -q -p no:cacheprovider tests" in wf and "langsam" not in wf
 
 
 def test_no_credentials_in_compose(compose):
@@ -48,6 +65,7 @@ def test_no_credentials_in_compose(compose):
     for pattern in (r"\$2[aby]\$", r"\$apr1\$", r"\{SHA\}"):
         assert not re.search(pattern, compose), "Zugangsdaten gehören nur in .env"
     assert "@" not in compose, "Benutzername gehört nur in .env"
+    assert "pbkdf2:" not in compose, "Passwort-Hash gehört nur in .env"
 
 
 def test_env_is_ignored_by_git():
@@ -80,11 +98,24 @@ def test_placeholder_service_and_files(compose):
 
 
 def test_password_script_stores_only_hash():
+    """Seit 0.15.2: Benutzername und PBKDF2-Hash für die Anmeldemaske; das Passwort selbst landet nirgends."""
     script = (ROOT / "tools" / "dashboard_passwort.sh").read_text(encoding="utf-8")
     assert "read -rsp" in script                         # Passwort verdeckt eingeben
-    assert "htpasswd -niB" in script                     # bcrypt-Hash
-    assert "SOCCER_DASHBOARD_AUTH='$H'" in script        # nur der Hash landet in .env
+    assert 'echo "SI_LOGIN_HASH=$H"' in script and 'echo "SI_LOGIN_USER=$U"' in script
+    assert "pbkdf2_hmac" in script and "600000" in script
+    assert "-e '^SI_LOGIN_USER=' -e '^SI_LOGIN_HASH='" in script   # andere Zeilen in .env bleiben
+    assert "unset P1 P2" in script and "$P1" not in script.split("unset P1 P2")[1]
     assert "set -euo pipefail" in script                 # bei Fehlern sofort abbrechen
+
+
+def test_password_script_hash_matches_app():
+    """Das Skript rechnet gleich wie app/anmeldung.py: ein dort erzeugter Hash wird von der App erkannt."""
+    import hashlib
+
+    import anmeldung
+    salt, n = bytes(range(16)), 600000
+    stored = "pbkdf2:sha256:%d:%s:%s" % (n, salt.hex(), hashlib.pbkdf2_hmac("sha256", b"Ein-Passwort-123", salt, n).hex())
+    assert anmeldung.check_password("Ein-Passwort-123", stored) and not anmeldung.check_password("x", stored)
 
 
 # --- Einspiel-Skripte (seit 09.11.2026): nur unser Container, nie data/ ---------------------------------------

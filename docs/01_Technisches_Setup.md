@@ -8,15 +8,16 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 
 ## 0. Stand und Versionen
 
-**In Betrieb:** Version 0.15 (seit 16.11.2026) – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit den festgelegten Schwellen (positiv/negativ getrennt, KPI 03 je Liga), Top Anomalien, Datenqualität und Sensitivitätsanalyse; Datenbank 2018/19–2026/27 mit Referenzsaison 2018/19 (KPI-Regelwerk 1.2). Seit 15.11.2026 **Datenimport über API-Football**: Container `soccer-import` (täglich 04:00), Reiter „Datenimport/API“ mit Freigabe (halbautomatisch) und Entscheiden, Spielplan der laufenden Saison und der Vorsaison aus der API (Status nur aus der API, Nachholspiele mit KPIs), Ergebnis-Import nach `06`, Abschnitt 10.1, Teamnamen von API-Football (Abschnitt 6.5). Passwortschutz unter `/dashboard`, Platzhalterseite unter `/`.
+**In Betrieb:** Version 0.15.1 (seit 16.11.2026) – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit den festgelegten Schwellen (positiv/negativ getrennt, KPI 03 je Liga), Top Anomalien, Datenqualität und Sensitivitätsanalyse; Datenbank 2018/19–2026/27 mit Referenzsaison 2018/19 (KPI-Regelwerk 1.2). Seit 15.11.2026 **Datenimport über API-Football**: Container `soccer-import` (täglich 04:00), Reiter „Datenimport/API“ mit Freigabe (halbautomatisch) und Entscheiden, Spielplan der laufenden Saison und der Vorsaison aus der API (Status nur aus der API, Nachholspiele mit KPIs), Ergebnis-Import nach `06`, Abschnitt 10.1, Teamnamen von API-Football (Abschnitt 6.5). Passwortschutz unter `/dashboard`, Platzhalterseite unter `/`.
 
-**Bereit zum Einspielen:** Version 0.15.1 – Massnahmen aus der Code-Prüfung vom 16.11.2026: Übernahme mit Übergabe-Protokoll (Datenbank und Spielplan nie gemischt), Prüfsummen der Fassung vor dem Tausch, eindeutige Backup-Namen, negative Statistikwerte gelten als fehlend und negative Tore als Fehler, Vorladen aller Seiten im Hintergrund, schneller Testlauf, Liste offener Bereinigungen (Abschnitt 8.1).
+**Bereit zum Einspielen:** Version 0.15.2 – Anmeldemaske mit Benutzername und Passwort statt der Passwortabfrage des Browsers (Abschnitt 3, Zugang; einmalig vorher Abschnitt 6.3), Einspielen nur mit den schnellen Tests (rund 5 statt 25 Minuten).
 
 **Als Nächstes:** Version 0.16 – Anzeige kommender Spieltage nach dem freigegebenen Designentwurf (`07`, Abschnitt 4) · 2 Wochen halbautomatischer Betrieb, danach Datum für den automatischen Tausch festlegen (`app/config/import.toml`) · E-Mail-Benachrichtigung · Phase 2: Wettquoten, Verletzungen, Tabellenstände (rückwirkend) · Rundum-Prüfung des Codes · KPI-Erweiterungen und Freigabe je Liga · Gewichtung der Top Anomalien (Regelwerk, Punkt 17) · öffentliche Website.
 
 | Version | Etappe | Inhalt | Eingespielt | Git | Tests |
 |---|---|---|---|---|---|
-| 0.15.1 | Code-Prüfung | Übergabe-Protokoll und Prüfsummen bei der Übernahme, eindeutige Backups, negative Werte, Vorladen im Hintergrund, schneller Testlauf, Bereinigungsliste | ausstehend | – | 468 |
+| 0.15.2 | Anmeldemaske | Anmeldemaske statt Browser-Passwortabfrage (Benutzername, Passwort-Hash in .env, 12 h, Sperre nach Fehlversuchen, Anfragebremse), Einspielen mit schnellen Tests | ausstehend | – | 478 |
+| 0.15.1 | Code-Prüfung | Übergabe-Protokoll und Prüfsummen bei der Übernahme, eindeutige Backups, negative Werte, Vorladen im Hintergrund, schneller Testlauf, Bereinigungsliste | 16.11.2026 | `88a3066` | 470 |
 | 0.15 | Datenimport nach Reviews | Spielplan v2.1 (Status nur aus der API, Nachholspiele mit KPIs, Termin, Vorsaison), Ergebnis-Import R1–R9 (Korrekturfenster, Entscheide, Endstand gegen Tor-Ereignisse, Plausibilität, Zuordnungsdatei), täglich, Reiter Blöcke A/B | 16.11.2026 | `a4367eb` | 459 |
 | 0.14.1 | Datenimport, Nachtrag | Teamnamen mit ü und Akzenten (10 Teams), Einspiel-Skript macht nach Abbruch weiter, Statustext | 15.11.2026 | `1408c50` | 442 |
 | 0.14 | Datenimport | Datenimport über API-Football: Container soccer-import, Reiter Datenimport/API mit Freigabe, Spielplan aus der API, Teamnamen der API, Status „abgebrochen“ | 15.11.2026 | `8260056` | 441 |
@@ -114,8 +115,8 @@ Ausbaustufen:
 
 ```
 Besucher → https://soccer-intelligence.com/            → Traefik → soccer-placeholder (nginx, öffentlich)
-Besucher → https://soccer-intelligence.com/dashboard…  → Traefik → Passwortabfrage (BasicAuth)
-                                                                  → football-dashboard (Streamlit, Port 8501)
+Besucher → https://soccer-intelligence.com/dashboard…  → Traefik (Anfragebremse je Adresse)
+                                                                  → football-dashboard (Streamlit, Port 8501, Anmeldemaske)
 ```
 
 - Traefik läuft im Host-Netzwerk, erledigt HTTPS/Zertifikat und findet beide Container automatisch über ihre Docker-Labels.
@@ -125,14 +126,21 @@ Besucher → https://soccer-intelligence.com/dashboard…  → Traefik → Passw
 - Port 8501 ist nur lokal gebunden (`127.0.0.1`), also von aussen nicht direkt erreichbar.
 - Traefik liest die Container-Adresse selbständig aus Docker. Ein Neubau des Containers bricht das Routing nicht.
 
-### Zugang (Etappe E, 31.10.2026)
+### Zugang (seit Version 0.15.2, 16.11.2026; vorher Etappe E)
 
 - Streamlit läuft unter dem Pfad `/dashboard` (Umgebungsvariable `STREAMLIT_SERVER_BASE_URL_PATH=dashboard` in `docker-compose.yml`).
-- Der Passwortschutz schützt alle Unterseiten und die Datenverbindung der App.
-- Betroffen sind nur die Labels des eigenen Containers `football-dashboard` und ein neuer, kleiner Container für die Platzhalterseite. Die Traefik-Grundkonfiguration, n8n und alle anderen Anwendungen bleiben unverändert.
-- Ein gemeinsamer Zugang (Benutzername und Passwort). Beides steht nur in `.env` auf dem Server: Benutzername im Klartext, Passwort als bcrypt-Hash. Nicht in Git, nicht in der Dokumentation.
-- Fehlt die Zeile in `.env`, startet `docker compose` gar nicht erst (Fehlermeldung „SOCCER_DASHBOARD_AUTH fehlt in .env“), statt das Dashboard ungeschützt zu veröffentlichen.
-- Einschränkung: Es gibt keinen „Abmelden“-Knopf. Man meldet sich durch Schliessen des Browsers ab.
+- **Anmeldemaske im Dashboard** (`app/anmeldung.py`) statt der Passwortabfrage des Browsers (Traefik BasicAuth bis
+  0.15.1; auf manchen Arbeitsrechnern gesperrt). Ohne gültige Anmeldung zeigt jede Adresse unter `/dashboard` nur die
+  Maske; Navigation, Seiten und die Buttons im Reiter Datenimport/API erscheinen erst danach.
+- Ein Zugang (Benutzername und Passwort). Beides steht nur in `.env` auf dem Server: `SI_LOGIN_USER` im Klartext,
+  `SI_LOGIN_HASH` als PBKDF2-SHA256-Hash (600'000 Durchläufe, Zufallssalz). Nicht in Git, nicht in der Dokumentation.
+  Setzen oder ändern: Abschnitt 6.3. Fehlen die Zeilen, bleibt das Dashboard gesperrt (Hinweis statt Inhalt).
+- Nach der Anmeldung bleibt man **12 Stunden** angemeldet (signiertes Cookie, nur über HTTPS, Pfad `/dashboard`).
+  „Abmelden“ unten auf jeder Seite. Ein neues Passwort meldet alle Browser ab.
+- Schutz vor Durchprobieren: je Adresse nach 5 Fehlversuchen 15 Minuten Sperre, jede falsche Eingabe wartet 1 Sekunde;
+  dazu begrenzt Traefik die Anfragen je Adresse (Label `soccerintel-ratelimit` des eigenen Containers).
+- Betroffen sind nur die Labels des eigenen Containers `football-dashboard`. Die Traefik-Grundkonfiguration, n8n und alle
+  anderen Anwendungen bleiben unverändert. `SOCCER_DASHBOARD_AUTH` bleibt in `.env`, damit ein Rückweg auf 0.15.1 geht.
 
 ---
 
@@ -163,7 +171,7 @@ Besucher → https://soccer-intelligence.com/dashboard…  → Traefik → Passw
 - **`football-dashboard`:**
   - `./data:/data:ro`: Die Excel-Dateien sind nur lesbar.
   - Port nur lokal (`127.0.0.1:8501`), Pfad `/dashboard` (`STREAMLIT_SERVER_BASE_URL_PATH`).
-  - Traefik-Labels mit Passwortschutz: Hash aus `.env`, Variable `SOCCER_DASHBOARD_AUTH`. Fehlt sie, startet Compose nicht.
+  - Traefik-Labels: Anfragebremse und `noindex` (seit 0.15.2 ohne BasicAuth); Anmeldedaten `SI_LOGIN_USER`, `SI_LOGIN_HASH` aus `.env`.
   - Kopfzeile `X-Robots-Tag: noindex, nofollow`.
   - `./import:/import:ro` und `./import/anfragen` (schreibbar, nur für Freigabe-Anfragen) seit Version 0.14.
 - **`soccer-placeholder`:** nginx 1.27, nur lesend.
@@ -224,7 +232,7 @@ Erwartet: genau die drei Versionen oben. Weicht etwas ab → Ursache klären, be
    ```
    Nach einem Verbindungsabbruch: neu anmelden und `tmux attach -t einspielen` (der Lauf geht dort weiter); fertig: `exit`.
    Wurde der Lauf trotzdem nach dem Holen abgebrochen, merkt sich das Skript das (`backup/EINSPIELEN_OFFEN`) und macht beim nächsten Aufruf mit Tests und Neubau weiter, statt „Nichts Neues“ zu melden.
-   Das Skript zeigt, was neu ist, macht ein Backup, übernimmt genau den Stand von GitHub (nur „fast-forward“, kein eigener Commit), testet noch einmal mit den echten Excel-Dateien, baut nur `football-dashboard` neu und prüft `200`/`401`. Danach im Browser prüfen, was in `RELEASE.md` steht, und mit `j` bestätigen.
+   Das Skript zeigt, was neu ist, macht ein Backup, übernimmt genau den Stand von GitHub (nur „fast-forward“, kein eigener Commit), testet mit den echten Excel-Dateien (seit 0.15.2 nur die schnellen Tests, rund 5 Minuten; die langsamen laufen bei jedem Pull Request auf GitHub), baut nur `football-dashboard` und `soccer-import` neu und prüft `200`/`200` (Platzhalter, Anmeldemaske). Danach im Browser prüfen, was in `RELEASE.md` steht, und mit `j` bestätigen.
 
 Das Skript stoppt, wenn auf dem Server etwas geändert wurde, das nicht auf GitHub ist (`git status` nicht leer oder eigene Commits). Bei einem Fehler hält es an, setzt nichts selbst zurück und nennt den Rückweg. Protokolle (Tests, Neubau) liegen im Backup-Ordner. Die automatischen Tests auf GitHub laufen ohne die Excel-Dateien aus `data/` (die liegen nur auf dem Server); dafür prüfen sie auch die Einspiel-Skripte in einem Probelauf (`tests/test_einspielen.py`, im Test-Container auf dem Server übersprungen, weil dort `git` fehlt).
 
@@ -257,7 +265,7 @@ Fragt vorher nach. Schon übernommen oder committet: Ein Gegen-Commit stellt gen
    ```bash
    cd /docker/football-dashboard && docker run --rm -v "$PWD":/src:ro -e SI_DATA_DIR=/src/data -e PYTHONDONTWRITEBYTECODE=1 -w /src python:3.12-slim sh -c "pip install -q --root-user-action=ignore -r requirements-dev.txt && python -m pytest -q -p no:cacheprovider tests" 2>&1 | tail -15
    ```
-4. **Aktivieren** (nur unser Container) und **prüfen**. Erwartet: `200` und `401`.
+4. **Aktivieren** (nur unser Container) und **prüfen**. Erwartet: `200` und `200` (seit 0.15.2 Anmeldemaske; bis 0.15.1 `401`).
    ```bash
    cd /docker/football-dashboard && docker compose up -d --build football-dashboard && sleep 5 && docker ps --format "table {{.Names}}\t{{.Status}}" && docker logs football-dashboard --tail 8 && curl -s -o /dev/null -w "%{http_code}\n" https://soccer-intelligence.com/ ; curl -s -o /dev/null -w "%{http_code}\n" https://soccer-intelligence.com/dashboard/
    ```
@@ -305,17 +313,23 @@ Für `Spielplan.xlsx` gilt derselbe Ablauf. Die Prüfregeln stehen in `04_Spielp
 2. Die neue Saison wie gewohnt ergänzen und die Datei nach den Schritten 1–4 oben aufspielen.
 3. Kontrolle im Bereich Datenqualität: je Liga „Referenzsaison: 2019/20 (nur Vorsaison, nicht ausgewertet)“, keine Warnung „Saison fehlt“. Im Code ist nichts zu ändern.
 
-### 6.3 Dashboard-Zugang setzen oder Passwort ändern
+### 6.3 Dashboard-Zugang setzen oder Passwort ändern (seit 0.15.2: Anmeldemaske)
 
 ```bash
-cd /docker/football-dashboard
-bash tools/dashboard_passwort.sh                 # fragt Benutzername und Passwort (verdeckt, zweimal)
-docker compose up -d football-dashboard          # Zugang neu einlesen (kein Neubau nötig)
+bash /docker/football-dashboard/tools/dashboard_passwort.sh
+```
+```bash
+cd /docker/football-dashboard && docker compose up -d football-dashboard
 ```
 
-- Gespeichert wird nur der bcrypt-Hash in `.env` (Zeile `SOCCER_DASHBOARD_AUTH`). Das Passwort erscheint weder auf dem Bildschirm noch im Befehlsverlauf.
+- Fragt Benutzername und Passwort (verdeckt, zweimal, mindestens 10 Zeichen). Gespeichert werden nur `SI_LOGIN_USER`
+  und der Hash `SI_LOGIN_HASH` in `.env`. Das Passwort erscheint weder auf dem Bildschirm noch im Befehlsverlauf.
 - Die alte `.env` wird vorher nach `backup/env_<Datum>` gesichert. Andere Zeilen in `.env` bleiben unverändert.
 - Bei verschiedenen Eingaben oder einem Fehler bricht das Skript ab und ändert nichts.
+- **Vor dem ersten Einspielen von 0.15.2** (das Skript liegt dann erst auf GitHub, noch nicht auf dem Server):
+  ```bash
+  cd /docker/football-dashboard && git fetch -q && bash <(git show origin/main:tools/dashboard_passwort.sh)
+  ```
 
 ### 6.4 Zustand prüfen (nur lesend)
 
