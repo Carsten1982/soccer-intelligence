@@ -1,0 +1,121 @@
+{% extends "basis.html" %}
+{% from "teile.html" import deko_feld, pfeil_rechts, pfeil_weiter, balken, lesen_knopf, lesen_ligaschnitt, warnbox, pausenkarte %}
+{#- Startseite (seit 0.18 nach Entwurf 1d „Main_P1“; Konzept 08, Abschnitt 7). Ranking = Top Anomalien des
+    Dashboards (F6), Zustände nach Übergabe 5.3, Tage-Zähler (Q7), Foto nur vom Server (Q6). -#}
+
+{% block inhalt %}
+<div class="wrap">
+  <div class="hero hero-start">
+    {{ deko_feld() }}
+    <div class="innen">
+      <h1>{{ t('start.h1_vorne') }} <span class="akzent">{{ t('start.h1_akzent') }}</span><span class="unter">{{ t('start.unterzeile') }}</span></h1>
+      <div class="knoepfe">
+        <a class="knopf-akzent" href="#ranking">{{ t('start.knopf_auffaellig') }}{{ pfeil_weiter('#0B3D2E') }}</a>
+        <a class="knopf-unterstrich" href="#nutzen">{{ t('start.knopf_so') }}</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap abschnitt-start" id="ranking">
+  <div class="kopfzeile">
+    <div>
+      <h2 class="h2-gross">{{ t('start.ranking_titel') }}</h2>
+      {% if seite.zustand == 'liste' %}<p class="text-gross">{{ t('start.ranking_text') }}</p>{% endif %}
+    </div>
+    {% if seite.zustand == 'liste' %}<details class="lesen">{{ lesen_knopf() }}{{ lesen_ligaschnitt() }}</details>{% endif %}
+  </div>
+
+  {% if seite.veraltet %}{{ warnbox(t('veraltet.titel', datum=veraltet_text), t('veraltet.text')) }}{% endif %}
+
+  {% if seite.zustand == 'gesperrt' %}
+  {{ pausenkarte(t('fehler.daten_titel'), t('fehler.daten_titel'), t('fehler.daten_text')) }}
+  {% elif seite.zustand in ('pause', 'keine') %}
+  {% set art = seite.pause.art %}
+  {{ pausenkarte(t('start.pause.' ~ art ~ '.zeile'), t('start.pause.' ~ art ~ '.titel', datum=pause_datum),
+                 t('start.pause.' ~ art ~ '.text'), t('start.pause.' ~ art ~ '.knopf'),
+                 url('/spieltag/' ~ seite.pause.liga), seite.pause.tage if art in ('spielpause', 'winterpause', 'saisonstart', 'unbekannt') else none,
+                 tn('start.tage_start' if art == 'saisonstart' else 'start.tage_spieltag', seite.pause.tage or 0)) }}
+  {% else %}
+  <ol class="ranking">
+    {% for r in seite.ranking %}
+    <li>
+      <a class="rang-zeile"{% if r.id %} href="{{ url('/spiel/' ~ r.id) }}"{% endif %}>
+        <span class="inhalt">
+          <span class="links">
+            <span class="rang">{{ r.rang }}</span>
+            <span>
+              <span class="liga">{{ t('start.ranking_zeile', liga=t('liga.' ~ r.liga_key), n=r.spieltag) }}</span>
+              <span class="paar">{{ r.heim }} – {{ r.gast }}</span>
+              <span class="wann">{{ termin(r) }}</span>
+            </span>
+          </span>
+          <span class="rechts">
+            <span class="wertzeile">
+              {% if r.richtung == 'hoch' %}
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0A6B45" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="{{ t('start.mehr') }}"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+              {% else %}
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#B03A2E" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="{{ t('start.weniger') }}"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+              {% endif %}
+              <span class="wert farbe-{{ r.richtung }}">{{ prozent(r.abweichung) }}</span>
+              <span class="chip s-{{ r.stufe }}-{{ r.richtung }}">{{ t('stufe.' ~ r.stufe) }}</span>
+              <span class="thema">{{ t('kennzahl.' ~ r.kpi ~ '.name') }}</span>
+            </span>
+            {{ balken(balken_daten(r)) }}
+          </span>
+        </span>
+        <span class="pfeil-rund" aria-hidden="true">{{ pfeil_rechts('#C6F26B') }}</span>
+      </a>
+    </li>
+    {% endfor %}
+  </ol>
+  {% endif %}
+  <div class="datenstand-hell">{{ t('start.datenstand', datum=datenstand_text) }}</div>
+</div>
+
+<div class="wrap abschnitt" id="ligen">
+  <h2 class="h2-gross">{{ t('start.ligen_titel') }}</h2>
+  <p class="text-gross">{{ t('start.ligen_text') }}</p>
+  <div class="liga-knoepfe">
+    {% for lg in ligen %}<a href="{{ url('/spieltag/' ~ lg.slug) }}">{{ t('liga.' ~ lg.key) }}</a>{% endfor %}
+  </div>
+</div>
+
+<div class="wrap abschnitt" id="nutzen">
+  <h2 class="h2-gross">{{ t('start.so_titel') }}</h2>
+  <div class="nutzen">
+    <div><h3>{{ t('start.vergleichen_titel') }}</h3><p>{{ t('start.vergleichen') }}</p></div>
+    <div><h3>{{ t('start.markieren_titel') }}</h3><p>{{ t('start.markieren') }} <a href="{{ url('/methodik') }}">{{ t('start.markieren_link') }}</a></p></div>
+    <div><h3>{{ t('start.entscheiden_titel') }}</h3><p>{{ t('start.entscheiden') }}</p></div>
+  </div>
+</div>
+
+<div class="wrap abschnitt-cta">
+  <div class="cta-band">
+    <div>
+      <div class="gross">{{ t('start.bereit_titel') }}</div>
+      <p>{{ t('start.bereit_text') }}</p>
+    </div>
+    <a class="knopf-dunkel hell" href="{{ url('/spieltag/' ~ standard_liga) }}">{{ t('start.bereit_knopf') }}{{ pfeil_weiter('#F4F7F2') }}</a>
+  </div>
+</div>
+
+<div class="wrap abschnitt-fan">
+  <div class="fan">
+    {% if foto %}
+    <img src="{{ foto }}" alt="{{ t('start.fan_bild') }}" width="115" height="115">
+    {% else %}
+    <span class="foto-platz" role="img" aria-label="{{ t('start.fan_bild') }}"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></span>
+    {% endif %}
+    <div>
+      <h2>{{ t('start.fan_titel') }}</h2>
+      <p>{{ t('start.fan_text') }}</p>
+      <div class="name">{{ t('start.fan_name') }}</div>
+    </div>
+  </div>
+  <section class="seo" aria-labelledby="seo-titel">
+    <h2 id="seo-titel">{{ t('start.seo_titel') }}</h2>
+    <p>{{ t('start.seo_text') }}</p>
+  </section>
+</div>
+{% endblock %}

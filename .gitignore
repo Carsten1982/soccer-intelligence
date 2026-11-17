@@ -15,3 +15,6 @@ __pycache__/
 .pytest_cache/
 # Datenimport (seit 0.14): Rohdaten, Läufe, Berichte, Anfragen – nur auf dem Server
 import/
+
+# Website (seit 0.18): Foto für die Startseite, nur auf dem Server (Entscheidung Carsten 17.11.2026)
+website-bilder/

@@ -20,8 +20,10 @@ from urllib.parse import parse_qs, urlsplit
 
 from . import einstellungen as W
 from .daten import Daten, zeitreise
-from .seiten import Kontext, hinweis_html, spieltag_html
+from .seiten import Kontext, hinweis_html, spiel_html, spieltag_html, start_html
+from .spiel import spiel_daten
 from .spieltag import spieltag_daten
+from .start import start_daten
 
 DATEN = Daten()
 FOLGT = ("/methodik", "/impressum", "/datenschutz")
@@ -41,6 +43,11 @@ class Antwort:
 
 def _html(status: int, text: str) -> Antwort:
     return Antwort(status, text.encode("utf-8"), **{"Cache-Control": "no-store"})
+
+
+def _json(daten: dict) -> Antwort:
+    inhalt = json.dumps(daten, ensure_ascii=False, indent=1).encode("utf-8")
+    return Antwort(200, inhalt, "application/json; charset=utf-8", **{"Cache-Control": "no-store"})
 
 
 def _datei(rest: str) -> Antwort:
@@ -72,7 +79,15 @@ def beantworten(pfad: str, query: str, daten: Daten = DATEN) -> Antwort:
     k = Kontext(datum=None if ungueltig else datum, ungueltig=ungueltig, jetzt=zp.jetzt, zeitreise=zp.zeitreise)
     stand = zp.stand.isoformat(timespec="minutes") if zp.stand else None
 
-    if rest in ("/", "/spieltag", "/spieltag/"):          # bis 0.19 ohne Startseite: weiter zum Spieltag
+    if rest == f"/bilder/{W.FOTO}":                         # Foto der Startseite, nur vom Server (Q6)
+        foto = W.BILDER / W.FOTO
+        if not foto.is_file():
+            return Antwort(404, b"nicht gefunden", "text/plain; charset=utf-8")
+        return Antwort(200, foto.read_bytes(), "image/jpeg", **{"Cache-Control": "public, max-age=3600"})
+    if rest == "/":                                          # Startseite (seit 0.18)
+        foto = f"{prefix}/bilder/{W.FOTO}" if (W.BILDER / W.FOTO).is_file() else None
+        return _html(200, start_html(start_daten(daten, zp), k, foto))
+    if rest in ("/spieltag", "/spieltag/"):
         return Antwort(302, b"", **{"Location": k.url(f"/spieltag/{W.STANDARD_LIGA}"), "Cache-Control": "no-store"})
     teile = [x for x in rest.split("/") if x]
     if len(teile) == 2 and teile[0] == "spieltag":
@@ -84,10 +99,17 @@ def beantworten(pfad: str, query: str, daten: Daten = DATEN) -> Antwort:
         web = W.liga_aus_slug(teile[2][:-5])
         if web is None:
             return Antwort(404, b"{}", "application/json")
-        inhalt = json.dumps(spieltag_daten(daten, web, zp), ensure_ascii=False, indent=1).encode("utf-8")
-        return Antwort(200, inhalt, "application/json; charset=utf-8", **{"Cache-Control": "no-store"})
-    if len(teile) == 2 and teile[0] == "spiel" and teile[1].isdigit():
-        return _html(200, hinweis_html("folgt", k, stand))                 # Matchdetail folgt mit 0.18
+        return _json(spieltag_daten(daten, web, zp))
+    if len(teile) == 2 and teile[0] == "spiel" and teile[1].isdigit():   # Matchdetail je Paarung (seit 0.18)
+        seite = spiel_daten(daten, int(teile[1]), zp)
+        if seite is None:
+            return _html(404, hinweis_html("fehlt", k, stand))
+        return _html(200, spiel_html(seite, k))
+    if teile == ["daten", "start.json"]:
+        return _json(start_daten(daten, zp))
+    if len(teile) == 3 and teile[:2] == ["daten", "spiel"] and teile[2].endswith(".json") and teile[2][:-5].isdigit():
+        seite = spiel_daten(daten, int(teile[2][:-5]), zp)
+        return _json(seite) if seite is not None else Antwort(404, b"{}", "application/json")
     if rest.rstrip("/") in FOLGT:
         return _html(200, hinweis_html("folgt", k, stand, aktiv=rest.strip("/")))
     return _html(404, hinweis_html("fehlt", k, stand))
@@ -125,8 +147,21 @@ class Handler(BaseHTTPRequestHandler):
         sys.stdout.flush()
 
 
+def vorladen(daten: Daten = DATEN) -> None:
+    """Beim Start alles einmal rechnen (Daten, Startseite, Spieltag je Liga), damit schon der erste Aufruf schnell
+    ist. Fehler hier stoppen den Dienst nicht; die Seite meldet sie dann selbst."""
+    try:
+        zp = daten.zeitpunkt()
+        start_daten(daten, zp)
+        for web in W.LIGEN:
+            spieltag_daten(daten, web, zp)
+        print("Vorschau: Daten vorgeladen", flush=True)
+    except Exception:  # noqa: BLE001
+        traceback.print_exc()
+
+
 def main() -> None:
-    threading.Thread(target=DATEN.bestand, daemon=True).start()       # Daten im Hintergrund vorladen
+    threading.Thread(target=vorladen, daemon=True).start()            # Daten im Hintergrund vorladen
     server = ThreadingHTTPServer(("0.0.0.0", W.PORT), Handler)
     print(f"Vorschau läuft auf Port {W.PORT} unter {W.PREFIX}", flush=True)
     server.serve_forever()

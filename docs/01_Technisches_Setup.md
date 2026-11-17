@@ -1,6 +1,6 @@
 # Soccer Intelligence – Technisches Setup und Betrieb
 
-**Stand:** 14.11.2026 · **Verantwortlich:** Carsten Thiele · **Mitwirkende:** ChatGPT (Server-Setup, Review), Claude (Daten, Architektur, Code)
+**Stand:** 17.11.2026 · **Verantwortlich:** Carsten Thiele · **Mitwirkende:** ChatGPT (Server-Setup, Review), Claude (Daten, Architektur, Code)
 
 Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abläufe und Architektur. Fachliche Regeln stehen in `02`–`06`, Änderungen im `CHANGELOG.md`, das aktuelle Release in `RELEASE.md`.
 
@@ -8,15 +8,16 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 
 ## 0. Stand und Versionen
 
-**In Betrieb:** Version 0.16 (seit 16.11.2026) – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit den festgelegten Schwellen (positiv/negativ getrennt, KPI 03 je Liga), Top Anomalien, Datenqualität und Sensitivitätsanalyse; Datenbank 2018/19–2026/27 mit Referenzsaison 2018/19 (KPI-Regelwerk 1.2). Seit 15.11.2026 **Datenimport über API-Football**: Container `soccer-import` (täglich 04:00), Reiter „Datenimport/API“ mit Freigabe (halbautomatisch) und Entscheiden, Spielplan der laufenden Saison und der Vorsaison aus der API (Status nur aus der API, Nachholspiele mit KPIs), Ergebnis-Import nach `06`, Abschnitt 10.1, Teamnamen von API-Football (Abschnitt 6.5). Anmeldemaske unter `/dashboard` (Benutzername und Passwort-Hash in `.env`, 12 Stunden angemeldet), Platzhalterseite unter `/`. Ligaseiten mit kommenden Spieltagen in Abschnitten, Spalte Datum, Pausen-Boxen; Top Anomalien je Liga der nächste Block vor dem Anpfiff (`07`, Abschnitt 4).
+**In Betrieb:** Version 0.17 (seit 17.11.2026) – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit den festgelegten Schwellen (positiv/negativ getrennt, KPI 03 je Liga), Top Anomalien, Datenqualität und Sensitivitätsanalyse; Datenbank 2018/19–2026/27 mit Referenzsaison 2018/19 (KPI-Regelwerk 1.2). Seit 15.11.2026 **Datenimport über API-Football**: Container `soccer-import` (täglich 04:00), Reiter „Datenimport/API“ mit Freigabe (halbautomatisch) und Entscheiden, Spielplan der laufenden Saison und der Vorsaison aus der API (Status nur aus der API, Nachholspiele mit KPIs), Ergebnis-Import nach `06`, Abschnitt 10.1, Teamnamen von API-Football (Abschnitt 6.5). Anmeldemaske unter `/dashboard` (Benutzername und Passwort-Hash in `.env`, 12 Stunden angemeldet), Platzhalterseite unter `/`. Ligaseiten mit kommenden Spieltagen in Abschnitten, Spalte Datum, Pausen-Boxen; Top Anomalien je Liga der nächste Block vor dem Anpfiff (`07`, Abschnitt 4). Vorschau der öffentlichen Website unter `/vorschau` mit Passwortabfrage (Container `soccer-vorschau`, Seite Spieltag, Zeitreise `?datum=…`, `08_Website.md`).
 
-**Bereit zum Einspielen:** Version 0.17 – Öffentliche Website, erster Teil (`08_Website.md`): Grundgerüst (Design, selbst gehostete Schriften, Sprachdatei, Formate) und Seite **Spieltag**, als Vorschau unter `/vorschau` mit Passwortabfrage (neuer Container `soccer-vorschau`) und Zeitreise `?datum=…`. Einmalig: Passwort der Vorschau setzen und den Container starten (RELEASE.md).
+**Bereit zum Einspielen:** Version 0.18 – Öffentliche Website nach den Entwürfen (`08_Website.md`, Entscheidungen Q1–Q7): **Startseite** (Ranking = Top Anomalien, Pausen mit Tage-Zähler, Foto oder Platzhalter), **Spieltag** genau nach Entwurf 3d, **Matchdetail** mit eigener Seite je Paarung (Kernaussage, Auffälligkeiten, Zahlen im Detail, Normalbereich, Formkurve). Foto der Startseite nur auf dem Server: `website-bilder/portrait.jpg` (RELEASE.md).
 
-**Als Nächstes:** Website: 0.18 Matchdetail, 0.19 Startseite, danach Methodik, Impressum, Datenschutz und Livegang · 2 Wochen halbautomatischer Betrieb, danach Datum für den automatischen Tausch festlegen (`app/config/import.toml`) · E-Mail-Benachrichtigung · Phase 2: Wettquoten, Verletzungen, Tabellenstände (rückwirkend) · Rundum-Prüfung des Codes · KPI-Erweiterungen und Freigabe je Liga · Gewichtung der Top Anomalien (Regelwerk, Punkt 17).
+**Als Nächstes:** Website: Methodik (mit den besprochenen Änderungen), Impressum, Datenschutz und Livegang · 2 Wochen halbautomatischer Betrieb, danach Datum für den automatischen Tausch festlegen (`app/config/import.toml`) · E-Mail-Benachrichtigung · Phase 2: Wettquoten, Verletzungen, Tabellenstände (rückwirkend) · Rundum-Prüfung des Codes · KPI-Erweiterungen und Freigabe je Liga · Gewichtung der Top Anomalien (Regelwerk, Punkt 17).
 
 | Version | Etappe | Inhalt | Eingespielt | Git | Tests |
 |---|---|---|---|---|---|
-| 0.17 | Website: Spieltag | Öffentliche Website als Vorschau unter `/vorschau` (Container `soccer-vorschau`, Passwortabfrage): Design-Grundlagen, Schriften selbst gehostet, Sprachdatei mit ß, Seite Spieltag mit Tabs, Kacheln, Pausen, Datenstand, Zeitreise | ausstehend | – | 600 |
+| 0.18 | Website: drei Seiten | Startseite (1d), Spieltag (3d) und Matchdetail je Paarung (2i) genau nach den Entwürfen; Entscheidungen Q1–Q7; Foto nur auf dem Server (`website-bilder/`); Vorladen beim Start | ausstehend | – | 617 |
+| 0.17 | Website: Spieltag | Öffentliche Website als Vorschau unter `/vorschau` (Container `soccer-vorschau`, Passwortabfrage): Design-Grundlagen, Schriften selbst gehostet, Sprachdatei mit ß, Seite Spieltag mit Tabs, Kacheln, Pausen, Datenstand, Zeitreise | 17.11.2026 | `49c2056` | 600 |
 | 0.16 | Kommende Spieltage | Ligaseiten mit Abschnitten je Spieltag, Spalte Datum, gespielte Spiele grau, „Werte ab“, Pausen-Boxen, Datenstand, Pfeile vorwärts 2; Top Anomalien je Liga der nächste Block vor dem Anpfiff; Vorschau im Reiter Datenimport/API | 16.11.2026 | `5b1e949` | 563 |
 | 0.15.2 | Anmeldemaske | Anmeldemaske statt Browser-Passwortabfrage (Benutzername, Passwort-Hash in .env, 12 h, Sperre nach Fehlversuchen, Anfragebremse), Einspielen mit schnellen Tests; Nachtrag: Seitentest mit Anmeldung | 16.11.2026 | `47d54ca` | 479 |
 | 0.15.1 | Code-Prüfung | Übergabe-Protokoll und Prüfsummen bei der Übernahme, eindeutige Backups, negative Werte, Vorladen im Hintergrund, schneller Testlauf, Bereinigungsliste | 16.11.2026 | `88a3066` | 470 |
@@ -165,6 +166,7 @@ Besucher → https://soccer-intelligence.com/vorschau…   → Traefik (Passwort
 ├── tools/                      einspielen.sh (Release), zurueck.sh (Rückweg), dashboard_passwort.sh (Zugang), vorschau_passwort.sh (Vorschau, seit 0.17)
 ├── data/                       nicht in Git: Database-Soccer-Intelligence.xlsx, Spielplan.xlsx (GÜLTIG)
 ├── import/                     nicht in Git: Datenimport (laeufe/ mit Berichten und neuen Fassungen, roh/ mit API-Antworten, anfragen/, zustand.json)
+├── website-bilder/             nicht in Git: Foto der Startseite portrait.jpg (seit 0.18, nur lesend in soccer-vorschau)
 ├── backup/                     Sicherungen, nicht in Git (auch die vor einem Import ersetzten Fassungen, die letzten 30)
 ├── docs/                       Dokumentation, massgebliche Quelle (md)
 ├── word/                       Archiv der Word-Dokumente (nicht mehr gepflegt)
@@ -182,7 +184,7 @@ Besucher → https://soccer-intelligence.com/vorschau…   → Traefik (Passwort
   - `./import:/import:ro` und `./import/anfragen` (schreibbar, nur für Freigabe-Anfragen) seit Version 0.14.
 - **`soccer-placeholder`:** nginx 1.27, nur lesend.
 - **`soccer-import`** (seit 0.14): gleiches Image, Befehl `python -m importer.dienst`; schreibt `./data` (nur beim Tausch nach Freigabe), `./import`, `./backup`; keine Labels, kein Port; Schlüssel aus `.env` (`API_FOOTBALL_KEY`, fehlt er, meldet der Reiter „API-Schlüssel fehlt“).
-- **`soccer-vorschau`** (seit 0.17): gleiches Image, Befehl `python -m website.vorschau`; liest `./data` und `./import` nur; kein Port nach aussen (Traefik intern auf 8080); Traefik-Labels: Pfad `/vorschau`, Passwortabfrage (`SOCCER_VORSCHAU_AUTH` aus `.env`), Anfragebremse, `noindex`.
+- **`soccer-vorschau`** (seit 0.17): gleiches Image, Befehl `python -m website.vorschau`; liest `./data`, `./import` und `./website-bilder` (Foto, seit 0.18) nur; kein Port nach aussen (Traefik intern auf 8080); Traefik-Labels: Pfad `/vorschau`, Passwortabfrage (`SOCCER_VORSCHAU_AUTH` aus `.env`), Anfragebremse, `noindex`.
 
 Die Tests in `tests/test_deploy.py` prüfen diese Punkte automatisch.
 
@@ -353,6 +355,20 @@ cd /docker/football-dashboard && docker compose up -d --build soccer-vorschau
   Gespeichert wird nur der bcrypt-Hash als `SOCCER_VORSCHAU_AUTH`. Benutzername und Passwort dürfen andere sein als
   beim Dashboard.
 
+**Foto der Startseite** (seit 0.18, Entscheidung Q6 in `08_Website.md`): nur auf dem Server, nie in Git.
+
+1. Foto vorbereiten: JPEG, quadratisch, mindestens 230 × 230 Pixel (angezeigt 115 × 115, doppelt für scharfe
+   Handy-Bildschirme), Dateiname genau `portrait.jpg`.
+2. Mit WinSCP nach `/docker/football-dashboard/website-bilder/` hochladen (Ordner entsteht beim Einspielen von 0.18;
+   fehlt er: `mkdir -p /docker/football-dashboard/website-bilder`). Den Ordner selbst nicht löschen oder umbenennen,
+   sonst sieht der Container ihn erst nach einem Neustart wieder.
+3. Prüfen (erwartet `-rw-r--r--` und die Grösse in Bytes):
+   ```bash
+   ls -l /docker/football-dashboard/website-bilder/portrait.jpg
+   ```
+4. Die Startseite der Vorschau neu laden: Das Foto erscheint sofort (kein Neustart nötig; der Browser behält ein altes
+   Foto bis zu einer Stunde, dann Strg+F5). Ohne Datei steht ein neutraler Platzhalter.
+
 ### 6.4 Zustand prüfen (nur lesend)
 
 ```bash
@@ -427,9 +443,9 @@ app/
 │   ├── top.py            Auswahl der Top Anomalien (Etappe D, ab H über KPI 02–09)
 │   ├── simulation.py     Ergebniskontrolle und Simulation der Schwellen (Etappe I.1)
 │   └── frequency.py      Häufigkeit der Anomalien (Etappe C)
-├── website/              öffentliche Website (0.17, 08_Website.md): daten (Laden, Zeitreise), spieltag (Datensatz mit
-│                         Codes), seiten + vorlagen/ (HTML), texte/de.json (Sprachdatei), format, statisch/ (CSS,
-│                         Schriften, Tabs), vorschau (Webserver unter /vorschau)
+├── website/              öffentliche Website (0.17, 08_Website.md): daten (Laden, Zeitreise), start, spieltag, spiel
+│                         (Datensätze mit Codes, 0.18), seiten + vorlagen/ (HTML, teile.html = Bausteine), texte/de.json
+│                         (Sprachdatei), format, statisch/ (CSS, Schriften, site.js), vorschau (Webserver unter /vorschau)
 ├── importer/             Datenimport über API-Football (0.14): client (Abfragen, Obergrenze, Rohdaten), convert (58
 │                         Spalten, Tor-Ereignisse), spielplan, teams, erzeugen (neue Fassung + Bericht), dienst (Zeitplan,
 │                         Freigabe), entscheide (Entscheide aus dem Reiter, 0.15); core/zuordnung.py = eigene ID ↔ API-ID

@@ -72,6 +72,7 @@ services:
     volumes:
       - ./data:/data:ro
       - ./import:/import:ro
+      - ./website-bilder:/bilder:ro                 # Foto der Startseite (seit 0.18), nur auf dem Server, nicht in Git
     environment:
       - TZ=Europe/Zurich
       - SI_VORSCHAU_PORT=8080

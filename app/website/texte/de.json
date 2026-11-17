@@ -9,7 +9,8 @@
     "navigation": "Hauptnavigation",
     "spieltag": "Spieltag",
     "methodik": "Methodik",
-    "impressum": "Impressum"
+    "impressum": "Impressum",
+    "zurueck_spieltag": "Zurück zum Spieltag"
   },
   "fuss": {
     "pflicht": "Statistische Auswertungen, keine Wettberatung. Keine Verbindung zu Ligen oder Vereinen.",
@@ -30,14 +31,26 @@
     "beschreibung": "Alle Spiele der {liga} im Überblick: statistische Auffälligkeiten bei Toren, Ecken, Karten und weiteren Kennzahlen.",
     "h1": "Alle Spiele im Überblick",
     "intro": "Wähle deine Liga und sieh, bei welchen Partien die Zahlen aus der Reihe fallen.",
-    "ligen": "Liga auswählen",
+    "ligen": "Liga wählen",
     "nummer": "{n}. Spieltag",
     "datenstand": "Aktueller Datenstand: {datum}",
-    "partien": {"eins": "1 Partie", "mehr": "{n} Partien"},
-    "auffaellig": {"null": "keine mit Auffälligkeit", "mehr": "{n} mit Auffälligkeit"},
-    "nachholspiel": {"eins": "plus 1 Nachholspiel", "mehr": "plus {n} Nachholspiele"},
-    "vorgezogen": {"eins": "plus 1 vorgezogenes Spiel", "mehr": "plus {n} vorgezogene Spiele"},
-    "tabs": "Spieltage",
+    "partien": {
+      "eins": "1 Partie",
+      "mehr": "{n} Partien"
+    },
+    "auffaellig": {
+      "null": "keine mit Auffälligkeit",
+      "mehr": "{n} mit Auffälligkeit"
+    },
+    "nachholspiel": {
+      "eins": "plus 1 Nachholspiel",
+      "mehr": "plus {n} Nachholspiele"
+    },
+    "vorgezogen": {
+      "eins": "plus 1 vorgezogenes Spiel",
+      "mehr": "plus {n} vorgezogene Spiele"
+    },
+    "tabs": "Spieltag wählen",
     "tab": "{n}. Spieltag · ab {datum}",
     "keine_abweichungen": "Bei diesem Spieltag weicht kein Wert deutlich vom Ligaschnitt ab.",
     "gegen": "gegen",
@@ -49,12 +62,16 @@
     "erklaerung_stufe_titel": "Stark oder Leicht:",
     "erklaerung_stufe": "Zeigt die Stärke der Abweichung.",
     "erklaerung_weiss_titel": "Weiße Kacheln:",
-    "erklaerung_weiss": "Keine Auffälligkeit bei dieser Partie."
+    "erklaerung_weiss": "Keine Auffälligkeit bei dieser Partie.",
+    "h1_vorne": "Alle Spiele im",
+    "h1_akzent": "Überblick"
   },
   "stufe": {
     "stark": "Stark",
     "leicht": "Leicht",
-    "ohne": "Ohne Auffälligkeit"
+    "ohne": "Ohne Auffälligkeit",
+    "normal": "Normal",
+    "nicht_gewertet": "nicht gewertet"
   },
   "chip": {
     "stark": "Stark",
@@ -132,5 +149,189 @@
     "zeitreise": "Zeitreise: {zeit} (Import an diesem Tag angenommen)",
     "aktuell": "aktueller Stand",
     "ungueltig": "Ungültiges Datum – angezeigt wird der aktuelle Stand."
+  },
+  "kennzahl": {
+    "kpi02": {
+      "name": "Erwartete Tore",
+      "hoch": "Überdurchschnittlich viele Tore erwartet",
+      "tief": "Unterdurchschnittlich wenige Tore erwartet"
+    },
+    "kpi03": {
+      "name": "Über 2,5 Tore",
+      "hoch": "Mehr als 2,5 Tore erwartet",
+      "tief": "Weniger als 2,5 Tore erwartet"
+    },
+    "kpi04": {
+      "name": "Gelbe Karten",
+      "hoch": "Überdurchschnittlich viele gelbe Karten",
+      "tief": "Unterdurchschnittlich wenige gelbe Karten"
+    },
+    "kpi05": {
+      "name": "Ecken",
+      "hoch": "Erhöhtes Eckballaufkommen",
+      "tief": "Wenige Ecken erwartet"
+    },
+    "kpi06": {
+      "name": "Erwartete Tore 1. Halbzeit",
+      "hoch": "Viele Tore in der 1. Halbzeit",
+      "tief": "Wenige Tore in der 1. Halbzeit"
+    },
+    "kpi07": {
+      "name": "Erwartete Tore 2. Halbzeit",
+      "hoch": "Viele Tore in der 2. Halbzeit",
+      "tief": "Wenige Tore in der 2. Halbzeit"
+    },
+    "kpi08": {
+      "name": "Beide Teams treffen",
+      "hoch": "Beide Teams treffen wahrscheinlich",
+      "tief": "Beide Teams treffen eher nicht"
+    },
+    "kpi09": {
+      "name": "Erwartete Schüsse aufs Tor",
+      "hoch": "Viele Schüsse aufs Tor",
+      "tief": "Wenige Schüsse aufs Tor"
+    }
+  },
+  "lesen": {
+    "ligaschnitt_titel": "Ligaschnitt:",
+    "ligaschnitt": "Der Strich in der Mitte des Balkens markiert den Ligadurchschnitt der letzten 20 Spieltage.",
+    "prozent_titel": "Prozentzahl:",
+    "prozent": "Abweichung des Spielwerts vom Ligaschnitt.",
+    "farben_titel": "Farben:",
+    "farben": "Grün steht für überdurchschnittliche, Rot für unterdurchschnittliche Werte. Dunkel bedeutet stark, hell bedeutet leicht."
+  },
+  "spiel": {
+    "seitentitel": "{heim} gegen {gast} – {liga} – Soccer Intelligence",
+    "beschreibung": "Statistische Auffälligkeiten der Partie {heim} gegen {gast} ({liga}, {spieltag}).",
+    "kopfzeile": "{liga} · {spieltag}",
+    "gegen": "gegen",
+    "form_titel": "Letzte 5 Spiele",
+    "form_legende_s": "S = Sieg",
+    "form_legende_u": "U = Unentschieden",
+    "form_legende_n": "N = Niederlage",
+    "form": {
+      "S": "Sieg",
+      "U": "Unentschieden",
+      "N": "Niederlage",
+      "-": "Noch kein Spiel"
+    },
+    "endstand": "Endstand {ergebnis}",
+    "ergebnis_folgt": "Ergebnis folgt",
+    "auffaelligstes": "Auffälligstes Merkmal",
+    "gesamtbild": "Gesamtbild",
+    "keine_titel": "Keine statistischen Auffälligkeiten",
+    "keine_text": "Alle {n} Kennzahlen liegen im Normalbereich. Die größte Abweichung: {name} {wert}.",
+    "bewertung": "Bewertung",
+    "nicht_gewertet": "Nicht gewertet",
+    "nicht_gewertet_text": "Die statistische Datengrundlage ist zu schwach.",
+    "nicht_gewertet_leer_text": "Die statistische Datengrundlage ist zu schwach. Es liegen noch keine Werte vor.",
+    "hinweis_nicht_gewertet_titel": "Nicht gewertet:",
+    "hinweis_nicht_gewertet": "Die statistische Datengrundlage für dieses Spiel ist zu schwach. Die Werte siehst du trotzdem, wir stufen sie aber nicht als Abweichung ein.",
+    "hinweis_nicht_gewertet_leer": "Für dieses Spiel liegen noch keine Werte vor, weil die statistische Datengrundlage zu schwach ist. Das betrifft vor allem Aufsteiger zu Saisonbeginn.",
+    "hinweis_nachholspiel_titel": "Nachholspiel:",
+    "hinweis_nachholspiel": "Dieses Spiel gehört zu einem früheren Spieltag und wird am {datum} nachgeholt.",
+    "hinweis_vorgezogen_titel": "Vorgezogen:",
+    "hinweis_vorgezogen": "Dieses Spiel gehört zum {spieltag} und wird vorgezogen am {datum} gespielt.",
+    "hinweis_gespielt_titel": "Gespielt:",
+    "hinweis_gespielt": "Die Werte wurden vor dem Spiel berechnet.",
+    "zeitpunkt_uhr": "{tag} um {uhr} Uhr",
+    "status_titel": "Status",
+    "status_text": "Für dieses Spiel gibt es keine Werte.",
+    "auffaelligkeiten": "Auffälligkeiten",
+    "normalbereich": "Im Normalbereich",
+    "kennzahlen": "Kennzahlen",
+    "zahlen_detail": "Zahlen im Detail",
+    "zahlen_detail_zu": "Zahlen im Detail zuklappen: {name}",
+    "zuklappen": "Zuklappen",
+    "erwartungswert": "Erwartungswert",
+    "je_mannschaft": "Je Mannschaft",
+    "mittelwert": "Mittelwert beider Teams",
+    "ligaschnitt": "Ligaschnitt",
+    "vergleichswert_marke": "Vergleichswert (Marke)",
+    "abweichung": "Abweichung",
+    "aufteilung": "{name}: {heim} {wert_heim}, {gast} {wert_gast}",
+    "methodik": "Wie entstehen diese Werte?",
+    "alle_spiele": "Alle Spiele des Spieltags",
+    "nicht_gefunden": "Dieses Spiel gibt es nicht."
+  },
+  "start": {
+    "seitentitel": "Soccer Intelligence – Fußballspiele durchleuchtet",
+    "beschreibung": "Statistische Auffälligkeiten bei Toren, Ecken, Karten und weiteren Kennzahlen der Bundesliga, Premier League, La Liga und Serie A – vor dem Anpfiff.",
+    "h1_vorne": "Fußballspiele",
+    "h1_akzent": "durchleuchtet.",
+    "unterzeile": "Entdecke statistische Auffälligkeiten bei Toren, Ecken, Karten und weiteren Fußball-Kennzahlen – vor dem Anpfiff.",
+    "knopf_auffaellig": "Auffällige Spiele",
+    "knopf_so": "So funktioniert’s",
+    "ranking_titel": "Die auffälligsten Spiele",
+    "ranking_text": "Die interessantesten Zahlen und Abweichungen des kommenden Spieltags.",
+    "ranking_zeile": "{liga} · Spieltag {n}",
+    "mehr": "mehr als üblich",
+    "weniger": "weniger als üblich",
+    "datenstand": "Aktueller Datenstand: {datum}",
+    "ligen_titel": "Deine Liga. Dein Spieltag.",
+    "ligen_text": "Tippe auf deine Liga und betrachte alle Spiele des Spieltags.",
+    "so_titel": "So funktioniert’s",
+    "vergleichen_titel": "Wir vergleichen",
+    "vergleichen": "Jedes Spiel wird mit dem Schnitt der Liga abgeglichen: Tore, Karten, Ecken und mehr.",
+    "markieren_titel": "Wir markieren",
+    "markieren": "Weicht ein Wert deutlich ab, bekommt das Spiel eine Markierung: hell für leicht, dunkel für stark.",
+    "markieren_link": "Mehr dazu hier…",
+    "entscheiden_titel": "Du entscheidest",
+    "entscheiden": "Ob fürs Fachsimpeln oder für deinen Wetttipp: Du siehst auf einen Blick, wo es sich lohnt, genauer hinzuschauen.",
+    "bereit_titel": "Bereit für den Spieltag?",
+    "bereit_text": "In unter einer Minute weißt du, welche Spiele auffallen.",
+    "bereit_knopf": "Spieltag ansehen",
+    "fan_titel": "Von einem Fußballfan gebaut",
+    "fan_text": "Ich bin leidenschaftlicher Fußballfan und interessiere mich besonders für die Zahlen und Statistiken hinter dem Spiel. Mit Soccer Intelligence verbinde ich meine Begeisterung für Fußball mit der Freude an Daten und neuen Technologien. Gleichzeitig ist das Projekt für mich eine spannende Möglichkeit der Weiterentwicklung.",
+    "fan_name": "Carsten Thiele",
+    "fan_bild": "Porträt des Gründers von Soccer Intelligence",
+    "seo_titel": "Was ist Soccer Intelligence?",
+    "seo_text": "Soccer Intelligence analysiert Fußballspiele aus der Bundesliga, Premier League, La Liga und Serie A anhand verschiedener statistischer Kennzahlen. Dazu vergleichen wir Werte wie Tore, Ecken, Karten und Torschüsse mit dem jeweiligen Ligadurchschnitt. Deutliche Abweichungen kennzeichnen wir als statistische Auffälligkeiten – so erkennst du bereits vor dem Anpfiff, welche Spiele besonders interessant sind. Unsere Analysen richten sich an Fußballfans und Tipper, die genauer hinschauen möchten. Soccer Intelligence bietet verständliche Statistiken und Auswertungen, keine Wettberatung.",
+    "pause": {
+      "spielpause": {
+        "zeile": "Spielpause",
+        "titel": "Nächster Spieltag am {datum}",
+        "text": "Gerade wird in keiner Liga gespielt. Sobald es weitergeht, siehst du hier wieder die auffälligsten Spiele.",
+        "knopf": "Zum nächsten Spieltag"
+      },
+      "winterpause": {
+        "zeile": "Winterpause",
+        "titel": "Nächster Spieltag am {datum}",
+        "text": "Gerade wird in keiner Liga gespielt. Sobald es weitergeht, siehst du hier wieder die auffälligsten Spiele.",
+        "knopf": "Zum nächsten Spieltag"
+      },
+      "sommerpause": {
+        "zeile": "Sommerpause",
+        "titel": "Die Saison ist beendet",
+        "text": "Alle Spiele sind gespielt. Sobald der Spielplan der neuen Saison steht, geht es hier weiter.",
+        "knopf": ""
+      },
+      "saisonstart": {
+        "zeile": "Sommerpause",
+        "titel": "Saisonstart am {datum}",
+        "text": "Ab dem Saisonstart siehst du hier wieder die auffälligsten Spiele.",
+        "knopf": "Zum nächsten Spieltag"
+      },
+      "unbekannt": {
+        "zeile": "Nächster Spieltag",
+        "titel": "Nächster Spieltag am {datum}",
+        "text": "Sobald der Spielplan wieder aktuell ist, siehst du hier die auffälligsten Spiele.",
+        "knopf": "Zum nächsten Spieltag"
+      },
+      "keine": {
+        "zeile": "Aktueller Spieltag",
+        "titel": "Keine Abweichungen",
+        "text": "Bei den anstehenden Spielen weicht kein Wert deutlich vom Ligaschnitt ab. Alle Spiele findest du auf der Spieltagsseite.",
+        "knopf": "Zum Spieltag"
+      }
+    },
+    "tage_spieltag": {
+      "eins": "Tag bis zum Spieltag",
+      "mehr": "Tage bis zum Spieltag"
+    },
+    "tage_start": {
+      "eins": "Tag bis zum Start",
+      "mehr": "Tage bis zum Start"
+    }
   }
 }

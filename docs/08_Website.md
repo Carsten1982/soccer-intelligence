@@ -1,12 +1,12 @@
 # Soccer Intelligence – Öffentliche Website (Konzept und Protokoll)
 
-**Version:** 1.0 · **Stand:** 16.11.2026 · **Umsetzung ab:** Version 0.17
+**Version:** 1.1 · **Stand:** 17.11.2026 · **Umsetzung ab:** Version 0.17 (Grundgerüst, Spieltag), 0.18 (alle drei Seiten nach Entwurf)
 **Grundlage:**
 - Übergabe der Frontend-Entwürfe (Carsten, 16.11.2026, `Uebergabe_Frontend_Entwuerfe.md`)
-- Entwurf „1d · Startseite mit Pausen A“ (`Main_P1`)
-- Entscheidungen Carsten vom 16.11.2026: T1–T5, F1–F8, Datenstand, Zeitreise
+- Entwürfe (Carsten, 17.11.2026, nochmals hochgeladen): Startseite „1d“ (`Main_P1`, ergänzend „1b“ `Main_C`), Spieltag „3d“ (`Spieltag_P1`), Matchdetail „2i“ (`Spiel_P1`, ergänzend „2c“ `Spiel_F`). Die älteren und neueren Entwürfe ergänzen sich (zeigen verschiedene Zustände)
+- Entscheidungen Carsten vom 16.11.2026: T1–T5, F1–F8, Datenstand, Zeitreise; vom 17.11.2026: Q1–Q7
 
-**Wichtig:** Die Entwürfe für Spieltag (`Spieltag_P1`) und Matchdetail (`Spiel_P1`) kamen nicht an (vom Upload entfernt). Carsten hat den „Zu-Not-Weg“ gewählt: Spieltag und Matchdetail werden **nach der Übergabe-Datei** gebaut, im Stil der Startseite. Jede Stelle, an der ich dabei etwas annehmen musste, steht in **Abschnitt 9 (Annahmen)** und wird in der Vorschau geprüft.
+**Verlauf:** In 0.17 kamen die Entwürfe für Spieltag und Matchdetail nicht an (vom Upload entfernt); die Seite Spieltag entstand damals nach der Übergabe-Datei („Zu-Not-Weg“, Annahmen in Abschnitt 9). Seit **0.18** sind alle drei Seiten **genau nach den Entwürfen** gebaut; die damals nötigen Annahmen A1 und A2 sind damit ersetzt.
 
 ---
 
@@ -26,7 +26,7 @@
 | T3 | Vorschau mit Passwortschutz |
 | T4 | Umsetzung genau nach Designvorgabe. Schriften Outfit und Inter, **selbst gehostet** (schneller, kein Datenschutz-Thema mit Google) |
 | T5 | Die Website schreibt mit **ß** („Fußball“, „weißt“). Das Dashboard bleibt bei ss (CLAUDE.md) |
-| F1 | KPI 03 „Über 2,5 Tore“ vorerst mit der Abweichung wie im Rechenkern. **Offener Punkt:** Text und Vergleichswert (2,5-Tore-Marke statt Ligaschnitt) im Nachgang anpassen |
+| F1 | KPI 03 „Über 2,5 Tore“ mit der Abweichung wie im Rechenkern. Text und Vergleichswert seit 0.18 nach Q2 (2,5-Tore-Marke statt Ligaschnitt) |
 | F2 | „Nicht gewertet“ = „vorläufig“ nach Regelwerk (weniger als 10 Spiele, z. B. Aufsteiger) |
 | F3 | Keine Sonderbehandlung „Werte ab“ auf der Spieltag-Seite: Es stehen die Werte, die gerade berechenbar sind |
 | F4 | Nachhol- und vorgezogene Spiele wie im Entwurf: im Spieltag, in dessen Zeitraum sie fallen, sonst im ersten; mit Chip |
@@ -37,18 +37,30 @@
 | D1 | **„Aktueller Datenstand“** (Startseite, Spieltag) und **„Stand“** (Fusszeile) = Datum bzw. Datum und Uhrzeit des **letzten erfolgreichen Importlaufs** über die API |
 | Z1 | **Zeitreise** nur in der Vorschau: `?datum=…` auf jeder Seite (Abschnitt 6) |
 
+**Entscheidungen Carsten vom 17.11.2026 (Fragerunde vor 0.18, alle Empfehlungen angenommen):**
+
+| Nr. | Entscheidung |
+|---|---|
+| Q1 | Matchdetail, „Zahlen im Detail“: Erwartungswert = Hauptwert der Kennzahl. Die zweiteilige Leiste „Heim + Gast“ nur bei **Gelben Karten** (Summe der Teamwerte); alle anderen Kennzahlen zeigen „Je Mannschaft · Mittelwert beider Teams“ |
+| Q2 | KPI 03 „Über 2,5 Tore“: Vergleichswert ist die **Marke 2,5** (nicht der Ligaschnitt), Erwartungswert in Toren; Texte „Mehr als 2,5 Tore erwartet“ / „Weniger als 2,5 Tore erwartet“ |
+| Q3 | Die Website verwendet die kurzen Texte des Entwurfs (Übergabe 4.4), nicht die Texte des Dashboards |
+| Q4 | Eine einzelne vorläufige Kennzahl erscheint ohne Stufe, schraffiert, unter „Im Normalbereich“ mit dem Vermerk „nicht gewertet“. Das ganze Spiel ist nur dann „nicht gewertet“, wenn alle Kennzahlen vorläufig sind (F2) |
+| Q5 | Gespieltes Spiel: „Endstand 2 : 1“ bzw. „Ergebnis folgt“ statt des Anstosses, dazu der Hinweis „Die Werte wurden vor dem Spiel berechnet.“ |
+| Q6 | Foto der Startseite: nur auf dem Server (`/docker/football-dashboard/website-bilder/portrait.jpg`), nie in Git; fehlt es, steht ein neutraler Platzhalter |
+| Q7 | Startseite in einer Pause: Tage-Zähler bis zum nächsten Spieltag bzw. Saisonstart |
+
 ## 3. Technik
 
 | Teil | Umsetzung |
 |---|---|
 | Programmteil | `app/website/` im bestehenden Projekt (gleiche Datenbank, gleicher Rechenkern) |
-| Seiten | HTML-Vorlagen (Jinja2) + eine CSS-Datei mit den Farben und Massen des Entwurfs; wenig JavaScript (nur Tabs), alles funktioniert auch ohne |
+| Seiten | HTML-Vorlagen (Jinja2, gemeinsame Bausteine in `vorlagen/teile.html`) + eine CSS-Datei mit den Farben und Massen der Entwürfe; wenig JavaScript (`statisch/site.js`: Tabs der englischen Woche, „Zuklappen“ im Matchdetail), alles funktioniert auch ohne. Keine Inline-Stile (Content-Security-Policy), Balkenbreiten über Klassen `.w0`–`.w100` |
 | Texte | Sprachdatei `app/website/texte/de.json` mit Schlüsseln (Übergabe 9.1); Mehrzahl als eigene Varianten; Fallback Deutsch |
 | Formate | `app/website/format.py`: Datum „Sa 21.11.“, Prozent „+47,36 %“ mit echtem Minus „−“, Ergebnis „2 : 1“; je Sprache eine Tabelle (jetzt nur `de`) |
 | Schriften | Outfit und Inter als variable WOFF2-Dateien (SIL Open Font License 1.1, Lizenzdateien liegen bei), nur lateinische Zeichen; erweiterte Zeichen lädt der Browser nur bei Bedarf |
 | Daten | `app/website/daten.py` lädt Datenbank, Spielplan, Schwellen und den Importstand, mit Zwischenspeicher je Dateistand |
 | Datenschnittstelle | Je Seite ein Datensatz mit **Codes statt Texten** (Abschnitt 5), als JSON abrufbar (`/vorschau/daten/…`). Daraus entsteht beim Livegang der statische Export |
-| Vorschau | Container `soccer-vorschau` (gleiches Programm-Abbild wie das Dashboard), kleiner Python-Webserver, erzeugt die Seiten bei jedem Aufruf neu (nötig für die Zeitreise). Nur lesend auf `data/` und `import/` |
+| Vorschau | Container `soccer-vorschau` (gleiches Programm-Abbild wie das Dashboard), kleiner Python-Webserver, erzeugt die Seiten bei jedem Aufruf neu (nötig für die Zeitreise). Nur lesend auf `data/`, `import/` und (seit 0.18) `website-bilder/` (Foto, Q6). Beim Start rechnet er Startseite und Spieltage einmal vor, damit schon der erste Aufruf schnell ist |
 | Zugang | Traefik-Router `Host(soccer-intelligence.com) && PathPrefix(/vorschau)` mit Passwortabfrage (BasicAuth, Hash in `.env` als `SOCCER_VORSCHAU_AUTH`), Anfragebremse, „noindex“ |
 | Livegang (später) | statischer Export nach `site/`, ausgeliefert von nginx (wie der Platzhalter); Erzeugen im Container `soccer-import` nach jeder Übernahme und alle 15 Minuten |
 
@@ -56,24 +68,26 @@
 
 | Adresse (Vorschau) | Seite | Version |
 |---|---|---|
-| `/vorschau/` | Startseite (bis 0.19: Weiterleitung auf den Spieltag) | 0.19 |
+| `/vorschau/` | Startseite (in 0.17 Weiterleitung auf den Spieltag) | 0.18 |
+| `/vorschau/spieltag` | Weiterleitung auf `/vorschau/spieltag/bundesliga` (F8) | 0.18 |
 | `/vorschau/spieltag/<liga>` | Spieltag; `<liga>` = `bundesliga`, `la-liga`, `premier-league`, `serie-a` | 0.17 |
-| `/vorschau/spiel/<id>` | Matchdetail; `<id>` = Spiel-ID von API-Football | 0.18 |
+| `/vorschau/spiel/<id>` | Matchdetail, **eine Seite je Paarung** des Spielplans (laufende Saison und Vorsaison); `<id>` = Spiel-ID von API-Football; unbekannte ID: Seite „nicht gefunden“ (404) | 0.18 |
+| `/vorschau/bilder/portrait.jpg` | Foto der Startseite aus `website-bilder/` (Q6); fehlt es: 404, die Startseite zeigt den Platzhalter | 0.18 |
 | `/vorschau/methodik`, `/impressum`, `/datenschutz` | Hinweis „folgt später“ | später |
-| `/vorschau/daten/spieltag/<liga>.json` | Datensatz der Seite (Codes) | 0.17 |
+| `/vorschau/daten/start.json`, `/daten/spieltag/<liga>.json`, `/daten/spiel/<id>.json` | Datensätze der Seiten (Codes) | 0.17/0.18 |
 
 Reihenfolge der Ligen auf der Website (Entwurf): Bundesliga, La Liga, Premier League, Serie A.
 
 ## 5. Seite Spieltag (Übergabe, Abschnitt 6)
 
-### 5.1 Aufbau
+### 5.1 Aufbau (seit 0.18 nach Entwurf 3d)
 1. Kopf: Logo „Soccer Intelligence“, Navigation Spieltag · Methodik · Impressum.
-2. Link „Startseite“, H1 „Alle Spiele im Überblick“, Text „Wähle deine Liga und sieh, bei welchen Partien die Zahlen aus der Reihe fallen.“
-3. Liga-Auswahl: vier Kacheln, je „10. Spieltag“ (anstehender Spieltag); die gewählte in der Akzentfarbe. Darunter „Aktueller Datenstand: Mo 16.11.2026“ (D1).
-4. Titel = Liganame, Zusammenfassung „10. Spieltag · 20.11. – 22.11.2026 · 9 Partien · 2 mit Auffälligkeit · plus 1 Nachholspiel“.
+2. Dunkler Kopfbereich: H1 „Alle Spiele im **Überblick**“ (Akzent), Text „Wähle deine Liga und sieh, bei welchen Partien die Zahlen aus der Reihe fallen.“, darunter die Liga-Auswahl: vier Kacheln mit „10. Spieltag“ bzw. Pausenname (A5); die gewählte in der Akzentfarbe. Darunter „Aktueller Datenstand: Mo 16.11.2026“ (D1).
+3. Titel = Liganame, Zusammenfassung „10. Spieltag · 20.11. – 22.11.2026 · 9 Partien · 2 mit Auffälligkeit · plus 1 Nachholspiel“ (je Tab eine eigene Zeile).
+4. Bei englischer Woche Tabs „10. Spieltag · ab 20.11.“ / „11. Spieltag · ab 24.11.“ (Standard: der frühere; ohne JavaScript stehen beide untereinander).
 5. Legende Stark · Leicht · Ohne Auffälligkeit, „Wie lese ich das?“ (aufklappbar, Texte Übergabe 6.3).
-6. Bei englischer Woche Tabs „10. Spieltag · ab 20.11.“ / „11. Spieltag · ab 24.11.“ (Standard: der frühere).
-7. Liste der Partien als Kacheln, Fusszeile.
+6. Ohne jede Abweichung der Hinweis „Bei diesem Spieltag weicht kein Wert deutlich vom Ligaschnitt ab.“
+7. Partien als Kacheln im Raster (Computer zwei Spalten, Handy eine), Fusszeile.
 
 ### 5.2 Welche Spiele (gleiche Regeln wie Dashboard, `07`, Abschnitt 4)
 - Tabs = die Spieltage, die das Dashboard ohne Auswahl als Abschnitte zeigt (anstehender Spieltag, weitere Spieltage, die heute bis heute + 6 beginnen).
@@ -95,12 +109,12 @@ Reihenfolge der Prüfung: **Status > gespielt > nicht gewertet > Stufe** (Überg
 Stufen kommen aus `schwellen.toml` über den Rechenkern (Übergabe 4.1, keine festen 20/35). Vorläufige Kennzahlen zählen für die Stufe nicht.
 
 ### 5.4 Sortierung und Zählung
-- Stark (nach grösster Abweichung) → Leicht (nach grösster Abweichung) → Ohne → Nicht gewertet → Status → Gespielt; sonst nach Anstoss.
-- Nachhol- und vorgezogene Spiele stehen danach, am Ende der Liste (Übergabe 6.4), unter sich gleich sortiert.
+- Seit 0.18 wie im Entwurf 3d (Skript `renderVals`): Stark (nach grösster Abweichung) → Leicht (nach grösster Abweichung) → Ohne Auffälligkeit → alle übrigen (Nicht gewertet, Status, Gespielt) als **eine** Gruppe nach Anstoss.
+- Nachhol- und vorgezogene Spiele werden mitsortiert (wie im Entwurf); in 0.17 standen sie als Gruppe am Ende (Annahme A2, ersetzt).
 - „Partien“ = Spiele des Spieltags ohne Sonderspiele; „mit Auffälligkeit“ = Stark + Leicht, Sonderspiele eingeschlossen; „plus n Nachholspiel(e)“ bzw. „plus n vorgezogene(s) Spiel(e)“.
 
 ### 5.5 Kachel
-Heim, „gegen“, Gast, Termin („Sa 14.11. · 15:30“, „Sa 14.11. · Zeit offen“, „Wochenende 06./07.02. · Termin offen“, bei Status „Termin offen“ bzw. Datum). Chips rechts, runder Pfeil. Farben und Ränder nach Übergabe 6.2.
+Heim, „gegen“, Gast, Termin („Sa 14.11. · 15:30“, „Sa 14.11. · Zeit offen“, „Wochenende 06./07.02. · Termin offen“, bei Status „Termin offen“ bzw. Datum), bei gespielten Spielen das Ergebnis. Chips (Stufe, Nachholspiel/vorgezogen, Status, Ergebnis folgt), runder Pfeil zur Seite des Spiels. Farben, Ränder und Masse nach Entwurf 3d. Verschobene und abgesagte Spiele sind nicht verlinkt (F8).
 
 ### 5.6 Datensatz (Codes, Auszug)
 ```json
@@ -122,46 +136,72 @@ Heim, „gegen“, Gast, Termin („Sa 14.11. · 15:30“, „Sa 14.11. · Zeit 
 - Grenzen: Spielplan = der heutige (spätere Verschiebungen sind schon eingetragen). Zeitraum = laufende Saison und Vorsaison.
 - Auf der öffentlichen Seite gibt es keine Zeitreise.
 
-## 7. Matchdetail und Startseite
+## 7. Matchdetail und Startseite (seit 0.18)
 
-Folgen in 0.18 und 0.19, Regeln aus der Übergabe (Abschnitte 5 und 7) mit den Entscheidungen F1, F2, F6, F7, F8. Werden vor der Umsetzung hier ergänzt.
+### 7.1 Matchdetail (Entwurf 2i, ergänzend 2c; Übergabe Abschnitt 7)
+**Jede Paarung des Spielplans hat eine eigene Seite** unter `/spiel/<Spiel-ID von API-Football>` – auch gespielte, Nachhol- und vorgezogene Spiele. Verlinkt sind sie von der Spieltag-Seite und vom Ranking der Startseite. Verschobene und abgesagte Spiele haben ebenfalls eine Seite (über die Adresse erreichbar), werden aber nicht verlinkt (F8). Programm: `app/website/spiel.py` (Datensatz), `vorlagen/spiel.html`.
 
-## 8. Testfälle (Version 0.17)
+1. Kopf rechts „Zurück zum Spieltag“ (statt Navigation).
+2. Scoreboard: Liga · Spieltag, Termin (bzw. „Endstand 2 : 1“ / „Ergebnis folgt“, Q5) mit Chips Nachholspiel/vorgezogen/Status, beide Teams mit Formkurve „Letzte 5 Spiele“ (S/U/N, „–“ = noch kein Spiel, KPI 01) und Legende.
+3. Kernaussage: grösste Auffälligkeit („+44,00 % · Über 2,5 Tore · Mehr als 2,5 Tore erwartet“); ohne Auffälligkeit „Keine statistischen Auffälligkeiten – Alle 8 Kennzahlen liegen im Normalbereich. Die größte Abweichung: …“; nicht gewertet „Nicht gewertet“; Status „Für dieses Spiel gibt es keine Werte.“
+4. Hinweise: Nachholspiel („… wird am So 22.11. um 17:30 Uhr nachgeholt“), vorgezogen, gespielt („Die Werte wurden vor dem Spiel berechnet.“, Q5).
+5. „Auffälligkeiten“: Karten je Kennzahl mit Stufe, nach Betrag der Abweichung sortiert; Balken (Länge = Betrag/2 % der Breite, höchstens 50 %, über 100 % gekappt mit Streifen, Übergabe 4.2); aufklappbar „Zahlen im Detail“: Erwartungswert, „Je Mannschaft · Mittelwert beider Teams“ (bei Gelben Karten „Heim + Gast“ mit zweiteiliger Leiste, Q1), Ligaschnitt bzw. „Vergleichswert (Marke)“ 2,50 bei KPI 03 (Q2), Abweichung mit Stufe, „Zuklappen“.
+6. „Im Normalbereich“: übrige Kennzahlen als aufklappbare Zeilen, nach Betrag; eine einzelne vorläufige Kennzahl dort schraffiert mit „· nicht gewertet“ (Q4). Ist das ganze Spiel nicht gewertet: Hinweisbox und Überschrift „Kennzahlen“ (ohne Werte: eigener Text „Für dieses Spiel liegen noch keine Werte vor …“).
+7. Status-Spiele (verschoben, abgesagt …): nur Scoreboard und Kernaussage, keine Kennzahlen (wie die graue Kachel, F5).
+8. Link „Wie entstehen diese Werte?“ (Methodik, folgt) und „Alle Spiele des Spieltags“.
+
+Werte unverändert aus dem Rechenkern (F6): Erwartungswert = `hauptwert`, Teamwerte = `heim`/`auswaerts`, Ligaschnitt = `referenz`, Abweichung = `abweichung` (gerundet), Stufe aus `schwellen.toml`; KPI 08 in Prozent.
+
+### 7.2 Startseite (Entwurf 1d, ergänzend 1b; Übergabe Abschnitt 5)
+Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
+
+1. Kopfbereich „Fußballspiele **durchleuchtet.**“ mit Knöpfen „Auffällige Spiele“ und „So funktioniert’s“.
+2. **„Die auffälligsten Spiele“** = genau die Top Anomalien des Dashboards (F6): je Liga der zeitlich nächste Block (`core/anzeige.top_block`), nur Spiele vor dem Anpfiff und mit Werten (`values_gate`), Auswahl und Rangfolge nach Regelwerk 2.6 (`core/top.select_top`: stark vor leicht, grösster Betrag, früheres Datum, Ligareihenfolge der Konfiguration; höchstens 4, einer je Spiel; vorläufige Werte und verschobene Spiele nie). Je Zeile: Rang, „Bundesliga · Spieltag 10“, Paarung, Termin, Pfeil, Abweichung, Stufe, Kennzahl, Balken; Link zum Matchdetail.
+3. Zustände statt der Liste (Pausenkarte): **Keine Abweichungen** (eine Liga spielt, aber ohne Auffälligkeit) · **Spielpause** / **Winterpause** (keine Liga in den nächsten 14 Tagen; Winterpause, wenn Weihnachten in der Lücke liegt) · **Saisonstart** (alle nächsten Spieltage gehören zu einer neuen Saison) · **Sommerpause** („Die Saison ist beendet“, kein angesetztes Spiel) · **Nächster Spieltag** ohne Pausennamen bei veraltetem Datenstand (S9). Massgebend ist der früheste nächste Spieltag aller Ligen; der Knopf führt zu dessen Liga. Tage-Zähler (Q7) bei Spiel-, Winterpause, Saisonstart und veraltetem Stand. Fehler in den Daten: Hinweis „Daten werden geprüft“.
+4. Warnbox bei veraltetem Datenstand (über 3 Tage, F7); „Aktueller Datenstand: …“ (D1).
+5. „Deine Liga. Dein Spieltag.“ (vier Liga-Knöpfe), „So funktioniert’s“ (drei Spalten), Band „Bereit für den Spieltag?“, Block „Von einem Fußballfan gebaut“ mit Foto (Q6) oder Platzhalter, SEO-Text „Was ist Soccer Intelligence?“.
+
+**Foto (Q6):** Datei `portrait.jpg` im Ordner `/docker/football-dashboard/website-bilder/` auf dem Server (quadratisch, mindestens 230 × 230 Pixel, JPEG). Der Ordner ist nur lesend im Container `soccer-vorschau` eingebunden (`/bilder`), steht in `.gitignore` und kommt nie ins Programm-Abbild (Dockerfile kopiert nur `app/`). Ein neues Foto wirkt sofort (kein Neustart nötig; Browser-Zwischenspeicher bis 1 Stunde).
+
+## 8. Testfälle (seit Version 0.17, `tests/test_website.py`)
 
 | Nr. | Situation | Erwartet |
 |---|---|---|
 | W1 | Formate | „Sa 21.11.“, „+47,36 %“, „−22,07 %“ (U+2212), „0,00 %“ ohne Vorzeichen, „2 : 1“, Zeitraum über den Jahreswechsel |
 | W2 | Einstufung | Status vor gespielt vor nicht gewertet vor Stufe; vorläufige Kennzahlen zählen nicht; stark vor leicht |
-| W3 | Sortierung | Stark → Leicht → Ohne → Nicht gewertet → Status → Gespielt; innerhalb Stark/Leicht nach Betrag |
+| W3 | Sortierung | seit 0.18: Stark → Leicht → Ohne → übrige (Nicht gewertet, Status, Gespielt) nach Anstoss; innerhalb Stark/Leicht nach Betrag; Sonderspiele mitsortiert |
 | W4 | Zählung | Partien ohne Sonderspiele; „mit Auffälligkeit“ mit Sonderspielen; „keine mit Auffälligkeit“ |
-| W5 | Nachholspiel | im Tab, in dessen Zeitraum es fällt, sonst im ersten; am Ende der Liste; Chip |
+| W5 | Nachholspiel | im Tab, in dessen Zeitraum es fällt, sonst im ersten; mitsortiert (seit 0.18); Chip |
 | W6 | Englische Woche | zwei Tabs mit eigener Zählung; Standard der frühere |
 | W7 | Pausen | Spielpause, Winterpause, Sommerpause, Saisonstart als Karte statt Liste; ab 14 Tagen Liste |
 | W8 | Datenstand | Warnbox ab 4 Tagen, Liste bleibt; Datum = letzter erfolgreicher Lauf |
 | W9 | Zeitreise | Datum aus der Adresse, Ergebnisse und Werte nur vor dem Importtag, Links tragen das Datum |
 | W10 | Texte | jeder Schlüssel der Vorlagen in `de.json`; ß-Schreibweise; alle Texte maskiert |
-| W11 | Vorschau-Dienst | Adressen, Weiterleitung, 404, ungültiges Datum, Dateien nur aus dem eigenen Ordner, Kopfzeilen |
+| W11 | Vorschau-Dienst | Adressen (Startseite, Matchdetail, JSON), Weiterleitung, 404, ungültiges Datum, Dateien nur aus dem eigenen Ordner, Kopfzeilen; Foto nur aus `website-bilder/`, sonst Platzhalter; Vorladen bricht nie ab |
 | W12 | Container | Router nur unter `/vorschau`, mit Passwortabfrage, noindex, Anfragebremse; nur lesend |
-| W13 | Echte Daten | alle vier Ligen an mehreren Tagen (wie A27) ohne Fehler |
+| W13 | Echte Daten | alle vier Ligen an mehreren Tagen (wie A27) ohne Fehler; mit echten Dateien auch Startseite und Matchdetail jeder verlinkten Paarung |
+| W14 | Matchdetail | Q1 (Summe nur Gelbe Karten, sonst Mittelwert), Q2 (Marke 2,50), Q4 (einzelne vorläufige Kennzahl unter Normalbereich), Q5 (Endstand, Ergebnis folgt, Hinweis), nicht gewertet mit/ohne Werte, Status ohne Kennzahlen, Nachholspiel-Hinweis, Formkurve, Balken und Zahlen; **jede Paarung eines Spieltags und der ganzen Saison hat eine eigene Seite** (echte Saisonlisten) |
+| W15 | Startseite | Ranking wie Dashboard (stark vor leicht, Betrag, höchstens 4, einer je Spiel, ohne vorläufige und verschobene, nur vor dem Anpfiff); Zustände Spielpause, Winterpause, Sommerpause, Saisonstart, unbekannt (veraltet), keine, gesperrt; Tage-Zähler |
+| W16 | Sicherheit | keine Inline-Stile und -Skripte (Content-Security-Policy), jede Balkenbreite hat eine CSS-Klasse |
 
 ## 9. Annahmen (bitte in der Vorschau prüfen)
 
 | Nr. | Annahme | Grund |
 |---|---|---|
-| A1 | Spieltag-Kachel und Liste im Stil der Startseite (Karten, Radius, Schrift), Masse aus der Übergabe 6.2 | Entwurf `Spieltag_P1` nicht angekommen |
-| A2 | Nachhol- und vorgezogene Spiele stehen als eigene Gruppe am Ende der Liste | Übergabe 6.4 „am Ende der Liste“ zusammen mit 6.3 „Sortierung nach Stufe“ |
+| A1 | ~~Spieltag-Kachel und Liste im Stil der Startseite~~ – **erledigt mit 0.18**: genau nach Entwurf 3d | Entwurf `Spieltag_P1` war in 0.17 nicht angekommen |
+| A2 | ~~Nachhol- und vorgezogene Spiele als eigene Gruppe am Ende~~ – **ersetzt mit 0.18**: mitsortiert wie im Entwurf 3d (Abschnitt 5.4) | Entwurf 3d sortiert alle Spiele gemeinsam |
 | A3 | Status „gewertet“ (am grünen Tisch) bekommt den Chip „Am grünen Tisch gewertet“, damit er nicht mit „Nicht gewertet“ verwechselt wird | Begriffe sonst gleich |
 | A4 | „Ergebnis folgt“ als Chip, solange das Ergebnis nach dem Anstoss noch nicht übernommen ist | Übergabe nennt nur „Ergebnis“ |
 | A5 | Liga-Kachel zeigt in einer Pause den Pausennamen statt der Spieltagsnummer | Übergabe nennt nur „24. Spieltag“ |
 | A6 | Bei veraltetem Datenstand ohne anstehenden Spieltag: Warnbox und Karte „Nächster Spieltag am …“ ohne Pausennamen | S9: keine Pausenhinweise bei veraltetem Stand |
-| A7 | Die Pausen-Karte der Spieltag-Seite hat keinen Tage-Zähler (nur die Startseite) | Übergabe 6.4 |
+| A7 | Die Pausen-Karte der Spieltag-Seite hat keinen Tage-Zähler (nur die Startseite, Q7) | Übergabe 6.4; Entwurf 3d bestätigt |
 | A8 | Navigation zu Methodik und Impressum zeigt bis zur Umsetzung „Diese Seite folgt später.“ | Seiten noch nicht im Umfang |
 | A9 | Vorschau-Leiste oben (Zeitpunkt, Eingabe) nur in der Vorschau, nicht Teil der Website | wie die Prototyp-Leiste des Entwurfs |
 
 ## 10. Offene Punkte
 
-- F1: KPI 03 Text und Vergleichswert (2,5-Tore-Marke) anpassen.
 - Startseite: maximale Anzahl im Ranking (vorerst 4, wie Dashboard).
+- Methodik-Seite mit den besprochenen Änderungen (Mehrwert = Trefferquote − Grundquote aller Spiele, Prozentpunkte statt Prozent).
 - Methodik-Seite: eine oder zwei (Übergabe 10, Punkt 9).
 - Livegang: Impressum, Datenschutz, rechtliche Prüfung „keine Wettberatung“, statischer Export und nginx, Weiterleitung `/` statt Platzhalter.
 - Mehrsprachigkeit (EN, IT, ES): Übersetzungen, Namenstabellen, Adressen je Sprache (später).
@@ -171,6 +211,5 @@ Folgen in 0.18 und 0.19, Regeln aus der Übergabe (Abschnitte 5 und 7) mit den E
 | Version | Inhalt |
 |---|---|
 | 0.17 | Grundgerüst (Design, Schriften, Texte, Formate, Daten, Vorschau-Container mit Passwort, Zeitreise) und Seite **Spieltag** |
-| 0.18 | Seite **Matchdetail** |
-| 0.19 | **Startseite** |
+| 0.18 | Alle drei Seiten **nach den Entwürfen**: Startseite (1d), Spieltag (3d), Matchdetail (2i) mit eigener Seite je Paarung; Entscheidungen Q1–Q7 |
 | später | Methodik, Impressum, Datenschutz, Livegang |

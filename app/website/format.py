@@ -75,6 +75,15 @@ def prozent(wert, lang: str = "de") -> str:
     return _f(lang)["prozent"].format(zahl=zeichen + zahl)
 
 
+def zahl(wert, lang: str = "de", einheit: str = "") -> str:
+    """„3,40“ bzw. „64,00 %“ (zwei Nachkommastellen, Werte kommen gerundet aus dem Rechenkern); None -> „–“."""
+    if wert is None:
+        return "–"
+    d = Decimal(str(wert)).quantize(Decimal("0.01"))
+    text = f"{d:.2f}".replace(".", _f(lang)["komma"]).replace("-", MINUS)
+    return _f(lang)["prozent"].format(zahl=text) if einheit == "%" else text
+
+
 def ergebnis(heim: int, gast: int) -> str:
     """„2 : 1“ (Übergabe 6.2)"""
     return f"{heim} : {gast}"

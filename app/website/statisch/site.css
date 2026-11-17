@@ -15,28 +15,16 @@
   unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
 
 :root {
-  --bg: #F4F7F2;
-  --gruen: #0B3D2E;
-  --akzent: #C6F26B;
-  --text: #0E2A1F;
-  --text2: #3E5247;
-  --text3: #5B6B61;
-  --rand: #D3DED5;
-  --rand2: #E1EAE2;
-  --hinweis: #E6F0E8;
-  --hinweis-rand: #BFD4C5;
-  --warn: #FFF4D6;
-  --warn-rand: #E8C46A;
-  --warn-text: #4A3000;
-  --warn-icon: #B7791F;
-  --grau: #ECEFEC;
-  --grau-text: #6F7D74;
-  --pos: #0A6B45;
-  --neg: #B03A2E;
-  --titel: "Outfit", system-ui, sans-serif;
-  --fliess: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --bg: #F4F7F2; --gruen: #0B3D2E; --akzent: #C6F26B;
+  --text: #0E2A1F; --text2: #3E5247; --text3: #5B6B61;
+  --rand: #D3DED5; --rand2: #E1EAE2; --hinweis: #E6F0E8; --hinweis-rand: #BFD4C5;
+  --warn: #FFF4D6; --warn-rand: #E8C46A; --warn-text: #4A3000; --warn-icon: #B7791F;
+  --grau: #ECEFEC; --grau-text: #6F7D74; --pos: #0A6B45; --neg: #B03A2E; --hell: #C4DACD; --hell2: #9EBFAE;
+  --titel: "Outfit", system-ui, sans-serif; --fliess: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
-
+/* Soccer Intelligence – Website (seit 0.17, seit 0.18 genau nach den Entwürfen 1d Startseite, 3d Spieltag, 2i Matchdetail).
+   Masse und Farben aus den Entwürfen; Mobile first bis 360 px, Tippflächen ≥ 44 px. Keine eingebetteten Stilangaben
+   (Sicherheitsrichtlinie): Balkenlängen über die Klassen .w0 … .w100. */
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; font-family: var(--fliess); color: var(--text); background: var(--bg); line-height: 1.5; }
@@ -45,8 +33,10 @@ a:hover { text-decoration: underline; }
 button { font-family: inherit; }
 :focus-visible { outline: 3px solid var(--pos); outline-offset: 2px; border-radius: 6px; }
 .unsichtbar { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-
 .wrap { max-width: 1120px; margin: 0 auto; padding: 0 clamp(16px, 5vw, 48px); }
+.eng { max-width: 816px; margin: 0 auto; padding: 0 clamp(16px, 5vw, 48px); }
+.titel { font-family: var(--titel); }
+svg.icon { display: block; }
 
 /* Vorschau-Leiste (nur Vorschau, Annahme A9) */
 .vorschau { background: var(--warn); border-bottom: 1px solid var(--warn-rand); color: var(--warn-text); font-size: 14px; }
@@ -63,35 +53,54 @@ button { font-family: inherit; }
 .logo span { font-family: var(--titel); font-weight: 700; font-size: 20px; letter-spacing: -0.01em; }
 .kopf nav { display: flex; flex-wrap: wrap; gap: 0 8px; }
 .kopf nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px; font-size: 16px; font-weight: 500; }
-.kopf nav a[aria-current="page"] { font-weight: 700; text-decoration: underline; text-underline-offset: 6px; text-decoration-thickness: 2px; }
+.kopf nav a[aria-current="page"] { text-decoration: underline; text-underline-offset: 6px; text-decoration-thickness: 2px; }
+.kopf .zurueck { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-size: 16px; font-weight: 500; }
 
-/* Seitenkopf */
-.zurueck { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: 15px; font-weight: 500; color: var(--text2); }
-h1 { margin: 4px 0 0; font-family: var(--titel); font-weight: 700; font-size: clamp(30px, 6vw, 46px); line-height: 1.05; letter-spacing: -0.01em; }
-.intro { margin: 10px 0 0; font-size: 17px; line-height: 1.5; color: var(--text2); max-width: 720px; }
+/* Dunkelgrüne Kopfbereiche (Hero, Spieltag-Auswahl, Scoreboard) */
+.hero { position: relative; overflow: hidden; background: var(--gruen); color: #F4F7F2; border-radius: 28px; }
+.hero > svg.deko { position: absolute; inset: 0; width: 100%; height: 100%; }
+.hero > .innen { position: relative; }
+.hero-start { padding: clamp(28px, 6vw, 72px) clamp(20px, 5vw, 64px); }
+.hero-start .innen { max-width: 640px; }
+.hero-start svg.deko { opacity: 0.14; }
+.hero-start h1 { margin: 0; font-family: var(--titel); font-weight: 700; font-size: clamp(38px, 8.5vw, 72px); line-height: 1.02; letter-spacing: -0.02em; }
+.hero-start h1 .unter { display: block; margin-top: 20px; font-family: var(--fliess); font-weight: 400; font-size: clamp(17px, 2.4vw, 20px); line-height: 1.55; letter-spacing: 0; color: var(--hell); }
+.akzent { color: var(--akzent); }
+.knoepfe { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+.knopf-akzent { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; padding: 0 30px; border-radius: 999px; background: var(--akzent); color: var(--gruen); font-size: 18px; font-weight: 600; }
+.knopf-unterstrich { display: inline-flex; align-items: center; justify-content: center; min-height: 56px; padding: 0 22px; color: #F4F7F2; font-size: 17px; font-weight: 500; text-decoration: underline; }
+.knopf-dunkel { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; padding: 0 26px; border-radius: 999px; background: var(--gruen); color: var(--akzent); font-size: 17px; font-weight: 600; }
+.knopf-dunkel.hell { color: #F4F7F2; font-size: 18px; padding: 0 30px; }
+a.knopf-akzent:hover, a.knopf-dunkel:hover { text-decoration: none; }
 
-/* Liga-Auswahl */
-.ligen { list-style: none; margin: 24px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 12px; }
-.ligen a { display: flex; flex-direction: column; justify-content: center; min-height: 76px; padding: 14px 18px; border-radius: 20px; background: #fff; border: 1px solid var(--rand); color: var(--text); text-decoration: none; }
-.ligen a:hover { border-color: var(--gruen); }
-.ligen a[aria-current="page"] { background: var(--akzent); border-color: var(--akzent); }
-.ligen .name { font-family: var(--titel); font-weight: 600; font-size: 20px; line-height: 1.2; }
-.ligen .info { margin-top: 2px; font-size: 15px; font-weight: 500; color: var(--text2); }
-.datenstand { margin-top: 12px; font-size: 14px; color: var(--text2); }
+.hero-spieltag { padding: clamp(16px, 3vw, 28px) clamp(18px, 4vw, 40px) clamp(24px, 4vw, 40px); }
+.hero-spieltag svg.deko { opacity: 0.14; }
+.hero .zurueck-hell { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-size: 16px; font-weight: 500; color: var(--hell); }
+.hero-spieltag h1 { margin: 8px 0 0; font-family: var(--titel); font-weight: 700; font-size: clamp(34px, 7vw, 52px); line-height: 1.05; letter-spacing: -0.01em; }
+.hero-spieltag p { margin: 12px 0 0; font-size: 17px; line-height: 1.5; color: var(--hell); max-width: 34em; }
+.ligawahl { list-style: none; margin: 24px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 10px; }
+.ligawahl a { display: block; min-height: 64px; padding: 10px 14px; border-radius: 16px; text-align: left; background: rgba(244, 247, 242, 0.08); color: #F4F7F2; border: 1.5px solid rgba(244, 247, 242, 0.3); }
+.ligawahl a:hover { text-decoration: none; border-color: var(--akzent); }
+.ligawahl a[aria-current="page"] { background: var(--akzent); color: var(--gruen); border: 2px solid var(--akzent); }
+.ligawahl .name { display: block; font-family: var(--titel); font-weight: 700; font-size: 18px; line-height: 1.15; }
+.ligawahl .info { display: block; margin-top: 2px; font-size: 14px; font-weight: 500; color: var(--hell2); }
+.ligawahl a[aria-current="page"] .info { color: #2C4A3A; }
+.hero .datenstand { margin-top: 16px; font-size: 14px; line-height: 1.5; color: var(--hell2); }
 
-/* Liga-Titel und Zusammenfassung */
-.liga-titel { margin: clamp(32px, 6vw, 56px) 0 0; font-family: var(--titel); font-weight: 700; font-size: clamp(28px, 5.5vw, 40px); line-height: 1.1; }
-.zusammenfassung { margin: 8px 0 0; font-size: 16px; line-height: 1.5; color: var(--text2); }
-.zusammenfassung b { color: var(--text); font-weight: 600; }
+/* Abschnitte und Überschriften */
+.abschnitt-start { padding-top: clamp(44px, 7vw, 80px); }
+.abschnitt { padding-top: clamp(48px, 7vw, 88px); }
+.h2-gross { margin: 0; font-family: var(--titel); font-weight: 700; font-size: clamp(30px, 6vw, 46px); line-height: 1.05; letter-spacing: -0.01em; }
+.h2-liga { margin: 0; font-family: var(--titel); font-weight: 700; font-size: clamp(26px, 5.5vw, 34px); line-height: 1.1; }
+.h2-klein { margin: 0; font-family: var(--titel); font-weight: 700; font-size: 22px; line-height: 1.2; }
+.text-gross { margin: 10px 0 0; font-size: 17px; line-height: 1.5; color: var(--text2); }
+.kopfzeile { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px 24px; }
+.kopfzeile > div { flex: 1 1 280px; min-width: 0; }
+.kopfzeile-mitte { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 16px; }
+.datenstand-hell { margin-top: 16px; font-size: 14px; line-height: 1.5; color: var(--text2); }
 
-/* Legende und „Wie lese ich das?“ */
-.legende { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 16px; font-size: 15px; color: var(--text2); }
-.legende .eintrag { display: inline-flex; align-items: center; gap: 8px; }
-.muster { display: inline-block; width: 22px; height: 22px; border-radius: 6px; border: 1px solid var(--rand); background: #fff; }
-.muster--stark { background: #E3F1B6; border-color: #C5DC84; box-shadow: inset 4px 0 0 var(--gruen); }
-.muster--leicht { background: #F3F9DF; border-color: #D9E7B2; box-shadow: inset 4px 0 0 #9BC53D; }
-details.lesen { flex-basis: 100%; }
-details.lesen > summary { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; cursor: pointer; list-style: none; color: var(--text2); font-weight: 500; }
+/* „Wie lese ich das?“ (aufklappbar) */
+details.lesen > summary { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 4px; cursor: pointer; list-style: none; color: var(--text2); font-size: 15px; font-weight: 500; }
 details.lesen > summary::-webkit-details-marker { display: none; }
 details.lesen > summary span { text-decoration: underline; text-underline-offset: 3px; }
 details.lesen > summary svg { transition: transform .15s; }
@@ -100,64 +109,228 @@ details.lesen[open] > summary svg { transform: rotate(180deg); }
 .hinweisbox ul { list-style: none; margin: 0; padding: 0; font-size: 15px; line-height: 1.5; color: var(--text); }
 .hinweisbox li { margin-top: 6px; }
 .hinweisbox b { font-weight: 600; }
+.lesen-zeile { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 16px; }
+.lesen-zeile .lesen-box { flex-basis: 100%; }
 
-/* Warnbox (Datenstand veraltet) */
+/* Warnbox, Notiz, Pausen-Karte */
 .warnbox { margin-top: 16px; display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; background: var(--warn); border: 1px solid var(--warn-rand); border-radius: 14px; color: var(--warn-text); font-size: 16px; line-height: 1.5; }
 .warnbox svg { flex: 0 0 auto; margin-top: 1px; color: var(--warn-icon); }
-
-/* Pausen-Karte */
-.pausenkarte { margin-top: 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 20px 24px; background: #fff; border: 1px solid var(--rand); border-radius: 24px; padding: clamp(20px, 4vw, 32px); }
-.pausenkarte .icon { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: 50%; background: var(--gruen); color: var(--akzent); }
+.notiz { margin-top: 16px; display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; background: #F7F9F6; border: 1px dashed #B3C2B8; border-radius: 14px; font-size: 15px; line-height: 1.5; color: var(--text2); }
+.notiz p { margin: 0; }
+.notiz b { font-weight: 600; color: var(--text); }
+.notiz svg { flex: 0 0 auto; margin-top: 2px; color: var(--text3); }
+.pausenkarte { margin-top: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 20px 24px; background: #fff; border: 1px solid var(--rand); border-radius: 24px; padding: clamp(20px, 4vw, 32px); }
+.pausenkarte .icon-kreis { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: 50%; background: var(--gruen); color: var(--akzent); }
 .pausenkarte .inhalt { flex: 1 1 260px; min-width: 0; }
 .pausenkarte .zeile { font-size: 14px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3); }
 .pausenkarte h3 { margin: 6px 0 0; font-family: var(--titel); font-weight: 700; font-size: clamp(24px, 4.6vw, 32px); line-height: 1.1; }
 .pausenkarte p { margin: 10px 0 0; font-size: 17px; line-height: 1.55; color: var(--text2); }
+.pausenkarte .zaehler { flex: 0 0 auto; text-align: center; min-width: 96px; }
+.pausenkarte .zaehler b { display: block; font-family: var(--titel); font-weight: 700; font-size: 44px; line-height: 1; color: var(--gruen); }
+.pausenkarte .zaehler span { display: block; margin-top: 4px; font-size: 14px; color: var(--text3); }
 
-/* Tabs (englische Woche) */
-.tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+/* Balken (Übergabe 4.2): Mittelstrich = Ligaschnitt, Länge = Betrag/100 × 50 %, gekappt bei 50 % */
+.balken { display: block; position: relative; height: 12px; margin: 16px 0 6px; }
+.balken.b10 { height: 10px; margin: 18px 0 6px; }
+.balken.b8 { height: 8px; margin: 12px 0 6px; }
+.balken .spur { position: absolute; inset: 0; border-radius: 999px; background: var(--rand2); overflow: hidden; }
+.balken .fuell { position: absolute; top: 0; bottom: 0; }
+.balken .fuell.hoch { left: 50%; }
+.balken .fuell.tief { right: 50%; }
+.balken .kappe { position: absolute; top: 0; bottom: 0; width: 7px; background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.9) 0 2px, transparent 2px 4px); }
+.balken .kappe.hoch { right: 0; }
+.balken .kappe.tief { left: 0; }
+.balken .mitte { position: absolute; left: 50%; top: -7px; bottom: -7px; width: 3px; margin-left: -1.5px; border-radius: 2px; background: var(--text); }
+.f-stark-hoch { background: #0A6B45; }
+.f-stark-tief { background: #B03A2E; }
+.f-leicht-hoch { background: #D9EDC2; box-shadow: inset 0 0 0 1.5px #8DBF63; }
+.f-leicht-tief { background: #F3D5D0; box-shadow: inset 0 0 0 1.5px #DC9A90; }
+.f-normal { background: #9AA9A0; }
+.f-schraffiert { background: repeating-linear-gradient(135deg, #9AA9A0 0 4px, #C9D3CC 4px 8px); }
+
+/* Stufen-Chips (Matchdetail, Ranking) */
+.chip { display: inline-flex; align-items: center; min-height: 28px; padding: 0 12px; border-radius: 8px; font-size: 14px; font-weight: 600; line-height: 1.2; flex: 0 0 auto; }
+.chip.s-stark-hoch { background: #0A6B45; color: #fff; border: 1.5px solid #0A6B45; }
+.chip.s-leicht-hoch { background: #D9EDC2; color: #0A4A31; border: 1.5px solid #8DBF63; }
+.chip.s-stark-tief { background: #B03A2E; color: #fff; border: 1.5px solid #B03A2E; }
+.chip.s-leicht-tief { background: #F3D5D0; color: #6B2018; border: 1.5px solid #DC9A90; }
+.chip.klein { min-height: 26px; padding: 0 10px; }
+
+/* Startseite: Ranking */
+.ranking { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.rang-zeile { display: flex; align-items: center; gap: 16px; background: #fff; border: 1px solid var(--rand); border-radius: 20px; padding: 18px 20px; color: var(--text); }
+a.rang-zeile:hover { text-decoration: none; border-color: var(--gruen); }
+.rang-zeile .inhalt { flex: 1 1 auto; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 14px 24px; }
+.rang-zeile .links { display: flex; align-items: center; gap: 16px; flex: 1 1 240px; min-width: 0; }
+.rang-zeile .rang { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: var(--gruen); color: var(--akzent); font-family: var(--titel); font-weight: 700; font-size: 20px; }
+.rang-zeile .liga, .rang-zeile .paar, .rang-zeile .wann { display: block; }
+.rang-zeile .liga { font-size: 14px; font-weight: 600; color: var(--text2); }
+.rang-zeile .paar { font-family: var(--titel); font-weight: 600; font-size: 21px; line-height: 1.2; overflow-wrap: anywhere; }
+.rang-zeile .wann { margin-top: 2px; font-size: 15px; font-weight: 500; color: var(--text2); }
+.rang-zeile .rechts { flex: 1 1 220px; min-width: 0; }
+.rang-zeile .wertzeile { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; }
+.rang-zeile .wert { font-family: var(--titel); font-weight: 700; font-size: 36px; line-height: 1; }
+.rang-zeile .thema { font-size: 16px; font-weight: 600; }
+.farbe-hoch { color: var(--pos); }
+.farbe-tief { color: var(--neg); }
+.pfeil-rund { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: var(--gruen); }
+
+/* Startseite: Ligen, Nutzen, Aufruf, Über mich, Was ist … */
+.liga-knoepfe { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+.liga-knoepfe a { display: inline-flex; align-items: center; gap: 10px; min-height: 56px; padding: 0 24px; border-radius: 999px; background: var(--gruen); color: #F4F7F2; font-size: 18px; font-weight: 600; }
+.liga-knoepfe a:hover { text-decoration: none; background: #145a44; }
+.nutzen { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; margin-top: 24px; }
+.nutzen > div { background: #fff; border: 1px solid var(--rand); border-radius: 20px; padding: 26px; min-width: 0; }
+.nutzen h3 { margin: 0; font-family: var(--titel); font-weight: 700; font-size: 26px; }
+.nutzen p { margin: 10px 0 0; font-size: 17px; line-height: 1.55; color: var(--text2); }
+.nutzen p a { font-weight: 700; color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
+.abschnitt-cta { padding-top: clamp(40px, 6vw, 72px); }
+.cta-band { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px 32px; background: var(--akzent); color: var(--gruen); border-radius: 24px; padding: clamp(24px, 5vw, 44px); }
+.cta-band > div { flex: 1 1 280px; min-width: 0; }
+.cta-band .gross { font-family: var(--titel); font-weight: 700; font-size: clamp(26px, 5vw, 38px); line-height: 1.1; }
+.cta-band p { margin: 8px 0 0; font-size: 17px; line-height: 1.5; }
+.abschnitt-fan { padding: clamp(48px, 7vw, 88px) 0 clamp(48px, 7vw, 88px); }
+.fan { display: flex; flex-wrap: wrap; align-items: center; gap: 20px 28px; background: #fff; border: 1px solid var(--rand); border-radius: 20px; padding: clamp(20px, 4vw, 32px); }
+.fan img, .fan .foto-platz { flex: 0 0 auto; width: 115px; height: 115px; border-radius: 50%; object-fit: cover; display: block; }
+.fan .foto-platz { display: inline-flex; align-items: center; justify-content: center; background: var(--hinweis); color: var(--text3); }
+.fan > div { flex: 1 1 280px; min-width: 0; }
+.fan h2 { margin: 0; font-family: var(--titel); font-weight: 700; font-size: 26px; line-height: 1.1; }
+.fan p { margin: 8px 0 0; font-size: 17px; line-height: 1.55; color: var(--text2); }
+.fan .name { margin-top: 10px; font-family: var(--titel); font-size: 18px; font-weight: 600; line-height: 1.3; color: var(--pos); }
+.seo { margin-top: 32px; padding-top: 28px; border-top: 1px solid var(--rand); }
+.seo h2 { margin: 0; font-family: var(--titel); font-weight: 700; font-size: 20px; line-height: 1.2; color: var(--text2); }
+.seo p { margin: 10px 0 0; font-size: 15px; line-height: 1.65; color: var(--text3); }
+
+/* Spieltag: Titel, Zusammenfassung, Tabs, Legende */
+.abschnitt-liga { padding-top: clamp(28px, 5vw, 44px); }
+.zusammenfassung { margin: 6px 0 0; font-size: 16px; line-height: 1.5; color: var(--text2); }
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .tabs[hidden] { display: none; }
-.tabs button { display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 999px; border: 1.5px solid var(--gruen); background: #fff; color: var(--gruen); font-size: 16px; font-weight: 600; cursor: pointer; }
-.tabs button[aria-pressed="true"] { background: var(--gruen); color: #F4F7F2; }
-.panel { margin-top: 20px; }
-.panel[hidden] { display: none; }
-.panel + .panel { margin-top: 36px; }
-.panel h3 { margin: 0; font-family: var(--titel); font-weight: 700; font-size: 22px; }
-.satz { margin: 12px 0 0; font-size: 16px; color: var(--text2); }
+.tabs button { flex: 1 1 0; min-height: 44px; padding: 0 12px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; background: #fff; color: var(--gruen); border: 1.5px solid #9DBBA6; }
+.tabs button[aria-pressed="true"] { background: var(--gruen); color: #F4F7F2; border-color: var(--gruen); }
+.legende { display: flex; flex-wrap: wrap; align-items: center; gap: 0 18px; margin-top: 6px; }
+.legende .eintrag { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-size: 14px; color: var(--text2); }
+.muster { display: inline-block; width: 14px; height: 14px; border-radius: 4px; background: #fff; border: 1.5px solid #9DBBA6; }
+.muster--stark { background: #E3F1B6; border-color: var(--gruen); }
+.muster--leicht { background: #F3F9DF; border-color: #9BC53D; }
+.legende details.lesen { margin-left: auto; }
+/* „Wie lese ich das?“ in einer Zeile mit Überschrift oder Legende: aufgeklappt über die ganze Breite */
+.legende details.lesen[open], .kopfzeile details.lesen[open], .kopfzeile-mitte details.lesen[open] { flex-basis: 100%; margin-left: 0; display: flex; flex-direction: column; align-items: flex-end; }
+details.lesen[open] .hinweisbox { align-self: stretch; text-align: left; }
+[data-panel][hidden], [data-sub][hidden] { display: none; }
 
-/* Kacheln der Partien (Übergabe 6.2) */
-.partien { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
-.kachel { position: relative; display: flex; align-items: center; gap: 16px; min-height: 88px; padding: 16px 20px; border-radius: 20px; background: #fff; border: 1px solid var(--rand); color: var(--text); text-decoration: none; overflow: hidden; }
+/* Spieltag: Kacheln (Entwurf 3d) */
+.partien { list-style: none; margin: 16px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 12px; }
+.kachel { display: flex; align-items: center; gap: 16px; min-height: 88px; padding: 16px 16px 16px 20px; border-radius: 20px; background: #fff; color: var(--text); border: 1px solid var(--rand); height: 100%; }
 a.kachel:hover { text-decoration: none; border-color: var(--gruen); }
-.kachel--stark { min-height: 104px; background: #E3F1B6; border-color: #C5DC84; }
-.kachel--leicht { min-height: 104px; background: #F3F9DF; border-color: #D9E7B2; }
-.kachel--stark::before, .kachel--leicht::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--gruen); }
-.kachel--leicht::before { background: #9BC53D; }
-.kachel--status { background: var(--grau); border: 1.5px dashed #B3C2B8; color: var(--grau-text); }
-.kachel--gespielt { background: var(--grau); border: 1.5px solid #C9D2CB; color: var(--grau-text); }
-.kachel .teams { flex: 1 1 auto; min-width: 0; }
-.kachel .team { display: block; font-family: var(--titel); font-weight: 600; font-size: 18px; line-height: 1.25; overflow-wrap: anywhere; }
-.kachel .gegen { display: block; margin: 1px 0; font-size: 14px; color: var(--text3); }
-.kachel--status .gegen, .kachel--gespielt .gegen { color: var(--grau-text); }
-.kachel .termin { display: block; margin-top: 6px; font-size: 14px; font-weight: 500; color: var(--text3); }
-.kachel--status .termin, .kachel--gespielt .termin { color: var(--grau-text); }
-.kachel .rechts { flex: 0 1 auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
-.chips { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
-.chip { display: inline-flex; align-items: center; min-height: 28px; padding: 0 10px; border-radius: 8px; font-size: 14px; font-weight: 600; line-height: 1.2; text-align: center; }
-.chip--stark { background: var(--gruen); color: var(--akzent); }
-.chip--leicht { border: 1.5px solid var(--gruen); color: var(--gruen); }
-.chip--status { border: 1.5px dashed var(--grau-text); color: var(--grau-text); }
-.chip--sonder { border: 1.5px dashed var(--text3); color: var(--text2); }
-.chip--ergebnis { border: 1.5px solid #9AA9A0; color: var(--text2); background: #fff; font-family: var(--titel); font-size: 16px; }
-.pfeil { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: var(--gruen); }
-.kachel--status .pfeil, .kachel--gespielt .pfeil { background: #9AA9A0; }
+.kachel--stark { min-height: 104px; background: #E3F1B6; border-color: #C5DC84; box-shadow: inset 4px 0 0 var(--gruen); }
+.kachel--leicht { min-height: 104px; background: #F3F9DF; border-color: #D9E7B2; box-shadow: inset 4px 0 0 #9BC53D; }
+.kachel--status { background: var(--grau); color: var(--grau-text); border: 1px dashed #B3C2B8; }
+.kachel--gespielt { background: var(--grau); color: var(--grau-text); border: 1px solid var(--rand); }
+.kachel .teams { flex: 1 1 auto; min-width: 0; display: block; }
+.kachel .team { display: block; font-family: var(--titel); font-weight: 600; font-size: 18px; line-height: 1.2; hyphens: auto; overflow-wrap: anywhere; }
+.kachel .gegen { display: block; margin: 3px 0; font-size: 13px; line-height: 1.2; color: var(--text3); }
+.kachel .wann { display: block; margin-top: 6px; font-size: 13px; line-height: 1.2; color: var(--text3); }
+.kachel--stark .gegen, .kachel--stark .wann, .kachel--leicht .gegen, .kachel--leicht .wann { color: #4A5B50; }
+.kachel--status .gegen, .kachel--status .wann, .kachel--gespielt .gegen, .kachel--gespielt .wann { color: #7A877F; }
+.kachel .rechts { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; }
+.kachel .chips { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.kchip { display: inline-flex; align-items: center; min-height: 28px; padding: 0 12px; border-radius: 8px; font-size: 14px; font-weight: 600; text-align: center; }
+.kchip--stark { background: var(--gruen); color: var(--akzent); border: 1.5px solid var(--gruen); }
+.kchip--leicht { background: transparent; color: var(--gruen); border: 1.5px solid var(--gruen); }
+.kchip--status { background: transparent; color: var(--text3); border: 1.5px dashed #8A978F; }
+.kchip--ergebnis { background: transparent; color: var(--text3); border: 1.5px solid #8A978F; }
+.kpfeil { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; width: 36px; height: 36px; background: #EEF1EE; color: var(--text2); }
+.kachel--stark .kpfeil, .kachel--leicht .kpfeil { width: 40px; height: 40px; background: var(--gruen); color: var(--akzent); }
+.kachel--status .kpfeil, .kachel--gespielt .kpfeil { background: #DDE3DE; color: var(--grau-text); }
+
+/* Matchdetail: Scoreboard (Entwurf 2i) */
+.scoreboard { padding: clamp(24px, 5vw, 48px) clamp(16px, 4vw, 48px); text-align: center; }
+.scoreboard svg.deko { opacity: 0.12; }
+.sb-liga { font-size: 15px; line-height: 1.5; color: var(--akzent); font-weight: 600; }
+.sb-wann { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 10px; margin-top: 2px; font-size: 15px; line-height: 1.5; color: var(--hell); }
+.sb-chip { display: inline-flex; align-items: center; min-height: 26px; padding: 0 10px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #F4F7F2; border: 1.5px solid var(--hell); }
+.sb-teams { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: center; gap: 24px; margin-top: 24px; }
+.sb-team { flex: 1 1 220px; min-width: 0; }
+.sb-name { font-family: var(--titel); font-weight: 700; font-size: clamp(27px, 5.85vw, 43.2px); line-height: 1.05; overflow-wrap: anywhere; }
+.sb-strich { width: 56px; height: 4px; border-radius: 2px; margin: 12px auto 0; background: #5CC6D0; }
+.sb-strich.gast { background: #FF7FAE; }
+.sb-form { display: flex; gap: 6px; justify-content: center; margin-top: 14px; }
+.sb-form span { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; font-size: 14px; font-weight: 700; }
+.form-S { background: var(--akzent); color: var(--gruen); }
+.form-U { background: #5C8571; color: #fff; }
+.form-N { background: transparent; color: #F4F7F2; border: 2px solid var(--hell2); }
+.form-- { background: transparent; color: var(--hell2); border: 1.5px dashed var(--hell2); }
+.sb-gegen { flex: 0 0 auto; align-self: center; font-family: var(--titel); font-weight: 600; font-size: 20px; color: var(--hell2); }
+.sb-legende-titel { margin-top: 14px; font-size: 14px; line-height: 1.4; color: var(--hell2); }
+.sb-legende { display: flex; flex-wrap: wrap; gap: 4px 16px; justify-content: center; margin-top: 2px; font-size: 14px; color: var(--hell2); }
+.sb-aussage { margin-top: 28px; padding-top: 24px; border-top: 1px solid rgba(244, 247, 242, 0.2); }
+.sb-label { font-size: 17px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--hell2); }
+.sb-zeile { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: 0 14px; margin-top: 10px; }
+.sb-gross { font-family: var(--titel); font-weight: 700; font-size: clamp(27.6px, 5.75vw, 36.8px); line-height: 1.15; }
+.sb-gross.hoch { color: var(--akzent); }
+.sb-gross.tief { color: #FF9A8B; }
+.sb-sub { margin: 6px auto 0; max-width: 34em; font-size: 14px; line-height: 1.5; color: var(--hell); }
+
+/* Matchdetail: Auffälligkeiten und Normalbereich */
+.abschnitt-detail { padding-top: clamp(32px, 5vw, 56px); }
+.abschnitt-notiz { padding-top: clamp(16px, 3vw, 24px); }
+.karten { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+.karte { min-width: 0; border-radius: 20px; overflow: hidden; background: #F6FBE4; border: 1px solid var(--rand); box-shadow: inset 4px 0 0 var(--gruen); }
+.karte.leicht { box-shadow: inset 4px 0 0 var(--akzent); }
+.karte .oben { padding: 18px 18px 12px; }
+.karte .kopf-k { display: flex; align-items: center; gap: 12px; }
+.ikon { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: var(--gruen); color: var(--akzent); }
+.ikon.normal { width: 36px; height: 36px; background: #EEF1EE; color: var(--text3); }
+.karte .name, .normal-zeile .name { flex: 1 1 auto; min-width: 0; font-size: 17px; font-weight: 600; line-height: 1.25; }
+.karte .wertzeile { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 14px; margin-top: 14px; }
+.karte .gross { font-family: var(--titel); font-weight: 700; font-size: 44px; line-height: 1; }
+.karte .satz { font-size: 16px; font-weight: 600; line-height: 1.3; color: var(--text); }
+details.detail > summary { list-style: none; cursor: pointer; }
+details.detail > summary::-webkit-details-marker { display: none; }
+.karte details.detail > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; padding: 0 18px; background: #EEF5EF; border-top: 1px solid var(--rand); color: var(--gruen); font-size: 16px; font-weight: 600; }
+.chev { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid var(--gruen); background: var(--gruen); color: var(--akzent); transition: transform .15s; }
+.chev.klein { width: 36px; height: 36px; }
+details.detail[open] > summary .chev { background: #fff; color: var(--gruen); transform: rotate(180deg); }
+.zahlen { padding: 4px 18px 14px; }
+.normal-liste .zahlen { padding: 0 16px 12px; }
+.zahlen .block { padding: 12px 0 8px; border-top: 1px solid var(--rand2); }
+.zahlen .zeile { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 16px; line-height: 1.3; }
+.zahlen .zeile + .zeile { margin-top: 8px; }
+.zahlen .zeile.trenn { padding: 12px 0; border-top: 1px solid var(--rand2); margin-top: 0; }
+.zahlen .zeile > span:first-child { color: var(--text2); }
+.zahlen .zeile b { font-family: var(--titel); font-weight: 700; font-size: 18px; }
+.zahlen .zeile.team { font-size: 15px; }
+.zahlen .zeile.team b { font-weight: 600; font-size: 16px; color: var(--text); }
+.zahlen .klein { margin: 10px 0 0; font-size: 14px; line-height: 1.3; color: var(--text3); }
+.farbpunkt { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 8px; vertical-align: -1px; background: #0E6F7A; }
+.farbpunkt.gast { background: #C2255C; }
+.aufteilung { display: flex; gap: 3px; height: 14px; margin: 12px 0 2px; }
+.aufteilung span { border-radius: 7px; min-width: 8px; background: #0E6F7A; }
+.aufteilung span.gast { background: #C2255C; }
+.zuklappen { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 48px; margin-top: 12px; padding: 0 16px; border-radius: 12px; background: #fff; border: 1.5px solid var(--gruen); color: var(--gruen); font-size: 16px; font-weight: 600; cursor: pointer; }
+.normal-liste { margin-top: 12px; background: #fff; border: 1px solid var(--rand); border-radius: 20px; overflow: hidden; }
+.normal-liste > details + details { border-top: 1px solid var(--rand2); }
+.normal-zeile { display: flex; flex-direction: column; gap: 6px; padding: 12px 16px 8px; color: var(--text); }
+.normal-zeile .oben { display: flex; align-items: center; gap: 12px; width: 100%; }
+.normal-zeile .wert { flex: 0 0 auto; font-family: var(--titel); font-weight: 700; font-size: 20px; line-height: 1; color: var(--text2); }
+.normal-zeile .unten { display: block; padding-left: 52px; }
+.normal-zeile .vermerk { font-size: 13px; font-weight: 500; color: var(--grau-text); }
+.methodik-link { padding-top: clamp(24px, 4vw, 40px); text-align: center; }
+.methodik-link a { display: inline-flex; align-items: center; min-height: 44px; font-size: 17px; font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
+.abschluss { padding: clamp(40px, 6vw, 64px) 0; }
+.abschluss a { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 56px; padding: 10px 20px; border-radius: 999px; background: var(--gruen); color: #F4F7F2; font-size: clamp(15px, 4.4vw, 18px); font-weight: 600; line-height: 1.25; text-align: center; }
+.abschluss a:hover { text-decoration: none; }
 
 /* Hinweis-Seiten */
-.leer { margin: clamp(32px, 6vw, 56px) 0; }
-.knopf-gruen { display: inline-flex; align-items: center; gap: 10px; min-height: 56px; margin-top: 20px; padding: 0 26px; border-radius: 999px; background: var(--gruen); color: var(--akzent); font-size: 17px; font-weight: 600; }
+.leer { padding: clamp(32px, 6vw, 56px) 0; }
+.leer h1 { margin: 0; font-family: var(--titel); font-weight: 700; font-size: clamp(30px, 6vw, 46px); line-height: 1.05; }
+.leer p { margin: 10px 0 0; font-size: 17px; color: var(--text2); }
+.leer .knopf-dunkel { margin-top: 20px; }
+.abstand-unten { height: clamp(40px, 6vw, 72px); }
 
 /* Fusszeile */
-main { padding-bottom: clamp(48px, 7vw, 88px); }
-.fuss { background: var(--gruen); color: #C4DACD; }
+.fuss { background: var(--gruen); color: var(--hell); }
 .fuss .wrap { display: flex; flex-wrap: wrap; gap: 24px 48px; padding-top: 36px; padding-bottom: 36px; }
 .fuss .marke { font-family: var(--titel); font-weight: 700; font-size: 19px; color: #F4F7F2; }
 .fuss p { margin: 10px 0 0; font-size: 15px; line-height: 1.55; }
@@ -165,8 +338,105 @@ main { padding-bottom: clamp(48px, 7vw, 88px); }
 .fuss nav { display: flex; flex-wrap: wrap; gap: 0 16px; margin-top: 6px; }
 .fuss nav a { display: inline-flex; align-items: center; min-height: 44px; color: #F4F7F2; }
 
-@media (max-width: 520px) {
-  .kachel { flex-wrap: wrap; padding: 14px 16px; }
-  .kachel .rechts { flex: 1 1 100%; justify-content: space-between; }
-  .chips { justify-content: flex-start; }
-}
+/* Breiten in Prozent für Balken und Aufteilung (statt eingebetteter Stilangaben) */
+.w0 { width: 0%; }
+.w1 { width: 1%; }
+.w2 { width: 2%; }
+.w3 { width: 3%; }
+.w4 { width: 4%; }
+.w5 { width: 5%; }
+.w6 { width: 6%; }
+.w7 { width: 7%; }
+.w8 { width: 8%; }
+.w9 { width: 9%; }
+.w10 { width: 10%; }
+.w11 { width: 11%; }
+.w12 { width: 12%; }
+.w13 { width: 13%; }
+.w14 { width: 14%; }
+.w15 { width: 15%; }
+.w16 { width: 16%; }
+.w17 { width: 17%; }
+.w18 { width: 18%; }
+.w19 { width: 19%; }
+.w20 { width: 20%; }
+.w21 { width: 21%; }
+.w22 { width: 22%; }
+.w23 { width: 23%; }
+.w24 { width: 24%; }
+.w25 { width: 25%; }
+.w26 { width: 26%; }
+.w27 { width: 27%; }
+.w28 { width: 28%; }
+.w29 { width: 29%; }
+.w30 { width: 30%; }
+.w31 { width: 31%; }
+.w32 { width: 32%; }
+.w33 { width: 33%; }
+.w34 { width: 34%; }
+.w35 { width: 35%; }
+.w36 { width: 36%; }
+.w37 { width: 37%; }
+.w38 { width: 38%; }
+.w39 { width: 39%; }
+.w40 { width: 40%; }
+.w41 { width: 41%; }
+.w42 { width: 42%; }
+.w43 { width: 43%; }
+.w44 { width: 44%; }
+.w45 { width: 45%; }
+.w46 { width: 46%; }
+.w47 { width: 47%; }
+.w48 { width: 48%; }
+.w49 { width: 49%; }
+.w50 { width: 50%; }
+.w51 { width: 51%; }
+.w52 { width: 52%; }
+.w53 { width: 53%; }
+.w54 { width: 54%; }
+.w55 { width: 55%; }
+.w56 { width: 56%; }
+.w57 { width: 57%; }
+.w58 { width: 58%; }
+.w59 { width: 59%; }
+.w60 { width: 60%; }
+.w61 { width: 61%; }
+.w62 { width: 62%; }
+.w63 { width: 63%; }
+.w64 { width: 64%; }
+.w65 { width: 65%; }
+.w66 { width: 66%; }
+.w67 { width: 67%; }
+.w68 { width: 68%; }
+.w69 { width: 69%; }
+.w70 { width: 70%; }
+.w71 { width: 71%; }
+.w72 { width: 72%; }
+.w73 { width: 73%; }
+.w74 { width: 74%; }
+.w75 { width: 75%; }
+.w76 { width: 76%; }
+.w77 { width: 77%; }
+.w78 { width: 78%; }
+.w79 { width: 79%; }
+.w80 { width: 80%; }
+.w81 { width: 81%; }
+.w82 { width: 82%; }
+.w83 { width: 83%; }
+.w84 { width: 84%; }
+.w85 { width: 85%; }
+.w86 { width: 86%; }
+.w87 { width: 87%; }
+.w88 { width: 88%; }
+.w89 { width: 89%; }
+.w90 { width: 90%; }
+.w91 { width: 91%; }
+.w92 { width: 92%; }
+.w93 { width: 93%; }
+.w94 { width: 94%; }
+.w95 { width: 95%; }
+.w96 { width: 96%; }
+.w97 { width: 97%; }
+.w98 { width: 98%; }
+.w99 { width: 99%; }
+.w100 { width: 100%; }

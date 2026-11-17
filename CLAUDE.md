@@ -61,7 +61,7 @@ Befehle zum Einspielen nur in `01`, Abschnitt 6; das Release-spezifische in `REL
      ihn zusammen („Squash and merge“), erst wenn die automatischen Tests grün sind.
    - Jede Änderung bringt eine neue `RELEASE.md` mit (`**Commit:**`-Zeile, `## Erwartungswerte`, `## Im Browser prüfen`)
      sowie Einträge in CHANGELOG und `01`, Abschnitt 0.
-   - Im Repository fehlen `data/`, `backup/` und `.env` (nur auf dem Server). Tests mit echten Daten werden darum
+   - Im Repository fehlen `data/`, `backup/`, `import/`, `website-bilder/` (Foto der Startseite) und `.env` (nur auf dem Server). Tests mit echten Daten werden darum
      übersprungen; die Testfälle laufen mit `tests/referenz/`. Nie Excel-Dateien ausser `tests/referenz/` committen.
    - Einspielen auf dem Server: `bash /docker/football-dashboard/tools/einspielen.sh github` (macht Carsten).
 

@@ -163,6 +163,30 @@ class Daten:
             self._cache[key] = wert
         return wert
 
+    def spielplan(self, liga: str) -> pd.DataFrame | None:
+        """Spielplan der Liga mit den Hilfsspalten der Anzeige (core.anzeige.prepare)."""
+        from core.anzeige import prepare
+        fixtures = self.bestand().fx.leagues.get(liga)
+        if fixtures is None:
+            return None
+        return self._merken(("spielplan", self._schluessel, liga), lambda: prepare(fixtures))
+
+    def spiel(self, spiel_id: int):
+        """(Liga, Zeile im Spielplan) zur Spiel-ID von API-Football, None wenn unbekannt. Jede Paarung des Spielplans
+        (laufende Saison und Vorsaison) hat so eine eigene Seite."""
+        def index():
+            out = {}
+            for liga in self.bestand().fx.leagues:
+                plan = self.spielplan(liga)
+                if plan is None or "api_id" not in plan:
+                    continue
+                for row in plan.itertuples():
+                    if row.api_id is not None and row.api_id == row.api_id:          # NaN überspringen
+                        out[int(row.api_id)] = (liga, row)
+            return out
+        self.bestand()
+        return self._merken(("spiele", self._schluessel), index).get(int(spiel_id))
+
     def prepared(self, liga: str, bis: date | None) -> pd.DataFrame | None:
         """Aufbereitete Spiele der Liga; Zeitreise: nur Spiele vor dem Importtag."""
         df = self.bestand().prepared.get(liga)
