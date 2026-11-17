@@ -23,7 +23,9 @@ from core.top import TOP_KPIS
 from . import einstellungen as W
 from .daten import Bestand, Daten, Zeitpunkt
 
-REIHENFOLGE = {"stark": 0, "leicht": 1, "ohne": 2, "nicht_gewertet": 3, "status": 4, "gespielt": 5}
+# Sortierung wie im Entwurf 3d (Skript renderVals): Stark → Leicht → ohne Auffälligkeit → alles andere (nicht
+# gewertet, Status, gespielt) in einer Gruppe; innerhalb Stark/Leicht nach Betrag, sonst nach Anstoss.
+REIHENFOLGE = {"stark": 0, "leicht": 1, "ohne": 2, "nicht_gewertet": 3, "status": 3, "gespielt": 3}
 SONDERSPIEL = {HINT_CATCHUP: "nachholspiel", HINT_EARLY: "vorgezogen"}
 TERMIN = {TERMIN_TIME_OPEN: "zeit_offen", TERMIN_PROVISIONAL: "vorlaeufig"}
 PAUSE = {A.WINTER: "winterpause", A.BREAK: "spielpause", A.SUMMER: "sommerpause", A.SEASON_START: "saisonstart"}
@@ -82,10 +84,9 @@ def spiel_eintrag(row, kpis: MatchKpis | None, jetzt, ergebnisse: dict, team_ids
 
 
 def sortieren(spiele: list[dict]) -> list[dict]:
-    """Konzept 5.4: Stark → Leicht → Ohne → Nicht gewertet → Status → Gespielt; Sonderspiele danach (Annahme A2)."""
-    regulaer = sorted((s for s in spiele if not s["sonderspiel"]), key=lambda s: s["_sort"])
-    sonder = sorted((s for s in spiele if s["sonderspiel"]), key=lambda s: s["_sort"])
-    return regulaer + sonder
+    """Konzept 5.4 (seit 0.18 nach Entwurf 3d): Stark → Leicht → Ohne → übrige; Nachhol- und vorgezogene Spiele
+    werden wie im Entwurf mitsortiert (bis 0.17: als Gruppe am Ende, Annahme A2)."""
+    return sorted(spiele, key=lambda s: s["_sort"])
 
 
 # --- Seite ------------------------------------------------------------------------------------------------

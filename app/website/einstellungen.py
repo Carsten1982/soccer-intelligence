@@ -14,6 +14,10 @@ TEXTE = ORDNER / "texte"
 SPRACHE = "de"                     # erste Fassung nur Deutsch (Übergabe 9); Struktur für en, it, es angelegt
 PREFIX = os.environ.get("SI_VORSCHAU_PREFIX", "/vorschau")    # Adresse der Vorschau (Traefik-Regel PathPrefix)
 PORT = int(os.environ.get("SI_VORSCHAU_PORT", "8080"))
+# Foto für die Startseite (seit 0.18, Entscheidung Q6): nur auf dem Server, nicht in Git. Fehlt es, zeigt die Seite
+# einen neutralen Platzhalter. Ablage: /docker/football-dashboard/website-bilder/portrait.jpg
+BILDER = Path(os.environ.get("SI_BILDER_DIR", "/bilder"))
+FOTO = "portrait.jpg"
 
 VORMITTAG = (8, 0)                 # Zeitreise ohne Uhrzeit: 08:00, also nach dem Import um 04:00
 IMPORT_STUNDE = 4                  # täglicher Importlauf (importer/einstellungen.py, RUN_HOUR)

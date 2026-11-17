@@ -1,10 +1,10 @@
 {% extends "basis.html" %}
+{% from "teile.html" import pfeil_weiter %}
 {#- Hinweis-Seiten: „folgt später“ (Annahme A8), „nicht gefunden“, Daten werden geprüft. -#}
 {% block inhalt %}
-<div class="leer">
+<div class="eng leer">
   <h1>{{ titel }}</h1>
-  <p class="intro">{{ text }}</p>
-  <a class="knopf-gruen" href="{{ url('/spieltag/' ~ standard_liga) }}">{{ zurueck }}
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+  <p>{{ text }}</p>
+  <a class="knopf-dunkel" href="{{ url('/spieltag/' ~ standard_liga) }}">{{ zurueck }}{{ pfeil_weiter() }}</a>
 </div>
 {% endblock %}

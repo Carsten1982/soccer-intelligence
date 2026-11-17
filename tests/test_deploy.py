@@ -98,6 +98,16 @@ def test_preview_service_only_under_vorschau_with_password(compose):
     assert "loadbalancer.server.port=8080" in block and "SI_VORSCHAU_PORT=8080" in block
 
 
+def test_preview_photo_only_on_server():
+    """Seit 0.18 (Q6): Das Foto der Startseite liegt nur auf dem Server in website-bilder/ (nur lesend eingebunden),
+    nie in Git und nie im Image (Dockerfile kopiert nur app/)."""
+    block = _service_block((ROOT / "docker-compose.yml").read_text(encoding="utf-8"), "soccer-vorschau")
+    assert "./website-bilder:/bilder:ro" in block
+    assert "website-bilder/" in (ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()
+    kopien = [z for z in (ROOT / "Dockerfile").read_text(encoding="utf-8").splitlines() if z.startswith(("COPY", "ADD"))]
+    assert kopien == ["COPY requirements.txt .", "COPY app/ /app/"]      # (auf dem Server liegt das Foto im Ordner)
+
+
 def test_preview_password_script_stores_only_hash():
     script = (ROOT / "tools" / "vorschau_passwort.sh").read_text(encoding="utf-8")
     assert "read -rsp" in script and "htpasswd -niB" in script
