@@ -1,6 +1,6 @@
 # Soccer Intelligence – Dashboard-Briefing
 
-**Version 5.6** · Stand 18.11.2026 (Version 0.19: Auffälligkeit und Prognosewert statt leicht/stark, 4.1, 5, 6.3, 6.4, 8; Version 0.14: Bereich Datenimport/API, 6.5; Version 0.15: Entwurf 2 mit Blöcken A/B und Entscheiden; Version 0.15.2: Anmeldemaske, 2.4; Version 0.16: kommende Spieltage, 4, 4.4, 5)
+**Version 5.7** · Stand 18.11.2026 (Version 0.19.1: Reiter-Reihenfolge, Text Top Anomalien, Schwellen je Liga in der Sensitivitätsanalyse; Version 0.19: Auffälligkeit und Prognosewert statt leicht/stark, 4.1, 5, 6.3, 6.4, 8; Version 0.14: Bereich Datenimport/API, 6.5; Version 0.15: Entwurf 2 mit Blöcken A/B und Entscheiden; Version 0.15.2: Anmeldemaske, 2.4; Version 0.16: kommende Spieltage, 4, 4.4, 5)
 
 > **Massgebliche Quelle seit 31.10.2026.** Änderungen werden nur noch in dieser Datei gemacht, mit Datum in der Änderungshistorie bzw. im `CHANGELOG.md`.
 > Das Word-Dokument *Dashboard-Briefing v4.2* liegt nur noch als Archiv im Ordner `word/` und wird nicht mehr gepflegt. Änderungen seit 31.10.2026 sind im Text als „Änderung“ mit Datum gekennzeichnet.
@@ -158,7 +158,7 @@ Die Navigation besteht aus einem Tab pro Bereich. Zu Beginn sind das vier Tabs:
 
 - Datenqualität (ganz rechts)
 
-Weitere aktivierte Ligen erhalten automatisch einen eigenen Tab. Dieser wird vor dem Tab Datenqualität eingefügt. Seit Etappe F (Änderung 07.11.2026): Top Anomalien · Bundesliga · Premier League · Serie A · LaLiga · Datenqualität.
+Weitere aktivierte Ligen erhalten automatisch einen eigenen Tab. Dieser wird vor dem Tab Datenqualität eingefügt. Seit Etappe F (Änderung 07.11.2026): Top Anomalien · Bundesliga · Premier League · Serie A · LaLiga · Datenqualität. Seit 0.19.1 (Carsten 18.11.2026) mit den internen Bereichen: Top Anomalien · Bundesliga · Premier League · Serie A · LaLiga · Sensitivitätsanalyse · Datenqualität · Datenimport/API.
 
 Der aktive Tab muss visuell klar erkennbar sein.
 
@@ -286,7 +286,7 @@ Der Bereich Top Anomalien (/dashboard) zeigt die auffälligsten Anomalien der an
 
 8.  Gibt es keine Auffälligkeit, erscheint der Hinweis «Für die anstehenden Spiele liegen keine Auffälligkeiten vor.»
 
-9.  Text unter der Liste (freigegeben 18.11.2026): «Berücksichtigt: je Liga der anstehende Spieltag samt Nachhol- und vorgezogenen Spielen an seinen Tagen (Sonderspiele davor als eigener Block), wenn er höchstens 14 Tage entfernt ist. Nur Spiele vor dem Anpfiff und mit Werten, ohne vorläufige Werte. Auswahl: Eine Kennzahl ist auffällig, wenn ihre Abweichung über der Schwelle ihrer Liga liegt. Zuerst kommen Spiele mit Prognosewert hoch, dann mittel, dann gering – bis vier Einträge erreicht sind; innerhalb einer Stufe zählt die grösste Abweichung. Pro Begegnung ein Eintrag (die Kennzahl mit dem höchsten Prognosewert). Liga-Mix: höchstens zwei Einträge je Liga; nur wenn die anderen Ligen nicht genug Auffälligkeiten haben, wird mit weiteren Spielen derselben Liga aufgefüllt.» Die Karten zeigen den Prognosewert und die Herleitung.
+9.  Text unter der Liste (Wortlaut Carsten 18.11.2026, seit 0.19.1) mit drei Zwischentiteln: **Berücksichtigte Spiele** (anstehende Spieltage aller Ligen samt Nachhol- und vorgezogenen Spielen, je Liga der nächste Spieltag, wenn er innerhalb der nächsten 14 Tage beginnt, Sonderspiele separat; nur Spiele vor dem Anpfiff mit vollständigen, nicht vorläufigen Werten) · **Auswahl der Auffälligkeiten** (über der Schwelle der Liga; nach Prognosewert hoch, mittel, gering, innerhalb der Stufe grösste Abweichung) · **Verteilung der Spiele** (eine Auffälligkeit je Begegnung, in der Regel höchstens zwei Spiele je Liga mit Auffüllen, maximal 4 Spiele). Wortlaut in `app/views/top_anomalien.py` (`selection_text`). Die Karten zeigen den Prognosewert und die Herleitung.
 
 Die Auswahl-Logik wird zusätzlich im KPI-Regelwerk festgehalten (Abschnitt 2.6), da sie später auch für die öffentliche Startseite gilt.
 
@@ -353,7 +353,7 @@ Siebter Bereich (ganz rechts, nur intern), Tab-Name **„Sensitivitätsanalyse�
 - **Rechts:** Grundlage (Spiele, Liga, Saisons, abgeschlossene Spieltage); bei „Alle Ligen“ ein orangefarbener Hinweis mit den Spieltagen je Liga; Knopf **„Auf gültige Schwellen zurücksetzen“**.
 - **Eine Tabelle für alle KPIs 02–09.** Kopfzeile (bleibt oben): **KPI** · **Schwelle:** Richtung (ⓘ), Abweichung in % (ⓘ) · **Betroffene Spiele:** Anzahl Spiele, Ø/ST, Spieltagsabdeckung · **Ergebnisqualität und Prognosewert:** Anzahl eingetroffen, Trefferquote, Vergleichsgruppe (alle Spiele), Mehrwert in Pp., Spanne (Wilson 95 %), Empfehlung, **Prognosewert** (jede Spalte mit ⓘ-Kurzhilfe, Verweis „Mehr Details findest du unter der Tabelle.“).
   - Je KPI **zwei Zeilen: ↗ mehr, ↘ weniger**; Nummer und Name links; KPIs durch eine Linie getrennt.
-  - In jeder Zeile ein **Eingabefeld** (Betrag, eine Nachkommastelle). Vorbelegt mit der gültigen Schwelle; leer mit grauem Text **„keine“** (keine gültige Schwelle) bzw. bei „Alle Ligen“ **„je Liga“** (unterschiedliche Schwellen; jede Liga zählt mit ihrer gültigen). Eigene Werte blau. Ohne Schwelle steht in der Zeile nur die Vergleichsgruppe und „keine Schwelle“.
+  - In jeder Zeile ein **Eingabefeld** (Betrag, eine Nachkommastelle). Vorbelegt mit der gültigen Schwelle; leer mit grauem Text **„keine“** (keine gültige Schwelle) bzw. bei „Alle Ligen“ **„je Liga“** (unterschiedliche Schwellen; jede Liga zählt mit ihrer gültigen). Seit 0.19.1 stehen bei „je Liga“ die gültigen Schwellen klein und grau unter dem Feld (z. B. „PL 10 · SA 15“), und beim Wechsel auf eine Liga zeigt das Feld deren Schwelle (Fehler 0.19 behoben). Eigene Werte blau. Ohne Schwelle steht in der Zeile nur die Vergleichsgruppe und „keine Schwelle“; das Feld bleibt leer (Entscheidung Carsten 18.11.2026, keine Vorbelegung mit 0 %).
   - Empfehlung als farbige Marke wie bisher (Funktioniert grün, Funktioniert leicht gelb, Keine relevante Verbesserung grau, Noch unklar blau, Negativ rot, Zu wenige Daten grau). Unter 50 Spielen ist die Zeile grau.
   - **Prognosewert:** Marke hoch (dunkel), mittel, gering (hell) in einer Farbe; „–“ mit grauem Grund (z. B. „Empfehlung: Funktioniert leicht“, „nicht stabil (4 von 7 Saisons)“). Bei einer einzelnen Saison ist die Spalte ausgegraut: „–“, „nur bei mehreren Saisons“.
   - Kein „Total“ mehr (bis 0.18).

@@ -54,7 +54,7 @@ PAGES["simulation"] = st.Page(simulation.render, title="Sensitivitätsanalyse",
 
 PAGES["datenimport"] = st.Page(datenimport.render, title="Datenimport/API", url_path="datenimport")   # seit 0.14
 
-nav = st.navigation([PAGES["top"], *league_pages, PAGES["datenqualitaet"], PAGES["simulation"], PAGES["datenimport"]],
-                    position="top")
+nav = st.navigation([PAGES["top"], *league_pages, PAGES["simulation"], PAGES["datenqualitaet"], PAGES["datenimport"]],
+                    position="top")             # seit 0.19.1: Sensitivitätsanalyse vor Datenqualität (Carsten)
 nav.run()
 anmeldung.logout_button()              # „Abmelden“ unten auf jeder Seite (0.15.2)

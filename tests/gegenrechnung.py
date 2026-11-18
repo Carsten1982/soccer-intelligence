@@ -370,3 +370,84 @@ def sens_summary(events: list[tuple[str, tuple, dict]], closed: set[tuple[str, t
                     res[prefix + d] = (n, k, None, 100 * k0 / n0 if n0 else None, None, None, None)
         out[key] = res
     return out
+
+
+# --- Empfehlung, Stabilität und Prognosewert (seit 0.19.1, Regelwerk 11.3) ------------------------------------------------
+
+def _two(x: float) -> Decimal:
+    """Wie angezeigt: zwei Nachkommastellen, kaufmännisch."""
+    return Decimal(repr(x)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+def rate_rule(n: int, gain: float | None, low: float | None, high: float | None) -> str:
+    """Empfehlung nach Regelwerk 11.3, eigene Umsetzung (erste zutreffende Stufe gilt)."""
+    if n < 50 or gain is None:
+        return "Zu wenige Daten"
+    g, lo, hi = _two(gain), _two(low), _two(high)
+    if hi < 0:
+        return "Negativ"
+    if g >= 5 and lo > 2:
+        return "Funktioniert"
+    if g >= 2 and lo >= -5:
+        return "Funktioniert leicht"
+    if hi < 5:
+        return "Keine relevante Verbesserung"
+    return "Noch unklar"
+
+
+def level_rule(recommendation: str, rate: float | None, gain: float | None, positive: int, seasons: int) -> str | None:
+    """Prognosewert nach Regelwerk 2.2/11.3: nur bei mehreren Saisons, „Funktioniert“ und Mehrwert in mindestens zwei
+    Dritteln der Saisons positiv (aufgerundet); hoch ab 60 % und +8 Pp., mittel ab 55 %, gering ab 50 %."""
+    if seasons < 2 or recommendation != "Funktioniert" or 3 * positive < 2 * seasons:
+        return None
+    q, g = _two(rate), _two(gain)
+    if q >= 60 and g >= 8:
+        return "hoch"
+    if q >= 55:
+        return "mittel"
+    if q >= 50:
+        return "gering"
+    return None
+
+
+def sens_rating(events: list[tuple[str, tuple, dict]], closed: set[tuple[str, tuple]], lim: dict) -> dict:
+    """Je KPI und Richtung (pos/neg): (Empfehlung, Saisons mit positivem Mehrwert, Saisons, Prognosewert).
+    Gleiche Eingaben wie sens_summary (Schwelle der Richtung = „leicht“)."""
+    out = {}
+    for key in ("kpi02", "kpi03", "kpi04", "kpi05", "kpi06", "kpi07", "kpi08", "kpi09"):
+        seasons = set()
+        per = {d: defaultdict(lambda: [0, 0, 0, 0]) for d in ("pos", "neg")}   # Saison -> n, k, n0, k0
+        tot = {d: [0, 0, 0, 0] for d in ("pos", "neg")}
+        for league, md, ev in events:
+            if (league, md) not in closed:
+                continue
+            dev, provisional, more, less = ev[key]
+            if dev is None or provisional:
+                continue
+            seasons.add(md[0])
+            t = lim[league] if league in lim else lim
+            for d, happened, flagged in (("pos", more, dev > t["lp"]), ("neg", less, dev < t["ln"])):
+                if happened is None:
+                    continue
+                for acc in (per[d][md[0]], tot[d]):
+                    acc[2] += 1
+                    acc[3] += int(happened)
+                    if flagged:
+                        acc[0] += 1
+                        acc[1] += int(happened)
+        res = {}
+        for d in ("pos", "neg"):
+            n, k, n0, k0 = tot[d]
+            positive = sum(1 for s in seasons
+                           if per[d][s][0] and per[d][s][2] and per[d][s][1] / per[d][s][0] > per[d][s][3] / per[d][s][2])
+            if n and n0:
+                p1, p2 = k / n, k0 / n0
+                (l1, u1), (l2, u2) = _wilson(k, n), _wilson(k0, n0)
+                low = 100 * (p1 - p2 - ((p1 - l1) ** 2 + (u2 - p2) ** 2) ** 0.5)
+                high = 100 * (p1 - p2 + ((u1 - p1) ** 2 + (p2 - l2) ** 2) ** 0.5)
+                rec = rate_rule(n, 100 * (p1 - p2), low, high)
+                res[d] = (rec, positive, len(seasons), level_rule(rec, 100 * p1, 100 * (p1 - p2), positive, len(seasons)))
+            else:
+                res[d] = (rate_rule(n, None, None, None), positive, len(seasons), None)
+        out[key] = res
+    return out

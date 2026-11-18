@@ -277,13 +277,15 @@ def test_one_game_and_real_zero_cards():
     assert r.vorlaeufig and r.hauptwert == Fraction(2)
 
 
-def test_kpi03_zero_deviation_has_title_but_no_text():
+def test_kpi03_zero_deviation_has_own_sentence():
+    """Regelwerk Punkt 2, seit 0.19.1 (Carsten 18.11.2026): bei genau 0,00 % ein eigener Satz statt keinem."""
     db = mini_db([(1, "2026-08-01", "2026/2027", 1, "A", "B", 2, 1, 0, 0),
                   (2, "2026-08-08", "2026/2027", 2, "B", "A", 1, 1, 0, 0)])
     m = Match("Liga", "2026/2027", 3, date(2026, 9, 1), "A", "B")
     r = compute_match(db, m, 34).kpi03
     assert fmt_signed(r.abweichung_rund) == "0.00"
-    assert r.ueberschrift == "Keine statistische Besonderheit" and r.text is None
+    assert r.ueberschrift == "Keine statistische Besonderheit"
+    assert r.text == "In den bisherigen Spielen beider Teams fielen im Schnitt genau 2,5 Tore – so viele wie die Marke."
 
 
 def test_later_games_do_not_change_earlier_matchday(prepared):
@@ -378,3 +380,37 @@ def test_stat_kpis_skip_missing_values_never_zero():
     assert r.vorlaeufig
     r8 = stat_kpi(db, m, 34, "kpi08")
     assert r8.prozent and r8.heim.wert == Fraction(100) and r8.heim.summe == 10   # 1:1 -> immer BTTS
+
+
+# --- Bereinigung B1 (0.19.1): Index statt Filter über die ganze Liga -----------------------------------------------------
+
+def test_index_selects_exactly_like_the_previous_filters(prepared_h):
+    """team_games und reference_games über den Index = bisherige Filter über die ganze Liga (gleiche Zeilen, gleiche
+    Reihenfolge), für jedes Spiel der Referenz-Datenbank und beide Teams; dazu: neues DataFrame -> neuer Index."""
+    from datetime import timedelta
+
+    from core.fixtures import previous_season
+    from core.kpis import league_index, reference_games, reference_keys, team_games, team_rows
+
+    def old_team(p, team, season, stichtag, n):
+        w = (season, previous_season(season))
+        m = ((p["home"] == team) | (p["away"] == team)) & p["season"].isin(w) & (p["date"] <= stichtag - timedelta(2))
+        return p[m].tail(n)
+
+    def old_reference(p, match, mds):
+        wanted = {f"{s}#{md}" for s, md in reference_keys(match.season, match.matchday, mds)}
+        return p[p["key"].isin(wanted) & (p["date"] < match.stichtag)]
+
+    for league, p in prepared_h.items():
+        mds = 34 if league == "Bundesliga" else 38
+        for g in p.iloc[::7].itertuples():
+            m = Match(league, g.season, int(g.gameday), g.date, g.home, g.away)
+            for team in (g.home, g.away):
+                for n in (5, 10):
+                    pd.testing.assert_frame_equal(team_games(p, team, g.season, g.date, n),
+                                                  old_team(p, team, g.season, g.date, n))
+                assert [r.id for r in team_rows(p, team, g.season, g.date, 10)] == \
+                    list(old_team(p, team, g.season, g.date, 10)["id"])
+            pd.testing.assert_frame_equal(reference_games(p, m, mds)[1], old_reference(p, m, mds))
+        copy = p.copy()
+        assert league_index(copy) is not league_index(p) and league_index(p) is league_index(p)

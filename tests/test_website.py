@@ -266,7 +266,7 @@ def test_w9_time_travel_parsing():
 def test_w9_links_carry_date_and_results_filtered(monkeypatch):
     k = seiten.Kontext(datum="2026-10-03T16:30")
     assert k.url("/spieltag/la-liga") == "/vorschau/spieltag/la-liga?datum=2026-10-03T16%3A30"
-    assert seiten.Kontext().url("/spiel/5") == "/vorschau/spiel/5" and k.statisch("site.css") == "/vorschau/statisch/site.css"
+    assert seiten.Kontext().url("/spiel/5") == "/vorschau/spiel/5" and k.statisch("site.css").startswith("/vorschau/statisch/site.css?v=")
     import pandas as pd
     from website.daten import Daten
     d = Daten(import_dir=None)
@@ -590,7 +590,8 @@ def test_w16_no_inline_styles_or_scripts(partien):
     seiten_html += [seiten.spiel_html(spiel.spiel_daten(partien, i, z), seiten.Kontext()) for i in range(101, 106)]
     for html in seiten_html:
         assert "style=" not in html and "<style" not in html
-        assert re.findall(r"<script[^>]*>", html) == ['<script src="/vorschau/statisch/site.js" defer>']
+        assert re.findall(r"<script[^>]*>", html) == [f'<script src="{seiten.Kontext().statisch("site.js")}" defer>']
+        assert "/vorschau/statisch/site.js?v=" in html                   # mit Versionsnummer (0.19.1)
         assert not re.search(r"\son[a-z]+=", html)
     breiten = set(re.findall(r'class="(?:gast )?w(\d+)"', "".join(seiten_html)))
     css = (W.STATISCH / "site.css").read_text(encoding="utf-8")
@@ -636,3 +637,22 @@ def test_w13_real_files_all_leagues():
             for x in (x for tab in s["tabs"] for x in tab["spiele"] if x["link"]):          # jede Paarung (0.18)
                 m = spiel.spiel_daten(d, x["id"], z)
                 assert m["heim"] == x["heim"] and "</html>" in seiten.spiel_html(m, seiten.Kontext()), x["id"]
+
+
+def test_static_files_carry_a_version():
+    """Seit 0.19.1: CSS, JS und Schriften mit ?v=<Prüfsumme>; die Adresse ändert sich mit dem Inhalt, der Dienst
+    liefert die Datei auch mit Versionsnummer aus (Browser-Zwischenspeicher nach einem Release)."""
+    import hashlib
+
+    from website import einstellungen as WE
+    from website import vorschau
+    k = seiten.Kontext()
+    url = k.statisch("site.css")
+    want = hashlib.sha256((WE.STATISCH / "site.css").read_bytes()).hexdigest()[:10]
+    assert url == f"/vorschau/statisch/site.css?v={want}"
+    assert seiten.version("gibt-es-nicht.css") == "" and k.statisch("gibt-es-nicht.css").endswith("gibt-es-nicht.css")
+    assert k.statisch("site.js").startswith("/vorschau/statisch/site.js?v=")
+    assert k.statisch("schriften/inter-latin-wght-normal.woff2").endswith(".woff2")      # Schriften ohne Version
+    pfad, _, query = url.partition("?")
+    a = vorschau.beantworten(pfad, query)
+    assert a.status == 200 and a.inhalt == (WE.STATISCH / "site.css").read_bytes()

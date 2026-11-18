@@ -131,7 +131,7 @@ def _as_matchday(value) -> int | None:
 
 def _text(row, column: str) -> str:
     """Optionale Textspalte: fehlt sie oder ist sie leer -> ''."""
-    if column not in row.index or _is_empty(row[column]):
+    if column not in row or _is_empty(row[column]):          # row: Zeile als dict (seit 0.19.1) oder Series
         return ""
     return str(row[column]).strip()
 
@@ -164,7 +164,7 @@ def _parse_sheet(league: str, raw: pd.DataFrame) -> tuple[pd.DataFrame, list[Iss
 
     has_status = COL_STATUS in raw.columns
     rows = []
-    for idx, r in raw.iterrows():
+    for idx, r in zip(raw.index, raw.to_dict("records")):    # dict statt iterrows: rund doppelt so schnell (B5)
         values = [r[c] for c in REQUIRED_COLUMNS] + ([r[COL_STATUS]] if has_status else [])
         if all(_is_empty(v) for v in values):
             continue                                    # komplett leere Zeile (Formatierung) ignorieren
@@ -240,7 +240,7 @@ def _plausibility(league: League, df: pd.DataFrame) -> list[Issue]:
         row = int(r["excel_row"]) if r is not None else None
         issues.append(Issue(WARNUNG, name, check, msg, match=label, excel_row=row))
 
-    for _, r in df[df["heim"] == df["gast"]].iterrows():
+    for r in df[df["heim"] == df["gast"]].to_dict("records"):
         warn("Heim = Gast", "Heim- und Gastmannschaft identisch", r)
 
     for (season, md), g in df.groupby(["saison", "spieltag"], sort=True):
@@ -256,7 +256,7 @@ def _plausibility(league: League, df: pd.DataFrame) -> list[Issue]:
                  f"({league.teams} Teams laut Konfiguration)")
 
     pairs = df[df.duplicated(["saison", "heim", "gast"], keep="first")]
-    for _, r in pairs.iterrows():
+    for r in pairs.to_dict("records"):
         warn("Paarung doppelt", f"Paarung kommt in Saison {r['saison']} mehrfach vor", r)
     return issues
 

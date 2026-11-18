@@ -30,7 +30,7 @@ from importer import dienst, entscheide
 from importer import einstellungen as E
 from importer.convert import fixture_row
 from importer.erzeugen import _links
-from importer.spielplan import fixture_rows
+from importer.spielplan import fixture_rows, main_period
 from importer.teams import TeamNames
 
 TODAY = date(2026, 11, 15)
@@ -411,3 +411,27 @@ def test_daily_schedule_and_next_run():
     assert next_run(sat, {"letzter_lauf_tag": "2026-11-21"}) == datetime(2026, 11, 22, 4, 0, tzinfo=TZ)
     assert dienst.due({}, datetime(2026, 11, 22, 4, 0, tzinfo=TZ)) and not dienst.due({}, sat)
     assert timedelta(days=E.CORRECTION_DAYS) == timedelta(days=7)
+
+
+def test_main_period_sliding_window_equals_previous_version():
+    """Bereinigung B3 (0.19.1): gleitendes Fenster statt Neufiltern je Starttag – gleiches Ergebnis wie vorher,
+    auch bei Gleichstand (früheres Fenster gewinnt). Vergleich mit der bisherigen Umsetzung an Zufallsdaten."""
+    import random
+    from datetime import timedelta
+
+    from importer.spielplan import WINDOW
+
+    def before(days):
+        if not days:
+            return None
+        best = None
+        for start in sorted(set(days)):
+            inside = [d for d in days if start <= d <= start + timedelta(days=WINDOW)]
+            if best is None or len(inside) > len(best):
+                best = inside
+        return min(best), max(best)
+
+    rnd = random.Random(19)
+    for _ in range(3000):
+        days = [date(2026, 8, 1) + timedelta(days=rnd.randint(0, 40)) for _ in range(rnd.randint(0, 12))]
+        assert main_period(days) == before(days), days

@@ -3,7 +3,7 @@
 Jedes historische Spiel wird so berechnet, als wäre es noch nicht gespielt (Stichtag = Spieldatum, Spieltag = Gameday),
 und es wird festgehalten, ob im Spiel „mehr“ bzw. „weniger“ als die Ligareferenz vor dem Spiel eintraf.
 
-- build_cases: einmal je Datenbankstand alle Spiele berechnen (rund 50 Sekunden). Gespeichert wird je Spiel und KPI nur
+- build_cases: einmal je Datenbankstand alle Spiele berechnen (rund 5 Sekunden seit 0.19.1, vorher 50). Gespeichert wird je Spiel und KPI nur
   die gerundete Abweichung und das Ereignis; vorläufige und nicht berechenbare Werte fallen weg.
 - closed_matchdays: abgeschlossene Spieltage (Nenner für „Ø pro Spieltag“ und „Spieltagsabdeckung“).
 - season_choices: Saisonauswahl ohne Referenzsaison.

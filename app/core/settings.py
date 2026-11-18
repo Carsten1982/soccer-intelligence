@@ -30,4 +30,4 @@ LEAGUE_SHEETS = REQUIRED_LEAGUE_SHEETS + OPTIONAL_LEAGUE_SHEETS
 # Anzeige-Zeitzone
 TIMEZONE = "Europe/Zurich"  # massgeblich für „heute“ (aktueller Spieltag)
 
-APP_VERSION = "0.19 – Prognosewert (Auffälligkeit statt leicht/stark)"
+APP_VERSION = "0.19.1 – Anpassungen nach Abnahme 0.19 (Texte, Schwellen je Liga, Tempo)"

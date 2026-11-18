@@ -142,3 +142,22 @@ Top Anomalien (316 Runden): 306 mit vier Einträgen, 10 ohne (Saisonbeginn 2018/
   rechnen weiter mit der Schwelle 20 % (`LEGACY`) und sind alle grün.
 - `tests/test_website.py`, `test_ui.py`, `test_simulation.py`: Codes hoch/mittel/gering, Sortierung und Ranking mit
   Liga-Mix, Seite Sensitivitätsanalyse.
+
+## 6. Nachtrag Version 0.19.1 (18.11.2026)
+
+**Gegenrechnung der Spalte Prognosewert.** Bis 0.19 prüfte die unabhängige Gegenrechnung der Tabelle (T13) nur
+Anzahl, Trefferquote, Vergleichsgruppe, Mehrwert und Spanne. Neu:
+
+| Prüfung | Umfang | Ergebnis |
+|---|---|---|
+| T13 erweitert: Empfehlung, Saisons positiv, Saisons, Prognosewert unabhängig nachgerechnet (`gegenrechnung.sens_rating`) | 5 Schwellen-Varianten × 3 Auswahlen (alle Ligen, Bundesliga, LaLiga), 8 KPIs × 2 Richtungen, Saisons 2025/26–2026/27 | **0 Abweichungen** |
+| Regeln der Gegenrechnung = Regeln der App auf einem Raster an allen Grenzen (`test_counter_rules_agree_with_app_on_a_grid`) | Empfehlung 3'840 Fälle, Prognosewert 720 Fälle, alle vier Ausgänge (hoch, mittel, gering, –) | **0 Abweichungen** |
+| Tabelle mit den gültigen Schwellen = Datei (`test_table_with_valid_thresholds_equals_file`, echte Datenbank) | alle 23 Schwellen: Spiele, Trefferquote, Vergleichsgruppe, Mehrwert, Saisons positiv, Prognosewert | **0 Abweichungen** |
+
+**Bereinigung B1 (Index statt Filter über die ganze Liga).** Vollvergleich mit dem Code von 0.19:
+
+| Vergleich | Umfang | Ergebnis |
+|---|---|---|
+| Fälle der Sensitivitätsanalyse (`build_cases`, echte Datenbank des Probelaufs) | 77'354 Fälle in vier Ligen | **identisch**; Rechenzeit 52,8 s → 5,2 s |
+| Alle Spiele der Referenz-Datenbank (`451348b6`): Werte, Referenzen, Einstufung, Texte | 95'824 KPI-Werte | **identisch** bis auf den neuen Satz bei KPI 03 mit genau 0,00 % (437 Spiele, Entscheidung Carsten) |
+| Auswahl der Teamspiele und Referenzspiele = bisherige Filter (`test_index_selects_exactly_like_the_previous_filters`) | jedes 7. Spiel der Referenz-Datenbank, beide Teams, 5 und 10 Spiele | **identisch** |

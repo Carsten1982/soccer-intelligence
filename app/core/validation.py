@@ -80,14 +80,15 @@ def check_stat_consistency(sheet: str, df: pd.DataFrame) -> list[Issue]:
             lambda r, h=home, a=away, p=period: f"{p}: {r[h]:g} % + {r[a]:g} % = {r[h] + r[a]:g} %",
         )
 
-    # Schüsse gesamt >= aufs Tor + daneben (geblockte Schüsse können die Differenz erklären)
+    # Schüsse gesamt >= aufs Tor + daneben (geblockte Schüsse können die Differenz erklären). Seit 0.19.1 nur Hinweis
+    # (Entscheidung Carsten 18.11.2026): kommt in der Quelle vor (z. B. id 11344), geht in keinen KPI ein.
     for side, total in (("Home", "Home Team Shots"), ("Away", "Away Team Shots")):
         for p in schema.PERIODS:
             t, on, off = f"{total} {p}", f"{side} Shots on Target {p}", f"{side} Shots off Target {p}"
             present = _all_present(df, (t, on, off))
             bad = df[present & (df[t] < df[on] + df[off])]
             issues += row_issues(
-                WARNUNG, sheet, "Schüsse < aufs Tor + daneben", bad,
+                HINWEIS, sheet, "Schüsse < aufs Tor + daneben", bad,
                 lambda r, t=t, on=on, off=off: f"{t} {r[t]:g} < {r[on]:g} + {r[off]:g}",
             )
 
@@ -177,9 +178,9 @@ def check_gamedays(sheet: str, df: pd.DataFrame) -> list[Issue]:
         long = pd.concat([s[["Gameday", "homeTeam"]].rename(columns={"homeTeam": "team"}),
                           s[["Gameday", "awayTeam"]].rename(columns={"awayTeam": "team"})])
         dup = long[long.duplicated(["Gameday", "team"])]
-        for _, r in dup.drop_duplicates().iterrows():
+        for gameday, team in dup.drop_duplicates().itertuples(index=False):      # B4: Prüfung mit duplicated()
             issues.append(Issue(WARNUNG, sheet, "Team mehrfach im Spieltag",
-                                f"Saison {season}, Spieltag {int(r['Gameday'])}: {r['team']} mehrfach"))
+                                f"Saison {season}, Spieltag {int(gameday)}: {team} mehrfach"))
     return issues
 
 

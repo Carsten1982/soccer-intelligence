@@ -21,12 +21,14 @@ Die Testfälle in docs/tests/ sind die verbindliche Referenz (tests/test_kpis.py
 
 from __future__ import annotations
 
+import weakref
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from fractions import Fraction
 
+import numpy as np
 import pandas as pd
 
 from .fixtures import previous_season
@@ -199,14 +201,61 @@ def rows_of(games: pd.DataFrame) -> Rows:
     return list(games.itertuples(index=False))
 
 
+@dataclass
+class LeagueIndex:
+    """Vorbereitete Indizes einer vorbereiteten Liga (Bereinigung B1, Version 0.19.1): Statt für jedes Spiel die ganze
+    Liga zu filtern, stehen die Zeilennummern je Team und Saison und je Spieltag bereit. Die Auswahl bleibt genau gleich
+    (Reihenfolge der Zeilen = Sortierung von prepare_league); nur schneller."""
+    rows: list                                   # alle Spiele als Zeilen (wie rows_of), Reihenfolge wie prepared
+    dates: np.ndarray                            # Datum je Zeile
+    team_season: dict[tuple[str, str], np.ndarray]
+    by_key: dict[str, np.ndarray]                # "Saison#Spieltag" -> Zeilennummern
+
+
+_INDEXES: dict[int, tuple[weakref.ref, LeagueIndex]] = {}
+
+
+def league_index(prepared: pd.DataFrame) -> LeagueIndex:
+    """Index einmal je vorbereiteter Liga (gilt, solange dasselbe DataFrame-Objekt lebt; es wird nie verändert)."""
+    key = id(prepared)
+    hit = _INDEXES.get(key)
+    if hit is not None and hit[0]() is prepared:
+        return hit[1]
+    positions = np.arange(len(prepared))
+    team_season: dict[tuple[str, str], list[np.ndarray]] = {}
+    for column in ("home", "away"):
+        for (team, season), pos in pd.Series(positions).groupby([prepared[column].to_numpy(),
+                                                                 prepared["season"].to_numpy()]):
+            team_season.setdefault((team, season), []).append(pos.to_numpy())
+    index = LeagueIndex(
+        rows=rows_of(prepared),
+        dates=np.asarray(prepared["date"].to_numpy(), dtype=object),
+        team_season={k: np.unique(np.concatenate(v)) for k, v in team_season.items()},
+        by_key={k: pos.to_numpy() for k, pos in pd.Series(positions).groupby(prepared["key"].to_numpy())},
+    )
+    _INDEXES[key] = (weakref.ref(prepared, lambda _, k=key: _INDEXES.pop(k, None)), index)
+    return index
+
+
+def _team_positions(prepared: pd.DataFrame, team: str, season: str, stichtag: date, n: int) -> np.ndarray:
+    ix = league_index(prepared)
+    parts = [ix.team_season[(team, s)] for s in (season, previous_season(season)) if (team, s) in ix.team_season]
+    if not parts or n <= 0:
+        return np.array([], dtype=int)
+    pos = np.sort(np.concatenate(parts))
+    pos = pos[ix.dates[pos] <= stichtag - timedelta(days=MIN_GAP_DAYS)]
+    return pos[-n:]
+
+
+def team_rows(prepared: pd.DataFrame, team: str, season: str, stichtag: date, n: int) -> Rows:
+    """Wie rows_of(team_games(…)), aber über den Index (schnell)."""
+    ix = league_index(prepared)
+    return [ix.rows[i] for i in _team_positions(prepared, team, season, stichtag, n)]
+
+
 def team_games(prepared: pd.DataFrame, team: str, season: str, stichtag: date, n: int) -> pd.DataFrame:
     """Die letzten n abgeschlossenen Ligaspiele des Teams (Saisonfenster, 2-Tage-Regel), alt -> neu."""
-    window = (season, previous_season(season))
-    last_day = stichtag - timedelta(days=MIN_GAP_DAYS)
-    home, away = prepared["home"].to_numpy(), prepared["away"].to_numpy()
-    seasons, dates = prepared["season"].to_numpy(), prepared["date"].to_numpy()
-    mask = ((home == team) | (away == team)) & ((seasons == window[0]) | (seasons == window[1])) & (dates <= last_day)
-    return prepared[mask].tail(n)
+    return prepared.iloc[_team_positions(prepared, team, season, stichtag, n)]
 
 
 def reference_keys(season: str, matchday: int, matchdays_per_season: int) -> list[tuple[str, int]]:
@@ -359,12 +408,25 @@ def reference_value(label: str, rows: Rows, per_game: Callable, scale: int = 1) 
     return Reference(label, n, total, Fraction(total * scale, n) if n else None)
 
 
+def _reference_positions(prepared: pd.DataFrame, match: Match, matchdays_per_season: int) -> tuple[str, np.ndarray]:
+    keys = reference_keys(match.season, match.matchday, matchdays_per_season)
+    ix = league_index(prepared)
+    parts = [ix.by_key[k] for k in {f"{s}#{md}" for s, md in keys} if k in ix.by_key]
+    pos = np.sort(np.concatenate(parts)) if parts else np.array([], dtype=int)
+    return reference_label(keys), pos[ix.dates[pos] < match.stichtag]
+
+
+def reference_rows(prepared: pd.DataFrame, match: Match, matchdays_per_season: int) -> tuple[str, Rows]:
+    """Wie reference_games, aber als Zeilen über den Index (schnell)."""
+    label, pos = _reference_positions(prepared, match, matchdays_per_season)
+    ix = league_index(prepared)
+    return label, [ix.rows[i] for i in pos]
+
+
 def reference_games(prepared: pd.DataFrame, match: Match, matchdays_per_season: int) -> tuple[str, pd.DataFrame]:
     """Spiele der 20 Referenz-Spieltage, die vor dem Stichtag gespielt wurden."""
-    keys = reference_keys(match.season, match.matchday, matchdays_per_season)
-    wanted = {f"{s}#{md}" for s, md in keys}
-    games = prepared[prepared["key"].isin(wanted) & (prepared["date"] < match.stichtag)]
-    return reference_label(keys), games
+    label, pos = _reference_positions(prepared, match, matchdays_per_season)
+    return label, prepared.iloc[pos]
 
 
 # --- KPI 01: Formkurve -----------------------------------------------------------
@@ -379,25 +441,25 @@ def _form(team: str, rows: Rows) -> FormTeam:
 
 
 def kpi01_team(prepared: pd.DataFrame, team: str, season: str, stichtag: date) -> FormTeam:
-    return _form(team, rows_of(team_games(prepared, team, season, stichtag, FORM_SAMPLE)))
+    return _form(team, team_rows(prepared, team, season, stichtag, FORM_SAMPLE))
 
 
 # --- Teamwerte KPI 02/03 (Tore) und KPI 04 (Karten) ----------------------------------
 
 def team_goals(prepared: pd.DataFrame, team: str, season: str, stichtag: date) -> TeamValue:
-    return team_value(team, rows_of(team_games(prepared, team, season, stichtag, SAMPLE)), _goals)
+    return team_value(team, team_rows(prepared, team, season, stichtag, SAMPLE), _goals)
 
 
 def team_cards(prepared: pd.DataFrame, team: str, season: str, stichtag: date) -> TeamValue:
     # zuerst die letzten 10 Spiele, dann leere Werte weg (kein älteres Spiel nachziehen)
-    return team_value(team, rows_of(team_games(prepared, team, season, stichtag, SAMPLE)), _own_cards(team))
+    return team_value(team, team_rows(prepared, team, season, stichtag, SAMPLE), _own_cards(team))
 
 
 # --- Ligareferenz -------------------------------------------------------------------
 
 def league_reference(prepared: pd.DataFrame, match: Match, matchdays_per_season: int, cards: bool) -> Reference:
-    label, games = reference_games(prepared, match, matchdays_per_season)
-    return reference_value(label, rows_of(games), _both_cards if cards else _goals)
+    label, rows = reference_rows(prepared, match, matchdays_per_season)
+    return reference_value(label, rows, _both_cards if cards else _goals)
 
 
 # --- Texte (Regelwerk, Abschnitte 4–6 und 9) ------------------------------------------
@@ -419,14 +481,17 @@ def _text_kpi02(r: KpiResult) -> tuple[str | None, str | None]:
                                     f"Das sind {de_abs(dev)} % weniger als im Liga-Durchschnitt.")
 
 
+KPI03_EXACT_TEXT = "In den bisherigen Spielen beider Teams fielen im Schnitt genau 2,5 Tore – so viele wie die Marke."
+
+
 def _text_kpi03(r: KpiResult) -> tuple[str | None, str | None]:
     if r.abweichung_rund is None:
         return None, None
     dev = r.abweichung_rund
     if r.anomalie == NONE:
         if r.richtung is None:
-            # Genau 0,00 %: Text ist im Regelwerk noch offen (offener Punkt 2) -> nur Überschrift
-            return NO_ANOMALY_TITLE, None
+            # Genau 0,00 % (Regelwerk Punkt 2, Entscheidung Carsten 18.11.2026, Version 0.19.1)
+            return NO_ANOMALY_TITLE, KPI03_EXACT_TEXT
         word = "mehr" if r.richtung == POSITIVE else "weniger"
         return NO_ANOMALY_TITLE, (f"In den bisherigen Spielen erzielten die beiden Teams im Schnitt {de_abs(dev)} % "
                                   f"{word} Tore als die 2,5-Tore-Marke.")
@@ -603,10 +668,10 @@ def stat_kpi(prepared: pd.DataFrame, match: Match, matchdays_per_season: int, ke
              thresholds: Thresholds = NO_THRESHOLDS) -> KpiResult:
     """Ein einzelner KPI 05–09 (für Tests und Auswertungen; compute_match rechnet alle auf einmal)."""
     spec = STAT_KPIS[key]
-    teams = [team_value(t, rows_of(team_games(prepared, t, match.season, match.stichtag, SAMPLE)), spec.per_game,
-                        spec.scale) for t in (match.home, match.away)]
-    label, games = reference_games(prepared, match, matchdays_per_season)
-    return kpi_stat(spec, *teams, reference_value(label, rows_of(games), spec.per_game, spec.scale), thresholds)
+    teams = [team_value(t, team_rows(prepared, t, match.season, match.stichtag, SAMPLE), spec.per_game, spec.scale)
+             for t in (match.home, match.away)]
+    label, rows = reference_rows(prepared, match, matchdays_per_season)
+    return kpi_stat(spec, *teams, reference_value(label, rows, spec.per_game, spec.scale), thresholds)
 
 
 # --- Alle KPIs einer Begegnung ---------------------------------------------------------
@@ -642,8 +707,7 @@ def league_references(prepared: pd.DataFrame, match: Match, matchdays_per_season
     Sie hängen nur von Saison, Spieltag und Stichtag ab. Die Häufigkeit nutzt sie darum für alle Spiele mit
     gleichem (Saison, Spieltag, Stichtag) gemeinsam. Der Stichtag gehört dazu: Wegen Nachholspielen kann sich die
     Referenz innerhalb eines Spieltags unterscheiden (Code-Prüfung 08.11.2026, Punkt L2)."""
-    label, games = reference_games(prepared, match, matchdays_per_season)
-    rows = rows_of(games)
+    label, rows = reference_rows(prepared, match, matchdays_per_season)
     refs = {"kpi02": reference_value(label, rows, _goals), "kpi04": reference_value(label, rows, _both_cards)}
     for key, spec in STAT_KPIS.items():
         refs[key] = reference_value(label, rows, spec.per_game, spec.scale)
@@ -658,7 +722,7 @@ def compute_match(prepared: pd.DataFrame, match: Match, matchdays_per_season: in
         return thresholds(match.league, key) if thresholds else NO_THRESHOLDS
 
     teams = (match.home, match.away)
-    rows = {t: rows_of(team_games(prepared, t, match.season, match.stichtag, SAMPLE)) for t in teams}
+    rows = {t: team_rows(prepared, t, match.season, match.stichtag, SAMPLE) for t in teams}
     refs = references if references is not None else league_references(prepared, match, matchdays_per_season)
     goals = tuple(team_value(t, rows[t], _goals) for t in teams)
     cards = tuple(team_value(t, rows[t], _own_cards(t)) for t in teams)

@@ -25,7 +25,6 @@ import threading
 import time
 
 import streamlit as st
-import streamlit.components.v1 as components
 
 COOKIE = "si_anmeldung"
 HOURS = 12
@@ -115,11 +114,16 @@ def _address() -> str:
         return "unbekannt"
 
 
+def cookie_script(value: str, max_age: int) -> str:
+    """Kleines Skript, das das Cookie im Browser setzt (Pfad /dashboard, nur über HTTPS)."""
+    return (f"<script>window.parent.document.cookie = '{COOKIE}={value}; max-age={max_age}; path=/dashboard; "
+            f"SameSite=Strict; Secure';</script>")
+
+
 def _set_cookie(value: str, max_age: int) -> None:
-    """Cookie im Browser setzen (Streamlit kann das nur über ein kleines Skript; Pfad /dashboard, nur über HTTPS)."""
-    components.html(
-        f"<script>window.parent.document.cookie = '{COOKIE}={value}; max-age={max_age}; path=/dashboard; "
-        f"SameSite=Strict; Secure';</script>", height=0)
+    """Cookie im Browser setzen (Streamlit kann das nur über ein kleines Skript). Seit 0.19.1 mit st.iframe statt
+    components.html (wird nach 2026-06-01 entfernt, Bereinigung B6); 1 Pixel hoch, weil 0 nicht erlaubt ist."""
+    st.iframe(cookie_script(value, max_age), height=1)
 
 
 def require_login() -> None:

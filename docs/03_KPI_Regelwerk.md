@@ -311,6 +311,7 @@ Gemeinsame Over-2.5-Abweichung = (Gemeinsamer Teamdurchschnitt − 2,5) / 2,5 ×
 | Fall | Überschrift | Beschreibung |
 |---|---|---|
 | Keine Anomalie | Keine statistische Besonderheit | In den bisherigen Spielen erzielten die beiden Teams im Schnitt {Abweichung} % mehr/weniger Tore als die 2,5-Tore-Marke. |
+| Genau 0,00 % (seit 0.19.1, Carsten 18.11.2026) | Keine statistische Besonderheit | In den bisherigen Spielen beider Teams fielen im Schnitt genau 2,5 Tore – so viele wie die Marke. |
 | Positiv | Über 2,5 Goals erwartet | In den bisherigen Spielen beider Teams fielen im Schnitt {Abweichung} % mehr Tore als die 2,5-Tore-Marke. |
 | Negativ | Unter 2,5 Goals erwartet | In den bisherigen Spielen beider Teams fielen im Schnitt {Abweichung} % weniger Tore als die 2,5-Tore-Marke. |
 
@@ -401,7 +402,7 @@ Simulations-KPIs 10–13 (nur Backend, keine Anomalie-Einstufung, nie Top-Anomal
 Diese Punkte sollten vor der Umsetzung im Code geklärt werden:
 
 1. ~~**KPI 03 Frontend-Texte:** `{Hauptwert} %` statt `{Abweichung} %`.~~ **Erledigt am 30.10.2026:** `{Abweichung}` gilt. Im Word als Änderung markiert, mit deren Annahme abgeschlossen.
-2. **KPI 03 „Keine Anomalie“ bei 0,00 %:** Der Satz „mehr/weniger“ passt nicht, wenn die Abweichung genau 0,00 % beträgt. Dafür fehlt ein eigener Text.
+2. ~~**KPI 03 „Keine Anomalie“ bei 0,00 %:** Der Satz „mehr/weniger“ passt nicht, wenn die Abweichung genau 0,00 % beträgt. Dafür fehlt ein eigener Text.~~ **Erledigt 18.11.2026 (Version 0.19.1, Carsten):** eigener Satz „In den bisherigen Spielen beider Teams fielen im Schnitt genau 2,5 Tore – so viele wie die Marke.“ (Abschnitt 5).
 3. ~~**KPI 02 Fall A, Hinweis und Vorzeichen:** Hinweis stammte aus KPI 03; Vorzeichen im Text „Keine Anomalie“ ungeklärt.~~ **Erledigt am 30.10.2026:** Hinweis im Word ersetzt. Im Text „Keine Anomalie“ (KPI 02 und KPI 04) steht das Vorzeichen immer, bei 0,0 % keins (Abschnitt 2.4). Testfall KPI 02 PL-1 entsprechend auf „+7,0 %“ angepasst.
 4. ~~**3-Tage-Regel:** Ligaspiele unter der Woche, Geltung für die Ligareferenz.~~ **Erledigt am 30.10.2026:** auf 2 Kalendertage reduziert (Spiele unter der Woche und dichte Spielpläne, z. B. Premier League über Weihnachten, zählen mit); gilt nur für Teamwerte, nicht für die Ligareferenz. Siehe Abschnitt 1.
 5. ~~**Ligareferenz in KPI 04:** Definition der letzten 20 Spieltage.~~ **Erledigt am 28.10.2026:** einheitlich über Spalte `Gameday` geregelt, siehe Abschnitt 1.1.
@@ -409,9 +410,9 @@ Diese Punkte sollten vor der Umsetzung im Code geklärt werden:
 7. **Datenquelle KPI 04:** Der Name der Datenquelle (im Word-Archiv als Platzhalter „[Name der Quelle]“) ist noch nicht dokumentiert. Bei Bedarf in Abschnitt 6 ergänzen. Für die Berechnung nicht relevant. *(02.11.2026: Bei einem Wechsel des Lieferanten muss die Zählweise der Gelben Karten vorab verglichen werden, siehe `06_Datenlieferung.md`, Abschnitt 8.)*
 8. ~~**Überschrift KPI 03 negativ:** „Unter 2.5 Goals“ statt „2,5“.~~ **Erledigt am 30.10.2026:** „2,5“ gilt, im Word als Änderung markiert.
 9. ~~**KPI 03 Nachkommastellen Hauptwert:**~~ **Erledigt am 08.11.2026:** zwei Nachkommastellen für alle KPIs (2.3); das Beispiel „3,10“ passt damit.
-10. **KPI-Karte bei Aufsteiger-Spielen (KPI 02–04):** Die Testfälle nehmen an: Teamwert des Gegners und Ligareferenz werden angezeigt, Hauptwert, Abweichung und Anomalie als „–“. Bitte bestätigen.
-11. **Schwellenwerte für Serie A und LaLiga** (07.11.2026): Nach dem Einschalten (Etappe F) mit „Häufigkeit der Anomalien“ prüfen, ob die Schwellen ±20 % / ±35 % ähnlich oft anschlagen wie in Bundesliga und Premier League (v. a. KPI 03). **Ergebnis 07.11.2026 (Saison 2025/26):** KPI 02 und 04 schlagen ähnlich oft an wie in Bundesliga und Premier League (leicht 12–20 %, stark 0–6 %). KPI 03 seltener (Serie A 9,3 %, LaLiga 18,3 % Anomalien gesamt; Bundesliga 59,5 %, Premier League 19,9 %), weil beide Ligen nahe an der festen 2,5-Tore-Marke liegen. Die Schwellen bleiben unverändert; KPI 03 wird ohnehin zusammen mit Bundesliga und Premier League überprüft. Details: `docs/tests/pruefprotokoll_etappe_f.md`.
-12. **Schwellen für KPI 05–09** (08.11.2026): Vorläufig gelten ±20 % / ±35 %. Probelauf mit der Saison 2025/26 (Anteil Spiele mit Anomalie, leicht + stark):
+10. ~~**KPI-Karte bei Aufsteiger-Spielen (KPI 02–04):** Die Testfälle nehmen an: Teamwert des Gegners und Ligareferenz werden angezeigt, Hauptwert, Abweichung und Anomalie als „–“. Bitte bestätigen.~~ **Bestätigt 18.11.2026 (Carsten):** so wie umgesetzt (Gegnerwert und Ligareferenz sichtbar, Hauptwert, Abweichung und Einstufung „–“).
+11. ~~**Schwellenwerte für Serie A und LaLiga**~~ **Erledigt 18.11.2026 (Version 0.19):** abgelöst durch die Schwellen je Liga, KPI und Richtung (2.2). Bisheriger Text (07.11.2026): Nach dem Einschalten (Etappe F) mit „Häufigkeit der Anomalien“ prüfen, ob die Schwellen ±20 % / ±35 % ähnlich oft anschlagen wie in Bundesliga und Premier League (v. a. KPI 03). **Ergebnis 07.11.2026 (Saison 2025/26):** KPI 02 und 04 schlagen ähnlich oft an wie in Bundesliga und Premier League (leicht 12–20 %, stark 0–6 %). KPI 03 seltener (Serie A 9,3 %, LaLiga 18,3 % Anomalien gesamt; Bundesliga 59,5 %, Premier League 19,9 %), weil beide Ligen nahe an der festen 2,5-Tore-Marke liegen. Die Schwellen bleiben unverändert; KPI 03 wird ohnehin zusammen mit Bundesliga und Premier League überprüft. Details: `docs/tests/pruefprotokoll_etappe_f.md`.
+12. ~~**Schwellen für KPI 05–09**~~ **Erledigt 18.11.2026 (Version 0.19):** abgelöst durch die Schwellen je Liga, KPI und Richtung (2.2). Bisheriger Text (08.11.2026): Vorläufig gelten ±20 % / ±35 %. Probelauf mit der Saison 2025/26 (Anteil Spiele mit Anomalie, leicht + stark):
 
     | Liga | KPI 05 Ecken | KPI 06 Tore 1. HZ | KPI 07 Tore 2. HZ | KPI 08 BTTS | KPI 09 Schüsse aufs Tor | zum Vergleich KPI 02 |
     |---|---|---|---|---|---|---|
@@ -433,7 +434,7 @@ Diese Punkte sollten vor der Umsetzung im Code geklärt werden:
 
 Für die Umsetzung blockierend ist keiner dieser Punkte: Die Testfälle legen für 2, 6, 9 und 10 jeweils eine Annahme fest. Wird eine Annahme geändert, sind die betroffenen Testfälle anzupassen.
 
-**Umsetzung (Etappe C, 31.10.2026):** so wie in den Testfällen angenommen. Punkt 2: Bei genau 0,00 % zeigt KPI 03 nur die Überschrift „Keine statistische Besonderheit“, ohne Satz, bis ein Text festgelegt ist. Punkte 6 und 9: eine Nachkommastelle (ab Etappe H zwei, Entscheidung 08.11.2026). Punkt 10: Gegnerwert und Ligareferenz sichtbar, Hauptwert, Abweichung und Anomalie „–“.
+**Umsetzung (Etappe C, 31.10.2026):** so wie in den Testfällen angenommen. Punkt 2: Bei genau 0,00 % zeigt KPI 03 nur die Überschrift „Keine statistische Besonderheit“, ohne Satz, bis ein Text festgelegt ist. Seit 0.19.1 mit eigenem Satz (Punkt 2, Abschnitt 5). Punkte 6 und 9: eine Nachkommastelle (ab Etappe H zwei, Entscheidung 08.11.2026). Punkt 10: Gegnerwert und Ligareferenz sichtbar, Hauptwert, Abweichung und Anomalie „–“.
 
 ---
 

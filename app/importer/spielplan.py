@@ -16,6 +16,7 @@ Seit Version 0.15 (Entscheidungen Carsten 15.11.2026, S1–S6):
 
 from __future__ import annotations
 
+from bisect import bisect_right
 from datetime import date, datetime, timedelta
 
 from .convert import round_number, season_label
@@ -37,12 +38,15 @@ def main_period(days: list[date]) -> tuple[date, date] | None:
     """Fenster von höchstens 4 Tagen mit den meisten Spielen (bei Gleichstand das früheste); None ohne Spiele."""
     if not days:
         return None
-    best = None
-    for start in sorted(set(days)):
-        inside = [d for d in days if start <= d <= start + timedelta(days=WINDOW)]
-        if best is None or len(inside) > len(best):
-            best = inside
-    return min(best), max(best)
+    ordered = sorted(days)
+    best, best_count, i = None, 0, 0
+    for start in sorted(set(ordered)):                 # gleitendes Fenster (Bereinigung B3, 0.19.1)
+        while ordered[i] < start:
+            i += 1
+        j = bisect_right(ordered, start + timedelta(days=WINDOW))
+        if j - i > best_count:                          # strikt grösser: bei Gleichstand bleibt das frühere Fenster
+            best, best_count = (start, ordered[j - 1]), j - i
+    return best
 
 
 def fixture_rows(season_list: list[dict], names: TeamNames, today: date) -> list[dict]:
