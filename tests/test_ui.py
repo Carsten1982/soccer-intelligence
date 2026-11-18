@@ -146,6 +146,7 @@ def test_simulation_page():
     assert [s.label for s in at.selectbox] == ["Liga", "Saison"]
     value = lambda kpi: [at.number_input(key=f"sth_{kpi}_{p}").value for p in ("mehr", "weniger")]  # noqa: E731
     assert value("kpi09") == [None, None] and value("kpi07") == [None, None]      # je Liga bzw. keine
+    assert 'si-perliga">BL 15 · PL 10 · LL 10<' in text and 'si-perliga">PL 10 · SA 15<' in text   # 0.19.1: je Liga
     at.number_input(key="sth_kpi07_mehr").set_value(30.0).run()    # eine Zahl gilt für alle Ligen
     assert not at.exception and ".st-key-sth_kpi07_mehr input" in _texts(at)       # eigener Wert blau
     at.button(key="sens_reset").click().run()
@@ -153,6 +154,9 @@ def test_simulation_page():
     at.selectbox(key="sens_liga").set_value("Bundesliga").run()
     assert not at.exception
     assert value("kpi09") == [15.0, 10.0] and value("kpi08") == [None, 35.0] and value("kpi02") == [None, None]
+    at.selectbox(key="sens_liga").set_value("Premier League").run()   # Fehler 0.19: Feld blieb nach dem Wechsel leer
+    assert not at.exception and value("kpi02") == [None, 10.0] and value("kpi09") == [10.0, None]
+    assert 'class="si-perliga"' not in _texts(at)                     # eine Liga: Zahl im Feld, kein Hinweis
     at.button(key="sens_proposal").click().run()                   # Vorschlag: nur Anzeige und Download
     assert not at.exception, at.exception
     tables = [d.value for d in at.dataframe if "prognosewert" in d.value.columns]
@@ -171,6 +175,33 @@ def test_datenqualitaet_page():
     assert "Häufigkeit je Liga und KPI" in text
     tables = [d.value for d in at.dataframe if "Prognosewert" in d.value.columns and "Richtung" in d.value.columns]
     assert tables and len(tables[0]) == 23                          # die freigegebenen Schwellen
+
+
+def test_top_selection_text_and_navigation_order():
+    """0.19.1 (Carsten 18.11.2026): Text unter den Top Anomalien mit drei Zwischentiteln; Reiter Sensitivitätsanalyse
+    vor Datenqualität."""
+    pytest.importorskip("streamlit")
+    from views.top_anomalien import selection_text
+    text = selection_text()
+    titles = ["**Berücksichtigte Spiele**", "**Auswahl der Auffälligkeiten**", "**Verteilung der Spiele**"]
+    assert [text.index(t) for t in titles] == sorted(text.index(t) for t in titles)
+    for part in ("Je Liga zählt der nächste Spieltag, wenn er innerhalb der nächsten 14 Tage beginnt",
+                 "in der Regel höchstens zwei Spiele", "Maximale Anzahl: 4 Spiele", "zuerst hoch, dann mittel"):
+        assert part in text, part
+    app = (Path(__file__).resolve().parents[1] / "app" / "app.py").read_text(encoding="utf-8")
+    nav = app[app.index("st.navigation(["):]
+    assert nav.index('PAGES["simulation"]') < nav.index('PAGES["datenqualitaet"]') < nav.index('PAGES["datenimport"]')
+
+
+def test_per_league_hint():
+    pytest.importorskip("streamlit")
+    from core.sensitivity import Limits
+    from views.simulation import per_league_hint
+    D = __import__("decimal").Decimal
+    per = {"Bundesliga": Limits(None, None), "Premier League": Limits(None, D("10.0")),
+           "Serie A": Limits(None, D("15.0")), "LaLiga": Limits(None, None)}
+    assert per_league_hint(per, "weniger") == "PL 10 · SA 15" and per_league_hint(per, "mehr") == ""
+    assert per_league_hint({"Bundesliga": Limits(D("10"), None), "LaLiga": Limits(D("10"), None)}, "mehr") == ""
 
 
 def test_rule_numbers_in_texts():
@@ -192,14 +223,16 @@ def _explanation():
 @pytest.mark.skipif(AppTest is None, reason="Streamlit nicht vorhanden")
 def test_explanation_uses_the_shipped_example():
     """Erklärfeld der Sensitivitätsanalyse: Beispiel Bundesliga, Schüsse aufs Tor, weniger (Schwelle 10 %, 227 Spiele,
-    144 eingetroffen, 63 % gegen 52 %, +12 Pp., Spanne +5 bis +18, 7 von 7, hoch) und die Zahlen der Regeln."""
+    144 eingetroffen, 63,44 % gegen 51,57 %, +11,87 Pp., Spanne +5,06 bis +18,25, 7 von 7, hoch) und die Zahlen der
+    Regeln. Seit 0.19.1 mit zwei Nachkommastellen, damit die Rechnung aufgeht (vorher 63 − 52 = +12)."""
     at = AppTest.from_function(_explanation, default_timeout=TIMEOUT).run()
     assert not at.exception, at.exception
     text = _texts(at)
     for part in ("mehr als <b>10 %</b> darunter", "In 227 früheren Spielen lag die Erwartung mehr als 10 % unter",
-                 "In 144", "<b>63 %</b>", "nur\nin 52 %", "<b>+12 Prozentpunkte</b>", "<b>+5 und +18 Pp.</b>",
-                 "7 von 7", "ergeben <b>hoch</b>", "10, 15, 20, 25, 30 und 35 %", "**ab 60 %**", "**ab +8 Pp.**",
-                 "**ab 55 %**", "**ab 50 %**", "über +2 Pp."):
+                 "In 144", "<b>63,44 %</b>", "in\n51,57 % der Fälle", "63,44 − 51,57 = <b>+11,87 Prozentpunkte</b>",
+                 "in rund 12 von 100", "<b>+5,06 und +18,25\nPp.</b>", "rund 5 Treffer mehr", "7 von 7 Saisons",
+                 "Prognosewert <b>hoch</b>", "10, 15, 20, 25, 30 und 35 %", "**ab 60 %**", "**ab +8 Pp.**",
+                 "**ab 55 %**", "**ab 50 %**", "über +2 Pp.", "rechte (obere) Wert", "weder in den Top Anomalien"):
         assert part in text, part
 
 

@@ -122,9 +122,9 @@ def selection_text() -> str:
     per_league = _WORDS.get(MAX_PER_LEAGUE, str(MAX_PER_LEAGUE))
     return (
         "**Berücksichtigte Spiele**\n\n"
-        "Einbezogen werden die anstehenden Spieltage aller Ligen sowie Nachhol- und vorgezogene Spiele. Berücksichtigt "
-        f"werden Begegnungen, die innerhalb der nächsten {A.PAUSE_DAYS} Tage stattfinden. Sonderspiele vor dem regulären "
-        "Spieltag werden separat aufgeführt.\n\n"
+        "Einbezogen werden die anstehenden Spieltage aller Ligen sowie Nachhol- und vorgezogene Spiele. Je Liga zählt "
+        f"der nächste Spieltag, wenn er innerhalb der nächsten {A.PAUSE_DAYS} Tage beginnt. Sonderspiele vor dem "
+        "regulären Spieltag werden separat aufgeführt.\n\n"
         "Es zählen nur Spiele, die noch nicht angepfiffen wurden und für die vollständige, nicht vorläufige Werte "
         "vorliegen.\n\n"
         "**Auswahl der Auffälligkeiten**\n\n"
@@ -133,7 +133,7 @@ def selection_text() -> str:
         "entscheidet die grösste Abweichung.\n\n"
         "**Verteilung der Spiele**\n\n"
         "Pro Begegnung wird nur eine Auffälligkeit angezeigt – jene mit dem höchsten Prognosewert.\n\n"
-        f"Pro Liga werden maximal {per_league} Spiele berücksichtigt. Gibt es in anderen Ligen nicht genügend "
+        f"Pro Liga werden in der Regel höchstens {per_league} Spiele berücksichtigt. Gibt es in anderen Ligen nicht genügend "
         "Auffälligkeiten, können weitere Spiele aus derselben Liga hinzukommen.\n\n"
         f"Maximale Anzahl: {MAX_ENTRIES} Spiele"
     )

@@ -7,8 +7,10 @@ Seiten nach den Entwürfen: Startseite (1d), Spieltag (3d), Matchdetail (2i).
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass
 from datetime import date, datetime
+from functools import lru_cache
 from urllib.parse import quote
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
@@ -34,7 +36,27 @@ class Kontext:
         return ziel + (f"?datum={quote(self.datum)}" if self.datum else "")
 
     def statisch(self, pfad: str) -> str:
-        return f"{self.prefix.rstrip('/')}/statisch/{pfad}"
+        """Adresse einer Datei aus statisch/ mit Versionsnummer (?v=…, Prüfsumme des Inhalts; seit 0.19.1): Nach einem
+        Release mit geänderter CSS- oder JS-Datei lädt der Browser sie neu, ohne Strg+F5."""
+        return f"{self.prefix.rstrip('/')}/statisch/{pfad}" + version(pfad)
+
+
+def version(pfad: str) -> str:
+    """„?v=“ und die ersten 10 Zeichen der SHA-256 der Datei; leer, wenn die Datei fehlt. Nur CSS und JS: Schriften
+    ändern sich nicht, und ihre Vorlade-Adresse muss genau der Adresse in site.css entsprechen (sonst doppelt geladen)."""
+    if not pfad.endswith((".css", ".js")):
+        return ""
+    try:
+        st = (W.STATISCH / pfad).stat()
+    except OSError:
+        return ""
+    return f"?v={_pruefsumme(pfad, st.st_mtime_ns, st.st_size)}"
+
+
+@lru_cache(maxsize=64)
+def _pruefsumme(pfad: str, mtime_ns: int, groesse: int) -> str:
+    """Einmal je Dateistand gerechnet (Zeit und Grösse im Schlüssel)."""
+    return hashlib.sha256((W.STATISCH / pfad).read_bytes()).hexdigest()[:10]
 
 
 # --- Darstellungshilfen -----------------------------------------------------------------------------------

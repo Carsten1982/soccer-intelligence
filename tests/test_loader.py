@@ -312,7 +312,8 @@ def test_real_database():
     assert (union["homeTeam"], union["awayTeam"]) == ("Union Berlin", "Bochum")
     assert (union["Full-Time Home Goals"], union["Full-Time Away Goals"]) == (1, 1)
     assert all(pd.isna(union[c]) for c in schema.STAT_COLUMNS)
-    # Einzige bekannte Warnung: Schusssumme bei id 11344
+    # Schusssumme bei id 11344: seit 0.19.1 nur Hinweis (vorher die einzige bekannte Warnung)
+    assert not [i for i in db.issues if i.level == WARNUNG and i.check == "Schüsse < aufs Tor + daneben"]
     assert {i.match_id for i in db.issues if i.level == WARNUNG} <= {11344}
     # Korrigierte Premier-League-Spiele vom 18.10.2025
     pl = db.leagues["Premier League"].set_index("id")
@@ -347,3 +348,14 @@ def test_gameday_team_twice_is_warning(tmp_path, valid_sheets):
     db = load_database(write_workbook(tmp_path / "db.xlsx", valid_sheets))
     w = checks(db, WARNUNG)
     assert "Team mehrfach im Spieltag" in w and "Spieltag unvollständig" in w
+
+
+def test_shot_sum_is_only_a_hint(tmp_path, valid_sheets):
+    """Seit 0.19.1 (Carsten 18.11.2026): Schüsse gesamt < aufs Tor + daneben ist ein Hinweis, keine Warnung."""
+    df = valid_sheets["Bundesliga"]
+    for c in ("Home Team Shots Full Time", "Home Team Shots Second Half"):
+        df[c] = df[c].astype(float)
+        df.loc[0, c] = 1
+    db = load_database(write_workbook(tmp_path / "db.xlsx", valid_sheets))
+    found = [i for i in db.issues if i.check == "Schüsse < aufs Tor + daneben"]
+    assert found and {i.level for i in found} == {HINWEIS} and not db.has_errors

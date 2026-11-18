@@ -54,7 +54,7 @@
 | Teil | Umsetzung |
 |---|---|
 | Programmteil | `app/website/` im bestehenden Projekt (gleiche Datenbank, gleicher Rechenkern) |
-| Seiten | HTML-Vorlagen (Jinja2, gemeinsame Bausteine in `vorlagen/teile.html`) + eine CSS-Datei mit den Farben und Massen der Entwürfe; wenig JavaScript (`statisch/site.js`: Tabs der englischen Woche, „Zuklappen“ im Matchdetail), alles funktioniert auch ohne. Keine Inline-Stile (Content-Security-Policy), Balkenbreiten über Klassen `.w0`–`.w100` |
+| Seiten | HTML-Vorlagen (Jinja2, gemeinsame Bausteine in `vorlagen/teile.html`) + eine CSS-Datei mit den Farben und Massen der Entwürfe; wenig JavaScript (`statisch/site.js`: Tabs der englischen Woche, „Zuklappen“ im Matchdetail), alles funktioniert auch ohne. Keine Inline-Stile (Content-Security-Policy), Balkenbreiten über Klassen `.w0`–`.w100`. Seit 0.19.1 hängt an CSS und JS eine Versionsnummer (`?v=` + Prüfsumme des Inhalts): Nach einem Release lädt der Browser geänderte Dateien neu, ohne Strg+F5 |
 | Texte | Sprachdatei `app/website/texte/de.json` mit Schlüsseln (Übergabe 9.1); Mehrzahl als eigene Varianten; Fallback Deutsch |
 | Formate | `app/website/format.py`: Datum „Sa 21.11.“, Prozent „+47,36 %“ mit echtem Minus „−“, Ergebnis „2 : 1“; je Sprache eine Tabelle (jetzt nur `de`) |
 | Schriften | Outfit und Inter als variable WOFF2-Dateien (SIL Open Font License 1.1, Lizenzdateien liegen bei), nur lateinische Zeichen; erweiterte Zeichen lädt der Browser nur bei Bedarf |
@@ -214,4 +214,5 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
 | 0.17 | Grundgerüst (Design, Schriften, Texte, Formate, Daten, Vorschau-Container mit Passwort, Zeitreise) und Seite **Spieltag** |
 | 0.18 | Alle drei Seiten **nach den Entwürfen**: Startseite (1d), Spieltag (3d), Matchdetail (2i) mit eigener Seite je Paarung; Entscheidungen Q1–Q7 |
 | 0.19 | Prognosewert statt stark/leicht in den Daten und Texten (Gestaltung unverändert bis zum neuen Entwurf); Ranking mit Liga-Mix |
+| 0.19.1 | CSS und JS mit Versionsnummer (`?v=`), damit nach einem Release kein Strg+F5 nötig ist |
 | später | Methodik, Impressum, Datenschutz, Livegang |

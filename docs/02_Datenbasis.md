@@ -181,7 +181,7 @@ Carsten hat die Spiele von Serie A und LaLiga in die Datei übernommen. Claude h
 
 - ~~LaLiga, 17.05.2026: 7 Spiele mit vertauschten Werten in K–M~~ **korrigiert 07.11.2026:** K–M aus N–P übernommen (stimmt mit den Halbzeiten überein), je Spiel im Blatt *Datenhinweise* dokumentiert. Prüfung aller 8'730 Spiele: sonst keine Abweichung zwischen K–M und N–P. Vermutlich Fehler der ursprünglichen Quelle.
 - ~~*Datenhinweise* id 9198 `Seria A`~~ **korrigiert 07.11.2026** (`Serie A`).
-- Weitere Warnungen ohne Eile: „Schüsse < aufs Tor + daneben“ (Serie A 2, LaLiga 1).
+- ~~Weitere Warnungen ohne Eile: „Schüsse < aufs Tor + daneben“ (Serie A 2, LaLiga 1).~~ **Seit 0.19.1 nur Hinweis** (Abschnitt 5).
 
 ---
 
@@ -242,7 +242,6 @@ nur der Altbestand abweicht.
 - Ergebnisbuchstabe passt nicht zu den Toren
 - Halbzeitwerte ergeben nicht den Gesamtwert (Ecken, Karten, Schüsse)
 - Ballbesitz Heim + Auswärts ≠ 100 %
-- Schüsse gesamt < aufs Tor + daneben
 - Kommazahl bei Ecken, Karten oder Schüssen (seit H.1): Der Wert gilt als **fehlend** – er wird nie abgeschnitten und nie als 0 gerechnet. Der Ballbesitz (in %) darf Kommastellen haben.
 - Datenhinweis mit einer id, die keine ganze Zahl ist (z. B. 123,5): Er gilt für **kein** Spiel, auch nicht für 123 (seit H.2).
 - fehlende Statistik, die nicht in Datenhinweise dokumentiert ist (je Stufe höchstens 50 Einzelmeldungen, danach eine Sammelzeile „… und n weitere Zeilen“)
@@ -260,6 +259,7 @@ Tor, 9 Tore); Endstand gegen Tor-Ereignisse. Für den Altbestand gelten weiter n
 ### Hinweis – kein Handlungsbedarf
 
 - mehr Tore als Schüsse aufs Tor (meist Eigentore)
+- Schüsse gesamt < aufs Tor + daneben (seit 0.19.1 Hinweis statt Warnung, Entscheidung Carsten 18.11.2026: kommt in der Quelle vor, z. B. id 11344 in 5.1, und geht in keinen KPI ein; KPI 09 nutzt nur „aufs Tor“)
 - dokumentierte Sonderfälle mit leeren Statistikwerten
 - leere optionale Blätter, neueste Saison noch laufend
 
@@ -273,7 +273,7 @@ Geprüft mit dem Code aus Schritt 1 (angepasst an 58 Spalten). Ergebnis unverän
 | Warnungen | 2 | Bundesliga id 11344: Schüsse gesamt < aufs Tor + daneben (Gesamt und 2. HZ), siehe 5.1 |
 | Hinweise | 17 | 14 × mehr Tore als Schüsse aufs Tor (Eigentore), id 14421 Statistik fehlt (dokumentierte Ausnahme, siehe 4.1), Seria A und LaLiga leer |
 
-### 5.1 Offene Auffälligkeit: Spiel-ID 11344
+### 5.1 Auffälligkeit Spiel-ID 11344 (erledigt 0.19.1)
 
 **Bayer Leverkusen – FC Koln, 08.10.2023, Saison 2023/24, Endstand 3:0** (Blatt Bundesliga, Excel-Zeile 980)
 
@@ -285,7 +285,7 @@ Geprüft mit dem Code aus Schritt 1 (angepasst an 58 Spalten). Ergebnis unverän
 
 - Die Summe aus „aufs Tor“ und „daneben“ ist in der 2. Halbzeit und damit auch im Gesamtwert höher als die Gesamtzahl der Schüsse. In der Regel kann das nicht sein.
 - Mögliche Ursachen: falscher Wert bei „Schüsse gesamt“ in der 2. HZ (dann wäre 7 statt 5 und gesamt 14 statt 12 richtig) oder falsche Werte bei „aufs Tor“ bzw. „daneben“. Das ist nicht geklärt.
-- **Status: offen.** Die Daten bleiben unverändert. Die Auffälligkeit wird bis zu einer Entscheidung als Warnung angezeigt. Möglich sind: korrigieren (mit Quelle), im Blatt Datenhinweise dokumentieren oder die Prüfung zum Hinweis herabstufen.
+- **Status: erledigt 18.11.2026 (Version 0.19.1, Carsten):** Die Prüfung ist zum **Hinweis** herabgestuft. Die Daten bleiben unverändert; der Wert geht in keinen KPI ein (KPI 09 nutzt nur „aufs Tor“).
 
 ---
 

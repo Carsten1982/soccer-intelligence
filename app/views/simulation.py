@@ -16,6 +16,7 @@ from html import escape
 
 import streamlit as st
 
+from core.kpis import de, de_signed
 from core.matchday import season_short
 from core.sensitivity import (
     DIRECTIONS, MEHR, RECOMMENDATIONS, RULES, TOO_FEW, Count, Limits, Quality, evaluate, limit, matchday_summary,
@@ -98,6 +99,7 @@ CSS = """<style>
 .si-kpi {font-size:.85rem; color:#14213d; line-height:1.2;} .si-kpi small {display:block; color:#5b6b84; font-size:.74rem;}
 .si-lab {font-size:.8rem; color:#14213d; white-space:nowrap;} .si-lab.s {padding-left:.55rem;}
 .si-lab.t {font-weight:700;} .si-lab.c {text-align:center;}
+.si-perliga {font-size:.68rem; color:#5b6b84; line-height:1.15; margin:-.15rem 0 0 .2rem; white-space:nowrap; letter-spacing:-.01em;}
 .si-h {background:#eef2f7; border:1px solid #d8e0eb; font-size:.72rem; font-weight:700; color:#14213d; text-align:center;
   line-height:1.15; display:flex; align-items:center; justify-content:center; padding:.15rem .2rem; box-sizing:border-box;}
 .si-h.g {background:#dfe6ef; font-size:.76rem; height:1.6rem;} .si-h.l {height:2.7rem;} .si-h.full {height:4.35rem;}
@@ -196,6 +198,17 @@ def placeholder(per_league: dict[str, Limits], part: str) -> str:
     return "keine" if values == {None} else "je Liga"
 
 
+SHORT = {"Bundesliga": "BL", "Premier League": "PL", "Serie A": "SA", "LaLiga": "LL"}
+
+
+def per_league_hint(per_league: dict[str, Limits], part: str) -> str:
+    """Bei „Alle Ligen“ mit verschiedenen Schwellen: die gültigen Werte je Liga, z. B. „PL 10 · SA 15“ (0.19.1)."""
+    values = {lg: x.get(part) for lg, x in per_league.items()}
+    if len(set(values.values())) < 2:
+        return ""
+    return " · ".join(f"{SHORT.get(lg, lg[:3])} {_n(v)}" for lg, v in values.items() if v is not None)
+
+
 def follow_league(league: str) -> None:
     """Beim Wechsel der Liga: unveränderte Felder (noch der gültige Wert der bisherigen Auswahl) zeigen den gültigen Wert
     der neuen Auswahl. Eigene Eingaben bleiben stehen."""
@@ -209,7 +222,7 @@ def follow_league(league: str) -> None:
         for part in PARTS:
             key = f"{KEY}{kpi}_{part}"
             if key in state and was[part] != now[part] and state[key] == was[part]:
-                del state[key]
+                state[key] = now[part]      # zuweisen statt löschen: sonst behält der Browser das leere Feld (0.19.1)
 
 
 def threshold_input(kpi: str, part: str, default: float | None, hint: str) -> float | None:
@@ -300,6 +313,9 @@ def kpi_block(kpi: str, per_league: dict[str, Limits], result_for, one_season: b
             c[1].markdown(f'<div class="si-lab">{LABEL[part]}</div>', unsafe_allow_html=True)
             with c[2]:
                 values[part] = threshold_input(kpi, part, start[part], placeholder(per_league, part))
+                hint = per_league_hint(per_league, part) if values[part] is None else ""
+                if hint:
+                    st.markdown(f'<div class="si-perliga">{escape(hint)}</div>', unsafe_allow_html=True)
             slots[part] = c[3]
         lim = effective(values, per_league)
         r = result_for(lim)
@@ -319,119 +335,135 @@ def own_values_css(chosen: dict[str, dict[str, float | None]], starts: dict[str,
 # --- Erklärfeld (Spezifikation 18.11.2026, Abschnitt 4.2) -------------------------------------------------------------
 
 def _example() -> dict | None:
-    """Beispiel aus der gültigen Schwellendatei: Bundesliga, Schüsse aufs Tor, weniger."""
+    """Beispiel aus der gültigen Schwellendatei: Bundesliga, Schüsse aufs Tor, weniger. Werte mit zwei Nachkommastellen
+    wie in der Tabelle, damit die Rechnung aufgeht (0.19.1: vorher 63 − 52 = +12 mit gerundeten Werten)."""
     config = get_thresholds()
     s = config.get("Bundesliga", "kpi09").negativ
-    if s is None or s.spiele is None or s.trefferquote is None:
+    if s is None or s.spiele is None or s.trefferquote is None or s.vergleichsgruppe is None or s.mehrwert is None \
+            or s.spanne_links is None or s.spanne_rechts is None:
         return None
     hits = round(s.spiele * float(s.trefferquote) / 100)
     seasons = config.saisons.replace("/20", "/").replace("-", "–") if config.saisons else ""
-    return {"t": _n(s.schwelle), "n": s.spiele, "h": hits, "q": round(float(s.trefferquote)),
-            "b": round(float(s.vergleichsgruppe)), "g": round(float(s.mehrwert)), "lo": round(float(s.spanne_links)),
-            "hi": round(float(s.spanne_rechts)), "st": s.saisons_positiv or "", "pw": s.prognosewert,
-            "seasons": seasons}
+    return {"t": _n(s.schwelle), "n": s.spiele, "h": hits, "q": de(s.trefferquote), "b": de(s.vergleichsgruppe),
+            "g": de_signed(s.mehrwert), "g0": round(float(s.mehrwert)), "lo": de_signed(s.spanne_links),
+            "lo0": round(float(s.spanne_links)), "hi": de_signed(s.spanne_rechts), "st": s.saisons_positiv or "",
+            "pw": s.prognosewert, "seasons": seasons}
 
 
 def explanation() -> None:
-    """Rahmen und Einstieg (immer sichtbar), danach aufklappbare Erklärungen je Spalte."""
+    """Rahmen und Einstieg (immer sichtbar), danach aufklappbare Erklärungen je Spalte (Wortlaut Carsten 18.11.2026 mit
+    Korrekturen, Version 0.19.1)."""
     st.markdown(
         "<div class='si-box'><h4>Wie kommen die Werte in dieser Tabelle zustande?</h4>Wir schauen in die Vergangenheit: "
         "Wie oft ist eingetroffen, was eine Auffälligkeit angekündigt hat? Die Tabelle zeigt das Spalte für Spalte. Am "
-        "Ende steht der <b>Prognosewert</b>: Er sagt, ob und wie stark wir uns auf eine solche Auffälligkeit verlassen "
-        "können. Die Felder unten erklären jede Spalte genauer.</div>", unsafe_allow_html=True)
+        "Ende steht der <b>Prognosewert</b>. Er zeigt, wie zuverlässig sich eine Auffälligkeit in der Vergangenheit "
+        "bestätigt hat. Die folgenden Erklärungen beschreiben, wie die einzelnen Werte berechnet werden und welche "
+        "Aussagekraft sie haben.</div>", unsafe_allow_html=True)
     e = _example()
     if e:
         st.markdown(f"""<div class='si-box'><h4>Beispiel: Bundesliga, Schüsse aufs Tor, „weniger“</h4>
 <small>Stand Saisons {escape(e["seasons"])}</small><ol>
-<li><b>Abweichung in %:</b> Für jedes Spiel rechnen wir vor dem Anpfiff aus, wie viele Schüsse aufs Tor zu erwarten sind
-– aus den letzten 10 Spielen beider Teams. Das vergleichen wir mit dem Ligaschnitt der letzten 20 Spieltage. Liegt die
-Erwartung mehr als <b>{e["t"]} %</b> darunter (die <b>Schwelle</b> dieser Zeile), zählt das Spiel als auffällig. Jede Liga
-hat je Kennzahl und Richtung ihre eigene Schwelle.</li>
+<li><b>Abweichung in %:</b> Für jedes Spiel berechnen wir vor dem Anpfiff, wie viele Schüsse aufs Tor zu erwarten sind.
+Grundlage dafür sind die letzten 10 Spiele beider Teams. Diesen Wert vergleichen wir mit dem Ligaschnitt der letzten 20
+Spieltage. Liegt die Erwartung mehr als <b>{e["t"]} %</b> darunter (die <b>Schwelle</b> dieser Zeile), zählt das Spiel als
+auffällig. Jede Liga hat für jede Kennzahl und Richtung eine eigene Schwelle.</li>
 <li><b>Trefferquote:</b> In {e["n"]} früheren Spielen lag die Erwartung mehr als {e["t"]} % unter dem Ligaschnitt.
-Danach haben wir nachgeschaut, was im Spiel wirklich passiert ist: In {e["h"]} dieser {e["n"]} Spiele fielen tatsächlich
-weniger Schüsse aufs Tor als im Ligaschnitt. Die Auffälligkeit lag also in <b>{e["q"]} %</b> der Fälle richtig.</li>
-<li><b>Vergleichsgruppe und Mehrwert in Pp.:</b> Bei <i>allen</i> Spielen – auch denen ohne Auffälligkeit – fielen nur
-in {e["b"]} % weniger Schüsse als im Ligaschnitt. Der <b>Mehrwert in Pp.</b> ist {e["q"]} − {e["b"]} =
-<b>+{e["g"]} Prozentpunkte</b>: Mit Auffälligkeit trifft es in {e["g"]} von 100 Spielen öfter zu als im Normalfall.</li>
-<li><b>Spanne (Wilson 95 %):</b> Auch ein guter Wert kann Glück sein. Die Spanne zeigt, wie stark der Mehrwert zufällig
-schwanken kann. Hier liegt er mit 95 % Sicherheit zwischen <b>+{e["lo"]} und +{e["hi"]} Pp.</b> Selbst im ungünstigsten
-Fall bleibt ein Vorteil von {e["lo"]} Treffern pro 100 Spiele.</li>
-<li><b>Empfehlung:</b> Dieses Feld fasst Anzahl Spiele, Mehrwert und Spanne zu einem Urteil zusammen – hilft die
-Auffälligkeit oder nicht? Die möglichen Urteile sind <i>Zu wenige Daten, Negativ, Funktioniert, Funktioniert leicht,
-Keine relevante Verbesserung</i> und <i>Noch unklar</i>. Hier: <b>Funktioniert</b>. Wie jedes Urteil zustande kommt, steht
-unten unter „Empfehlung“.</li>
-<li><b>Prognosewert:</b> Er sagt, wie stark wir uns auf die Auffälligkeit verlassen können: <b>hoch</b>, <b>mittel</b>,
-<b>gering</b> oder <b>–</b> (nicht verlässlich genug). Ihn gibt es nur, wenn die Empfehlung „Funktioniert“ lautet und der
-Vorteil in fast jeder Saison da war (hier in {escape(e["st"]).replace("/", " von ")}). Hier: {e["q"]} % Trefferquote und
-+{e["g"]} Pp. ergeben <b>{e["pw"]}</b>. Die genauen Regeln stehen unten unter „Prognosewert“.</li></ol></div>""",
+Anschliessend haben wir geprüft, was im Spiel tatsächlich passiert ist: In {e["h"]} dieser {e["n"]} Spiele fielen weniger
+Schüsse aufs Tor als im Ligaschnitt. Die Auffälligkeit hat sich somit in <b>{e["q"]} %</b> der Fälle bestätigt.</li>
+<li><b>Vergleichsgruppe und Mehrwert in Pp.:</b> Bei <i>allen</i> Spielen – auch denen ohne Auffälligkeit – fielen in
+{e["b"]} % der Fälle weniger Schüsse aufs Tor als im Ligaschnitt. Der <b>Mehrwert in Pp.</b> ergibt sich aus der
+Differenz: {e["q"]} − {e["b"]} = <b>{e["g"]} Prozentpunkte</b>. Die Auffälligkeit hat sich damit in rund {e["g0"]} von 100
+Spielen häufiger bestätigt als im Durchschnitt aller Spiele.</li>
+<li><b>Spanne (Wilson 95 %):</b> Auch ein guter Wert kann durch Zufall zustande kommen. Die Spanne zeigt, wie stark der
+berechnete Mehrwert statistisch schwanken kann. Hier liegt er mit 95 % Sicherheit zwischen <b>{e["lo"]} und {e["hi"]}
+Pp.</b> Selbst am unteren Ende der Spanne bleiben rund {e["lo0"]} Treffer mehr pro 100 Spiele.</li>
+<li><b>Empfehlung:</b> Dieses Feld fasst Anzahl Spiele, Mehrwert und Spanne zu einem Urteil zusammen. Es beantwortet die
+Frage: Gibt es einen statistisch relevanten Vorteil? Die möglichen Urteile sind <i>Zu wenige Daten, Negativ,
+Funktioniert, Funktioniert leicht, Keine relevante Verbesserung</i> und <i>Noch unklar</i>. Hier lautet das Ergebnis:
+<b>Funktioniert</b>. Wie die einzelnen Urteile berechnet werden, steht weiter unten unter „Empfehlung“.</li>
+<li><b>Prognosewert:</b> Er zeigt, wie zuverlässig sich eine Auffälligkeit in der Vergangenheit bestätigt hat:
+<b>hoch</b>, <b>mittel</b>, <b>gering</b> oder <b>–</b> (nicht verlässlich genug). Ein Prognosewert wird nur vergeben, wenn
+die Empfehlung „Funktioniert“ lautet und der Mehrwert auch über mehrere Saisons hinweg stabil positiv war (hier in
+{escape(e["st"]).replace("/", " von ")} Saisons). Im Beispiel ergeben {e["q"]} % Trefferquote und {e["g"]} Pp. den
+Prognosewert <b>{e["pw"]}</b>. Die genauen Regeln stehen weiter unten unter „Prognosewert“.</li></ol></div>""",
                     unsafe_allow_html=True)
     with st.expander("Abweichung in % und Schwelle"):
-        st.markdown(f"""**Abweichung in %:** Wie stark die Erwartung für ein Spiel vom Ligaschnitt abweicht. Die Erwartung stammt aus den letzten 10 Spielen beider Teams (bis zwei Tage vor dem Anpfiff), der Ligaschnitt aus den 20 Spieltagen davor. Beispiel: erwartet 7,8 Schüsse, Ligaschnitt 9,0 Schüsse → −13,3 %.
+        st.markdown(f"""**Abweichung in %:** Wie stark weicht die Erwartung für ein Spiel vom Ligaschnitt ab? Die Erwartung wird anhand der letzten 10 Spiele beider Teams berechnet (Datenstand höchstens zwei Tage vor dem Anpfiff). Als Vergleich dient der Ligaschnitt der 20 vorherigen Spieltage. Beispiel: Erwartung 7,8 Schüsse, Ligaschnitt 9,0 Schüsse → −13,3 %.
 
-**Schwelle:** Ab dieser Abweichung gilt ein Spiel als auffällig. Gezählt wird, was darüber liegt: Bei 10 % zählt −10,01 %, −10,00 % nicht.
+**Schwelle:** Sie legt fest, ab welcher Abweichung ein Spiel als auffällig gilt. Entscheidend ist, dass die Abweichung die Schwelle überschreitet. Bei einer Schwelle von 10 % zählt deshalb −10,01 %, −10,00 % hingegen nicht.
 
-**Es gibt keine einheitliche Schwelle, sondern je Liga, Kennzahl und Richtung (*mehr* / *weniger*) höchstens eine.** Festgelegt werden sie nach einer festen Regel:
+**Es gibt keine einheitliche Schwelle.** Jede Liga hat je Kennzahl und Richtung (*mehr* / *weniger*) höchstens eine eigene Schwelle. Diese wird nach einem festen Verfahren bestimmt:
 1. Wir probieren {", ".join(_n(c) for c in R.candidates[:-1])} und {_n(R.candidates[-1])} % aus.
 2. In Frage kommen nur Schwellen mit der Empfehlung **Funktioniert**, deren Vorteil zudem **stabil** ist (siehe „Prognosewert“).
 3. Davon nehmen wir die mit dem **besten Prognosewert**; bei Gleichstand die mit **mehr Spielen**, damit Auffälligkeiten nicht zu selten werden.
-4. Kommt keine in Frage, gibt es für diese Kennzahl in dieser Liga und Richtung keine Schwelle – sie wird nie ausgezeichnet.
+4. Gibt es keine passende Schwelle, wird diese Kennzahl in der jeweiligen Liga und Richtung nicht als Auffälligkeit ausgewiesen.
 
-Die gültigen Schwellen werden einmal pro Saison nach Saisonende neu bestimmt und freigegeben (Knopf „Schwellenvorschlag berechnen“ unten). In der Tabelle kannst du andere Werte ausprobieren; was von der gültigen Schwelle abweicht, ist blau. Bei „Alle Ligen“ zählt jede Liga mit ihrer eigenen Schwelle, solange das Feld leer ist.""")
+Die gültigen Schwellen werden einmal pro Saison nach Saisonende neu bestimmt und freigegeben (Knopf „Schwellenvorschlag berechnen“ unten). In der Tabelle kannst du andere Werte ausprobieren; was von der gültigen Schwelle abweicht, ist blau. Bei „Alle Ligen“ zählt jede Liga mit ihrer eigenen Schwelle, solange das Feld leer ist; die Schwellen der Ligen stehen klein darunter.""")
     with st.expander("Anzahl Spiele, Ø pro Spieltag, Spieltagsabdeckung"):
-        st.markdown("**Anzahl Spiele:** So viele Spiele lagen über der Schwelle (vorläufige Werte, z. B. bei Aufsteigern, "
-                    "zählen nicht). **Ø pro Spieltag:** so viele solche Spiele im Schnitt je Spieltag (0,50 = an jedem "
-                    "zweiten Spieltag eines). **Spieltagsabdeckung:** an wie vielen von 100 Spieltagen es mindestens ein "
-                    "solches Spiel gab.")
+        st.markdown("**Anzahl Spiele:** So viele Spiele lagen über der festgelegten Schwelle. Vorläufige Werte (z. B. bei "
+                    "Aufsteigern) werden nicht berücksichtigt.\n\n"
+                    "**Ø pro Spieltag:** So viele auffällige Spiele gab es durchschnittlich pro Spieltag. Ein Wert von "
+                    "0,50 bedeutet beispielsweise, dass es im Schnitt an jedem zweiten Spieltag ein auffälliges Spiel "
+                    "gab.\n\n"
+                    "**Spieltagsabdeckung:** An wie vielen von 100 Spieltagen es mindestens ein auffälliges Spiel gab.")
     with st.expander("Anzahl eingetroffen und Trefferquote"):
-        st.markdown("**Eingetroffen** heisst: Der echte Wert im Spiel lag über (*mehr*) bzw. unter (*weniger*) dem "
-                    "Ligaschnitt, der **vor** dem Spiel galt. Genau gleich zählt nicht.\n\n"
+        st.markdown("**Eingetroffen** bedeutet: Der tatsächliche Wert im Spiel lag über (*mehr*) bzw. unter (*weniger*) "
+                    "dem Ligaschnitt, der bereits **vor** dem Spiel galt. Lag der Wert genau auf dem Ligaschnitt, zählt "
+                    "das nicht als Treffer.\n\n"
                     + "\n".join(f"- {TOP_KPIS[k].partition(' – ')[2]}: {t}" for k, t in EVENT_TEXTS.items())
                     + "\n\n**Trefferquote** = eingetroffen ÷ Spiele mit bekanntem Ergebnis.")
     with st.expander("Vergleichsgruppe (alle Spiele) und Mehrwert in Pp."):
-        st.markdown("**Vergleichsgruppe:** Wie oft trat dasselbe bei **allen** Spielen ein, mit und ohne Auffälligkeit? "
-                    "Das ist der Normalfall – wichtig, weil manches ohnehin oft passiert: 60 % Treffer sind nichts wert, "
-                    "wenn es sowieso in 60 % der Spiele passiert.\n\n**Mehrwert in Pp.** = Trefferquote − "
-                    "Vergleichsgruppe, in Prozentpunkten. +12 Pp. heisst: Mit Auffälligkeit trifft es in 12 von 100 "
-                    "Spielen öfter zu als im Normalfall.")
+        st.markdown("**Vergleichsgruppe:** Sie zeigt, wie oft dasselbe Ergebnis bei **allen** Spielen eintrat – "
+                    "unabhängig davon, ob eine Auffälligkeit vorlag oder nicht. Dieser Vergleich ist wichtig, weil manche "
+                    "Ergebnisse ohnehin häufig vorkommen: Eine Trefferquote von 60 % ist wenig aussagekräftig, wenn das "
+                    "Ergebnis auch bei 60 % aller Spiele eintritt.\n\n"
+                    "**Mehrwert in Pp.** = Trefferquote − Vergleichsgruppe, angegeben in Prozentpunkten. +12 Pp. "
+                    "bedeutet: Das erwartete Ergebnis trat bei Spielen mit Auffälligkeit 12 Prozentpunkte häufiger ein "
+                    "als bei allen Spielen.")
     with st.expander("Spanne (Wilson 95 %)"):
-        st.markdown("Wirfst du eine Münze zehnmal und es kommt siebenmal Kopf, ist sie deshalb noch nicht gezinkt – das "
-                    "kann Glück sein. Genauso kann ein guter Mehrwert aus wenigen Spielen Zufall sein.\n\n"
-                    "Die **Spanne** (berechnet mit dem Wilson-Verfahren) zeigt, in welchem Bereich der *echte* Mehrwert "
-                    "mit 95 % Sicherheit liegt. Je mehr Spiele, desto enger die Spanne.\n"
+        st.markdown("Wirfst du eine Münze zehnmal und es kommt siebenmal Kopf, bedeutet das noch nicht, dass die Münze "
+                    "gezinkt ist. Sieben Treffer können auch durch Zufall entstehen. Genauso kann ein hoher Mehrwert bei "
+                    "wenigen Spielen Zufall sein.\n\n"
+                    "Die **Spanne** (berechnet mit dem Wilson-Verfahren) zeigt, wie genau sich der Mehrwert anhand der "
+                    "vorhandenen Daten einschätzen lässt: Mit 95 % Sicherheit liegt der echte Mehrwert in diesem "
+                    "Bereich. Je mehr Spiele ausgewertet werden, desto genauer wird die Einschätzung und desto enger "
+                    "wird die Spanne.\n"
                     "- **Gutes Beispiel:** Mehrwert +12 Pp., Spanne **+5 bis +18 Pp.** (227 Spiele). Selbst im "
                     "ungünstigsten Fall bleiben +5 Pp. – der Vorteil ist kaum Zufall.\n"
                     "- **Schwaches Beispiel:** Mehrwert +12 Pp., Spanne **−4 bis +30 Pp.** (nur 35 Spiele). Der Mehrwert "
                     "sieht gleich gut aus, aber im ungünstigsten Fall wäre die Auffälligkeit sogar schlechter als der "
                     "Normalfall – das kann reines Glück sein.\n\n"
-                    "**Linker Wert** = ungünstigster Fall, **rechter Wert** = günstigster Fall. Für unsere Urteile zählt "
-                    "vor allem der linke Wert. (Fachlich: Newcombe-Methode aus zwei Wilson-Intervallen.)")
+                    "**Linker (unterer) Wert** = ungünstigster Fall, **rechter (oberer) Wert** = günstigster Fall. Für "
+                    "unsere Urteile zählt vor allem der linke Wert. (Fachlich: Newcombe-Methode aus zwei "
+                    "Wilson-Intervallen.)")
     with st.expander("Empfehlung"):
-        st.markdown(f"""Die Empfehlung fasst Anzahl Spiele, Mehrwert und Spanne zu einem Urteil zusammen. Geprüft wird von oben nach unten, **die erste passende Stufe gilt**:
-1. **Zu wenige Daten:** weniger als {R.min_cases} Spiele. Für ein Urteil reicht das nicht – so wie fünf Münzwürfe nichts beweisen.
-2. **Negativ:** mindestens {R.min_cases} Spiele, und sogar der rechte Wert der Spanne liegt unter 0. Die Auffälligkeit liegt öfter daneben als der Normalfall.
-3. **Funktioniert:** mindestens {R.min_cases} Spiele, Mehrwert mindestens +{_n(R.works_gain)} Pp., **und** der linke Wert der Spanne liegt über +{_n(R.works_low)} Pp. Auch im ungünstigsten Fall ein klarer Vorteil.
-4. **Funktioniert leicht:** mindestens {R.min_cases} Spiele, Mehrwert mindestens +{_n(R.light_gain)} Pp., und der linke Wert liegt nicht unter −{_n(-R.light_floor)} Pp. Wahrscheinlich ein kleiner Vorteil, aber nicht gesichert.
-5. **Keine relevante Verbesserung:** mindestens {R.min_cases} Spiele, und sogar der rechte Wert liegt unter +{_n(R.relevant_high)} Pp. Die Auffälligkeit schadet nicht, hilft aber kaum.
-6. **Noch unklar:** mindestens {R.min_cases} Spiele, aber nichts davon passt – meist, weil die Spanne sehr breit ist. Mehr Spiele würden helfen.
+        st.markdown(f"""Die Empfehlung fasst Anzahl Spiele, Mehrwert und Spanne zu einem Urteil zusammen. Die sechs möglichen Stufen werden von oben nach unten geprüft. Sobald eine Stufe zutrifft, wird dieses Urteil vergeben:
+1. **Zu wenige Daten:** Weniger als {R.min_cases} Spiele. Die Datenbasis ist zu klein, um eine verlässliche Aussage zu treffen – ähnlich wie fünf Münzwürfe noch keinen belastbaren Schluss zulassen.
+2. **Negativ:** Mindestens {R.min_cases} Spiele, und selbst der rechte (obere) Wert der Spanne liegt unter 0. Die Auffälligkeit schneidet damit schlechter ab als die Vergleichsgruppe.
+3. **Funktioniert:** Mindestens {R.min_cases} Spiele, Mehrwert mindestens +{_n(R.works_gain)} Pp. **und** der linke Wert der Spanne liegt über +{_n(R.works_low)} Pp. Auch am unteren Ende der Spanne bleibt somit ein Mehrwert von mehr als {_n(R.works_low)} Prozentpunkten.
+4. **Funktioniert leicht:** Mindestens {R.min_cases} Spiele, Mehrwert mindestens +{_n(R.light_gain)} Pp. und der linke Wert liegt nicht unter −{_n(-R.light_floor)} Pp. Es gibt Hinweise auf einen positiven Mehrwert, dieser ist statistisch aber weniger eindeutig.
+5. **Keine relevante Verbesserung:** Mindestens {R.min_cases} Spiele, und selbst der rechte (obere) Wert der Spanne liegt unter +{_n(R.relevant_high)} Pp. Ein relevanter Mehrwert ist damit nicht erkennbar.
+6. **Noch unklar:** Mindestens {R.min_cases} Spiele, aber keine der anderen Stufen trifft zu. Die Daten reichen noch nicht für eine eindeutige Bewertung; häufig ist die Spanne noch zu gross.
 
 Für den Prognosewert zählt nur „Funktioniert“. Die anderen Stufen zeigen, warum eine Zeile nicht reicht.""")
     with st.expander("Prognosewert"):
         a, b = R.stable_share
-        st.markdown(f"""Der Prognosewert sagt, wie stark wir uns auf eine Auffälligkeit verlassen können. Er bestimmt auch die Reihenfolge der **Top Anomalien**: zuerst hoch, dann mittel, dann gering, jeweils nach Grösse der Abweichung – mit höchstens zwei Spielen je Liga, damit alle Ligen vorkommen.
+        share = "zwei Dritteln" if (a, b) == (2, 3) else f"{a}/{b}"
+        st.markdown(f"""Der Prognosewert zeigt, wie zuverlässig sich eine Auffälligkeit in früheren Spielen bestätigt hat. Er bestimmt auch die Reihenfolge der **Top Anomalien**: zuerst hoch, dann mittel, dann gering. Innerhalb jeder Stufe entscheidet die Grösse der Abweichung. Pro Liga werden in der Regel höchstens zwei Spiele berücksichtigt.
 
 **Voraussetzungen:**
 1. Die Empfehlung lautet **Funktioniert**.
-2. **Stabil:** Der Mehrwert war in mindestens **{"zwei Dritteln" if (a, b) == (2, 3) else f"{a}/{b}"} der Saisons** einzeln positiv (bei 7 Saisons: in {R.stable_needed(7)}). So fällt eine Zeile heraus, die nur dank einer einzigen Ausnahmesaison gut aussieht.
+2. **Stabil:** Der Mehrwert war in mindestens **{share} der ausgewerteten Saisons** jeweils positiv (bei 7 Saisons also in mindestens {R.stable_needed(7)}). Dadurch werden Auffälligkeiten ausgeschlossen, deren positiver Gesamtwert hauptsächlich durch einzelne besonders gute Saisons zustande kommt.
 
 **Die vier Stufen:**
-- **hoch:** Trefferquote **ab {_n(R.high_rate)} %** und Mehrwert **ab +{_n(R.high_gain)} Pp.** Etwa 6 von 10 Treffern und klar besser als der Normalfall. Das +{_n(R.high_gain)} verhindert, dass etwas nur deshalb „hoch“ wird, weil es ohnehin oft passiert (z. B. „wenig Tore in der 1. Halbzeit“: schon bei allen Spielen rund 64 %).
-- **mittel:** Trefferquote **ab {_n(R.medium_rate)} %** (oder ab {_n(R.high_rate)} % mit Mehrwert unter +{_n(R.high_gain)} Pp.).
-- **gering:** Trefferquote **ab {_n(R.low_rate)} %**. Nachweislich besser als der Normalfall, aber nur knapp über „jedes zweite Mal“.
-- **–:** Voraussetzungen nicht erfüllt oder Trefferquote unter {_n(R.low_rate)} %. Der Grund steht grau daneben. Solche Zeilen werden nie ausgezeichnet.
+- **hoch:** Trefferquote **ab {_n(R.high_rate)} %** und Mehrwert **ab +{_n(R.high_gain)} Pp.** Das Ergebnis trat also in mindestens 6 von 10 Fällen ein und lag gleichzeitig deutlich über dem Vergleichswert. Der zusätzliche Mindestwert von +{_n(R.high_gain)} Pp. verhindert, dass eine Kennzahl allein aufgrund einer ohnehin hohen Grundhäufigkeit als „hoch“ eingestuft wird (z. B. „wenig Tore in der 1. Halbzeit“: schon bei allen Spielen rund 64 %).
+- **mittel:** Trefferquote **ab {_n(R.medium_rate)} %** (oder ab {_n(R.high_rate)} %, wenn der Mehrwert unter +{_n(R.high_gain)} Pp. liegt).
+- **gering:** Trefferquote **ab {_n(R.low_rate)} %**. Die Auffälligkeit bestätigt sich mindestens in jedem zweiten Fall. Der Vorteil gegenüber dem Vergleichswert ist aber geringer.
+- **–:** Die Voraussetzungen sind nicht erfüllt oder die Trefferquote liegt unter {_n(R.low_rate)} %. Der Grund wird grau daneben angezeigt. Mit einer solchen Schwelle wird die Kennzahl nirgends als auffällig ausgewiesen – weder in den Top Anomalien noch auf den Ligaseiten.
 
 Bei einer **einzelnen Saison** lässt sich die Stabilität nicht prüfen: Die Spalte ist dann ausgegraut mit „–“ und dem Hinweis „nur bei mehreren Saisons“.
 
-**Wichtig:** Der Prognosewert ist **keine Wahrscheinlichkeit für das nächste Spiel**, sondern die Bilanz der Vergangenheit. Weil wir die beste Schwelle auswählen, sind die Werte etwas zu optimistisch: In einer neuen Saison liegt die Trefferquote erfahrungsgemäss einige Prozentpunkte tiefer. Prüfen kannst du das, indem du oben nur die letzte Saison wählst.""")
+**Wichtig:** Der Prognosewert ist **keine Wahrscheinlichkeit für das nächste Spiel**, sondern zeigt die Ergebnisse vergleichbarer Auffälligkeiten aus der Vergangenheit. Da wir aus mehreren möglichen Schwellen die jeweils beste auswählen, können die historischen Werte etwas zu positiv ausfallen. In einer neuen Saison kann die Trefferquote deshalb einige Prozentpunkte tiefer liegen. Prüfen kannst du das, indem du oben nur die letzte Saison auswählst und die Trefferquote vergleichst.""")
     with st.expander("Grundlage der Berechnung"):
         st.markdown("Jedes frühere Spiel wird so berechnet, als wäre es noch nicht gespielt – nur mit Daten, die vor dem "
                     "Anpfiff bekannt waren. Ausgewertet werden die gewählten Saisons, nur abgeschlossene Spieltage. Nicht "

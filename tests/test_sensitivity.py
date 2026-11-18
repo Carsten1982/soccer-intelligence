@@ -260,6 +260,7 @@ def counter():
     return events, closed
 
 
+LEVELS_SEEN: set = set()         # Prognosewerte, die T13 über alle Varianten gesehen hat (Abdeckung, siehe unten)
 PER_LEAGUE = {"Bundesliga": (35, 5), "Premier League": (30, 10), "Serie A": (30, 10), "LaLiga": (20, 15)}
 
 
@@ -280,11 +281,12 @@ def test_t13_counter_calculation(cases_2018, matchdays_2018, counter, limits, le
         m, w = (D(str(x)) for x in v)
         return {"lp": m, "sp": m, "ln": -w, "sn": -w}
     if isinstance(limits, dict):
-        mine = G.sens_summary(events, closed, {lg: ref_lim(v) for lg, v in limits.items()})
+        ref = {lg: ref_lim(v) for lg, v in limits.items()}
         app_limits = {lg: lim(*v) for lg, v in limits.items()}
     else:
-        mine = G.sens_summary(events, closed, ref_lim(limits))
+        ref = ref_lim(limits)
         app_limits = lim(*limits)
+    mine, rating = G.sens_summary(events, closed, ref), G.sens_rating(events, closed, ref)
     for r in evaluate(c, md, {k: app_limits for k in TOP_KPIS}):
         m = mine[r.kpi]
         for d, key in ((MEHR, "pos"), (WENIGER, "neg")):
@@ -295,6 +297,10 @@ def test_t13_counter_calculation(cases_2018, matchdays_2018, counter, limits, le
             assert (q.cases, q.hits) == ref[:2], (r.kpi, d)
             for got, exp in zip((q.rate, q.base, q.gain, q.low, q.high), ref[2:]):
                 assert (got is None and exp is None) or math.isclose(got, exp, abs_tol=1e-9), (r.kpi, d, got, exp)
+            # seit 0.19.1: Empfehlung, Stabilität und Prognosewert ebenfalls unabhängig nachgerechnet
+            got = (q.recommendation, q.seasons_positive, q.seasons, q.prognosewert)
+            assert got == rating[r.kpi][key], (r.kpi, d, got, rating[r.kpi][key])
+            LEVELS_SEEN.add(q.prognosewert)
 
 
 def test_t15_limits_per_league():
@@ -312,3 +318,64 @@ def test_t15_limits_per_league():
     assert (r.counts[MEHR].count, r.counts[WENIGER].count) == (3, 1)
     only_l = evaluate(both, md, {"kpi02": {"L": per["L"]}})[0]
     assert only_l.counts[MEHR].count == one.counts[MEHR].count
+
+
+# --- seit 0.19.1: Regeln der Gegenrechnung = Regeln der App (alle Stufen, auch an den Grenzen) -------------------------
+
+def test_counter_rules_agree_with_app_on_a_grid():
+    """Die eigene Umsetzung in gegenrechnung.py (rate_rule, level_rule) und die App (recommendation, prognosis) kommen
+    auf einem Raster aus Werten an und um alle Grenzen zum selben Ergebnis – auch für mittel und gering, die T13 mit
+    den zwei Prüfsaisons nicht erreicht."""
+    values = [-6, -5.005, -5, -4.995, -0.01, 0, 1.995, 2, 2.004, 2.005, 4.99, 5, 7.99, 8, 8.005, 12]
+    seen = set()
+    for n in (49, 50, 300):
+        for gain in values:
+            for low in values:
+                for high in (-0.01, 0, 4.99, 5, 20):
+                    assert G.rate_rule(n, gain, low, high) == recommendation(n, gain, low, high), (n, gain, low, high)
+    for rec in (WORKS, WORKS_LIGHT):
+        for rate in (49.99, 49.995, 50, 54.99, 55, 59.99, 59.995, 60, 75):
+            for gain in (5, 7.99, 7.995, 8, 15):
+                for positive, seasons in ((7, 7), (5, 7), (4, 7), (2, 3), (1, 3), (2, 2), (1, 2), (1, 1)):
+                    app = prognosis(rec, rate, gain, positive, seasons)[0]
+                    assert G.level_rule(rec, rate, gain, positive, seasons) == app, (rec, rate, gain, positive, seasons)
+                    seen.add(app)
+    assert seen == {HIGH, MEDIUM, LOW, None}
+
+
+@pytest.mark.langsam
+def test_table_with_valid_thresholds_equals_file():
+    """Mit der echten Datenbank: Die Tabelle der Sensitivitätsanalyse zeigt je Liga mit den gültigen Schwellen und
+    „Alle Saisons“ (2019/20–2025/26) genau die Werte der Datei (Spiele, Trefferquote, Vergleichsgruppe, Mehrwert,
+    Saisons positiv, Prognosewert) – für alle 23 Schwellen, also auch mittel und gering."""
+    from conftest import REAL_DATABASE
+    if not REAL_DATABASE.exists():
+        pytest.skip("echte Datenbank nicht vorhanden")
+    from test_thresholds import CONFIG, LEAGUES
+
+    from core.config import load_leagues
+    from core.loader import load_database
+    from core.simulation import build_cases
+    from core.thresholds import load_thresholds
+    cfg = load_thresholds(CONFIG, LEAGUES)
+    db = load_database(REAL_DATABASE)
+    seasons = [f"{y}/{y + 1}" for y in range(2019, 2026)]
+    checked = set()
+    for lg in (x for x in load_leagues() if x.name in LEAGUES):
+        p = prepare_league(db.leagues[lg.name])
+        c, d = build_cases(p, lg), closed_matchdays(p, lg)
+        c, d = c[c["season"].isin(seasons)], d[d["season"].isin(seasons)]
+        limits = {k: Limits.from_thresholds(cfg.get(lg.name, k)) for k in TOP_KPIS}
+        for r in evaluate(c, d, limits):
+            t = cfg.get(lg.name, r.kpi)
+            for direction, signal in ((MEHR, t.positiv), (WENIGER, t.negativ)):
+                if signal is None:
+                    continue
+                q = r.quality[direction]
+                got = (q.cases, round(q.rate, 2), round(q.base, 2), round(q.gain, 2),
+                       f"{q.seasons_positive}/{q.seasons}", q.prognosewert)
+                want = (signal.spiele, float(signal.trefferquote), float(signal.vergleichsgruppe),
+                        float(signal.mehrwert), signal.saisons_positiv, signal.prognosewert)
+                assert got == want, (lg.name, r.kpi, direction, got, want)
+                checked.add((lg.name, r.kpi, direction))
+    assert len(checked) == 23

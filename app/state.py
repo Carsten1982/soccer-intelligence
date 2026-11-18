@@ -83,7 +83,7 @@ def get_frequency(league: League):
 # --- Sensitivitätsanalyse (Etappe I.1, seit Version 0.12) ------------------------------------------------
 
 @st.cache_data(show_spinner="Sensitivitätsanalyse wird vorbereitet: alle Spiele werden berechnet (einmal je "
-                            "Datenbankstand, rund 50 Sekunden) …", max_entries=2)
+                            "Datenbankstand, rund 10 Sekunden) …", max_entries=2)
 def _cached_simulation(path: str, key: tuple, leagues_key: tuple) -> pd.DataFrame:  # noqa: ARG001
     prepared = _cached_prepared(path, key)
     frames = [build_cases(prepared[lg.name], lg) for lg in get_active_leagues() if lg.name in prepared]
