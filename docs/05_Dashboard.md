@@ -158,7 +158,7 @@ Die Navigation besteht aus einem Tab pro Bereich. Zu Beginn sind das vier Tabs:
 
 - Datenqualität (ganz rechts)
 
-Weitere aktivierte Ligen erhalten automatisch einen eigenen Tab. Dieser wird vor dem Tab Datenqualität eingefügt. Seit Etappe F (Änderung 07.11.2026): Top Anomalien · Bundesliga · Premier League · Serie A · LaLiga · Datenqualität.
+Weitere aktivierte Ligen erhalten automatisch einen eigenen Tab. Dieser wird vor dem Tab Datenqualität eingefügt. Seit Etappe F (Änderung 07.11.2026): Top Anomalien · Bundesliga · Premier League · Serie A · LaLiga · Datenqualität. Seit 0.19.1 (Carsten 18.11.2026) mit den internen Bereichen: Top Anomalien · Bundesliga · Premier League · Serie A · LaLiga · Sensitivitätsanalyse · Datenqualität · Datenimport/API.
 
 Der aktive Tab muss visuell klar erkennbar sein.
 
@@ -286,7 +286,7 @@ Der Bereich Top Anomalien (/dashboard) zeigt die auffälligsten Anomalien der an
 
 8.  Gibt es keine Auffälligkeit, erscheint der Hinweis «Für die anstehenden Spiele liegen keine Auffälligkeiten vor.»
 
-9.  Text unter der Liste (freigegeben 18.11.2026): «Berücksichtigt: je Liga der anstehende Spieltag samt Nachhol- und vorgezogenen Spielen an seinen Tagen (Sonderspiele davor als eigener Block), wenn er höchstens 14 Tage entfernt ist. Nur Spiele vor dem Anpfiff und mit Werten, ohne vorläufige Werte. Auswahl: Eine Kennzahl ist auffällig, wenn ihre Abweichung über der Schwelle ihrer Liga liegt. Zuerst kommen Spiele mit Prognosewert hoch, dann mittel, dann gering – bis vier Einträge erreicht sind; innerhalb einer Stufe zählt die grösste Abweichung. Pro Begegnung ein Eintrag (die Kennzahl mit dem höchsten Prognosewert). Liga-Mix: höchstens zwei Einträge je Liga; nur wenn die anderen Ligen nicht genug Auffälligkeiten haben, wird mit weiteren Spielen derselben Liga aufgefüllt.» Die Karten zeigen den Prognosewert und die Herleitung.
+9.  Text unter der Liste (Wortlaut Carsten 18.11.2026, seit 0.19.1) mit drei Zwischentiteln: **Berücksichtigte Spiele** (anstehende Spieltage aller Ligen samt Nachhol- und vorgezogenen Spielen innerhalb der nächsten 14 Tage, Sonderspiele separat; nur Spiele vor dem Anpfiff mit vollständigen, nicht vorläufigen Werten) · **Auswahl der Auffälligkeiten** (über der Schwelle der Liga; nach Prognosewert hoch, mittel, gering, innerhalb der Stufe grösste Abweichung) · **Verteilung der Spiele** (eine Auffälligkeit je Begegnung, maximal zwei Spiele je Liga mit Auffüllen, maximal 4 Spiele). Wortlaut in `app/views/top_anomalien.py` (`selection_text`). Die Karten zeigen den Prognosewert und die Herleitung.
 
 Die Auswahl-Logik wird zusätzlich im KPI-Regelwerk festgehalten (Abschnitt 2.6), da sie später auch für die öffentliche Startseite gilt.
 

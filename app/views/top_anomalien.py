@@ -110,12 +110,30 @@ def render() -> None:
                         st.page_link(page, label=f"Zur {e.candidate.league} →")
                     except Exception:  # noqa: BLE001 - ausserhalb der Navigation (Tests)
                         pass
-    st.caption(f"Berücksichtigt: je Liga der anstehende Spieltag samt Nachhol- und vorgezogenen Spielen an seinen "
-               f"Tagen (Sonderspiele davor als eigener Block), wenn er höchstens {A.PAUSE_DAYS} Tage entfernt ist. Nur "
-               "Spiele vor dem Anpfiff und mit Werten, ohne vorläufige Werte. Auswahl: Eine Kennzahl ist auffällig, wenn "
-               "ihre Abweichung über der Schwelle ihrer Liga liegt. Zuerst kommen Spiele mit Prognosewert hoch, dann "
-               f"mittel, dann gering – bis {MAX_ENTRIES} Einträge erreicht sind; innerhalb einer Stufe zählt die grösste "
-               "Abweichung. Pro Begegnung ein Eintrag (die Kennzahl mit dem höchsten Prognosewert). Liga-Mix: "
-               f"höchstens {MAX_PER_LEAGUE} Einträge je Liga; nur wenn die anderen Ligen nicht genug Auffälligkeiten "
-               "haben, wird mit weiteren Spielen derselben Liga aufgefüllt.")
+    st.caption(selection_text())
     ui.footer()
+
+
+_WORDS = {1: "ein", 2: "zwei", 3: "drei", 4: "vier"}
+
+
+def selection_text() -> str:
+    """Text unter der Liste mit Zwischentiteln und Absätzen (Wortlaut Carsten 18.11.2026, Version 0.19.1)."""
+    per_league = _WORDS.get(MAX_PER_LEAGUE, str(MAX_PER_LEAGUE))
+    return (
+        "**Berücksichtigte Spiele**\n\n"
+        "Einbezogen werden die anstehenden Spieltage aller Ligen sowie Nachhol- und vorgezogene Spiele. Berücksichtigt "
+        f"werden Begegnungen, die innerhalb der nächsten {A.PAUSE_DAYS} Tage stattfinden. Sonderspiele vor dem regulären "
+        "Spieltag werden separat aufgeführt.\n\n"
+        "Es zählen nur Spiele, die noch nicht angepfiffen wurden und für die vollständige, nicht vorläufige Werte "
+        "vorliegen.\n\n"
+        "**Auswahl der Auffälligkeiten**\n\n"
+        "Eine Kennzahl gilt als auffällig, wenn ihre Abweichung über der jeweiligen Schwelle der Liga liegt.\n\n"
+        "Die Auswahl erfolgt nach dem Prognosewert: zuerst hoch, dann mittel und zuletzt gering. Innerhalb jeder Stufe "
+        "entscheidet die grösste Abweichung.\n\n"
+        "**Verteilung der Spiele**\n\n"
+        "Pro Begegnung wird nur eine Auffälligkeit angezeigt – jene mit dem höchsten Prognosewert.\n\n"
+        f"Pro Liga werden maximal {per_league} Spiele berücksichtigt. Gibt es in anderen Ligen nicht genügend "
+        "Auffälligkeiten, können weitere Spiele aus derselben Liga hinzukommen.\n\n"
+        f"Maximale Anzahl: {MAX_ENTRIES} Spiele"
+    )
