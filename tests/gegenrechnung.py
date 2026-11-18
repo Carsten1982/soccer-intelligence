@@ -125,6 +125,17 @@ def grade_split(dev: Decimal | None, lp: Decimal, sp: Decimal, ln: Decimal, sn: 
     return "keine"
 
 
+def grade_signal(dev: Decimal | None, pos: tuple[Decimal, str] | None, neg: tuple[Decimal, str] | None) -> str | None:
+    """Einstufung seit Version 0.19: je Richtung höchstens eine Schwelle (Betrag) mit Prognosewert. Auffällig, wenn der
+    Betrag der gerundeten Abweichung grösser als die Schwelle ist; dann der Prognosewert, sonst „keine“."""
+    if dev is None:
+        return None
+    side = pos if dev > 0 else neg if dev < 0 else None
+    if side is not None and abs(dev) > side[0]:
+        return side[1]
+    return "keine"
+
+
 class League:
     """Alle abgeschlossenen Spiele einer Liga, vorbereitet für schnelle Abfragen."""
 

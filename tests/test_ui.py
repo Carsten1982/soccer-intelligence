@@ -131,28 +131,35 @@ def _simulation():
 
 @needs_files
 def test_simulation_page():
-    """Version 0.13: Sensitivitätsanalyse als eine Tabelle mit vier Zeilen je KPI (Entwurf C); Eingaben wirken nur hier.
-    Vorbelegt mit den gültigen Schwellen; KPI 03 bei „Alle Ligen“ leer („je Liga“), bei einer Liga deren Werte."""
+    """Version 0.19: zwei Zeilen je KPI (mehr, weniger) mit je einer Schwelle, Spalte Prognosewert, Erklärfeld und
+    Schwellenvorschlag. Vorbelegt mit den gültigen Schwellen; bei „Alle Ligen“ leer, wenn die Ligen verschieden sind
+    („je Liga“) oder keine haben („keine“), bei einer Liga deren Werte. Eingaben wirken nur hier."""
     at = AppTest.from_function(_simulation, default_timeout=TIMEOUT).run()
     assert not at.exception, at.exception
     text = _texts(at)
     assert "Sensitivitätsanalyse" in text and "keinen Einfluss auf die anderen Dashboard-Tabs" in text
-    for label in ("Betroffene Spiele", "Prognosewert", "Vergleichs", "Empfehlung", "Leicht positiv", "Stark negativ",
-                  "Wie entsteht die Empfehlung?"):
+    for label in ("Betroffene Spiele", "Ergebnisqualität und Prognosewert", "Vergleichs", "Empfehlung", "↗ mehr",
+                  "↘ weniger", "Mehr Details findest du unter der Tabelle.", "Schüsse aufs Tor", "Schwellenvorschlag"):
         assert label in text, label
-    assert len(at.number_input) == 4 * 8                           # je KPI leicht/stark, positiv/negativ
+    assert "Leicht positiv" not in text and "Stark negativ" not in text
+    assert len(at.number_input) == 2 * 8                           # je KPI mehr und weniger
     assert [s.label for s in at.selectbox] == ["Liga", "Saison"]
-    value = lambda kpi: [at.number_input(key=f"sth_{kpi}_{p}").value for p in ("lp", "sp", "ln", "sn")]  # noqa: E731
-    assert value("kpi02") == [20.0, 30.0, -15.0, -25.0] and value("kpi03") == [None] * 4
-    at.number_input(key="sth_kpi02_lp").set_value(40.0).run()      # leicht über stark -> stark wird nachgezogen
-    assert not at.exception and at.number_input(key="sth_kpi02_sp").value == 40.0
-    assert ".st-key-sth_kpi02_lp input" in _texts(at)               # eigener Wert blau
-    at.number_input(key="sth_kpi03_lp").set_value(30.0).run()      # eine Zahl gilt für alle Ligen
-    assert not at.exception and ".st-key-sth_kpi03_lp input" in _texts(at)
+    value = lambda kpi: [at.number_input(key=f"sth_{kpi}_{p}").value for p in ("mehr", "weniger")]  # noqa: E731
+    assert value("kpi09") == [None, None] and value("kpi07") == [None, None]      # je Liga bzw. keine
+    at.number_input(key="sth_kpi07_mehr").set_value(30.0).run()    # eine Zahl gilt für alle Ligen
+    assert not at.exception and ".st-key-sth_kpi07_mehr input" in _texts(at)       # eigener Wert blau
     at.button(key="sens_reset").click().run()
-    assert value("kpi02")[0] == 20.0 and value("kpi03") == [None] * 4
+    assert value("kpi07") == [None, None]
     at.selectbox(key="sens_liga").set_value("Bundesliga").run()
-    assert not at.exception and value("kpi03") == [35.0, 40.0, -5.0, -10.0]
+    assert not at.exception
+    assert value("kpi09") == [15.0, 10.0] and value("kpi08") == [None, 35.0] and value("kpi02") == [None, None]
+    at.button(key="sens_proposal").click().run()                   # Vorschlag: nur Anzeige und Download
+    assert not at.exception, at.exception
+    tables = [d.value for d in at.dataframe if "prognosewert" in d.value.columns]
+    assert tables and len(tables[0]) > 0 and set(tables[0]["prognosewert"]) <= {"hoch", "mittel", "gering"}
+    single = [s for s in at.selectbox(key="sens_saison").options if s.startswith("Saison ")]
+    at.selectbox(key="sens_saison").set_value(single[0]).run()     # eine Saison: kein Prognosewert
+    assert not at.exception and "nur bei mehreren Saisons" in _texts(at)
 
 
 @needs_files
@@ -160,7 +167,40 @@ def test_datenqualitaet_page():
     at = AppTest.from_function(_datenqualitaet, default_timeout=TIMEOUT).run()
     assert not at.exception, at.exception
     text = _texts(at)
-    assert "Datenqualität" in text and "Gültige Schwellenwerte" in text
+    assert "Datenqualität" in text and "Gültige Schwellen und Prognosewerte" in text    # seit 0.19
+    assert "Häufigkeit je Liga und KPI" in text
+    tables = [d.value for d in at.dataframe if "Prognosewert" in d.value.columns and "Richtung" in d.value.columns]
+    assert tables and len(tables[0]) == 23                          # die freigegebenen Schwellen
+
+
+def test_rule_numbers_in_texts():
+    """Fehler beim Testen von 0.19: Zahlen der Regeln ohne Nachkommastellen verloren ihre Null (10 → 1, 60 → 6)."""
+    pytest.importorskip("streamlit")
+    from decimal import Decimal
+
+    from views.simulation import _n
+    assert [_n(Decimal(x)) for x in ("10", "60", "50", "5", "2", "35")] == ["10", "60", "50", "5", "2", "35"]
+    assert [_n(Decimal(x)) for x in ("10.0", "12.50", "0.5", "100")] == ["10", "12,5", "0,5", "100"]
+    assert _n(15) == "15"
+
+
+def _explanation():
+    from views import simulation
+    simulation.explanation()
+
+
+@pytest.mark.skipif(AppTest is None, reason="Streamlit nicht vorhanden")
+def test_explanation_uses_the_shipped_example():
+    """Erklärfeld der Sensitivitätsanalyse: Beispiel Bundesliga, Schüsse aufs Tor, weniger (Schwelle 10 %, 227 Spiele,
+    144 eingetroffen, 63 % gegen 52 %, +12 Pp., Spanne +5 bis +18, 7 von 7, hoch) und die Zahlen der Regeln."""
+    at = AppTest.from_function(_explanation, default_timeout=TIMEOUT).run()
+    assert not at.exception, at.exception
+    text = _texts(at)
+    for part in ("mehr als <b>10 %</b> darunter", "In 227 früheren Spielen lag die Erwartung mehr als 10 % unter",
+                 "In 144", "<b>63 %</b>", "nur\nin 52 %", "<b>+12 Prozentpunkte</b>", "<b>+5 und +18 Pp.</b>",
+                 "7 von 7", "ergeben <b>hoch</b>", "10, 15, 20, 25, 30 und 35 %", "**ab 60 %**", "**ab +8 Pp.**",
+                 "**ab 55 %**", "**ab 50 %**", "über +2 Pp."):
+        assert part in text, part
 
 
 # --- Kompakte Tabelle (Etappe H) -------------------------------------------------------

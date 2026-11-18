@@ -4,7 +4,7 @@
     Sprachdatei, Werte aus website.spieltag.spieltag_daten (Codes). -#}
 
 {% macro kachel(s) -%}
-{% set art = {'stark': 'kachel--stark', 'leicht': 'kachel--leicht', 'ohne': '', 'nicht_gewertet': 'kachel--status',
+{% set art = {'hoch': 'kachel--stark', 'mittel': 'kachel--leicht', 'gering': 'kachel--leicht', 'ohne': '', 'nicht_gewertet': 'kachel--status',
               'status': 'kachel--status', 'gespielt': 'kachel--gespielt'}[s.art] %}
 {% set innen %}
   <span class="teams">
@@ -15,7 +15,7 @@
   </span>
   <span class="rechts">
     <span class="chips">
-      {%- if s.art in ('stark', 'leicht') %}<span class="kchip kchip--{{ s.art }}">{{ t('chip.' ~ s.art) }}</span>{% endif %}
+      {%- if s.art in ('hoch', 'mittel', 'gering') %}<span class="kchip kchip--{{ stil(s.art) }}">{{ t('chip.' ~ s.art) }}</span>{% endif %}
       {%- if s.art == 'nicht_gewertet' %}<span class="kchip kchip--status">{{ t('chip.nicht_gewertet') }}</span>{% endif %}
       {%- if s.art == 'status' %}<span class="kchip kchip--status">{{ t('chip.' ~ s.status) }}</span>{% endif %}
       {%- if s.art == 'gespielt' %}{% if s.ergebnis %}<span class="kchip kchip--ergebnis">{{ ergebnis(s.ergebnis) }}</span>{% else %}<span class="kchip kchip--status">{{ t('chip.ergebnis_folgt') }}</span>{% endif %}{% endif %}
@@ -82,8 +82,8 @@
     </div>
     {% endif %}
     <div class="legende" aria-label="{{ t('spieltag.legende') }}">
-      <span class="eintrag"><span class="muster muster--stark" aria-hidden="true"></span>{{ t('stufe.stark') }}</span>
-      <span class="eintrag"><span class="muster muster--leicht" aria-hidden="true"></span>{{ t('stufe.leicht') }}</span>
+      <span class="eintrag"><span class="muster muster--stark" aria-hidden="true"></span>{{ t('stufe.hoch') }}</span>
+      <span class="eintrag"><span class="muster muster--leicht" aria-hidden="true"></span>{{ t('stufe.mittel_gering') }}</span>
       <span class="eintrag"><span class="muster" aria-hidden="true"></span>{{ t('stufe.ohne') }}</span>
       <details class="lesen">
         {{ lesen_knopf() }}

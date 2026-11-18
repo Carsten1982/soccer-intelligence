@@ -17,31 +17,25 @@ import pytest
 from conftest import REFERENCE_DATABASE_H
 
 from core.config import League
-from core.kpis import Match, classify, compute_match, prepare_league
+from core.kpis import HIGH, MEDIUM, NONE, Match, Signal, Thresholds, classify, compute_match, prepare_league
 from core.seasons import analysed_seasons
-from core.sensitivity import NEG, POS, Limits, evaluate
+from core.sensitivity import MEHR, WENIGER, Limits, evaluate
 from core.simulation import _event, build_cases, default_choice, pct, running_seasons, season_choices
 from core.top import TOP_KPIS
 
-LEVEL = {"keine": 0, "leicht": 1, "stark": 2}
-
-
-# --- Einstufung wie im Dashboard ----------------------------------------------------------------
-
 def test_counting_matches_classify():
-    """Bei symmetrischen Schwellen ±20/±35 zählt die Auswertung genau die Spiele, die das Dashboard als leichte bzw.
-    starke Anomalie einstuft (classify, Regelwerk 2.2; leicht enthält stark)."""
+    """Mit denselben Schwellen zählt die Auswertung genau die Spiele, die das Dashboard als auffällig einstuft
+    (classify, Regelwerk 2.2, seit 0.19 je Richtung eine Schwelle: mehr 20 %, weniger 12,5 %)."""
     rng = np.random.default_rng(1)
-    devs = [int(d) for d in rng.integers(-6000, 6000, 3000)] + [2000, -2000, 2001, -2001, 3500, 3501, -3501, 0]
+    devs = [int(d) for d in rng.integers(-6000, 6000, 3000)] + [2000, -2000, 2001, -2001, 1250, -1250, -1251, 0]
     cases = pd.DataFrame({"league": "L", "season": "S", "gameday": 1, "complete": True, "game": range(len(devs)),
                           "kpi": "kpi02", "dev": devs, "up": 0.0, "down": 0.0})
     r = evaluate(cases, pd.DataFrame({"league": ["L"], "season": ["S"], "gameday": [1]}),
-                 {"kpi02": Limits(Decimal(20), Decimal(-20), Decimal(35), Decimal(-35))})[0]
-    stage = [LEVEL[classify(Decimal(d) / 100)[0]] for d in devs]
-    assert r.light[POS].count == sum(1 for d, s in zip(devs, stage) if s >= 1 and d > 0)
-    assert r.light[NEG].count == sum(1 for d, s in zip(devs, stage) if s >= 1 and d < 0)
-    assert r.strong[POS].count == sum(1 for d, s in zip(devs, stage) if s == 2 and d > 0)
-    assert r.strong[NEG].count == sum(1 for d, s in zip(devs, stage) if s == 2 and d < 0)
+                 {"kpi02": Limits(Decimal(20), Decimal("12.5"))})[0]
+    t = Thresholds(Signal(Decimal(20), HIGH), Signal(Decimal("12.5"), MEDIUM))
+    flags = [classify(Decimal(d) / 100, t)[0] for d in devs]
+    assert r.counts[MEHR].count == sum(1 for d, f in zip(devs, flags) if f != NONE and d > 0)
+    assert r.counts[WENIGER].count == sum(1 for d, f in zip(devs, flags) if f != NONE and d < 0)
 
 
 # --- Wann ist eine Anomalie eingetroffen? -----------------------------------------------------------

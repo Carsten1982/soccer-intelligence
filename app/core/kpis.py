@@ -10,8 +10,8 @@ Grundsätze (Regelwerk, Abschnitte 1, 2 und 9):
   (z. B. 4,5 Ecken) gilt als fehlend; er wird nie abgeschnitten (seit H.1).
   Gerundet wird erst für die Anzeige: **zwei Nachkommastellen** (seit Etappe H, 08.11.2026), kaufmännisch
   (ab 5 weg von null), mit Dezimalarithmetik. So entstehen keine Gleitkomma-Fehler wie round(2.675, 2) = 2.67.
-- Die Anomalie-Einstufung verwendet die auf zwei Stellen gerundete Abweichung und die Schwellen aus
-  app/config/schwellen.toml (Standard ±20 % / ±35 %, Regelwerk 2.2).
+- Die Einstufung verwendet die auf zwei Stellen gerundete Abweichung und die Schwellen aus app/config/schwellen.toml
+  (seit 0.19 je Liga, KPI und Richtung mit Prognosewert hoch/mittel/gering; ohne Schwelle nie auffällig, Regelwerk 2.2).
 
 Tempo (seit H.1): Die Spiele eines Teams und die Referenzspiele werden je Begegnung nur einmal bestimmt und nur
 einmal in eine Liste von Zeilen umgewandelt (rows_of). Alle Werte werden dann aus diesen Listen gelesen.
@@ -51,7 +51,10 @@ OVER_MARK = Fraction(5, 2)   # KPI 03: feste Marke 2,5
 PLACEHOLDER = "–"        # U+2013
 DECIMALS = 2             # Anzeige-Rundung (Regelwerk 2.3, seit 08.11.2026)
 
-NONE, LIGHT, STRONG = "keine", "leicht", "stark"
+NONE = "keine"                                       # nicht auffällig
+HIGH, MEDIUM, LOW = "hoch", "mittel", "gering"      # Prognosewert einer Auffälligkeit (seit 0.19)
+LEVELS = (HIGH, MEDIUM, LOW)
+RANK = {HIGH: 3, MEDIUM: 2, LOW: 1, NONE: 0}
 POSITIVE, NEGATIVE = "positiv", "negativ"
 
 
@@ -100,44 +103,56 @@ def de_abs(value: Decimal | None) -> str:
     return PLACEHOLDER if value is None else f"{abs(value):.{DECIMALS}f}".replace(".", ",")
 
 
-# --- Einstufung (Regelwerk 2.2) ---------------------------------------------------
+# --- Einstufung (Regelwerk 2.2, seit Version 0.19: Auffälligkeit und Prognosewert) --------------------------------
+
+@dataclass(frozen=True)
+class Signal:
+    """Gültige Schwelle einer Kombination Liga × KPI × Richtung mit ihrem Prognosewert (app/config/schwellen.toml).
+
+    Auffällig ist eine Kennzahl, wenn der Betrag der gerundeten Abweichung grösser als die Schwelle ist. Die übrigen
+    Felder sind die Herleitung aus der Sensitivitätsanalyse (Anzeige im Dashboard, Regelwerk 11)."""
+    schwelle: Decimal
+    prognosewert: str                       # HIGH, MEDIUM oder LOW
+    spiele: int | None = None
+    trefferquote: Decimal | None = None
+    vergleichsgruppe: Decimal | None = None
+    mehrwert: Decimal | None = None
+    spanne_links: Decimal | None = None
+    spanne_rechts: Decimal | None = None
+    saisons_positiv: str | None = None      # z. B. "7/7"
+
 
 @dataclass(frozen=True)
 class Thresholds:
-    """Schwellen der Einstufung (Regelwerk 2.2), positiv und negativ getrennt (seit Version 0.13).
-
-    Positiv: x ≤ leicht → keine · ≤ stark → leicht · darüber → stark.
-    Negativ: x ≥ leicht_negativ → keine · ≥ stark_negativ → leicht · darunter → stark.
-    leicht_negativ und stark_negativ sind negative Zahlen; ohne Angabe gelten −leicht und −stark (symmetrisch)."""
-    leicht: Decimal = Decimal("20")
-    stark: Decimal = Decimal("35")
-    leicht_negativ: Decimal | None = None
-    stark_negativ: Decimal | None = None
-
-    def __post_init__(self) -> None:
-        if self.leicht_negativ is None:
-            object.__setattr__(self, "leicht_negativ", -self.leicht)
-        if self.stark_negativ is None:
-            object.__setattr__(self, "stark_negativ", -self.stark)
+    """Schwellen einer Liga für einen KPI: je Richtung höchstens eine (None = in dieser Richtung nie auffällig)."""
+    positiv: Signal | None = None
+    negativ: Signal | None = None
 
 
-STANDARD_THRESHOLDS = Thresholds()
+NO_THRESHOLDS = Thresholds()          # ohne Schwellendatei: nie auffällig
 
 
-def classify(deviation: Decimal | None, thresholds: Thresholds = STANDARD_THRESHOLDS
+def classify(deviation: Decimal | None, thresholds: Thresholds = NO_THRESHOLDS
              ) -> tuple[str | None, str | None]:
-    """(anomalie, richtung) anhand der gerundeten Abweichung; genau auf der Schwelle zählt zur schwächeren Stufe."""
+    """(Einstufung, Richtung) anhand der gerundeten Abweichung.
+
+    Einstufung: NONE (nicht auffällig) oder der Prognosewert HIGH/MEDIUM/LOW der Schwelle der Richtung; genau auf der
+    Schwelle ist nicht auffällig. None, wenn keine Abweichung berechenbar ist."""
     if deviation is None:
         return None, None
-    t = thresholds
-    if deviation > 0:
-        anomaly = NONE if deviation <= t.leicht else LIGHT if deviation <= t.stark else STRONG
-    elif deviation < 0:
-        anomaly = NONE if deviation >= t.leicht_negativ else LIGHT if deviation >= t.stark_negativ else STRONG
-    else:
-        anomaly = NONE
     direction = POSITIVE if deviation > 0 else NEGATIVE if deviation < 0 else None
-    return anomaly, direction
+    signal = thresholds.positiv if deviation > 0 else thresholds.negativ if deviation < 0 else None
+    if signal is not None and abs(deviation) > signal.schwelle:
+        return signal.prognosewert, direction
+    return NONE, direction
+
+
+def signal_of(deviation: Decimal | None, thresholds: Thresholds) -> Signal | None:
+    """Die Schwelle, über der die Abweichung liegt (für die Herleitung im Dashboard), sonst None."""
+    if deviation is None or deviation == 0:
+        return None
+    signal = thresholds.positiv if deviation > 0 else thresholds.negativ
+    return signal if signal is not None and abs(deviation) > signal.schwelle else None
 
 
 def relative_deviation(value: Fraction | None, reference: Fraction | None) -> Fraction | None:
@@ -274,7 +289,7 @@ class KpiResult:
     ueberschrift: str | None = None
     text: str | None = None
     teamabweichung: tuple[Fraction | None, Fraction | None] = (None, None)   # nur KPI 03
-    schwellen: Thresholds = STANDARD_THRESHOLDS
+    schwellen: Thresholds = NO_THRESHOLDS
     prozent: bool = False           # KPI 08: Werte in %
 
     @property
@@ -287,7 +302,12 @@ class KpiResult:
 
     @property
     def anomalie(self) -> str | None:
+        """NONE (nicht auffällig), HIGH/MEDIUM/LOW (auffällig mit Prognosewert) oder None (nicht berechenbar)."""
         return classify(self.abweichung_rund, self.schwellen)[0]
+
+    @property
+    def signal(self) -> Signal | None:
+        return signal_of(self.abweichung_rund, self.schwellen)
 
     @property
     def richtung(self) -> str | None:
@@ -531,7 +551,7 @@ def _vorlaeufig(home: TeamValue, away: TeamValue) -> bool:
 
 def kpi02(prepared: pd.DataFrame, match: Match, matchdays_per_season: int,
           goals: tuple[TeamValue, TeamValue] | None = None, ref: Reference | None = None,
-          thresholds: Thresholds = STANDARD_THRESHOLDS) -> KpiResult:
+          thresholds: Thresholds = NO_THRESHOLDS) -> KpiResult:
     home, away = goals or (team_goals(prepared, match.home, match.season, match.stichtag),
                            team_goals(prepared, match.away, match.season, match.stichtag))
     ref = ref or league_reference(prepared, match, matchdays_per_season, cards=False)
@@ -543,7 +563,7 @@ def kpi02(prepared: pd.DataFrame, match: Match, matchdays_per_season: int,
 
 
 def kpi03(prepared: pd.DataFrame, match: Match, goals: tuple[TeamValue, TeamValue] | None = None,
-          thresholds: Thresholds = STANDARD_THRESHOLDS) -> KpiResult:
+          thresholds: Thresholds = NO_THRESHOLDS) -> KpiResult:
     # dieselben Teamwerte wie KPI 02 (werden von compute_match übergeben)
     home, away = goals or (team_goals(prepared, match.home, match.season, match.stichtag),
                            team_goals(prepared, match.away, match.season, match.stichtag))
@@ -558,7 +578,7 @@ def kpi03(prepared: pd.DataFrame, match: Match, goals: tuple[TeamValue, TeamValu
 
 def kpi04(prepared: pd.DataFrame, match: Match, matchdays_per_season: int,
           cards: tuple[TeamValue, TeamValue] | None = None, ref: Reference | None = None,
-          thresholds: Thresholds = STANDARD_THRESHOLDS) -> KpiResult:
+          thresholds: Thresholds = NO_THRESHOLDS) -> KpiResult:
     home, away = cards or (team_cards(prepared, match.home, match.season, match.stichtag),
                            team_cards(prepared, match.away, match.season, match.stichtag))
     ref = ref or league_reference(prepared, match, matchdays_per_season, cards=True)
@@ -570,7 +590,7 @@ def kpi04(prepared: pd.DataFrame, match: Match, matchdays_per_season: int,
 
 
 def kpi_stat(spec: StatKpi, home: TeamValue, away: TeamValue, ref: Reference,
-             thresholds: Thresholds = STANDARD_THRESHOLDS) -> KpiResult:
+             thresholds: Thresholds = NO_THRESHOLDS) -> KpiResult:
     """KPI 05–09 aus fertigen Teamwerten und Ligareferenz."""
     main = _mean(home, away)
     r = KpiResult(spec.code, home, away, ref, main, relative_deviation(main, ref.wert),
@@ -580,7 +600,7 @@ def kpi_stat(spec: StatKpi, home: TeamValue, away: TeamValue, ref: Reference,
 
 
 def stat_kpi(prepared: pd.DataFrame, match: Match, matchdays_per_season: int, key: str,
-             thresholds: Thresholds = STANDARD_THRESHOLDS) -> KpiResult:
+             thresholds: Thresholds = NO_THRESHOLDS) -> KpiResult:
     """Ein einzelner KPI 05–09 (für Tests und Auswertungen; compute_match rechnet alle auf einmal)."""
     spec = STAT_KPIS[key]
     teams = [team_value(t, rows_of(team_games(prepared, t, match.season, match.stichtag, SAMPLE)), spec.per_game,
@@ -635,7 +655,7 @@ def compute_match(prepared: pd.DataFrame, match: Match, matchdays_per_season: in
     """Alle KPIs einer Begegnung. Die Spiele der Teams und die Referenzspiele werden nur einmal bestimmt.
     references: fertige Ligareferenzen (league_references), sonst werden sie hier berechnet."""
     def th(key: str) -> Thresholds:
-        return thresholds(match.league, key) if thresholds else STANDARD_THRESHOLDS
+        return thresholds(match.league, key) if thresholds else NO_THRESHOLDS
 
     teams = (match.home, match.away)
     rows = {t: rows_of(team_games(prepared, t, match.season, match.stichtag, SAMPLE)) for t in teams}

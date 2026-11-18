@@ -20,7 +20,7 @@
     {% endif %}
   </div>
   <div class="zeile trenn"><span>{{ t('spiel.vergleichswert_marke') if k.vergleich_art == 'marke' else t('spiel.ligaschnitt') }}</span><b>{{ zahl(k.vergleich, k) }}</b></div>
-  <div class="zeile trenn"><span>{{ t('spiel.abweichung') }}</span><b class="{{ 'farbe-' ~ k.richtung if k.stufe in ('stark', 'leicht') else '' }}">{{ prozent(k.abweichung) }}{% if k.abweichung is not none %} · {{ t('stufe.' ~ k.stufe) }}{% endif %}</b></div>
+  <div class="zeile trenn"><span>{{ t('spiel.abweichung') }}</span><b class="{{ 'farbe-' ~ k.richtung if k.stufe in ('hoch', 'mittel', 'gering') else '' }}">{{ prozent(k.abweichung) }}{% if k.abweichung is not none %} · {{ t('stufe.' ~ k.stufe) }}{% endif %}</b></div>
   <button type="button" class="zuklappen" data-zuklappen hidden aria-label="{{ t('spiel.zahlen_detail_zu', name=t('kennzahl.' ~ k.kpi ~ '.name')) }}">{{ t('spiel.zuklappen') }}{{ chevron() }}</button>
 </div>
 {%- endmacro %}
@@ -82,12 +82,12 @@
   </div>
   <div class="karten">
     {% for k in seite.auffaellig %}
-    <div class="karte {{ k.stufe }}">
+    <div class="karte {{ stil(k.stufe) }}">
       <div class="oben">
         <div class="kopf-k">
           <span class="ikon"><svg class="icon" width="22" height="22" aria-hidden="true"><use href="#ic-{{ k.icon }}"/></svg></span>
           <span class="name">{{ t('kennzahl.' ~ k.kpi ~ '.name') }}</span>
-          <span class="chip s-{{ k.stufe }}-{{ k.richtung }}">{{ t('stufe.' ~ k.stufe) }}</span>
+          <span class="chip s-{{ stil(k.stufe) }}-{{ k.richtung }}">{{ t('stufe.' ~ k.stufe) }}</span>
         </div>
         <div class="wertzeile">
           <span class="gross farbe-{{ k.richtung }}">{{ prozent(k.abweichung) }}</span>

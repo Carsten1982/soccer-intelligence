@@ -1,4 +1,4 @@
-"""Schwellenwerte aus app/config/schwellen.toml (KPI-Regelwerk 2.2, seit Etappe H)."""
+"""Schwellen und Prognosewerte aus app/config/schwellen.toml (KPI-Regelwerk 2.2, seit Version 0.19)."""
 
 from decimal import Decimal
 from pathlib import Path
@@ -6,10 +6,11 @@ from pathlib import Path
 import pytest
 
 from core.config import ConfigError
-from core.kpis import STANDARD_THRESHOLDS, Thresholds
+from core.kpis import HIGH, LOW, NO_THRESHOLDS, Signal, Thresholds
 from core.thresholds import describe, load_thresholds
 
 CONFIG = Path(__file__).resolve().parents[1] / "app" / "config" / "schwellen.toml"
+ARCHIVE = CONFIG.parent / "archiv" / "schwellen_2026-11-14.toml"
 LEAGUES = ["Bundesliga", "Premier League", "Serie A", "LaLiga"]
 
 
@@ -19,64 +20,56 @@ def write(tmp_path, text: str) -> Path:
     return p
 
 
-def test_shipped_file_has_standard_and_decided_overrides():
-    """Standard ±20 % / ±35 % bleibt; seit Version 0.13 Abweichungen je KPI (Werte: tests/test_schwellen.py)."""
-    cfg = load_thresholds(CONFIG, LEAGUES)
-    assert cfg.standard == STANDARD_THRESHOLDS == Thresholds(Decimal("20"), Decimal("35"))
-    assert len(cfg.overrides) == 11                           # 7 KPIs + KPI 03 in 4 Ligen
+ENTRY = '[[schwelle]]\nliga = "Bundesliga"\nkpi = "kpi09"\nrichtung = "weniger"\nschwelle = 10\nprognosewert = "hoch"\n'
 
 
-def test_precedence_league_and_kpi_before_kpi_before_league(tmp_path):
-    cfg = load_thresholds(write(tmp_path, """
-[standard]
-leicht = 20
-stark = 35
-[[abweichung]]
-liga = "Serie A"
-leicht = 18
-stark = 30
-[[abweichung]]
-kpi = "kpi05"
-leicht = 12
-stark = 18
-[[abweichung]]
-liga = "Serie A"
-kpi = "kpi05"
-leicht = 10.5
-stark = 16
-"""), LEAGUES)
-    assert cfg.get("Bundesliga", "kpi02") == Thresholds(Decimal(20), Decimal(35))
-    assert cfg.get("Serie A", "kpi02") == Thresholds(Decimal(18), Decimal(30))
-    assert cfg.get("Bundesliga", "kpi05") == Thresholds(Decimal(12), Decimal(18))
-    assert cfg.get("Serie A", "kpi05") == Thresholds(Decimal("10.5"), Decimal(16))     # 10.5 bleibt genau 10,5
-    rows = describe(cfg)
-    assert rows[0]["Gilt für"] == "Standard (alle übrigen)"
-    assert rows[1] == {"Gilt für": "Serie A", "Leicht positiv": "+18,00 %", "Stark positiv": "+30,00 %",
-                       "Leicht negativ": "−18,00 %", "Stark negativ": "−30,00 %"}
-    assert rows[3] == {"Gilt für": "KPI 05 · Serie A", "Leicht positiv": "+10,50 %", "Stark positiv": "+16,00 %",
-                       "Leicht negativ": "−10,50 %", "Stark negativ": "−16,00 %"}
+def test_lookup_per_league_kpi_direction(tmp_path):
+    cfg = load_thresholds(write(tmp_path, '[grundlage]\nsaisons = "2019/2020-2025/2026"\nfreigabe = "2026-11-18"\n'
+                                + ENTRY + ENTRY.replace('"weniger"', '"mehr"').replace("10", "15.5")
+                                .replace('"hoch"', '"gering"') + 'spiele = 86\ntrefferquote = 65.12\n'), LEAGUES)
+    t = cfg.get("Bundesliga", "kpi09")
+    assert t.negativ == Signal(Decimal(10), HIGH)
+    assert t.positiv.schwelle == Decimal("15.5") and t.positiv.prognosewert == LOW and t.positiv.spiele == 86
+    assert t.positiv.trefferquote == Decimal("65.12")
+    assert cfg.get("Bundesliga", "kpi02") == NO_THRESHOLDS == Thresholds()          # ohne Eintrag: nie auffällig
+    assert cfg.get("Serie A", "kpi09") == NO_THRESHOLDS
+    assert (cfg.saisons, cfg.freigabe) == ("2019/2020-2025/2026", "2026-11-18")
+    rows = describe(cfg, LEAGUES)
+    assert [r["Richtung"] for r in rows] == ["mehr", "weniger"]
+    assert rows[0]["Schwelle"] == "+15,50 %" and rows[1]["Schwelle"] == "−10,00 %" and rows[1]["Prognosewert"] == "hoch"
 
 
 @pytest.mark.parametrize("text, message", [
-    ("", "[standard] fehlt"),
-    ("[standard]\nleicht = 20\n", "'stark' fehlt"),
-    ("[standard]\nleicht = 35\nstark = 20\n", "0 < leicht < stark"),
-    ("[standard]\nleicht = 0\nstark = 20\n", "0 < leicht < stark"),
-    ("[standard]\nleicht = true\nstark = 35\n", "Zahl erwartet"),
-    ("[standard]\nleicht = 20\nstark = 35\n[[abweichung]]\nleicht = 10\nstark = 20\n", "'liga' oder 'kpi'"),
-    ("[standard]\nleicht = 20\nstark = 35\n[[abweichung]]\nkpi = \"kpi01\"\nleicht = 10\nstark = 20\n",
-     "unbekannter KPI"),
-    ("[standard]\nleicht = 20\nstark = 35\n[[abweichung]]\nliga = \"Ligue 1\"\nleicht = 10\nstark = 20\n",
-     "unbekannte Liga"),
-    ("[standard]\nleicht = 20\nstark = 35\n[[abweichung]]\nkpi = \"kpi05\"\nleicht = 10\nstark = 20\n"
-     "[[abweichung]]\nkpi = \"kpi05\"\nleicht = 11\nstark = 21\n", "doppelt"),
-    ("[standard\n", "ungültig"),
+    ("[standard]\nleicht = 20\nstark = 35\n", "altes Format"),
+    ('[[schwelle]]\nkpi = "kpi09"\nrichtung = "mehr"\nschwelle = 10\nprognosewert = "hoch"\n', "'liga' fehlt"),
+    (ENTRY.replace('richtung = "weniger"\n', ""), "'richtung' fehlt"),
+    (ENTRY.replace("schwelle = 10\n", ""), "'schwelle' fehlt"),
+    (ENTRY.replace('prognosewert = "hoch"\n', ""), "'prognosewert' fehlt"),
+    (ENTRY.replace('"weniger"', '"negativ"'), "Richtung 'negativ' unbekannt"),
+    (ENTRY.replace('"hoch"', '"stark"'), "Prognosewert 'stark' unbekannt"),
+    (ENTRY.replace("schwelle = 10", "schwelle = 0"), "grösser als 0"),
+    (ENTRY.replace("schwelle = 10", "schwelle = true"), "Zahl erwartet"),
+    (ENTRY.replace('"kpi09"', '"kpi01"'), "unbekannter KPI"),
+    (ENTRY.replace('"Bundesliga"', '"Ligue 1"'), "unbekannte Liga"),
+    (ENTRY + ENTRY, "doppelt"),
+    ("[[schwelle\n", "ungültig"),
 ])
 def test_invalid_files_give_clear_message(tmp_path, text, message):
     with pytest.raises(ConfigError, match=message.replace("[", r"\[").replace("(", r"\(")):
         load_thresholds(write(tmp_path, text), LEAGUES)
 
 
+def test_empty_file_means_nothing_is_flagged(tmp_path):
+    cfg = load_thresholds(write(tmp_path, ""), LEAGUES)
+    assert cfg.entries() == [] and cfg.get("Bundesliga", "kpi02") == NO_THRESHOLDS and describe(cfg) == []
+
+
 def test_missing_file(tmp_path):
     with pytest.raises(ConfigError, match="fehlt"):
         load_thresholds(tmp_path / "gibt_es_nicht.toml")
+
+
+def test_old_file_is_archived_and_rejected():
+    assert ARCHIVE.exists()
+    with pytest.raises(ConfigError, match="altes Format"):
+        load_thresholds(ARCHIVE, LEAGUES)

@@ -7,7 +7,8 @@ Einstufung je Partie (Übergabe 6.4: Status > Stufe > Normal, dazu „gespielt�
   status          verschoben, abgesagt, abgebrochen, ausgesetzt, gewertet (F5)
   gespielt        Ergebnis in der Datenbank oder Anstoss vorbei („Ergebnis folgt“)
   nicht_gewertet  alle Kennzahlen vorläufig oder keine Werte (F2: „Nicht gewertet“ = „vorläufig“)
-  stark / leicht  mindestens eine nicht vorläufige Kennzahl mit starker bzw. leichter Abweichung
+  hoch / mittel / gering  mindestens eine nicht vorläufige Kennzahl ist auffällig; die Art ist der höchste
+                  Prognosewert (seit 0.19, Regelwerk 2.2)
   ohne            sonst
 """
 
@@ -17,15 +18,16 @@ from datetime import date
 
 from core import anzeige as A
 from core.fixtures import HINT_CATCHUP, HINT_EARLY, INACTIVE_STATUS, TERMIN_PROVISIONAL, TERMIN_TIME_OPEN
-from core.kpis import LIGHT, STRONG, MatchKpis
+from core.kpis import LEVELS, RANK, MatchKpis
 from core.top import TOP_KPIS
 
 from . import einstellungen as W
 from .daten import Bestand, Daten, Zeitpunkt
 
-# Sortierung wie im Entwurf 3d (Skript renderVals): Stark → Leicht → ohne Auffälligkeit → alles andere (nicht
-# gewertet, Status, gespielt) in einer Gruppe; innerhalb Stark/Leicht nach Betrag, sonst nach Anstoss.
-REIHENFOLGE = {"stark": 0, "leicht": 1, "ohne": 2, "nicht_gewertet": 3, "status": 3, "gespielt": 3}
+# Sortierung (Entwurf 3d, seit 0.19 nach Prognosewert): hoch → mittel → gering → ohne Auffälligkeit → alles andere
+# (nicht gewertet, Status, gespielt) in einer Gruppe; innerhalb der Stufen nach Betrag, sonst nach Anstoss.
+REIHENFOLGE = {"hoch": 0, "mittel": 1, "gering": 2, "ohne": 3, "nicht_gewertet": 4, "status": 4, "gespielt": 4}
+AUFFAELLIG = LEVELS                       # Arten mit Auffälligkeit (Prognosewert hoch / mittel / gering)
 SONDERSPIEL = {HINT_CATCHUP: "nachholspiel", HINT_EARLY: "vorgezogen"}
 TERMIN = {TERMIN_TIME_OPEN: "zeit_offen", TERMIN_PROVISIONAL: "vorlaeufig"}
 PAUSE = {A.WINTER: "winterpause", A.BREAK: "spielpause", A.SUMMER: "sommerpause", A.SEASON_START: "saisonstart"}
@@ -48,11 +50,10 @@ def einstufen(row, kpis: MatchKpis | None, jetzt, ergebnisse: dict) -> dict:
             gewertet.append((key, r))
     if not gewertet:
         return {**out, "art": "nicht_gewertet"}
-    for stufe, art in ((STRONG, "stark"), (LIGHT, "leicht")):
-        treffer = [(k, r) for k, r in gewertet if r.anomalie == stufe]
-        if treffer:
-            k, r = max(treffer, key=lambda kr: abs(kr[1].abweichung_rund))
-            return {**out, "art": art, "staerkste": {"kpi": k, "abweichung": float(r.abweichung_rund)}}
+    treffer = [(k, r) for k, r in gewertet if r.anomalie in LEVELS]
+    if treffer:                                # höchster Prognosewert, dann grösste Abweichung
+        k, r = max(treffer, key=lambda kr: (RANK[kr[1].anomalie], abs(kr[1].abweichung_rund)))
+        return {**out, "art": r.anomalie, "staerkste": {"kpi": k, "abweichung": float(r.abweichung_rund)}}
     k, r = max(gewertet, key=lambda kr: abs(kr[1].abweichung_rund))
     return {**out, "staerkste": {"kpi": k, "abweichung": float(r.abweichung_rund)}}
 
@@ -78,13 +79,13 @@ def spiel_eintrag(row, kpis: MatchKpis | None, jetzt, ergebnisse: dict, team_ids
         "sonderspiel": SONDERSPIEL.get(row.hinweis) if row.status not in INACTIVE_STATUS else None,
         "link": api_id is not None and stufe["art"] != "status",          # F8: verschobene nicht verlinkt
         "_sort": (REIHENFOLGE[stufe["art"]],
-                  -abs(stufe["staerkste"]["abweichung"]) if stufe["art"] in ("stark", "leicht") else 0,
+                  -abs(stufe["staerkste"]["abweichung"]) if stufe["art"] in AUFFAELLIG else 0,
                   row.anstoss_zeit, int(row.reihenfolge)),
     }
 
 
 def sortieren(spiele: list[dict]) -> list[dict]:
-    """Konzept 5.4 (seit 0.18 nach Entwurf 3d): Stark → Leicht → Ohne → übrige; Nachhol- und vorgezogene Spiele
+    """Konzept 5.4 (seit 0.19): hoch → mittel → gering → ohne → übrige; Nachhol- und vorgezogene Spiele
     werden wie im Entwurf mitsortiert (bis 0.17: als Gruppe am Ende, Annahme A2)."""
     return sorted(spiele, key=lambda s: s["_sort"])
 
@@ -177,8 +178,8 @@ def spieltag_daten(daten: Daten, web: W.WebLiga, zp: Zeitpunkt) -> dict:
             s.pop("_sort")
         tab["spiele"] = spiele
         tab["partien"] = sum(1 for s in spiele if not s["sonderspiel"])
-        tab["auffaellig"] = sum(1 for s in spiele if s["art"] in ("stark", "leicht"))
-        tab["bewertet"] = sum(1 for s in spiele if s["art"] in ("stark", "leicht", "ohne"))
+        tab["auffaellig"] = sum(1 for s in spiele if s["art"] in AUFFAELLIG)
+        tab["bewertet"] = sum(1 for s in spiele if s["art"] in (*AUFFAELLIG, "ohne"))
         tab["sonderspiele"] = {"nachholspiel": sum(1 for s in spiele if s["sonderspiel"] == "nachholspiel"),
                                "vorgezogen": sum(1 for s in spiele if s["sonderspiel"] == "vorgezogen")}
     seite["tabs"] = tabs

@@ -192,21 +192,26 @@ def _fixtures_section() -> None:
 def _thresholds_section() -> None:
     """Gültige Schwellenwerte (Briefing 6.3, Etappe H): nur Anzeige, Änderung bewusst über die Datei."""
     from core.thresholds import describe
-    st.markdown("#### Gültige Schwellenwerte")
-    st.caption("Aus `app/config/schwellen.toml` · eingestuft wird die auf zwei Nachkommastellen gerundete "
-               "Abweichung: Anomalie, wenn sie über der positiven bzw. unter der negativen Schwelle liegt (genau auf "
-               "der Schwelle zählt zur schwächeren Stufe) · KPI 03 je Liga · Änderungen nur über die Datei (Neubau, "
-               "Git, CHANGELOG), nicht hier.")
-    rows = describe(get_thresholds())
+    config = get_thresholds()
+    st.markdown("#### Gültige Schwellen und Prognosewerte")
+    st.caption(f"Aus `app/config/schwellen.toml` (berechnet mit den Saisons {config.saisons or '–'}, Freigabe "
+               f"{config.freigabe or '–'}) · je Liga, KPI und Richtung höchstens eine Schwelle · auffällig, wenn die auf "
+               "zwei Nachkommastellen gerundete Abweichung über der Schwelle liegt (genau auf der Schwelle: nicht "
+               "auffällig) · Kombinationen, die hier fehlen, werden nie ausgezeichnet · Herleitung in der "
+               "Sensitivitätsanalyse · Änderungen nur einmal pro Saison über die Datei (Freigabe, GitHub), nicht hier.")
+    rows = describe(config, [lg.name for lg in get_active_leagues()])
+    if not rows:
+        st.info("Keine gültigen Schwellen – keine Kennzahl wird ausgezeichnet.")
+        return
     st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch", height=(len(rows) + 1) * 35 + 3)   # ohne Scrollen
 
 
 def _frequency_section() -> None:
     _thresholds_section()
     st.markdown("#### Häufigkeit je Liga und KPI")
-    st.caption("Wie oft zeigen KPI 02–09 keine, leichte oder starke Anomalien? Grundlage: alle Spiele der letzten "
-               "abgeschlossenen Saison, jeweils so berechnet, als wären sie noch nicht gespielt. Dient der Überprüfung "
-               "der Schwellenwerte je Liga und KPI.")
+    st.caption("Wie oft sind KPI 02–09 auffällig, und mit welchem Prognosewert? Grundlage: alle Spiele der letzten "
+               "abgeschlossenen Saison, jeweils so berechnet, als wären sie noch nicht gespielt; vorläufige Werte "
+               "(z. B. Aufsteiger) sind nie auffällig und separat gezählt.")
     db = get_database()
     if db.has_errors:
         st.info("Wird angezeigt, sobald die Datenbank fehlerfrei ist.")
@@ -225,7 +230,7 @@ def render() -> None:
     ui.header()
     st.markdown("### Datenqualität")
     st.caption("Internes Kontrollblatt. Daten werden hier nur angezeigt, nicht bearbeitet.")
-    tab_db, tab_fx, tab_freq = st.tabs(["Datenbank", "Spielplan und Spieltage", "Häufigkeit der Anomalien"])
+    tab_db, tab_fx, tab_freq = st.tabs(["Datenbank", "Spielplan und Spieltage", "Schwellen und Häufigkeit"])
     with tab_db:
         _database_section()
     with tab_fx:

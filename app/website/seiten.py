@@ -53,6 +53,15 @@ def termin(s: dict) -> str:
     return f"{F.tag(d)} · {s['anstoss']}" if s.get("anstoss") else F.tag(d)
 
 
+# Gestaltung bis zum Designentwurf der Website (seit 0.19): Prognosewert hoch wie bisher „stark“ (dunkel),
+# mittel und gering wie bisher „leicht“ (hell). Die Wörter zeigen den Prognosewert.
+STIL = {"hoch": "stark", "mittel": "leicht", "gering": "leicht"}
+
+
+def stil(stufe: str | None) -> str:
+    return STIL.get(stufe or "", "")
+
+
 def balken_daten(k: dict) -> dict:
     """Balken nach Übergabe 4.2: Länge = Betrag/100 × 50 % der Breite, höchstens 50 %; über 100 % gekappt mit
     gestricheltem Streifen. Farbe: dunkel = stark, hell = leicht, grau = normal, schraffiert = nicht gewertet."""
@@ -62,8 +71,8 @@ def balken_daten(k: dict) -> dict:
     betrag = abs(wert)
     richtung = "hoch" if wert >= 0 else "tief"
     stufe = k.get("stufe")
-    if stufe in ("stark", "leicht"):
-        klasse = f"f-{stufe}-{richtung}"
+    if stufe in STIL:
+        klasse = f"f-{STIL[stufe]}-{richtung}"
     elif stufe == "nicht_gewertet":
         klasse = "f-schraffiert"
     else:
@@ -87,7 +96,7 @@ def _env() -> Environment:
                       undefined=StrictUndefined, trim_blocks=True, lstrip_blocks=True)
     env.globals.update(
         t=t, tn=tn, termin=termin, standard_liga=W.STANDARD_LIGA, prozent=F.prozent, zahl=zahl,
-        balken_daten=balken_daten, aufteilung=aufteilung, ligen=W.LIGEN,
+        balken_daten=balken_daten, aufteilung=aufteilung, ligen=W.LIGEN, stil=stil,
         ergebnis=lambda e: F.ergebnis(*e),
         zeitraum=lambda von, bis: F.zeitraum(date.fromisoformat(von), date.fromisoformat(bis)),
         datum_kurz=lambda iso: F.datum_kurz(date.fromisoformat(iso)) if iso else "",

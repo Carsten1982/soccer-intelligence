@@ -16,7 +16,7 @@ from conftest import REAL_DATABASE, REAL_FIXTURES
 from test_anzeige import game, plan, real_plan, rnd
 
 from core import anzeige as A
-from core.kpis import LIGHT, NONE, STRONG
+from core.kpis import HIGH, MEDIUM, NONE
 from website import einstellungen as W
 from website import format as F
 from website import seiten, spiel, spieltag, start, vorschau
@@ -43,7 +43,7 @@ KPI_KEYS = ("kpi02", "kpi03", "kpi04", "kpi05", "kpi06", "kpi07", "kpi08", "kpi0
 
 
 def match(form_home=None, form_away=None, **werte):
-    """MatchKpis-Ersatz: alle 8 Kennzahlen „ohne“, einzelne überschreibbar (kpi03=kpi(STRONG, 44))."""
+    """MatchKpis-Ersatz: alle 8 Kennzahlen „ohne“, einzelne überschreibbar (kpi03=kpi(HIGH, 44))."""
     return SimpleNamespace(**{k: werte.get(k, kpi()) for k in KPI_KEYS},
                            form_home=None if form_home is None else SimpleNamespace(form=list(form_home)),
                            form_away=None if form_away is None else SimpleNamespace(form=list(form_away)))
@@ -118,16 +118,16 @@ def _row(**kw):
 
 
 @pytest.mark.parametrize("kw, kpis, erg, art", [
-    ({"status": "verschoben"}, match(kpi03=kpi(STRONG, 50)), {}, "status"),
-    ({}, match(kpi03=kpi(STRONG, 50)), {(S, "A", "B"): (2, 1)}, "gespielt"),          # Ergebnis vor Stufe
-    ({}, match(**{k: kpi(STRONG, 50, vorl=True) for k in ("kpi02", "kpi03", "kpi04", "kpi05", "kpi06", "kpi07",
+    ({"status": "verschoben"}, match(kpi03=kpi(HIGH, 50)), {}, "status"),
+    ({}, match(kpi03=kpi(HIGH, 50)), {(S, "A", "B"): (2, 1)}, "gespielt"),          # Ergebnis vor Stufe
+    ({}, match(**{k: kpi(HIGH, 50, vorl=True) for k in ("kpi02", "kpi03", "kpi04", "kpi05", "kpi06", "kpi07",
                                                             "kpi08", "kpi09")}), {}, "nicht_gewertet"),
     ({}, None, {}, "nicht_gewertet"),
     ({}, match(**{k: kpi(abw=None) for k in ("kpi02", "kpi03", "kpi04", "kpi05", "kpi06", "kpi07", "kpi08",
                                               "kpi09")}), {}, "nicht_gewertet"),  # Aufsteiger ohne Werte
-    ({}, match(kpi03=kpi(STRONG, 44), kpi05=kpi(LIGHT, 60)), {}, "stark"),          # stark vor leicht
-    ({}, match(kpi05=kpi(LIGHT, -18)), {}, "leicht"),
-    ({}, match(kpi03=kpi(STRONG, 44, vorl=True), kpi05=kpi(LIGHT, 18)), {}, "leicht"),  # vorläufig zählt nicht
+    ({}, match(kpi03=kpi(HIGH, 44), kpi05=kpi(MEDIUM, 60)), {}, "hoch"),          # stark vor leicht
+    ({}, match(kpi05=kpi(MEDIUM, -18)), {}, "mittel"),
+    ({}, match(kpi03=kpi(HIGH, 44, vorl=True), kpi05=kpi(MEDIUM, 18)), {}, "mittel"),  # vorläufig zählt nicht
     ({}, match(), {}, "ohne"),
 ])
 def test_w2_classification(kw, kpis, erg, art):
@@ -139,7 +139,7 @@ def test_w2_kickoff_passed_without_result_and_strongest():
     row = _row()
     assert spieltag.einstufen(row, match(), datetime(2026, 11, 21, 15, 30), {}) == \
         {"art": "gespielt", "status": None, "ergebnis": None, "staerkste": None}            # „Ergebnis folgt“
-    r = spieltag.einstufen(row, match(kpi03=kpi(STRONG, 44), kpi06=kpi(STRONG, -52)), datetime(2026, 11, 20), {})
+    r = spieltag.einstufen(row, match(kpi03=kpi(HIGH, 44), kpi06=kpi(HIGH, -52)), datetime(2026, 11, 20), {})
     assert r["staerkste"] == {"kpi": "kpi06", "abweichung": -52.0}
 
 
@@ -149,17 +149,17 @@ def test_w3_w4_sorting_counting_catchup_mixed_in():
               game(10, date(2026, 11, 22), "15:30", "I", "J", status="verschoben"),
               game(10, date(2026, 11, 22), "17:30", "K", "L"), game(10, date(2026, 11, 22), "19:30", "M", "N"),
               game(1, date(2026, 11, 22), "20:30", "O", "P", hint="Nachholspiel"))
-    kpis = {"C": match(kpi05=kpi(LIGHT, 18)), "E": match(kpi03=kpi(STRONG, 41)), "G": match(kpi03=kpi(STRONG, -60)),
+    kpis = {"C": match(kpi05=kpi(MEDIUM, 18)), "E": match(kpi03=kpi(HIGH, 41)), "G": match(kpi03=kpi(HIGH, -60)),
             "K": match(**{k: kpi(vorl=True) for k in ("kpi02", "kpi03", "kpi04", "kpi05", "kpi06", "kpi07", "kpi08",
                                                       "kpi09")}),
-            "O": match(kpi02=kpi(LIGHT, 22))}
+            "O": match(kpi02=kpi(MEDIUM, 22))}
     s = spieltag.spieltag_daten(FakeDaten({"Bundesliga": fx}, kpis, {(S, "A", "B"): (2, 1)}), BL,
                                 zp("2026-11-21T10:00"))
     tab = s["tabs"][0]
     # Seit 0.18 nach Entwurf 3d: Nachholspiel mitsortiert (O leicht vor C leicht: 22 > 18); nicht gewertet, Status
     # und gespielt in einer Gruppe nach Anstoss (A Fr 20:30, I So 15:30, K So 17:30)
     assert [(x["heim"], x["art"]) for x in tab["spiele"]] == [
-        ("G", "stark"), ("E", "stark"), ("O", "leicht"), ("C", "leicht"), ("M", "ohne"), ("A", "gespielt"),
+        ("G", "hoch"), ("E", "hoch"), ("O", "mittel"), ("C", "mittel"), ("M", "ohne"), ("A", "gespielt"),
         ("I", "status"), ("K", "nicht_gewertet")]
     assert (tab["partien"], tab["auffaellig"], tab["sonderspiele"]) == (7, 4, {"nachholspiel": 1, "vorgezogen": 0})
     assert tab["spiele"][5]["ergebnis"] == [2, 1] and tab["spiele"][2]["sonderspiel"] == "nachholspiel"
@@ -283,7 +283,7 @@ def test_w10_every_template_key_exists_and_eszett():
     keys = set()
     for vorlage in W.VORLAGEN.glob("*.html"):
         keys |= set(re.findall(r"\bt\('([a-z_.]+)'\s*[,)]", vorlage.read_text(encoding="utf-8")))   # feste Schlüssel
-    keys |= {f"chip.{s}" for s in ("verschoben", "abgesagt", "abgebrochen", "ausgesetzt", "gewertet", "stark", "leicht",
+    keys |= {f"chip.{s}" for s in ("verschoben", "abgesagt", "abgebrochen", "ausgesetzt", "gewertet", "hoch", "mittel",
                                    "nachholspiel", "vorgezogen", "nicht_gewertet", "ergebnis_folgt")}
     keys |= {f"pause.{a}.{f}" for a in ("spielpause", "winterpause", "sommerpause", "saisonstart", "unbekannt", "keine")
              for f in ("zeile", "titel", "text")}
@@ -402,12 +402,12 @@ def partien():
               game(1, date(2026, 11, 22), "17:30", "G", "H", hint="Nachholspiel"),    # 104 normal, Nachholspiel
               game(10, date(2026, 11, 20), "20:30", "I", "J"))                    # 105 gespielt 2 : 1
     fx["api_id"] = [101, 102, 103, 104, 105]
-    kpis = {"A": match(kpi03=kpi(STRONG, 44, wert=3.4, heim=3.2, gast=3.6, ref=None),
-                       kpi04=kpi(LIGHT, -22, wert=3.6, heim=1.4, gast=2.2, ref=4.62),
+    kpis = {"A": match(kpi03=kpi(HIGH, 44, wert=3.4, heim=3.2, gast=3.6, ref=None),
+                       kpi04=kpi(MEDIUM, -22, wert=3.6, heim=1.4, gast=2.2, ref=4.62),
                        kpi08=kpi(NONE, -8, wert=50, heim=40, gast=60, ref=54.35, prozent=True),
-                       kpi05=kpi(STRONG, 70, vorl=True)),
+                       kpi05=kpi(HIGH, 70, vorl=True)),
             "C": match(**{k: kpi(abw=None, wert=None, heim=None, gast=None, vorl=True) for k in KPI_KEYS}),
-            "E": match(kpi03=kpi(STRONG, 99)),
+            "E": match(kpi03=kpi(HIGH, 99)),
             "G": match(form_home="SUN-S", form_away="NN---")}
     return FakeDaten({"Bundesliga": fx}, kpis, {(S, "I", "J"): (2, 1)})
 
@@ -417,8 +417,8 @@ def test_w14_values_q1_q2_q4(partien):
     assert (s["seite"], s["id"], s["liga"], s["spieltag"], s["heim"], s["gast"]) == ("spiel", 101, "bundesliga", 10,
                                                                                       "A", "B")
     assert s["zustand"] == "offen" and s["bewertung"] == "auffaellig" and s["anstoss"] == "15:30"
-    assert [(k["kpi"], k["stufe"], k["richtung"]) for k in s["auffaellig"]] == [("kpi03", "stark", "hoch"),
-                                                                               ("kpi04", "leicht", "tief")]
+    assert [(k["kpi"], k["stufe"], k["richtung"]) for k in s["auffaellig"]] == [("kpi03", "hoch", "hoch"),
+                                                                               ("kpi04", "mittel", "tief")]
     k03, k04 = s["auffaellig"]
     assert (k03["erwartung"], k03["vergleich"], k03["vergleich_art"], k03["summe"]) == (3.4, 2.5, "marke", False)  # Q2
     assert (k04["erwartung"], k04["heim"], k04["gast"], k04["vergleich"], k04["summe"]) == (3.6, 1.4, 2.2, 4.62, True)  # Q1
@@ -499,9 +499,9 @@ def test_w14_escaped_and_labels():
 
 
 def test_w14_bar_and_number_helpers():
-    assert seiten.balken_daten({"abweichung": 44.0, "stufe": "stark"}) == \
+    assert seiten.balken_daten({"abweichung": 44.0, "stufe": "hoch"}) == \
         {"breite": 22, "richtung": "hoch", "klasse": "f-stark-hoch", "kappe": False}
-    assert seiten.balken_daten({"abweichung": -130.0, "stufe": "leicht"}) == \
+    assert seiten.balken_daten({"abweichung": -130.0, "stufe": "mittel"}) == \
         {"breite": 50, "richtung": "tief", "klasse": "f-leicht-tief", "kappe": True}           # gekappt
     assert seiten.balken_daten({"abweichung": 5.0, "stufe": "normal"})["klasse"] == "f-normal"
     assert seiten.balken_daten({"abweichung": None, "stufe": "nicht_gewertet"})["breite"] == 0
@@ -521,10 +521,10 @@ def _start_daten(**kw):
               game(13, date(2026, 11, 22), "18:30", "M", "N", status="verschoben"),
               game(13, date(2026, 11, 22), "21:00", "O", "P"))
     ll["api_id"] = [301, 302, 303]
-    kpis = {"A": match(kpi03=kpi(STRONG, 44)), "C": match(kpi05=kpi(LIGHT, -30)), "E": match(kpi02=kpi(LIGHT, 18)),
-            "G": match(kpi04=kpi(STRONG, -60, vorl=True), kpi09=kpi(LIGHT, 25)),
-            "K": match(kpi08=kpi(STRONG, 50, prozent=True)), "M": match(kpi03=kpi(STRONG, 99)),
-            "O": match(kpi06=kpi(LIGHT, 18))}
+    kpis = {"A": match(kpi03=kpi(HIGH, 44)), "C": match(kpi05=kpi(MEDIUM, -30)), "E": match(kpi02=kpi(MEDIUM, 18)),
+            "G": match(kpi04=kpi(HIGH, -60, vorl=True), kpi09=kpi(MEDIUM, 25)),
+            "K": match(kpi08=kpi(HIGH, 50, prozent=True)), "M": match(kpi03=kpi(HIGH, 99)),
+            "O": match(kpi06=kpi(MEDIUM, 18))}
     return FakeDaten({"Bundesliga": bl, "LaLiga": ll}, kpis, **kw)
 
 
@@ -532,9 +532,10 @@ def test_w15_ranking_like_dashboard():
     s = start.start_daten(_start_daten(), zp("2026-11-16T10:00"))
     assert s["zustand"] == "liste" and s["pause"] is None
     assert [(r["rang"], r["heim"], r["kpi"], r["stufe"], r["richtung"]) for r in s["ranking"]] == [
-        (1, "K", "kpi08", "stark", "hoch"), (2, "A", "kpi03", "stark", "hoch"), (3, "C", "kpi05", "leicht", "tief"),
-        (4, "G", "kpi09", "leicht", "hoch")]          # verschoben und vorläufig nie; höchstens 4, einer je Spiel
-    assert [r["id"] for r in s["ranking"]] == [301, 201, 202, 204] and s["ranking"][0]["liga"] == "la-liga"
+        (1, "K", "kpi08", "hoch", "hoch"), (2, "A", "kpi03", "hoch", "hoch"), (3, "C", "kpi05", "mittel", "tief"),
+        (4, "O", "kpi06", "mittel", "hoch")]          # verschoben und vorläufig nie; höchstens 4, einer je Spiel;
+    # Liga-Mix (seit 0.19): höchstens zwei je Liga – G (Bundesliga, dritter) weicht O (La Liga) trotz grösserer Abweichung
+    assert [r["id"] for r in s["ranking"]] == [301, 201, 202, 303] and s["ranking"][0]["liga"] == "la-liga"
     html = seiten.start_html(s, seiten.Kontext())
     assert html.count('class="rang-zeile"') == 4 and 'href="/vorschau/spiel/301"' in html
     assert "La Liga · Spieltag 13" in html and "Bundesliga · Spieltag 10" in html and "+50,00 %" in html

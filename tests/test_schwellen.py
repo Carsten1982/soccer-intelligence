@@ -1,11 +1,10 @@
-"""Version 0.13: neue Schwellen, positiv und negativ getrennt, KPI 03 je Liga (Entscheidung Carsten 14.11.2026).
+"""Version 0.19: Schwellen je Liga, KPI und Richtung mit Prognosewert (Spezifikation und Freigabe Carsten 18.11.2026).
 
-1. Die ausgelieferte schwellen.toml enthält genau die festgelegten Werte (unabhängig mit tomllib gelesen).
-2. Einstufung mit getrennten Schwellen, Grenzfälle (genau auf der Schwelle = schwächere Stufe).
-3. Dateiformat: leicht/stark (gleich für beide Richtungen) oder vier Felder; klare Fehlermeldungen.
-4. Dashboard-Werte mit den gültigen Schwellen = unabhängige Gegenrechnung (tests/gegenrechnung.py, grade_split)
-   für alle Spiele der letzten fünf Spieltage 2025/26 in allen vier Ligen.
-5. Die bestätigten Testfälle (docs/tests) rechnen weiter mit den Standardschwellen ±20/±35 und bleiben gültig.
+1. Die ausgelieferte schwellen.toml enthält genau die freigegebenen 23 Schwellen (unabhängig mit tomllib gelesen).
+2. Einstufung an den Grenzen (P1–P3): genau auf der Schwelle nicht auffällig, ohne Schwelle nie, vorläufig nie.
+3. Dashboard-Werte mit den gültigen Schwellen = unabhängige Gegenrechnung (tests/gegenrechnung.py, grade_signal).
+4. Echte Daten (P21, P22): der Schwellenvorschlag der Sensitivitätsanalyse ergibt genau die ausgelieferte Datei.
+5. Die bestätigten KPI-Testfälle (docs/tests) prüfen Werte und Texte weiter mit der Schwelle 20 % (test_kpis.LEGACY).
 """
 
 from __future__ import annotations
@@ -15,118 +14,82 @@ from decimal import Decimal
 
 import gegenrechnung as G
 import pytest
-from conftest import LEAGUE_TEAMS, REFERENCE_DATABASE_2018
+from conftest import LEAGUE_TEAMS, REAL_DATABASE, REFERENCE_DATABASE_2018
+from test_thresholds import CONFIG, LEAGUES
 
-from core.config import ConfigError
-from core.kpis import KPI_KEYS, LIGHT, NONE, STANDARD_THRESHOLDS, STRONG, Match, Thresholds, classify, \
-    compute_match, prepare_league
+from core.config import League, load_leagues
+from core.kpis import HIGH, KPI_KEYS, LOW, MEDIUM, NONE, Match, Signal, Thresholds, classify, compute_match, \
+    prepare_league
 from core.loader import load_database
-from core.thresholds import describe, load_thresholds
-from test_thresholds import CONFIG, LEAGUES, write
+from core.thresholds import load_thresholds
 
 D = Decimal
 
-# Festlegung Carsten 14.11.2026: (leicht positiv, stark positiv, leicht negativ, stark negativ)
-DECIDED = {
-    "kpi02": (20, 30, -15, -25), "kpi04": (15, 35, -20, -30), "kpi05": (15, 20, -10, -15),
-    "kpi06": (15, 25, -20, -30), "kpi07": (25, 30, -20, -25), "kpi08": (20, 25, -30, -35), "kpi09": (15, 20, -10, -15),
+# Freigegeben am 18.11.2026 (Spezifikation, Abschnitt 3.1): (Liga, KPI, Richtung) -> (Schwelle, Prognosewert)
+APPROVED = {
+    ("Bundesliga", "kpi04", "mehr"): (10, LOW), ("Bundesliga", "kpi06", "weniger"): (10, MEDIUM),
+    ("Bundesliga", "kpi08", "weniger"): (35, HIGH), ("Bundesliga", "kpi09", "mehr"): (15, HIGH),
+    ("Bundesliga", "kpi09", "weniger"): (10, HIGH),
+    ("Premier League", "kpi02", "weniger"): (10, MEDIUM), ("Premier League", "kpi03", "mehr"): (35, HIGH),
+    ("Premier League", "kpi04", "mehr"): (10, MEDIUM), ("Premier League", "kpi06", "weniger"): (25, HIGH),
+    ("Premier League", "kpi08", "mehr"): (25, HIGH), ("Premier League", "kpi09", "mehr"): (10, MEDIUM),
+    ("Serie A", "kpi02", "weniger"): (15, HIGH), ("Serie A", "kpi03", "mehr"): (30, HIGH),
+    ("Serie A", "kpi04", "weniger"): (15, HIGH), ("Serie A", "kpi05", "mehr"): (10, MEDIUM),
+    ("Serie A", "kpi05", "weniger"): (10, HIGH), ("Serie A", "kpi09", "weniger"): (10, HIGH),
+    ("LaLiga", "kpi02", "mehr"): (20, HIGH), ("LaLiga", "kpi03", "mehr"): (25, HIGH),
+    ("LaLiga", "kpi04", "mehr"): (25, HIGH), ("LaLiga", "kpi04", "weniger"): (10, MEDIUM),
+    ("LaLiga", "kpi09", "mehr"): (10, HIGH), ("LaLiga", "kpi09", "weniger"): (10, HIGH),
 }
-DECIDED_KPI03 = {"Bundesliga": (35, 40, -5, -10), "Premier League": (30, 40, -10, -15),
-                 "Serie A": (30, 40, -10, -20), "LaLiga": (20, 30, -15, -25)}
-
-
-def expected(league: str, kpi: str) -> tuple:
-    return DECIDED_KPI03[league] if kpi == "kpi03" else DECIDED[kpi]
-
-
-def as_tuple(t: Thresholds) -> tuple:
-    return (t.leicht, t.stark, t.leicht_negativ, t.stark_negativ)
 
 
 # --- 1. Ausgelieferte Datei ------------------------------------------------------------------------------------------
 
-def test_shipped_file_contains_the_decided_thresholds():
+def test_shipped_file_contains_the_approved_thresholds():
     raw = tomllib.loads(CONFIG.read_text(encoding="utf-8"))
-    assert raw["standard"] == {"leicht": 20, "stark": 35}
-    found = {(e.get("liga"), e["kpi"]): (e["leicht_positiv"], e["stark_positiv"], e["leicht_negativ"],
-                                          e["stark_negativ"]) for e in raw["abweichung"]}
-    want = {(None, k): v for k, v in DECIDED.items()} | {(lg, "kpi03"): v for lg, v in DECIDED_KPI03.items()}
-    assert found == want
+    assert raw["grundlage"]["saisons"] == "2019/2020-2025/2026" and raw["grundlage"]["freigabe"] == "2026-11-18"
+    found = {(e["liga"], e["kpi"], e["richtung"]): (e["schwelle"], e["prognosewert"]) for e in raw["schwelle"]}
+    assert found == APPROVED and len(found) == 23
     cfg = load_thresholds(CONFIG, LEAGUES)
-    for league in LEAGUES:
-        for kpi in KPI_KEYS:
-            assert as_tuple(cfg.get(league, kpi)) == tuple(D(v) for v in expected(league, kpi)), (league, kpi)
-    assert cfg.get("Ligue 1", "kpi03") == STANDARD_THRESHOLDS          # neue Liga ohne eigene KPI-03-Schwelle
+    assert {(lg, k, d): (int(s.schwelle), s.prognosewert) for lg, k, d, s in cfg.entries()} == APPROVED
+    bl = cfg.get("Bundesliga", "kpi09").negativ                 # P21: Herleitung in der Datei
+    assert (bl.spiele, bl.trefferquote, bl.vergleichsgruppe, bl.mehrwert, bl.spanne_links, bl.spanne_rechts,
+            bl.saisons_positiv) == (227, D("63.44"), D("51.57"), D("11.87"), D("5.06"), D("18.25"), "7/7")
+    assert sum(1 for v in APPROVED.values() if v[1] == HIGH) == 16 and sum(1 for v in APPROVED.values()
+                                                                             if v[1] == LOW) == 1
 
 
-def test_describe_lists_four_thresholds_per_scope():
-    rows = describe(load_thresholds(CONFIG, LEAGUES))
-    assert rows[0] == {"Gilt für": "Standard (alle übrigen)", "Leicht positiv": "+20,00 %", "Stark positiv": "+35,00 %",
-                       "Leicht negativ": "−20,00 %", "Stark negativ": "−35,00 %"}
-    assert [r["Gilt für"] for r in rows[1:]] == ["KPI 02", "KPI 03 · Bundesliga", "KPI 03 · Premier League",
-                                                  "KPI 03 · Serie A", "KPI 03 · LaLiga", "KPI 04", "KPI 05", "KPI 06",
-                                                  "KPI 07", "KPI 08", "KPI 09"]
-    assert rows[2] == {"Gilt für": "KPI 03 · Bundesliga", "Leicht positiv": "+35,00 %", "Stark positiv": "+40,00 %",
-                       "Leicht negativ": "−5,00 %", "Stark negativ": "−10,00 %"}
+# --- 2. Einstufung an den Grenzen -------------------------------------------------------------------------------------
+
+def test_p1_threshold_boundary_and_other_direction():
+    t = Thresholds(None, Signal(D(10), HIGH))                 # nur „weniger“ 10 %
+    assert classify(D("-10.00"), t) == (NONE, "negativ")
+    assert classify(D("-10.01"), t) == (HIGH, "negativ")
+    assert classify(D("25.00"), t) == (NONE, "positiv")       # andere Richtung ohne Schwelle
+    assert classify(D("0.00"), t) == (NONE, None) and classify(None, t) == (None, None)
 
 
-# --- 2. Einstufung -----------------------------------------------------------------------------------------------------
-
-@pytest.mark.parametrize("dev, level", [
-    ("20.00", NONE), ("20.01", LIGHT), ("30.00", LIGHT), ("30.01", STRONG),
-    ("-15.00", NONE), ("-15.01", LIGHT), ("-25.00", LIGHT), ("-25.01", STRONG),
-    ("0.00", NONE), ("19.99", NONE), ("-14.99", NONE),
-])
-def test_classify_with_split_thresholds(dev, level):
-    t = Thresholds(D(20), D(30), D(-15), D(-25))                        # KPI 02
-    assert classify(D(dev), t)[0] == level
+def test_p2_no_threshold_never_flagged():
+    assert classify(D("80.00"), Thresholds()) == (NONE, "positiv")
 
 
-def test_symmetric_thresholds_behave_as_before():
-    """Ohne negative Angaben gelten −leicht/−stark: dieselbe Einstufung wie bis Version 0.12."""
-    assert Thresholds(D(20), D(35)) == Thresholds(D(20), D(35), D(-20), D(-35)) == STANDARD_THRESHOLDS
-    for dev in ("-35.01", "-35.00", "-20.01", "-20.00", "0.00", "20.00", "20.01", "35.00", "35.01"):
-        size = abs(D(dev))
-        old = NONE if size <= 20 else LIGHT if size <= 35 else STRONG
-        assert classify(D(dev))[0] == old
+def test_p3_provisional_values_never_flagged():
+    from types import SimpleNamespace
+
+    from core.top import Candidate, select_top
+    r = SimpleNamespace(abweichung_rund=D("-30"), anomalie=HIGH, vorlaeufig=True)
+    k = SimpleNamespace(**{key: r for key in ("kpi02", "kpi03", "kpi04", "kpi05", "kpi06", "kpi07", "kpi08", "kpi09")})
+    from datetime import date
+    assert select_top([Candidate("Liga", 0, "2026/2027", 1, date(2026, 8, 1), 0, "A", "B", "", k)]) == []
 
 
-# --- 3. Dateiformat ----------------------------------------------------------------------------------------------------
+# --- 3. Dashboard mit den gültigen Schwellen = Gegenrechnung ----------------------------------------------------------
 
-def test_split_entry_is_read(tmp_path):
-    cfg = load_thresholds(write(tmp_path, """
-[standard]
-leicht = 20
-stark = 35
-[[abweichung]]
-liga = "Serie A"
-kpi = "kpi03"
-leicht_positiv = 30
-stark_positiv = 40.5
-leicht_negativ = -10
-stark_negativ = -20
-"""), LEAGUES)
-    assert as_tuple(cfg.get("Serie A", "kpi03")) == (D(30), D("40.5"), D(-10), D(-20))
-    assert cfg.get("LaLiga", "kpi03") == STANDARD_THRESHOLDS
+def _counter(cfg, league: str, kpi: str):
+    t = cfg.get(league, kpi)
+    pos = (t.positiv.schwelle, t.positiv.prognosewert) if t.positiv else None
+    neg = (t.negativ.schwelle, t.negativ.prognosewert) if t.negativ else None
+    return pos, neg
 
-
-SPLIT = "leicht_positiv = 20\nstark_positiv = 30\nleicht_negativ = -15\nstark_negativ = -25\n"
-
-
-@pytest.mark.parametrize("entry, message", [
-    ("leicht = 20\nstark = 30\nleicht_negativ = -15\n", "nicht beides"),
-    ("leicht_positiv = 20\nstark_positiv = 30\nleicht_negativ = -15\n", "'stark_negativ' fehlt"),
-    (SPLIT.replace("stark_positiv = 30", "stark_positiv = 20"), "0 < leicht_positiv < stark_positiv"),
-    (SPLIT.replace("leicht_negativ = -15", "leicht_negativ = 15"), "stark_negativ < leicht_negativ < 0"),
-    (SPLIT.replace("stark_negativ = -25", "stark_negativ = -10"), "stark_negativ < leicht_negativ < 0"),
-])
-def test_split_entry_errors(tmp_path, entry, message):
-    text = "[standard]\nleicht = 20\nstark = 35\n[[abweichung]]\nkpi = \"kpi02\"\n" + entry
-    with pytest.raises(ConfigError, match=message):
-        load_thresholds(write(tmp_path, text), LEAGUES)
-
-
-# --- 4. Dashboard mit den gültigen Schwellen = Gegenrechnung ----------------------------------------------------------
 
 @pytest.mark.langsam
 @pytest.mark.parametrize("league", list(LEAGUE_TEAMS))
@@ -144,12 +107,38 @@ def test_dashboard_levels_match_counter_calculation(league):
             mine = G.analyse(lg, g.season, gd, g.date, g.home, g.away)
             app = compute_match(prepared, Match(league, g.season, gd, g.date, g.home, g.away), md, cfg.get)
             for kpi in KPI_KEYS:
-                lp, sp, ln, sn = (D(v) for v in expected(league, kpi))
-                want = G.grade_split(mine[kpi]["abweichung"], lp, sp, ln, sn)
+                want = G.grade_signal(mine[kpi]["abweichung"], *_counter(cfg, league, kpi))
                 got = getattr(app, kpi)
                 checked += 1
                 levels.add(want)
                 if (got.abweichung_rund, got.anomalie) != (mine[kpi]["abweichung"], want):
                     diffs.append((gd, g.home, kpi, got.abweichung_rund, got.anomalie, want))
     assert not diffs, diffs[:10]
-    assert checked >= 5 * (teams // 2) * 8 and {NONE, LIGHT, STRONG} <= levels
+    assert checked >= 5 * (teams // 2) * 8 and NONE in levels and levels & {HIGH, MEDIUM, LOW}
+
+
+# --- 4. Echte Daten: Vorschlag = ausgelieferte Datei (P21, P22) --------------------------------------------------------
+
+@pytest.mark.langsam
+def test_p21_p22_proposal_reproduces_shipped_file():
+    """Mit der echten Datenbank (nur auf dem Server bzw. mit SI_DATA_DIR): Schwellenvorschlag mit den Saisons
+    2019/20–2025/26 = ausgelieferte schwellen.toml (Schwelle und Prognosewert aller 23 Kombinationen)."""
+    if not REAL_DATABASE.exists():
+        pytest.skip("echte Datenbank nicht vorhanden")
+    from core.sensitivity import proposal
+    from core.simulation import build_cases, closed_matchdays
+    db = load_database(REAL_DATABASE)
+    leagues: list[League] = [lg for lg in load_leagues() if lg.name in LEAGUES]
+    seasons = [f"{y}/{y + 1}" for y in range(2019, 2026)]
+    cases, days = [], []
+    import pandas as pd
+    for lg in leagues:
+        p = prepare_league(db.leagues[lg.name])
+        cases.append(build_cases(p, lg))
+        days.append(closed_matchdays(p, lg))
+    c, d = pd.concat(cases), pd.concat(days)
+    df = proposal(c[c["season"].isin(seasons)], d[d["season"].isin(seasons)], LEAGUES, list(KPI_KEYS))
+    got = {(r.liga, r.kpi, r.richtung): (int(r.schwelle), r.prognosewert) for r in df.itertuples()}
+    assert got == APPROVED
+    bl = df[(df.liga == "Bundesliga") & (df.kpi == "kpi09") & (df.richtung == "weniger")].iloc[0]
+    assert (bl.spiele, bl.eingetroffen, bl.saisons_positiv, bl.saisons) == (227, 144, 7, 7)

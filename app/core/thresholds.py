@@ -1,26 +1,30 @@
-"""Schwellenwerte der Anomalie-Einstufung (KPI-Regelwerk 2.2), eingelesen aus app/config/schwellen.toml.
+"""Schwellen und Prognosewerte (KPI-Regelwerk 2.2, seit Version 0.19), eingelesen aus app/config/schwellen.toml.
 
-Aufbau der Datei:
+Je Liga, KPI und Richtung (mehr / weniger) gibt es höchstens eine Schwelle mit ihrem Prognosewert. Kombinationen ohne
+Eintrag haben keine Schwelle: Die Kennzahl ist dort nie auffällig. Aufbau der Datei:
 
-    [standard]
-    leicht = 20      # |Abweichung| bis 20,00 % -> keine Anomalie
-    stark = 35       # bis 35,00 % -> leichte, darüber starke Anomalie
+    [grundlage]
+    saisons = "2019/2020-2025/2026"   # womit die Schwellen berechnet wurden (Sensitivitätsanalyse, Regelwerk 11)
+    berechnet = "2026-11-18"
+    freigabe = "2026-11-18"           # Freigabe durch Carsten
 
-    [[abweichung]]   # optional, beliebig oft
-    liga = "Serie A" # optional (ohne: alle Ligen)
-    kpi = "kpi03"    # optional (ohne: alle KPIs)
-    leicht = 15      # gleich für positiv und negativ (±15 / ±30) …
-    stark = 30
+    [[schwelle]]
+    liga = "Bundesliga"
+    kpi = "kpi09"
+    richtung = "weniger"              # mehr | weniger
+    schwelle = 10                     # auffällig, wenn die Abweichung unter −10,00 % liegt
+    prognosewert = "hoch"             # hoch | mittel | gering
+    spiele = 227                      # Herleitung (Anzeige im Dashboard), optional
+    trefferquote = 63.44
+    vergleichsgruppe = 51.57
+    mehrwert = 11.87
+    spanne_links = 5.06
+    spanne_rechts = 18.25
+    saisons_positiv = "7/7"
 
-    [[abweichung]]
-    kpi = "kpi02"    # … oder positiv und negativ getrennt (seit Version 0.13)
-    leicht_positiv = 20     # über +20,00 % leicht
-    stark_positiv = 30      # über +30,00 % stark
-    leicht_negativ = -15    # unter −15,00 % leicht
-    stark_negativ = -25     # unter −25,00 % stark
-
-Vorrang: Liga und KPI > nur KPI > nur Liga > Standard. Die Datei wird mit dem Code versioniert; Änderungen nur
-bewusst über die Datei (Neubau, Git, CHANGELOG), nie über das Dashboard.
+Die Datei wird einmal pro Saison nach Saisonende aus dem Schwellenvorschlag der Sensitivitätsanalyse erzeugt, von
+Carsten freigegeben und über GitHub übernommen (nie aus dem Dashboard gespeichert). Die Fassung bis Version 0.18
+(leicht/stark) liegt in app/config/archiv/.
 """
 
 from __future__ import annotations
@@ -31,31 +35,34 @@ from pathlib import Path
 
 from . import settings
 from .config import ConfigError, _read_toml, table_list
-from .kpis import KPI_KEYS, STANDARD_THRESHOLDS, Thresholds
+from .kpis import KPI_KEYS, LEVELS, NO_THRESHOLDS, Signal, Thresholds
 
-
-@dataclass(frozen=True)
-class Override:
-    liga: str | None
-    kpi: str | None
-    thresholds: Thresholds
-
-    @property
-    def rank(self) -> int:
-        """Je genauer, desto höher: Liga und KPI (3) > KPI (2) > Liga (1)."""
-        return (2 if self.kpi else 0) + (1 if self.liga else 0)
+DIRECTIONS = ("mehr", "weniger")
+STATS = ("spiele", "trefferquote", "vergleichsgruppe", "mehrwert", "spanne_links", "spanne_rechts")
 
 
 @dataclass(frozen=True)
 class ThresholdConfig:
-    standard: Thresholds = STANDARD_THRESHOLDS
-    overrides: tuple[Override, ...] = field(default_factory=tuple)
+    """Gültige Schwellen: (Liga, KPI) -> Thresholds(positiv, negativ)."""
+    by_league_kpi: dict[tuple[str, str], Thresholds] = field(default_factory=dict)
+    saisons: str = ""
+    berechnet: str = ""
+    freigabe: str = ""
 
     def get(self, league: str, kpi: str) -> Thresholds:
-        """Schwellen für Liga und KPI. config.get wird als Nachschlage-Funktion an compute_match übergeben."""
-        matching = [o for o in self.overrides
-                    if (o.liga is None or o.liga == league) and (o.kpi is None or o.kpi == kpi)]
-        return max(matching, key=lambda o: o.rank).thresholds if matching else self.standard
+        """Schwellen für Liga und KPI; ohne Eintrag NO_THRESHOLDS (nie auffällig). Wird als Nachschlage-Funktion an
+        compute_match übergeben."""
+        return self.by_league_kpi.get((league, kpi), NO_THRESHOLDS)
+
+    def entries(self) -> list[tuple[str, str, str, Signal]]:
+        """(Liga, KPI, Richtung, Signal) aller Einträge, für Anzeige und Prüfung."""
+        out = []
+        for (league, kpi), t in self.by_league_kpi.items():
+            if t.positiv is not None:
+                out.append((league, kpi, "mehr", t.positiv))
+            if t.negativ is not None:
+                out.append((league, kpi, "weniger", t.negativ))
+        return out
 
 
 def _number(value, where: str) -> Decimal:
@@ -70,74 +77,75 @@ def _number(value, where: str) -> Decimal:
     return number
 
 
-SYMMETRIC = ("leicht", "stark")
-SPLIT = ("leicht_positiv", "stark_positiv", "leicht_negativ", "stark_negativ")
-
-
-def _pair(entry: dict, where: str) -> Thresholds:
-    """Entweder leicht/stark (für beide Richtungen) oder alle vier Felder leicht/stark × positiv/negativ."""
-    split = [k for k in SPLIT if k in entry]
-    if split:
-        if any(k in entry for k in SYMMETRIC):
-            raise ConfigError(f"schwellen.toml, {where}: entweder leicht/stark oder die vier Felder "
-                              f"{', '.join(SPLIT)} angeben, nicht beides")
-        for key in SPLIT:
-            if key not in entry:
-                raise ConfigError(f"schwellen.toml, {where}: Feld '{key}' fehlt")
-        lp, sp, ln, sn = (_number(entry[k], where) for k in SPLIT)
-        if not (0 < lp < sp):
-            raise ConfigError(f"schwellen.toml, {where}: es muss gelten 0 < leicht_positiv < stark_positiv")
-        if not (sn < ln < 0):
-            raise ConfigError(f"schwellen.toml, {where}: es muss gelten stark_negativ < leicht_negativ < 0")
-        return Thresholds(lp, sp, ln, sn)
-    for key in SYMMETRIC:
+def _signal(entry: dict, where: str) -> Signal:
+    for key in ("schwelle", "prognosewert"):
         if key not in entry:
             raise ConfigError(f"schwellen.toml, {where}: Feld '{key}' fehlt")
-    light, strong = _number(entry["leicht"], where), _number(entry["stark"], where)
-    if not (0 < light < strong):
-        raise ConfigError(f"schwellen.toml, {where}: es muss gelten 0 < leicht < stark")
-    return Thresholds(light, strong)
+    threshold = _number(entry["schwelle"], where)
+    if threshold <= 0:
+        raise ConfigError(f"schwellen.toml, {where}: die Schwelle muss grösser als 0 sein (Betrag in %)")
+    level = str(entry["prognosewert"]).strip().lower()
+    if level not in LEVELS:
+        raise ConfigError(f"schwellen.toml, {where}: Prognosewert '{level}' unbekannt (erlaubt: {', '.join(LEVELS)})")
+    stats = {k: (int(_number(entry[k], where)) if k == "spiele" else _number(entry[k], where))
+             for k in STATS if k in entry}
+    seasons = str(entry["saisons_positiv"]) if "saisons_positiv" in entry else None
+    return Signal(threshold, level, saisons_positiv=seasons, **stats)
 
 
 def load_thresholds(path: Path | str | None = None, league_names: list[str] | None = None) -> ThresholdConfig:
     path = Path(path) if path else settings.THRESHOLDS_FILE
     data = _read_toml(path)
-    if "standard" not in data:
-        raise ConfigError(f"{path.name}: Abschnitt [standard] fehlt")
-    if not isinstance(data["standard"], dict):
-        raise ConfigError(f"{path.name}: [standard] muss ein Abschnitt mit leicht und stark sein")
-    standard = _pair(data["standard"], "[standard]")
-    overrides = []
-    seen = set()
-    for i, entry in enumerate(table_list(data, "abweichung", path), start=1):
-        where = f"Abweichung {i}"
-        liga = str(entry["liga"]).strip() if "liga" in entry else None
-        kpi = str(entry["kpi"]).strip().lower() if "kpi" in entry else None
-        if liga is None and kpi is None:
-            raise ConfigError(f"schwellen.toml, {where}: 'liga' oder 'kpi' angeben (sonst [standard] ändern)")
-        if kpi is not None and kpi not in KPI_KEYS:
-            raise ConfigError(f"schwellen.toml, {where}: unbekannter KPI '{kpi}' (erlaubt: {', '.join(KPI_KEYS)})")
-        if liga is not None and league_names is not None and liga not in league_names:
+    if "standard" in data or "abweichung" in data:
+        raise ConfigError(f"{path.name}: altes Format (leicht/stark) – seit Version 0.19 gilt [[schwelle]] je Liga, "
+                          "KPI und Richtung (Regelwerk 2.2)")
+    basis = data.get("grundlage", {})
+    if not isinstance(basis, dict):
+        raise ConfigError(f"{path.name}: [grundlage] muss ein Abschnitt sein")
+    found: dict[tuple[str, str], dict[str, Signal]] = {}
+    for i, entry in enumerate(table_list(data, "schwelle", path), start=1):
+        where = f"Schwelle {i}"
+        for key in ("liga", "kpi", "richtung"):
+            if key not in entry:
+                raise ConfigError(f"schwellen.toml, {where}: Feld '{key}' fehlt")
+        liga, kpi = str(entry["liga"]).strip(), str(entry["kpi"]).strip().lower()
+        direction = str(entry["richtung"]).strip().lower()
+        if kpi not in KPI_KEYS or kpi == "kpi01":
+            raise ConfigError(f"schwellen.toml, {where}: unbekannter KPI '{kpi}' (erlaubt: kpi02 … kpi09)")
+        if league_names is not None and liga not in league_names:
             raise ConfigError(f"schwellen.toml, {where}: unbekannte Liga '{liga}'")
-        if (liga, kpi) in seen:
-            raise ConfigError(f"schwellen.toml, {where}: Liga/KPI-Kombination kommt doppelt vor")
-        seen.add((liga, kpi))
-        overrides.append(Override(liga, kpi, _pair(entry, where)))
-    return ThresholdConfig(standard, tuple(overrides))
+        if direction not in DIRECTIONS:
+            raise ConfigError(f"schwellen.toml, {where}: Richtung '{direction}' unbekannt (erlaubt: mehr, weniger)")
+        slot = found.setdefault((liga, kpi), {})
+        if direction in slot:
+            raise ConfigError(f"schwellen.toml, {where}: {liga} / {kpi} / {direction} kommt doppelt vor")
+        slot[direction] = _signal(entry, where)
+    by = {key: Thresholds(d.get("mehr"), d.get("weniger")) for key, d in found.items()}
+    return ThresholdConfig(by, str(basis.get("saisons", "")), str(basis.get("berechnet", "")),
+                           str(basis.get("freigabe", "")))
 
 
-def _pct(value: Decimal) -> str:
-    return f"{value:+.2f} %".replace(".", ",").replace("-", "−")
+def _pct(value: Decimal | None, signed: bool = False) -> str:
+    if value is None:
+        return "–"
+    text = f"{value:+.2f}" if signed else f"{value:.2f}"
+    return text.replace(".", ",").replace("-", "−")
 
 
-def describe(config: ThresholdConfig) -> list[dict]:
-    """Zeilen für die Anzeige im Bereich Datenqualität: je Geltungsbereich die vier Schwellen.
-    Eine Anomalie liegt vor, wenn die gerundete Abweichung über (positiv) bzw. unter (negativ) der Schwelle liegt."""
-    def row(scope: str, t: Thresholds) -> dict:
-        return {"Gilt für": scope, "Leicht positiv": _pct(t.leicht), "Stark positiv": _pct(t.stark),
-                "Leicht negativ": _pct(t.leicht_negativ), "Stark negativ": _pct(t.stark_negativ)}
-    rows = [row("Standard (alle übrigen)", config.standard)]
-    for o in sorted(config.overrides, key=lambda o: o.kpi or ""):     # je KPI, Ligen in Dateireihenfolge
-        scope = " · ".join(x for x in (o.kpi.upper().replace("KPI", "KPI ") if o.kpi else None, o.liga) if x)
-        rows.append(row(scope, o.thresholds))
+def describe(config: ThresholdConfig, league_order: list[str] | None = None) -> list[dict]:
+    """Zeilen für die Anzeige im Bereich Datenqualität: je Liga, KPI und Richtung die gültige Schwelle mit Prognosewert
+    und Herleitung (Trefferquote, Vergleichsgruppe, Mehrwert)."""
+    from .top import TOP_KPIS
+    order = {name: i for i, name in enumerate(league_order or [])}
+    kpi_order = {k: i for i, k in enumerate(TOP_KPIS)}
+    rows = []
+    for league, kpi, direction, s in sorted(config.entries(), key=lambda e: (order.get(e[0], 99), e[0],
+                                                                                kpi_order.get(e[1], 99), e[2])):
+        rows.append({"Liga": league, "KPI": TOP_KPIS.get(kpi, kpi), "Richtung": direction,
+                     "Schwelle": f"{'+' if direction == 'mehr' else '−'}{_pct(s.schwelle)} %",
+                     "Prognosewert": s.prognosewert,
+                     "Spiele": s.spiele if s.spiele is not None else "–",
+                     "Trefferquote": f"{_pct(s.trefferquote)} %" if s.trefferquote is not None else "–",
+                     "Vergleichsgruppe": f"{_pct(s.vergleichsgruppe)} %" if s.vergleichsgruppe is not None else "–",
+                     "Mehrwert in Pp.": _pct(s.mehrwert, signed=True)})
     return rows
