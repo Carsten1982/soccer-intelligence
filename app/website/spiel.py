@@ -15,7 +15,7 @@ Festlegungen Carsten 17.11.2026:
 from __future__ import annotations
 
 from core.fixtures import INACTIVE_STATUS
-from core.kpis import LIGHT, STRONG, MatchKpis
+from core.kpis import LEVELS, RANK, MatchKpis
 from core.top import TOP_KPIS
 
 from . import einstellungen as W
@@ -38,10 +38,8 @@ def kennzahl(key: str, r) -> dict:
     vorl = r is None or r.vorlaeufig or abw is None
     if vorl:
         stufe = "nicht_gewertet"
-    elif r.anomalie == STRONG:
-        stufe = "stark"
-    elif r.anomalie == LIGHT:
-        stufe = "leicht"
+    elif r.anomalie in LEVELS:
+        stufe = r.anomalie                     # Prognosewert hoch / mittel / gering (seit 0.19)
     else:
         stufe = "normal"
     return {
@@ -93,8 +91,8 @@ def spiel_daten(daten: Daten, spiel_id: int, zp: Zeitpunkt) -> dict | None:
         kennzahlen = []
     ohne_werte = all(k["erwartung"] is None for k in kennzahlen)
     nicht_gewertet = all(k["stufe"] == "nicht_gewertet" for k in kennzahlen)
-    auffaellig = sorted((k for k in kennzahlen if k["stufe"] in ("stark", "leicht")), key=lambda k: -k["betrag"])
-    uebrige = sorted((k for k in kennzahlen if k["stufe"] not in ("stark", "leicht")), key=lambda k: -k["betrag"])
+    auffaellig = sorted((k for k in kennzahlen if k["stufe"] in LEVELS), key=lambda k: (-RANK[k["stufe"]], -k["betrag"]))
+    uebrige = sorted((k for k in kennzahlen if k["stufe"] not in LEVELS), key=lambda k: -k["betrag"])
     gewertet = [k for k in kennzahlen if k["stufe"] != "nicht_gewertet"]
     groesste = max(gewertet, key=lambda k: k["betrag"]) if gewertet else None
 

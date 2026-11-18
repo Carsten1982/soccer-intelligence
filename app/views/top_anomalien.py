@@ -1,6 +1,7 @@
 """Bereich Top Anomalien (Dashboard-Briefing, Kapitel 5): die auffälligsten anstehenden Begegnungen aller aktiven
 Ligen. Seit 0.16 (Spielplan v2.1, 4.7, Designentwurf 16.11.2026) je Liga der zeitlich nächste Block, nur Spiele vor
-dem Anpfiff und mit Werten; die Blöcke bildet core/anzeige.py, die Auswahl core/top.py (Regelwerk, Abschnitt 2.6).
+dem Anpfiff und mit Werten; die Blöcke bildet core/anzeige.py, die Auswahl core/top.py (Regelwerk, Abschnitt 2.6;
+seit 0.19 nach Prognosewert mit Liga-Mix).
 Unabhängig von den Spieltag-Pfeilen in den Liga-Bereichen.
 """
 
@@ -14,12 +15,12 @@ import streamlit as st
 from core import anzeige as A
 from core.config import League
 from core.kpis import de_signed
-from core.top import NO_ANOMALIES_TEXT, TOP_KPIS, Candidate, TopEntry, select_top
+from core.top import LOW_HINT, MAX_ENTRIES, MAX_PER_LEAGUE, NO_ANOMALIES_TEXT, Candidate, TopEntry, has_low, select_top
 from state import (
     get_active_leagues, get_database, get_fixtures, get_results, get_round_kpis, last_import_day, now,
 )
 from views import components as ui
-from views.kpi_table import ANOMALY_LABEL, anomaly_cell, value_text
+from views.kpi_table import ANOMALY_LABEL, anomaly_cell, derivation, value_text
 from views.registry import PAGES
 
 
@@ -36,6 +37,7 @@ def card_html(e: TopEntry) -> str:
         f'<div class="si-card-value">{anomaly_cell(r.anomalie)} <strong>{value_text(r, r.hauptwert_rund)}</strong> · '
         f'{de_signed(r.abweichung_rund)} % · {ANOMALY_LABEL[r.anomalie]}</div>'
         f'<div class="si-desc"><strong>{escape(r.ueberschrift or "")}</strong>{text}</div>'
+        + derivation(r) +
         "</div>"
     )
 
@@ -92,6 +94,11 @@ def render() -> None:
     if not entries:
         st.info(NO_ANOMALIES_TEXT, icon="ℹ️")
     else:
+        if len(entries) < MAX_ENTRIES:
+            st.caption(f"Aktuell nur {len(entries)} auffällige{'s' if len(entries) == 1 else ''} "
+                       f"Spiel{'' if len(entries) == 1 else 'e'}.")
+        if has_low(entries):
+            st.caption(LOW_HINT)
         leagues = {lg.name: lg for lg in get_active_leagues()}
         cols = st.columns(2)
         for i, e in enumerate(entries):
@@ -103,10 +110,12 @@ def render() -> None:
                         st.page_link(page, label=f"Zur {e.candidate.league} →")
                     except Exception:  # noqa: BLE001 - ausserhalb der Navigation (Tests)
                         pass
-    st.caption(f"Berücksichtigt: je Liga der zeitlich nächste Block – der anstehende Spieltag samt Nachhol- und "
-               f"vorgezogenen Spielen an seinen Tagen (Sonderspiele davor als eigener Block) –, wenn er höchstens "
-               f"{A.PAUSE_DAYS} Tage entfernt ist. Nur Spiele vor dem Anpfiff und mit Werten. KPI 02–09 "
-               f"({len(TOP_KPIS)} KPIs) mit leichter oder starker Anomalie, ohne vorläufige Werte. Höchstens vier "
-               "Einträge, pro Begegnung einer. Rangfolge: stark vor leicht, dann grösste Abweichung (Gewichtung wird "
-               "mit der Schwellen-Analyse überarbeitet).")
+    st.caption(f"Berücksichtigt: je Liga der anstehende Spieltag samt Nachhol- und vorgezogenen Spielen an seinen "
+               f"Tagen (Sonderspiele davor als eigener Block), wenn er höchstens {A.PAUSE_DAYS} Tage entfernt ist. Nur "
+               "Spiele vor dem Anpfiff und mit Werten, ohne vorläufige Werte. Auswahl: Eine Kennzahl ist auffällig, wenn "
+               "ihre Abweichung über der Schwelle ihrer Liga liegt. Zuerst kommen Spiele mit Prognosewert hoch, dann "
+               f"mittel, dann gering – bis {MAX_ENTRIES} Einträge erreicht sind; innerhalb einer Stufe zählt die grösste "
+               "Abweichung. Pro Begegnung ein Eintrag (die Kennzahl mit dem höchsten Prognosewert). Liga-Mix: "
+               f"höchstens {MAX_PER_LEAGUE} Einträge je Liga; nur wenn die anderen Ligen nicht genug Auffälligkeiten "
+               "haben, wird mit weiteren Spielen derselben Liga aufgefüllt.")
     ui.footer()

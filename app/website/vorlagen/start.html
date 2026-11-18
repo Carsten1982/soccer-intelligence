@@ -58,7 +58,7 @@
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#B03A2E" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="{{ t('start.weniger') }}"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
               {% endif %}
               <span class="wert farbe-{{ r.richtung }}">{{ prozent(r.abweichung) }}</span>
-              <span class="chip s-{{ r.stufe }}-{{ r.richtung }}">{{ t('stufe.' ~ r.stufe) }}</span>
+              <span class="chip s-{{ stil(r.stufe) }}-{{ r.richtung }}">{{ t('stufe.' ~ r.stufe) }}</span>
               <span class="thema">{{ t('kennzahl.' ~ r.kpi ~ '.name') }}</span>
             </span>
             {{ balken(balken_daten(r)) }}

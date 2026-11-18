@@ -34,30 +34,18 @@ ACTUAL: dict[str, tuple[Callable, int]] = {
     **{key: (spec.per_game, spec.scale) for key, spec in STAT_KPIS.items()},
 }
 
-# Wann eine Anomalie eingetroffen ist (Regelwerk 11.1) – für den Bereich „Definitionen und Änderungen“
+# Wann eine Auffälligkeit eingetroffen ist (Regelwerk 11.1) – für das Erklärfeld der Sensitivitätsanalyse
 EVENT_TEXTS = {
-    "kpi02": "Tore im Spiel über (positiv) bzw. unter (negativ) der Ligareferenz vor dem Spiel",
-    "kpi03": "mindestens 3 Tore (positiv) bzw. höchstens 2 Tore (negativ) – feste Marke 2,5",
-    "kpi04": "gelbe Karten im Spiel (beide Teams) über bzw. unter der Ligareferenz",
-    "kpi05": "Ecken im Spiel (beide Teams) über bzw. unter der Ligareferenz",
-    "kpi06": "Tore in der 1. Halbzeit über bzw. unter der Ligareferenz",
-    "kpi07": "Tore in der 2. Halbzeit über bzw. unter der Ligareferenz",
-    "kpi08": "beide Teams treffen (positiv) bzw. nicht beide (negativ)",
-    "kpi09": "Schüsse aufs Tor im Spiel (beide Teams) über bzw. unter der Ligareferenz",
+    "kpi02": "Tore im Spiel über bzw. unter dem Ligaschnitt",
+    "kpi03": "mindestens 3 bzw. höchstens 2 Tore (feste Marke 2,5)",
+    "kpi04": "gelbe Karten beider Teams über bzw. unter dem Ligaschnitt",
+    "kpi05": "Ecken beider Teams über bzw. unter dem Ligaschnitt",
+    "kpi06": "Tore der 1. Halbzeit über bzw. unter dem Ligaschnitt",
+    "kpi07": "Tore der 2. Halbzeit über bzw. unter dem Ligaschnitt",
+    "kpi08": "beide Teams treffen bzw. nicht beide",
+    "kpi09": "Schüsse aufs Tor beider Teams über bzw. unter dem Ligaschnitt",
 }
-DEFINITION_CHANGES = [
-    ("08.11.2026", "Erste Fassung der Ergebniskontrolle (Etappe I.1, Freigabe Carsten)."),
-    ("10.11.2026", "Referenzsaison: Die älteste Saison der Datenbank liefert nur die Vorsaison und wird nicht "
-                   "ausgewertet (bisher fest 2020/21). Neue Saisonauswahl; Definition „eingetroffen“ unverändert "
-                   "(Version 0.11, Freigabe Carsten)."),
-    ("11.11.2026", "Sensitivitätsanalyse: vier Schwellen je KPI (leicht/stark, positiv/negativ), Ø pro Spieltag und "
-                   "Spieltagsabdeckung über abgeschlossene Spieltage, Vergleich mit der Grundquote aller Spiele, "
-                   "Spanne nach Wilson/Newcombe und Empfehlung in sechs Stufen (Version 0.12, Freigabe Carsten)."),
-    ("14.11.2026", "Neue gültige Schwellen, mit dieser Analyse festgelegt (alle Ligen, Saisons 2019/20–2025/26): je KPI "
-                   "positiv und negativ getrennt, KPI 03 je Liga. Ergebnisqualität jetzt auch für die starke Schwelle, "
-                   "eine Tabelle mit vier Zeilen je KPI; Definition „eingetroffen“ unverändert (Version 0.13, Freigabe "
-                   "Carsten)."),
-]
+# Die Änderungen an den Definitionen stehen seit Version 0.19 nur noch im KPI-Regelwerk, Abschnitt 11.5.
 
 
 # --- 1. Fälle aufbauen (teuer, einmal je Datenbankstand) -----------------------------------------

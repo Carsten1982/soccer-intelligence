@@ -2,7 +2,8 @@
 
 Das Ranking „Die auffälligsten Spiele“ ist genau die Auswahl der Top Anomalien im Dashboard (F6: das Dashboard ist der
 Datenlieferant): je Liga der zeitlich nächste Block (core/anzeige.top_block), nur Spiele vor dem Anpfiff und mit
-Werten, Auswahl und Rangfolge nach Regelwerk 2.6 (core/top.select_top, höchstens 4 Einträge, einer je Spiel).
+Werten, Auswahl und Rangfolge nach Regelwerk 2.6 (core/top.select_top: Prognosewert, Liga-Mix, höchstens 4
+Einträge, einer je Spiel).
 
 Zustände (Übergabe 5.3): liste · keine (Spieltag steht an, aber keine Abweichung) · spielpause / winterpause (keine
 Liga spielt in den nächsten 14 Tagen) · sommerpause (keine Liga hat ein angesetztes Spiel) · saisonstart (neue Saison
@@ -12,7 +13,6 @@ angesetzt) · unbekannt (Datenstand veraltet, Pause nicht belegbar, S9). Dazu di
 from __future__ import annotations
 
 from core import anzeige as A
-from core.kpis import STRONG
 from core.top import Candidate, select_top
 
 from . import einstellungen as W
@@ -69,7 +69,7 @@ def start_daten(daten: Daten, zp: Zeitpunkt) -> dict:
             "anstoss": row.anstoss if row is not None and _termin(row) == "bestaetigt" else None,
             "termin": _termin(row) if row is not None else "bestaetigt",
             "kpi": e.kpi_key, "abweichung": float(e.result.abweichung_rund),
-            "stufe": "stark" if e.result.anomalie == STRONG else "leicht",
+            "stufe": e.result.anomalie,            # Prognosewert hoch / mittel / gering
             "richtung": "hoch" if e.result.abweichung_rund >= 0 else "tief",
         })
     if seite["ranking"]:

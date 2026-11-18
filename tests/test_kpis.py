@@ -19,7 +19,7 @@ import pytest
 from conftest import KNOWN_DB_SHA, KNOWN_DB_SHA_H, REFERENCE_DATABASE, REFERENCE_DATABASE_H
 
 from core.kpis import (
-    KPI_KEYS, LIGHT, NONE, STRONG, Match, Thresholds, classify, compute_match, de, de_abs, de_signed, fmt,
+    HIGH, KPI_KEYS, LOW, MEDIUM, NONE, Match, Signal, Thresholds, classify, compute_match, de, de_abs, de_signed, fmt,
     fmt_signed, kpi01_team, kpi02, kpi04, prepare_league, reference_keys, reference_label, round_display, stat_kpi,
     team_cards, team_goals,
 )
@@ -28,6 +28,22 @@ from core.loader import load_database
 DOCS = Path(__file__).resolve().parents[1] / "docs" / "tests"
 MATCHDAYS = {"Bundesliga": 34, "Premier League": 38, "Serie A": 38, "LaLiga": 38}
 TOL = 1e-9
+
+# Die bestätigten Testfälle (docs/tests) wurden mit der Standardschwelle ±20 % (bis Version 0.18 „leicht“) erstellt.
+# Seit Version 0.19 gibt es je Richtung eine Schwelle mit Prognosewert. Für die Testfälle gilt darum die Schwelle 20 %
+# in beiden Richtungen: Texte und Überschriften der Fälle bleiben gültig; „leicht“ und „stark“ heissen dort „auffällig“.
+LEGACY = Thresholds(Signal(Decimal(20), LOW), Signal(Decimal(20), LOW))
+
+
+def legacy(_league: str, _kpi: str) -> Thresholds:
+    return LEGACY
+
+
+def same_flag(anomaly, expected) -> bool:
+    """Bisherige Erwartung (keine/leicht/stark) gegen die neue Einstufung (keine / auffällig)."""
+    if expected is None:
+        return anomaly is None
+    return (anomaly == NONE) == (expected == "keine")
 
 
 def json_cases(filename: str) -> list[dict]:
@@ -80,7 +96,7 @@ def check_result(r, case, main_key):
     assert fmt(r.hauptwert_rund) == case[main_key]
     assert close(r.abweichung, case["abweichung_roh"]), (case["testfall"], r.abweichung)
     assert fmt_signed(r.abweichung_rund) == case["abweichung"]
-    assert r.anomalie == case["anomalie"]
+    assert same_flag(r.anomalie, case["anomalie"]), (case["testfall"], r.anomalie)
     assert r.richtung == case["richtung"]
     assert r.vorlaeufig == case["vorlaeufig"]
     assert r.ueberschrift == case["ueberschrift"]
@@ -111,7 +127,7 @@ def test_kpi01(prepared, case):
 @pytest.mark.parametrize("case", json_cases("test_kpi02_erwartete_tore.md"), ids=lambda c: c["testfall"])
 def test_kpi02(prepared, case):
     m = match_of(case)
-    r = kpi02(prepared[m.league], m, MATCHDAYS[m.league])
+    r = kpi02(prepared[m.league], m, MATCHDAYS[m.league], thresholds=LEGACY)
     check_team(r.heim, case["heim"], "tore")
     check_team(r.auswaerts, case["auswaerts"], "tore")
     check_reference(r.referenz, case["ligareferenz"], "tore")
@@ -121,7 +137,7 @@ def test_kpi02(prepared, case):
 @pytest.mark.parametrize("case", json_cases("test_kpi03_over25.md"), ids=lambda c: c["testfall"])
 def test_kpi03(prepared, case):
     m = match_of(case)
-    r = compute_match(prepared[m.league], m, MATCHDAYS[m.league]).kpi03
+    r = compute_match(prepared[m.league], m, MATCHDAYS[m.league], legacy).kpi03
     assert case["referenzwert"] == "2.5"
     check_team(r.heim, case["heim"], "tore")
     check_team(r.auswaerts, case["auswaerts"], "tore")
@@ -134,7 +150,7 @@ def test_kpi03(prepared, case):
 @pytest.mark.parametrize("case", json_cases("test_kpi04_gelbe_karten.md"), ids=lambda c: c["testfall"])
 def test_kpi04(prepared, case):
     m = match_of(case)
-    r = kpi04(prepared[m.league], m, MATCHDAYS[m.league])
+    r = kpi04(prepared[m.league], m, MATCHDAYS[m.league], thresholds=LEGACY)
     check_team(r.heim, case["heim"], "karten")
     check_team(r.auswaerts, case["auswaerts"], "karten")
     check_reference(r.referenz, case["ligareferenz"], "karten")
@@ -197,18 +213,21 @@ def test_round_display(value, expected):
 
 
 @pytest.mark.parametrize("dev, expected", [
-    ("20.00", (NONE, "positiv")), ("-20.00", (NONE, "negativ")), ("20.01", (LIGHT, "positiv")),
-    ("35.00", (LIGHT, "positiv")), ("-35.00", (LIGHT, "negativ")), ("35.01", (STRONG, "positiv")),
-    ("0.00", (NONE, None)),
+    ("20.00", (NONE, "positiv")), ("-20.00", (NONE, "negativ")), ("20.01", (LOW, "positiv")),
+    ("-20.01", (LOW, "negativ")), ("0.00", (NONE, None)),
 ])
 def test_classify_boundaries(dev, expected):
-    assert classify(Decimal(dev)) == expected
+    assert classify(Decimal(dev), LEGACY) == expected
 
 
-def test_classify_with_own_thresholds():
-    t = Thresholds(Decimal("12"), Decimal("18"))
-    assert classify(Decimal("12.00"), t)[0] == NONE and classify(Decimal("12.01"), t)[0] == LIGHT
-    assert classify(Decimal("-18.01"), t) == (STRONG, "negativ")
+def test_classify_without_thresholds_never_flags():
+    assert classify(Decimal("99.00")) == (NONE, "positiv") and classify(Decimal("-99.00")) == (NONE, "negativ")
+
+
+def test_classify_with_own_thresholds_per_direction():
+    t = Thresholds(Signal(Decimal("12"), HIGH), Signal(Decimal("18"), MEDIUM))
+    assert classify(Decimal("12.00"), t)[0] == NONE and classify(Decimal("12.01"), t)[0] == HIGH
+    assert classify(Decimal("-18.00"), t)[0] == NONE and classify(Decimal("-18.01"), t) == (MEDIUM, "negativ")
 
 
 def test_display_formats():
@@ -322,17 +341,18 @@ def check_stat(r, case):
     assert close(r.hauptwert, case["hauptwert_roh"]) and fmt(r.hauptwert_rund) == case["hauptwert"]
     assert close(r.abweichung, case["abweichung_roh"]), (case["testfall"], r.abweichung)
     assert fmt(r.abweichung_rund) == case["abweichung"], (case["testfall"], r.abweichung_rund)
-    assert (r.anomalie, r.richtung, r.vorlaeufig) == (case["anomalie"], case["richtung"], case["vorlaeufig"])
+    assert same_flag(r.anomalie, case["anomalie"]), (case["testfall"], r.anomalie)
+    assert (r.richtung, r.vorlaeufig) == (case["richtung"], case["vorlaeufig"])
     assert r.ueberschrift == case["ueberschrift"] and r.text == case["text"], case["testfall"]
 
 
 @pytest.mark.parametrize("key, case", stat_cases(), ids=lambda x: x if isinstance(x, str) else x["testfall"])
 def test_kpi05_to_09(prepared_h, key, case):
     m = match_of(case)
-    r = stat_kpi(prepared_h[m.league], m, MATCHDAYS[m.league], key)
+    r = stat_kpi(prepared_h[m.league], m, MATCHDAYS[m.league], key, thresholds=LEGACY)
     check_stat(r, case)
     # compute_match liefert für alle KPIs auf einmal dasselbe
-    assert vars(getattr(compute_match(prepared_h[m.league], m, MATCHDAYS[m.league]), key)) == vars(r)
+    assert vars(getattr(compute_match(prepared_h[m.league], m, MATCHDAYS[m.league], legacy), key)) == vars(r)
 
 
 def test_stat_cases_cover_all_files():

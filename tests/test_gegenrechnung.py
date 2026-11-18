@@ -20,7 +20,7 @@ import gegenrechnung as G
 import openpyxl
 import pytest
 from conftest import REAL_DATABASE, REAL_FIXTURES, REFERENCE_DATABASE, REFERENCE_DATABASE_H
-from test_kpis import json_cases
+from test_kpis import json_cases, legacy
 
 from core.config import active_leagues, load_leagues
 from core.kpis import Match, compute_match, prepare_league
@@ -110,6 +110,16 @@ def test_counter_kpi05_to_09(reference_leagues_h, kpi, file):
 REAL = REAL_DATABASE.exists() and REAL_FIXTURES.exists()
 
 
+def _flags(values: dict) -> dict:
+    """Gegenrechnung (keine/leicht/stark bei ±20/±35) und App (Schwelle 20 %, seit 0.19 eine Stufe) vergleichbar machen:
+    „leicht“ und „stark“ sind beide „auffällig“ (test_kpis.LEGACY)."""
+    out = dict(values)
+    for key, v in values.items():
+        if isinstance(v, dict) and "anomalie" in v and v["anomalie"] in ("leicht", "stark"):
+            out[key] = {**v, "anomalie": "gering"}
+    return out
+
+
 def _app_values(k) -> dict:
     out = {"form_heim": k.form_home.form, "form_gast": k.form_away.form,
            "tore_heim": (k.kpi02.heim.spiele, k.kpi02.heim.summe),
@@ -171,6 +181,7 @@ def test_app_matches_counter_calculation(real_db, league):
     diffs = []
     for season, gd, stichtag, home, away in cases:
         mine = G.analyse(lg, season, gd, stichtag, home, away)
-        app = _app_values(compute_match(prepared, Match(league.name, season, gd, stichtag, home, away), md))
+        app = _app_values(compute_match(prepared, Match(league.name, season, gd, stichtag, home, away), md, legacy))
+        mine = _flags(mine)
         diffs += [(season, gd, home, away, key, mine[key], app[key]) for key in mine if mine[key] != app[key]]
     assert not diffs, diffs[:10]

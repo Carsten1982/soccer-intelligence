@@ -1,45 +1,44 @@
-# Release: Version 0.18 – Website nach den Entwürfen (Startseite, Spieltag, Matchdetail)
+# Release: Version 0.19 – Auffälligkeit und Prognosewert (statt leicht/stark)
 
-**Stand:** 17.11.2026 · Version 0.18 · Entscheidungen Carsten 17.11.2026 (Q1–Q7) · Konzept und Protokoll `docs/08_Website.md` v1.1
+**Stand:** 18.11.2026 · Version 0.19 · Spezifikation und Freigabe Carsten 18.11.2026 · Regeln: KPI-Regelwerk v2.7 (2.2, 2.6, 11), Dashboard-Briefing v5.6, Prüfprotokoll `docs/tests/pruefprotokoll_prognosewert.md`
 
-**Commit:** Version 0.18: Website nach den Entwürfen – Startseite, Spieltag und Matchdetail je Paarung
+**Commit:** Version 0.19: Auffälligkeit und Prognosewert statt leicht/stark – Schwellen je Liga, KPI und Richtung
 
 ## Was ändert sich?
 
-- **Startseite** der Vorschau (`/vorschau/`, bisher Weiterleitung auf den Spieltag) nach Entwurf 1d: „Fußballspiele durchleuchtet.“, Ranking **„Die auffälligsten Spiele“** = genau die Top Anomalien des Dashboards (höchstens 4), in Pausen eine Karte mit **Tage-Zähler**, Liga-Knöpfe, „So funktioniert’s“, Block „Von einem Fußballfan gebaut“ mit Foto bzw. Platzhalter, SEO-Text.
-- **Spieltag** genau nach Entwurf 3d (dunkler Kopfbereich mit Liga-Auswahl, Kacheln im Raster). Neu sortiert wie im Entwurf: Stark → Leicht → Ohne → übrige nach Anstoss; Nachhol- und vorgezogene Spiele stehen nicht mehr gesammelt am Ende, sondern mittendrin.
-- **Matchdetail**: **jede Paarung hat eine eigene Seite** `/vorschau/spiel/<Spiel-ID>` (Klick auf eine Kachel oder einen Eintrag im Ranking). Scoreboard mit Formkurve, Kernaussage, Auffälligkeiten mit Balken und „Zahlen im Detail“, Liste „Im Normalbereich“, Hinweise für Nachholspiel, vorgezogen, gespielt und nicht gewertet. Umgesetzt nach Q1–Q5 (Gelbe Karten als Summe Heim + Gast, sonst Mittelwert; Über 2,5 Tore mit Marke 2,50; einzelne vorläufige Kennzahl schraffiert unter Normalbereich; Endstand bzw. „Ergebnis folgt“).
-- Die Vorschau rechnet beim Start alles einmal vor: Schon der erste Aufruf ist schnell.
-- Neuer Ordner auf dem Server **`website-bilder/`** für das Foto (nur lesend eingebunden, nicht in Git). Dashboard, Import und Platzhalter unverändert.
+- **Ein Spiel ist auffällig oder nicht.** Statt „leicht“ und „stark“ gibt es je Liga, Kennzahl und Richtung (mehr/weniger) höchstens **eine Schwelle**, und jede Auffälligkeit trägt einen **Prognosewert**: hoch, mittel oder gering. Kombinationen ohne Schwelle werden nie ausgezeichnet.
+- **Neue `app/config/schwellen.toml`** mit den freigegebenen **23 Schwellen** (16 hoch, 6 mittel, 1 gering; Saisons 2019/20–2025/26) samt Herleitung je Zeile. Die alte Datei liegt in `app/config/archiv/schwellen_2026-11-14.toml`; das alte Format wird abgelehnt.
+- **Top Anomalien** (Dashboard und Startseite der Vorschau): zuerst „hoch“, dann „mittel“, dann „gering“, jeweils nach der grössten Abweichung; **höchstens zwei Spiele je Liga** (Liga-Mix, aufgefüllt, wenn die anderen Ligen nicht genug haben); weniger als vier, wenn nicht genug auffällig sind. Hinweise „Aktuell nur x auffällige Spiele.“ und „Ergänzt mit Spielen geringer Verlässlichkeit.“
+- **Ligaseiten und Top-Karten:** Kreise in drei Grüntönen (hoch dunkel, mittel, gering hell), Legende „Prognosewert: hoch, mittel, gering, nicht auffällig“, in den Details eine Zeile zur Herleitung (Schwelle, Trefferquote, Vergleichsgruppe).
+- **Sensitivitätsanalyse:** zwei Zeilen je Kennzahl (mehr, weniger) mit je einer Schwelle, neue Spalte **Prognosewert**, kürzere Kurzhilfen, neues **Erklärfeld** unter der Tabelle (Beispiel Bundesliga Schüsse aufs Tor weniger, aufklappbare Felder) und Knopf **„Schwellenvorschlag berechnen“** mit Download als `schwellen.toml` (nur Anzeige, nichts wird gespeichert).
+- **Datenqualität:** Reiter „Schwellen und Häufigkeit“ mit der Tabelle „Gültige Schwellen und Prognosewerte“ (23 Zeilen) und der Häufigkeit nach hoch/mittel/gering.
+- **Vorschau der Website:** Daten und Texte mit Prognosewert („Prognosewert hoch“ usw.); **Gestaltung unverändert** (hoch wie bisher „stark“, mittel und gering wie bisher „leicht“) bis zum eigenen Design (Release B).
+- **KPI-Berechnung unverändert:** alle Werte, Referenzen und Texte wie in 0.18 (Vollvergleich, Prüfprotokoll Abschnitt 4).
+- Die Darstellung im Dashboard ist ein Zwischenstand bis zu deinem Designentwurf (Design-Briefing vom 18.11.2026).
 
 ## Einspielen
 
-1. Wie immer in `tmux`: `bash /docker/football-dashboard/tools/einspielen.sh github`, mit `j` abschliessen, wenn alles passt. Keine Zusatzschritte: Das Skript baut die Vorschau seit 0.17 selbst mit.
-2. **Foto (Q6), wann du willst:** Datei `portrait.jpg` (JPEG, quadratisch, mindestens 230 × 230 Pixel) mit WinSCP nach
-   **`/docker/football-dashboard/website-bilder/`** hochladen. Kein Neustart nötig. Genaue Schritte: `docs/01_Technisches_Setup.md`, Abschnitt 6.3 „Foto der Startseite“. Prüfen:
-   ```bash
-   ls -l /docker/football-dashboard/website-bilder/portrait.jpg
-   ```
+Wie immer in `tmux`: `bash /docker/football-dashboard/tools/einspielen.sh github`, mit `j` abschliessen, wenn alles passt. Keine Zusatzschritte. Die Schwellendatei kommt mit GitHub; am Server ist nichts von Hand zu ändern.
 
 ## Erwartungswerte
 
-- Git-Stand vorher: `49c2056`.
-- Schritt 4 des Einspielens: rund **586 bestanden, 15 übersprungen, 16 ausgelassen**, keine Fehler; Dauer rund 9 Minuten.
+- Git-Stand vorher: `fbdd5d9`.
+- Schritt 4 des Einspielens: rund **587 bestanden, 15 übersprungen, 17 ausgelassen** (langsame Tests), keine Fehler; Dauer rund 9 Minuten.
 - Schritt 5: „Container laufen (Dashboard, Import, Vorschau) · / = 200 · /dashboard/ = 200 (Anmeldemaske)“ und „/vorschau/ = 401 (Passwortabfrage der Vorschau)“.
-- `docker logs soccer-vorschau --tail 5` zeigt „Vorschau: Daten vorgeladen“ (rund 10–30 Sekunden nach dem Start).
-- Dashboard-Fusszeile: „Version 0.18 – Website (Startseite, Spieltag, Matchdetail)“.
-- Lokal mit den echten Dateien des Probelaufs (Stand 15.11.) gemessen: Startseite 0,4 s, Spieltag 0,2 s, Matchdetail unter 0,2 s; Ranking am Sa 21.11. 10:00: 1. Monza – Fiorentina (Beide Teams treffen +71,72 %), 2. FC Augsburg – FSV Mainz 05 (Über 2,5 Tore +66,00 %), 3. Barcelona – Villarreal, 4. Union Berlin – RB Leipzig. Mit den neueren Daten auf dem Server können die Werte abweichen.
+- Dashboard-Fusszeile: „Version 0.19 – Prognosewert (Auffälligkeit statt leicht/stark)“.
+- **Datenqualität → Schwellen und Häufigkeit:** 23 Zeilen, z. B. Bundesliga · Schüsse aufs Tor · weniger · −10,00 % · hoch · 227 Spiele · 63,44 % · 51,57 % · +11,87.
+- **Sensitivitätsanalyse → „Schwellenvorschlag berechnen“** mit „Alle Saisons“ (2019/20–2025/26): genau dieselben 23 Kombinationen wie die gültige Datei (lokal mit der echten Datenbank des Probelaufs geprüft).
+- Häufigkeit (Mittel je Liga-Spieltag, Saisons 2019/20–2025/26): Spiele mit „hoch“ Bundesliga 1,4 · Premier League 2,6 · Serie A 4,8 · La Liga 3,6.
+- Lokal mit den echten Dateien des Probelaufs (Stand 15.11.) am Sa 21.11. 10:00: Startseite 1. Barcelona – Villarreal (Über 2,5 Tore +56,00 %), 2. Racing Santander – Real Sociedad (+54,00 %), 3. Monza – Fiorentina (+50,00 %), 4. AC Milan – Frosinone (+42,00 %), alle „Prognosewert hoch“, je zwei aus La Liga und Serie A. Mit den neueren Daten auf dem Server können die Spiele abweichen.
 
 ## Im Browser prüfen
 
-1. `https://soccer-intelligence.com/vorschau` → Passwortabfrage → **Startseite**. Ranking mit bis zu 4 Spielen; der Eintrag stimmt mit dem Dashboard überein (Top Anomalien: gleiche Spiele, gleiche Kennzahl, gleicher Prozentwert). Klick auf einen Eintrag → Matchdetail.
-2. Ohne Foto: runder grauer Platzhalter beim Block „Von einem Fußballfan gebaut“. Nach dem Hochladen: dein Foto (Seite neu laden).
-3. „Spieltag ansehen“ → **Spieltag Bundesliga**: Kacheln im Raster, oben die stärksten. Liga wechseln (La Liga, Premier League, Serie A).
-4. Eine Kachel anklicken → **Matchdetail**: oben „Zurück zum Spieltag“, Scoreboard mit „Letzte 5 Spiele“, darunter Auffälligkeiten. „Zahlen im Detail“ aufklappen: Bei **Gelben Karten** „Heim + Gast“ mit zweiteiliger Leiste, bei allen anderen „Je Mannschaft · Mittelwert beider Teams“; bei **Über 2,5 Tore** „Vergleichswert (Marke) 2,50“. „Zuklappen“ schliesst wieder.
-5. **Zeitreise** (Adresse ergänzen):
-   - `/vorschau/spieltag/bundesliga?datum=2026-11-21T16:00` → gespielte Spiele mit Ergebnis bzw. „Ergebnis folgt“; Klick darauf → Matchdetail mit „Endstand …“ bzw. „Ergebnis folgt“ und dem Hinweis „Gespielt: Die Werte wurden vor dem Spiel berechnet.“
-   - Bayer Leverkusen – SC Paderborn 07 (Aufsteiger): `/vorschau/spiel/1575222` → „Nicht gewertet“ mit Hinweisbox.
-   - `/vorschau/spieltag/la-liga?datum=2026-12-01` → zwei vorgezogene Spiele (Chip „Vorgezogen“), nach Anstoss einsortiert; Klick → Hinweis „Vorgezogen: Dieses Spiel gehört zum 23. Spieltag …“.
-   - `/vorschau/?datum=2027-06-15` → Startseite mit Karte „Sommerpause – Die Saison ist beendet“.
-6. Auf dem Handy: alle drei Seiten untereinander, kein seitliches Scrollen; Kacheln einspaltig.
-7. Sag mir, was im Vergleich zu den Entwürfen noch anders aussehen soll.
+Falls eine Seite alt aussieht: einmal **Strg+F5** (Zwischenspeicher des Browsers).
+
+1. **Top Anomalien:** bis zu 4 Karten, je Karte „Auffällig · Prognosewert hoch“ (bzw. mittel/gering) und eine Zeile zur Herleitung; höchstens zwei Spiele aus derselben Liga (ausser die anderen Ligen haben zu wenig).
+2. **Eine Ligaseite** (z. B. Bundesliga): Legende „Prognosewert: hoch, mittel, gering, nicht auffällig“; Kreise in drei Grüntönen, nicht auffällige mit hellem Ring. Details einer Kennzahl aufklappen: Herleitungszeile. In der Bundesliga gibt es „gering“ nur bei Gelben Karten (mehr).
+3. **Datenqualität → Schwellen und Häufigkeit:** Tabelle mit 23 Zeilen (siehe Erwartungswerte), Häufigkeit mit den Spalten hoch, mittel, gering.
+4. **Sensitivitätsanalyse:** je Kennzahl zwei Zeilen (mehr, weniger), Spalte Prognosewert (farbige Kennzeichnung bzw. grauer Grund), Kurzhilfen ⓘ kurz mit „Mehr Details findest du unter der Tabelle.“ Darunter das Erklärfeld mit dem Beispiel Bundesliga Schüsse aufs Tor weniger (227 Spiele, 63,44 %, 51,57 %, +11,87 Pp.) und die aufklappbaren Felder. Eine einzelne Saison wählen: Prognosewert „–“, grau, „nur bei mehreren Saisons“. „↺ Auf gültige Schwellen zurücksetzen“ stellt die Vorbelegung wieder her.
+5. **„Schwellenvorschlag berechnen“** (Saison „Alle Saisons“): Tabelle mit 23 Zeilen = Datenqualität; Download „Vorschlag als schwellen.toml herunterladen“ funktioniert.
+6. **Vorschau** (`/vorschau`): Startseite-Ranking mit „Prognosewert hoch“; Spieltag mit Legende und Kacheln wie bisher gestaltet; Matchdetail eines ausgezeichneten Spiels mit „Prognosewert …“.
+7. Sag mir, ob die Texte der Sensitivitätsanalyse verständlich sind und was im Designentwurf anders werden soll.

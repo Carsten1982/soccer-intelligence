@@ -58,24 +58,27 @@
     "legende": "Legende",
     "wie_lesen": "Wie lese ich das?",
     "erklaerung_gruen_titel": "Grüne Kacheln:",
-    "erklaerung_gruen": "Bei diesen Partien weicht mindestens eine Kennzahl deutlich vom Ligaschnitt der letzten 20 Spieltage ab.",
-    "erklaerung_stufe_titel": "Stark oder Leicht:",
-    "erklaerung_stufe": "Zeigt die Stärke der Abweichung.",
+    "erklaerung_gruen": "Bei diesen Partien liegt mindestens eine Kennzahl über der Schwelle ihrer Liga – sie ist auffällig.",
+    "erklaerung_stufe_titel": "Prognosewert:",
+    "erklaerung_stufe": "Zeigt, wie oft sich solche Auffälligkeiten früher bestätigt haben: hoch, mittel oder gering. Dunkelgrün = hoch.",
     "erklaerung_weiss_titel": "Weiße Kacheln:",
     "erklaerung_weiss": "Keine Auffälligkeit bei dieser Partie.",
     "h1_vorne": "Alle Spiele im",
     "h1_akzent": "Überblick"
   },
   "stufe": {
-    "stark": "Stark",
-    "leicht": "Leicht",
+    "hoch": "Prognosewert hoch",
+    "mittel": "Prognosewert mittel",
+    "gering": "Prognosewert gering",
+    "mittel_gering": "Prognosewert mittel oder gering",
     "ohne": "Ohne Auffälligkeit",
     "normal": "Normal",
     "nicht_gewertet": "nicht gewertet"
   },
   "chip": {
-    "stark": "Stark",
-    "leicht": "Leicht",
+    "hoch": "Prognosewert hoch",
+    "mittel": "Prognosewert mittel",
+    "gering": "Prognosewert gering",
     "nicht_gewertet": "Nicht gewertet",
     "verschoben": "Verschoben",
     "abgesagt": "Abgesagt",
@@ -198,7 +201,7 @@
     "prozent_titel": "Prozentzahl:",
     "prozent": "Abweichung des Spielwerts vom Ligaschnitt.",
     "farben_titel": "Farben:",
-    "farben": "Grün steht für überdurchschnittliche, Rot für unterdurchschnittliche Werte. Dunkel bedeutet stark, hell bedeutet leicht."
+    "farben": "Grün steht für überdurchschnittliche, Rot für unterdurchschnittliche Werte. Dunkel bedeutet Prognosewert hoch, hell mittel oder gering."
   },
   "spiel": {
     "seitentitel": "{heim} gegen {gast} – {liga} – Soccer Intelligence",

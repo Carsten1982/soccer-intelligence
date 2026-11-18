@@ -102,8 +102,7 @@ Reihenfolge der Prüfung: **Status > gespielt > nicht gewertet > Stufe** (Überg
 | Status (`status`) | Spielplan-Status verschoben, abgesagt, abgebrochen, ausgesetzt, gewertet |
 | Gespielt (`gespielt`) | Ergebnis in der Datenbank, oder Anstoss vorbei (dann „Ergebnis folgt“) |
 | Nicht gewertet (`nicht_gewertet`) | alle 8 Kennzahlen vorläufig (F2) oder keine Werte |
-| Stark (`stark`) | mindestens eine nicht vorläufige Kennzahl mit starker Abweichung |
-| Leicht (`leicht`) | sonst mindestens eine mit leichter Abweichung |
+| Hoch / Mittel / Gering (`hoch`, `mittel`, `gering`, seit 0.19) | mindestens eine nicht vorläufige Kennzahl ist auffällig; Art = höchster Prognosewert (Regelwerk 2.2). Bis 0.18: Stark (`stark`) / Leicht (`leicht`) |
 | Ohne Auffälligkeit (`ohne`) | sonst |
 
 Stufen kommen aus `schwellen.toml` über den Rechenkern (Übergabe 4.1, keine festen 20/35). Vorläufige Kennzahlen zählen für die Stufe nicht.
@@ -124,7 +123,7 @@ Heim, „gegen“, Gast, Termin („Sa 14.11. · 15:30“, „Sa 14.11. · Zeit 
  "tabs": [{"saison": "2026/2027", "spieltag": 10, "von": "2026-11-20", "bis": "2026-11-22", "partien": 9,
            "auffaellig": 2, "sonderspiele": {"nachholspiel": 1, "vorgezogen": 0},
            "spiele": [{"id": 1388512, "heim": "Bayern München", "gast": "1. FC Köln", "datum": "2026-11-20",
-                       "anstoss": "20:30", "termin": "bestaetigt", "art": "stark", "status": null,
+                       "anstoss": "20:30", "termin": "bestaetigt", "art": "hoch", "status": null,
                        "ergebnis": null, "sonderspiel": null, "link": true,
                        "staerkste": {"kpi": "kpi03", "abweichung": 44.0}}]}]}
 ```
@@ -137,6 +136,8 @@ Heim, „gegen“, Gast, Termin („Sa 14.11. · 15:30“, „Sa 14.11. · Zeit 
 - Auf der öffentlichen Seite gibt es keine Zeitreise.
 
 ## 7. Matchdetail und Startseite (seit 0.18)
+
+**Seit 0.19 (Prognosewert, Regelwerk 2.2):** Website-Daten tragen statt „stark/leicht“ den Prognosewert `hoch`/`mittel`/`gering` (Kacheln, Karten, Ranking, Chips „Prognosewert hoch“ usw.). Gestaltung bis zum Designentwurf der Website unverändert: hoch wie bisher „stark“ (dunkel), mittel und gering wie bisher „leicht“ (hell). Neuer Entwurf und Release B folgen.
 
 ### 7.1 Matchdetail (Entwurf 2i, ergänzend 2c; Übergabe Abschnitt 7)
 **Jede Paarung des Spielplans hat eine eigene Seite** unter `/spiel/<Spiel-ID von API-Football>` – auch gespielte, Nachhol- und vorgezogene Spiele. Verlinkt sind sie von der Spieltag-Seite und vom Ranking der Startseite. Verschobene und abgesagte Spiele haben ebenfalls eine Seite (über die Adresse erreichbar), werden aber nicht verlinkt (F8). Programm: `app/website/spiel.py` (Datensatz), `vorlagen/spiel.html`.
@@ -156,7 +157,7 @@ Werte unverändert aus dem Rechenkern (F6): Erwartungswert = `hauptwert`, Teamwe
 Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
 
 1. Kopfbereich „Fußballspiele **durchleuchtet.**“ mit Knöpfen „Auffällige Spiele“ und „So funktioniert’s“.
-2. **„Die auffälligsten Spiele“** = genau die Top Anomalien des Dashboards (F6): je Liga der zeitlich nächste Block (`core/anzeige.top_block`), nur Spiele vor dem Anpfiff und mit Werten (`values_gate`), Auswahl und Rangfolge nach Regelwerk 2.6 (`core/top.select_top`: stark vor leicht, grösster Betrag, früheres Datum, Ligareihenfolge der Konfiguration; höchstens 4, einer je Spiel; vorläufige Werte und verschobene Spiele nie). Je Zeile: Rang, „Bundesliga · Spieltag 10“, Paarung, Termin, Pfeil, Abweichung, Stufe, Kennzahl, Balken; Link zum Matchdetail.
+2. **„Die auffälligsten Spiele“** = genau die Top Anomalien des Dashboards (F6): je Liga der zeitlich nächste Block (`core/anzeige.top_block`), nur Spiele vor dem Anpfiff und mit Werten (`values_gate`), Auswahl und Rangfolge nach Regelwerk 2.6 (`core/top.select_top`, seit 0.19: Prognosewert hoch vor mittel vor gering, dann grösster Betrag, früheres Datum, Ligareihenfolge; Liga-Mix höchstens 2 je Liga; höchstens 4, einer je Spiel; vorläufige Werte und verschobene Spiele nie). Je Zeile: Rang, „Bundesliga · Spieltag 10“, Paarung, Termin, Pfeil, Abweichung, Stufe, Kennzahl, Balken; Link zum Matchdetail.
 3. Zustände statt der Liste (Pausenkarte): **Keine Abweichungen** (eine Liga spielt, aber ohne Auffälligkeit) · **Spielpause** / **Winterpause** (keine Liga in den nächsten 14 Tagen; Winterpause, wenn Weihnachten in der Lücke liegt) · **Saisonstart** (alle nächsten Spieltage gehören zu einer neuen Saison) · **Sommerpause** („Die Saison ist beendet“, kein angesetztes Spiel) · **Nächster Spieltag** ohne Pausennamen bei veraltetem Datenstand (S9). Massgebend ist der früheste nächste Spieltag aller Ligen; der Knopf führt zu dessen Liga. Tage-Zähler (Q7) bei Spiel-, Winterpause, Saisonstart und veraltetem Stand. Fehler in den Daten: Hinweis „Daten werden geprüft“.
 4. Warnbox bei veraltetem Datenstand (über 3 Tage, F7); „Aktueller Datenstand: …“ (D1).
 5. „Deine Liga. Dein Spieltag.“ (vier Liga-Knöpfe), „So funktioniert’s“ (drei Spalten), Band „Bereit für den Spieltag?“, Block „Von einem Fußballfan gebaut“ mit Foto (Q6) oder Platzhalter, SEO-Text „Was ist Soccer Intelligence?“.
@@ -168,7 +169,7 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
 | Nr. | Situation | Erwartet |
 |---|---|---|
 | W1 | Formate | „Sa 21.11.“, „+47,36 %“, „−22,07 %“ (U+2212), „0,00 %“ ohne Vorzeichen, „2 : 1“, Zeitraum über den Jahreswechsel |
-| W2 | Einstufung | Status vor gespielt vor nicht gewertet vor Stufe; vorläufige Kennzahlen zählen nicht; stark vor leicht |
+| W2 | Einstufung | Status vor gespielt vor nicht gewertet vor Stufe; vorläufige Kennzahlen zählen nicht; seit 0.19 Prognosewert hoch vor mittel vor gering |
 | W3 | Sortierung | seit 0.18: Stark → Leicht → Ohne → übrige (Nicht gewertet, Status, Gespielt) nach Anstoss; innerhalb Stark/Leicht nach Betrag; Sonderspiele mitsortiert |
 | W4 | Zählung | Partien ohne Sonderspiele; „mit Auffälligkeit“ mit Sonderspielen; „keine mit Auffälligkeit“ |
 | W5 | Nachholspiel | im Tab, in dessen Zeitraum es fällt, sonst im ersten; mitsortiert (seit 0.18); Chip |
@@ -181,7 +182,7 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
 | W12 | Container | Router nur unter `/vorschau`, mit Passwortabfrage, noindex, Anfragebremse; nur lesend |
 | W13 | Echte Daten | alle vier Ligen an mehreren Tagen (wie A27) ohne Fehler; mit echten Dateien auch Startseite und Matchdetail jeder verlinkten Paarung |
 | W14 | Matchdetail | Q1 (Summe nur Gelbe Karten, sonst Mittelwert), Q2 (Marke 2,50), Q4 (einzelne vorläufige Kennzahl unter Normalbereich), Q5 (Endstand, Ergebnis folgt, Hinweis), nicht gewertet mit/ohne Werte, Status ohne Kennzahlen, Nachholspiel-Hinweis, Formkurve, Balken und Zahlen; **jede Paarung eines Spieltags und der ganzen Saison hat eine eigene Seite** (echte Saisonlisten) |
-| W15 | Startseite | Ranking wie Dashboard (stark vor leicht, Betrag, höchstens 4, einer je Spiel, ohne vorläufige und verschobene, nur vor dem Anpfiff); Zustände Spielpause, Winterpause, Sommerpause, Saisonstart, unbekannt (veraltet), keine, gesperrt; Tage-Zähler |
+| W15 | Startseite | Ranking wie Dashboard (Prognosewert, Betrag, Liga-Mix, höchstens 4, einer je Spiel, ohne vorläufige und verschobene, nur vor dem Anpfiff); Zustände Spielpause, Winterpause, Sommerpause, Saisonstart, unbekannt (veraltet), keine, gesperrt; Tage-Zähler |
 | W16 | Sicherheit | keine Inline-Stile und -Skripte (Content-Security-Policy), jede Balkenbreite hat eine CSS-Klasse |
 
 ## 9. Annahmen (bitte in der Vorschau prüfen)
@@ -212,4 +213,5 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
 |---|---|
 | 0.17 | Grundgerüst (Design, Schriften, Texte, Formate, Daten, Vorschau-Container mit Passwort, Zeitreise) und Seite **Spieltag** |
 | 0.18 | Alle drei Seiten **nach den Entwürfen**: Startseite (1d), Spieltag (3d), Matchdetail (2i) mit eigener Seite je Paarung; Entscheidungen Q1–Q7 |
+| 0.19 | Prognosewert statt stark/leicht in den Daten und Texten (Gestaltung unverändert bis zum neuen Entwurf); Ranking mit Liga-Mix |
 | später | Methodik, Impressum, Datenschutz, Livegang |

@@ -62,7 +62,11 @@ CSS = f"""
 .si-formrow {{white-space:nowrap;}}
 .si-form {{display:inline-block; width:.8rem; text-align:center; color:#9aa6b8; margin:0 .08rem;}}
 .si-form-S {{background:#2e9e5b;}} .si-form-U {{background:#9aa6b8;}} .si-form-N {{background:#d64545;}}
-.si-anom-keine {{background:#9aa6b8;}} .si-anom-leicht {{background:#f2c230;}} .si-anom-stark {{background:#d64545;}}
+.si-anom-keine {{background:#e3e8ef; box-shadow:inset 0 0 0 1px #c3ccd8;}}
+/* Prognosewert (seit 0.19, Zwischenstand bis zum Designentwurf): eine Farbe in drei Stufen */
+.si-anom-hoch {{background:#0f766e;}} .si-anom-mittel {{background:#4fb3a9;}}
+.si-anom-gering {{background:#d2efeb; box-shadow:inset 0 0 0 1.5px #4fb3a9;}}
+.si-kc-d {{color:{SLATE}; font-size:.74rem; margin-top:.2rem;}}
 .si-v {{display:inline-block; padding:0 .3rem; border-radius:.25rem; background:#fff3cd; color:#7a5b00;
   font-size:.7rem; font-weight:700; cursor:help;}}
 .si-legend {{color:{SLATE}; font-size:.8rem; margin:.25rem 0 1rem 0;}}

@@ -21,7 +21,8 @@ from conftest import (
     KNOWN_DB_SHA_2018, KNOWN_DB_SHA_H, LEAGUE_TEAMS, REFERENCE_DATABASE_2018, REFERENCE_DATABASE_H, make_match,
     write_workbook,
 )
-from test_gegenrechnung import _app_values
+from test_gegenrechnung import _app_values, _flags
+from test_kpis import legacy
 
 from core import schema
 from core.config import League
@@ -253,9 +254,9 @@ def test_counter_calculation_new_seasons(db_2018, counter_2018, cases_2018, name
     assert len(sample) > 100
     diffs, checked = [], 0
     for g in sample:
-        mine = G.analyse(lg, g.season, g.gameday, g.date, g.home, g.away)
+        mine = _flags(G.analyse(lg, g.season, g.gameday, g.date, g.home, g.away))
         app = _app_values(compute_match(prepared, Match(name, g.season, g.gameday, g.date, g.home, g.away),
-                                        2 * (teams - 1)))
+                                        2 * (teams - 1), legacy))
         diffs += [(g.id, key, mine[key], app[key]) for key in mine if mine[key] != app[key]]
         for kpi, (dev, provisional, more, less) in G.sim_events(lg, g).items():
             r = app_cases.get((g.id, kpi))
@@ -278,7 +279,7 @@ MATCHDAYS = [("2021/2022", 1), ("2021/2022", 2), ("2023/2024", 17), ("2025/2026"
 
 def _pages(path) -> dict:
     """Ligaseite je Liga und Spieltag (Stichtag = erstes Datum des Spieltags, wie „Datum von“) und die Top Anomalien
-    über alle vier Ligen. Gültige Standardschwellen (schwellen.toml enthält derzeit keine Abweichungen)."""
+    über alle vier Ligen, mit der Schwelle 20 % in beiden Richtungen (test_kpis.LEGACY)."""
     db = load_database(path)
     out, candidates = {}, {}
     for order, (name, teams) in enumerate(LEAGUE_TEAMS.items()):
@@ -286,7 +287,7 @@ def _pages(path) -> dict:
         for season, gd in MATCHDAYS:
             games = prepared[(prepared["season"] == season) & (prepared["gameday"] == gd)]
             von = min(games["date"])
-            res = [compute_match(prepared, Match(name, season, gd, von, g.home, g.away), 2 * (teams - 1))
+            res = [compute_match(prepared, Match(name, season, gd, von, g.home, g.away), 2 * (teams - 1), legacy)
                    for g in games.itertuples()]
             out[(name, season, gd)] = [repr(r) for r in res]
             candidates.setdefault((season, gd), []).extend(

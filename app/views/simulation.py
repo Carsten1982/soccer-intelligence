@@ -1,23 +1,27 @@
-"""Bereich Sensitivitätsanalyse (Version 0.12; seit 0.13 Designentwurf C vom 14.11.2026, Dashboard-Briefing 6.4).
+"""Bereich Sensitivitätsanalyse (seit 0.12; Version 0.19: eine Schwelle je Richtung und Prognosewert; Dashboard-Briefing
+6.4, KPI-Regelwerk 11).
 
-Links Liga und Saison, rechts eine Tabelle mit vier Zeilen je KPI 02–09: leicht positiv, stark positiv, leicht
-negativ, stark negativ, jede mit eigener Schwelle, Häufigkeit (betroffene Spiele) und Ergebnisqualität (Prognosewert),
-dazu eine Zeile Total. Gerechnet wird in core/sensitivity.py mit den Fällen aus core/simulation.py. Die Eingaben hier
-ändern nie die gültigen Schwellen (schwellen.toml). Hat ein KPI je Liga eigene Schwellen (KPI 03), bleibt das Feld bei
-„Alle Ligen“ leer („je Liga“); eine eingetragene Zahl gilt dann für alle Ligen.
+Links Liga und Saison, rechts je KPI 02–09 zwei Zeilen (mehr / weniger), jede mit eigener Schwelle, Häufigkeit
+(betroffene Spiele), Ergebnisqualität, Empfehlung und Prognosewert. Gerechnet wird in core/sensitivity.py mit den Fällen
+aus core/simulation.py. Die Eingaben hier ändern nie die gültigen Schwellen (schwellen.toml). Haben die Ligen
+unterschiedliche Schwellen, bleibt das Feld bei „Alle Ligen“ leer („je Liga“); eine eingetragene Zahl gilt dann für alle
+Ligen. Darunter das Erklärfeld (Rahmen, Beispiel, aufklappbare Erklärungen) und der Schwellenvorschlag.
 """
 
 from __future__ import annotations
 
+from datetime import date
+from decimal import Decimal
 from html import escape
 
 import streamlit as st
 
 from core.matchday import season_short
 from core.sensitivity import (
-    NEG, POS, RECOMMENDATIONS, TOO_FEW, TOTAL, Count, KpiSensitivity, Limits, Quality, evaluate, limit, matchday_summary,
+    DIRECTIONS, MEHR, RECOMMENDATIONS, RULES, TOO_FEW, Count, Limits, Quality, evaluate, limit, matchday_summary,
+    proposal, proposal_toml,
 )
-from core.simulation import DEFINITION_CHANGES, EVENT_TEXTS, default_choice, pct, running_seasons, season_choices
+from core.simulation import EVENT_TEXTS, default_choice, pct, running_seasons, season_choices
 from core.top import TOP_KPIS
 from state import get_active_leagues, get_closed_matchdays, get_database, get_simulation_cases, get_thresholds
 from views import components as ui
@@ -25,60 +29,48 @@ from views.registry import PAGES
 
 ALL = "Alle Ligen"
 KEY = "sth_"                                  # Präfix der Schwellenfelder (Zurücksetzen löscht alle)
-PARTS = ("lp", "sp", "ln", "sn")              # Zeilenfolge: leicht positiv, stark positiv, leicht negativ, stark negativ
-ATTR = {"lp": "light_pos", "sp": "strong_pos", "ln": "light_neg", "sn": "strong_neg"}
-LABEL = {"lp": "↗ Leicht positiv", "sp": "⇈ Stark positiv", "ln": "↘ Leicht negativ", "sn": "⇊ Stark negativ"}
-RATIO = [1.15, 1.45, 1.2, 10.9]              # Zeile: KPI · Eigenschaft · Abweichung in % · Zahlen
-COLS = [8, 6.5, 9.5, 9, 9, 10, 8.5, 17, 22.5]  # Breiten der Zahlenspalten in % (Summe 100)
+PARTS = DIRECTIONS                            # Zeilenfolge: mehr, weniger
+LABEL = {"mehr": "↗ mehr", "weniger": "↘ weniger"}
+RATIO = [1.15, 1.2, 1.2, 11.1]               # Zeile: KPI · Richtung · Abweichung in % · Zahlen
+COLS = [7, 5.5, 8.5, 7.5, 7.5, 9, 7.5, 13, 16, 18.5]   # Breiten der Zahlenspalten in % (Summe 100)
 STAGE_CSS = dict(zip(RECOMMENDATIONS, ("zw", "ng", "ok", "lt", "nr", "uk")))
+R = RULES
+MORE = "Mehr Details findest du unter der Tabelle."
+
+
+def _n(x) -> str:
+    """Zahl der Regeln für Texte: 5 statt 5.0, 10 bleibt 10, Komma statt Punkt.
+    Nullen nur nach dem Komma streichen (Fehler beim Testen 0.19: aus 10 wurde 1, aus 60 wurde 6)."""
+    if not isinstance(x, Decimal):
+        return str(x)
+    text = f"{x:f}"
+    if "." in text:
+        text = text.rstrip("0").rstrip(".")
+    return text.replace(".", ",")
+
 
 INFO = {
-    "eigenschaft": "Leicht: alle Spiele über der leichten Schwelle (die starken eingeschlossen). Stark: nur die Spiele "
-                   "über der starken Schwelle. Positiv = mehr als üblich erwartet, negativ = weniger.",
-    "schwelle": "Positiv zählt, was über der Schwelle liegt, negativ, was darunter liegt. Vorbelegt mit den gültigen "
-                "Werten aus schwellen.toml; eigene Werte erscheinen blau. KPI 03 bei „Alle Ligen“: leeres Feld = je Liga "
-                "die eigene gültige Schwelle; eine eingetragene Zahl gilt für alle Ligen.",
-    "spiele": "Spiele, bei denen der KPI vor dem Spiel über (positiv) bzw. unter (negativ) der Schwelle lag. Vorläufige "
-              "Werte (z. B. Aufsteiger) zählen nicht. Total = leicht positiv + leicht negativ.",
-    "schnitt": "Durchschnitt pro Spieltag: Anzahl Spiele geteilt durch die abgeschlossenen Spieltage der Auswahl. 0,50 "
-               "heisst: im Schnitt an jedem zweiten Spieltag ein solches Spiel.",
-    "abdeckung": "Anteil der Spieltage mit mindestens einem solchen Spiel. 85,30 % heisst: an 85 von 100 Spieltagen gab "
-                 "es bei diesem KPI mindestens eine solche Anomalie. Total = leicht positiv oder leicht negativ.",
-    "eingetroffen": "Davon die Spiele, in denen das Erwartete tatsächlich eintrat: positiv = mehr als der "
-                    "Liga-Durchschnitt vor dem Spiel, negativ = weniger. Total = leicht positiv + leicht negativ.",
-    "treffer": "Wie oft lag die Anomalie richtig? Anzahl eingetroffen geteilt durch die Spiele mit bekanntem Ergebnis "
-               "(fehlt der Wert im Spiel, z. B. keine Ecken erfasst, zählt das Spiel hier nicht).",
-    "vergleich": "Wie oft trat dasselbe in allen Spielen der Auswahl ein, mit und ohne Anomalie? Das ist der Normalfall. "
-                 "Er hängt nicht von der Schwelle ab und ist darum für leicht und stark gleich.",
-    "mehrwert": "Trefferquote minus Vergleichsgruppe, in Prozentpunkten. +8 heisst: Mit Anomalie trat das Erwartete in "
-                "8 von 100 Spielen häufiger ein als im Normalfall.",
-    "spanne": "Zeigt, wie stark der Mehrwert zufällig schwanken kann: Mit 95 % Sicherheit liegt der echte Mehrwert in "
-              "diesem Bereich. Je weniger Spiele, desto breiter. Liegt der linke Wert über 0, ist der Vorteil gesichert.",
-    "empfehlung": "Fasst Mehrwert und Spanne zusammen; die erste passende Stufe gilt. Zu wenige Daten: unter 50 Spielen. "
-                  "Negativ: die ganze Spanne liegt unter 0. Funktioniert: Mehrwert mindestens +5 Pp. und linker Wert "
-                  "über 0. Funktioniert leicht: Mehrwert mindestens +2 Pp. und linker Wert nicht unter −5. Keine "
-                  "relevante Verbesserung: auch der rechte Wert liegt unter +5 Pp. Noch unklar: alles übrige. Beruht "
-                  "auf den gewählten Saisons (historisch); Erklärung unten unter „Definitionen und Änderungen“.",
-    "saisons": "„Alle Saisons“ sind alle abgeschlossenen Saisons; „Letzte 2, 3 …“ zählen nur abgeschlossene. Die "
-               "älteste Saison der Datenbank (Referenzsaison) liefert nur die Vorsaison und fehlt immer.",
+    "richtung": f"Mehr = mehr als im Ligaschnitt erwartet, weniger = weniger. Je Kennzahl gibt es zwei Zeilen. {MORE}",
+    "schwelle": "Die Schwelle dieser Zeile: Auffällig ist ein Spiel, wenn die Erwartung um mehr als diesen Wert vom "
+                "Ligaschnitt abweicht. Vorbelegt mit der gültigen Schwelle; eigene Werte sind blau. Leer = keine Schwelle "
+                f"bzw. bei „Alle Ligen“ je Liga die eigene. {MORE}",
+    "spiele": f"So viele frühere Spiele lagen über der Schwelle (ohne vorläufige Werte). {MORE}",
+    "schnitt": f"So viele solche Spiele gab es im Schnitt je Spieltag. {MORE}",
+    "abdeckung": f"An wie vielen von 100 Spieltagen es mindestens ein solches Spiel gab. {MORE}",
+    "eingetroffen": "In so vielen dieser Spiele trat das Erwartete wirklich ein (mehr bzw. weniger als der Ligaschnitt "
+                    f"vor dem Spiel). {MORE}",
+    "treffer": f"Eingetroffen geteilt durch Anzahl Spiele: Wie oft lag die Auffälligkeit richtig? {MORE}",
+    "vergleich": f"Wie oft dasselbe bei allen Spielen eintrat – der Normalfall. {MORE}",
+    "mehrwert": f"Trefferquote minus Vergleichsgruppe: So viele Treffer mehr pro 100 Spiele. {MORE}",
+    "spanne": "In diesem Bereich liegt der echte Mehrwert mit 95 % Sicherheit. Links der ungünstigste, rechts der "
+              f"günstigste Fall. {MORE}",
+    "empfehlung": "Urteil aus Anzahl, Mehrwert und Spanne: Zu wenige Daten, Negativ, Funktioniert, Funktioniert leicht, "
+                  f"Keine relevante Verbesserung oder Noch unklar. {MORE}",
+    "prognosewert": "Wie stark wir uns auf die Auffälligkeit verlassen können: hoch, mittel, gering oder „–“ (mit Grund). "
+                    f"Nur bei „Funktioniert“ und stabil über die Saisons. {MORE}",
+    "saisons": "Welche Saisons ausgewertet werden. Den Prognosewert gibt es nur bei mehreren Saisons. Die älteste Saison "
+               "der Datenbank (Referenzsaison) liefert nur die Vorsaison und fehlt immer.",
 }
-
-STAGES_TEXT = """**Wie entsteht die Empfehlung?** Für jede Zeile schauen wir auf zwei Dinge. Der **Mehrwert** sagt, wie viel \
-öfter das Erwartete eintrat, wenn eine Anomalie angezeigt wurde, verglichen mit allen Spielen: +5 Pp. heisst, in 5 von \
-100 Spielen öfter. Weil im Fussball auch viel Zufall steckt, zeigt die **Spanne**, in welchem Bereich der echte Mehrwert \
-mit 95 % Sicherheit liegt; je mehr Spiele, desto enger wird sie. Geprüft wird in dieser Reihenfolge, die erste passende \
-Stufe gilt:
-
-- **Zu wenige Daten:** Es gibt weniger als 50 Spiele. Das reicht für kein Urteil, so wie man aus fünf Münzwürfen nicht \
-ablesen kann, ob eine Münze gezinkt ist.
-- **Negativ:** Sogar der beste Wert der Spanne liegt unter 0. Die Anomalie liegt also öfter daneben als der Normalfall.
-- **Funktioniert:** Der Mehrwert beträgt mindestens +5 Pp., und selbst der schlechteste Wert der Spanne liegt noch \
-über 0. Die Anomalie hilft also mit grosser Sicherheit.
-- **Funktioniert leicht:** Der Mehrwert beträgt mindestens +2 Pp., und im ungünstigsten Fall verliert man höchstens \
-5 Pp. Ein kleiner, aber wahrscheinlicher Vorteil.
-- **Keine relevante Verbesserung:** Sogar der beste Wert der Spanne liegt unter +5 Pp. Die Anomalie schadet nicht, \
-hilft aber kaum.
-- **Noch unklar:** Keine der Stufen oben passt, meist weil die Spanne sehr breit ist. Mehr Spiele würden helfen."""
 
 CSS = """<style>
 [data-testid="stColumn"]:has(.st-key-sens_settings) {position:sticky; top:4.2rem; align-self:flex-start;}
@@ -132,6 +124,14 @@ table.si-t {border-collapse:collapse; width:100%; margin:0 !important; table-lay
   color:#14213d; font-weight:400; font-size:.78rem; line-height:1.35; text-align:left; white-space:normal;}
 .si-i.r .tip {left:auto; right:-.3rem; transform:none;} .si-i.l .tip {left:-.3rem; transform:none;}
 .si-i:hover .tip {display:block;}
+.si-pw {display:inline-block; border-radius:.25rem; padding:.02rem .4rem; font-size:.74rem; font-weight:700; white-space:nowrap;}
+.si-pw.hoch {background:#0f766e; color:#fff;} .si-pw.mittel {background:#8fd3cb; color:#0b4f4a;}
+.si-pw.gering {background:#e3f4f2; color:#0b4f4a; border:1px solid #8fd3cb;}
+.si-why {color:#8a96a8; font-size:.7rem; white-space:normal; line-height:1.15;}
+.si-t td.off {background:#f1f3f6; color:#9aa6b8;}
+.si-box {border:1px solid #c3ccd8; border-radius:.5rem; padding:.7rem .9rem; background:#f8fafc; margin:.6rem 0 .4rem;
+  color:#14213d; font-size:.9rem;}
+.si-box h4 {margin:0 0 .3rem; font-size:1rem;} .si-box ol {margin:.3rem 0 0 1.1rem; padding:0;} .si-box li {margin:.25rem 0;}
 </style>"""
 
 
@@ -184,15 +184,21 @@ def valid_limits(league: str) -> dict[str, dict[str, Limits]]:
 def defaults(per_league: dict[str, Limits]) -> dict[str, float | None]:
     """Vorbelegung je Feld: der gültige Wert, wenn er in allen Ligen gleich ist, sonst leer („je Liga“)."""
     out = {}
-    for part, attr in ATTR.items():
-        values = {getattr(x, attr) for x in per_league.values()}
-        out[part] = float(values.pop()) if len(values) == 1 else None
+    for part in PARTS:
+        values = {x.get(part) for x in per_league.values()}
+        value = values.pop() if len(values) == 1 else None
+        out[part] = float(value) if value is not None else None
     return out
+
+
+def placeholder(per_league: dict[str, Limits], part: str) -> str:
+    values = {x.get(part) for x in per_league.values()}
+    return "keine" if values == {None} else "je Liga"
 
 
 def follow_league(league: str) -> None:
     """Beim Wechsel der Liga: unveränderte Felder (noch der gültige Wert der bisherigen Auswahl) zeigen den gültigen Wert
-    der neuen Auswahl, z. B. KPI 03 „je Liga“ -> Bundesliga 35. Eigene Eingaben bleiben stehen."""
+    der neuen Auswahl. Eigene Eingaben bleiben stehen."""
     state, before = st.session_state, st.session_state.get("sens_prev_liga")
     state["sens_prev_liga"] = league
     if before is None or before == league:
@@ -206,32 +212,21 @@ def follow_league(league: str) -> None:
                 del state[key]
 
 
-def _keep_order(kpi: str) -> None:
-    """Bei jeder Eingabe: stark betragsmässig nie unter leicht – sonst wird stark auf den leichten Wert gesetzt."""
-    state = st.session_state
-    for light, strong, sign in (("lp", "sp", 1), ("ln", "sn", -1)):
-        lk, sk = f"{KEY}{kpi}_{light}", f"{KEY}{kpi}_{strong}"
-        if state.get(lk) is not None and state.get(sk) is not None and sign * state[sk] < sign * state[lk]:
-            state[sk] = state[lk]
-
-
-def threshold_input(kpi: str, part: str, default: float | None) -> float | None:
-    """Ein Schwellenfeld: positiv 0 bis 999, negativ −999 bis 0, eine Nachkommastelle; leer = je Liga."""
+def threshold_input(kpi: str, part: str, default: float | None, hint: str) -> float | None:
+    """Ein Schwellenfeld (Betrag 0 bis 999, eine Nachkommastelle); leer = keine Schwelle bzw. je Liga."""
     key = f"{KEY}{kpi}_{part}"
-    lo, hi = (0.0, 999.0) if part in ("lp", "sp") else (-999.0, 0.0)
     start = {} if key in st.session_state else {"value": default}       # Wert sonst aus der Sitzung
-    return st.number_input(f"{kpi} {part}", min_value=lo, max_value=hi, step=0.1, format="%.1f", key=key,
-                           placeholder="je Liga", label_visibility="collapsed", on_change=_keep_order, args=(kpi,),
-                           **start)
+    return st.number_input(f"{kpi} {part}", min_value=0.0, max_value=999.0, step=0.1, format="%.1f", key=key,
+                           placeholder=hint, label_visibility="collapsed", **start)
 
 
 def effective(values: dict[str, float | None], per_league: dict[str, Limits]) -> Limits | dict[str, Limits]:
-    """Wirksame Schwellen: eingetragene Zahl für alle Ligen, leeres Feld = gültiger Wert der Liga. Liegt stark dadurch
-    unter leicht, gilt stark = leicht (wie bei der Eingabe). Gleich in allen Ligen -> ein Limits, sonst je Liga."""
+    """Wirksame Schwellen: eingetragene Zahl für alle Ligen, leeres Feld = gültiger Wert der Liga (auch „keine“).
+    Gleich in allen Ligen -> ein Limits, sonst je Liga."""
     out = {}
     for lg, valid in per_league.items():
-        v = {p: limit(values[p]) if values[p] is not None else getattr(valid, ATTR[p]) for p in PARTS}
-        out[lg] = Limits(v["lp"], v["ln"], max(v["sp"], v["lp"]), min(v["sn"], v["ln"]))
+        v = {p: limit(values[p]) if values[p] is not None else valid.get(p) for p in PARTS}
+        out[lg] = Limits(v[MEHR], v["weniger"])
     distinct = set(out.values())
     return distinct.pop() if len(distinct) == 1 else out
 
@@ -243,18 +238,19 @@ def head() -> None:
     with st.container(key="sens_head"):
         c = st.columns(RATIO, vertical_alignment="top")
         c[0].markdown('<div class="si-h full">KPI</div>', unsafe_allow_html=True)
-        c[1].markdown('<div class="si-h g span">Schwellen</div>'
-                      f'<div class="si-h l">Eigenschaft&nbsp;{info("eigenschaft", "l")}</div>', unsafe_allow_html=True)
+        c[1].markdown('<div class="si-h g span">Schwelle</div>'
+                      f'<div class="si-h l">Richtung&nbsp;{info("richtung", "l")}</div>', unsafe_allow_html=True)
         c[2].markdown('<div class="si-h g blank"></div>'
                       f'<div class="si-h l">Abweichung in %&nbsp;{info("schwelle", "l")}</div>', unsafe_allow_html=True)
         c[3].markdown(
             f'<table class="si-t">{colgroup()}<tr><th colspan=3 class=g>Betroffene Spiele</th>'
-            '<th colspan=6 class="g q">Prognosewert</th></tr><tr class=l>'
+            '<th colspan=7 class="g q">Ergebnisqualität und Prognosewert</th></tr><tr class=l>'
             f'<th>Anzahl Spiele {info("spiele")}</th><th>Ø/ST {info("schnitt")}</th>'
             f'<th>Spieltags&shy;abdeckung {info("abdeckung")}</th><th class=q>Anzahl eingetroffen {info("eingetroffen")}</th>'
             f'<th>Treffer&shy;quote {info("treffer")}</th><th>Vergleichs&shy;gruppe (alle Spiele) {info("vergleich")}</th>'
             f'<th>Mehrwert in Pp. {info("mehrwert", "r")}</th><th>Spanne (Wilson 95 %) {info("spanne", "r")}</th>'
-            f'<th>Empfehlung {info("empfehlung", "r")}</th></tr></table>', unsafe_allow_html=True)
+            f'<th>Empfehlung {info("empfehlung", "r")}</th><th>Prognose&shy;wert {info("prognosewert", "r")}</th></tr>'
+            '</table>', unsafe_allow_html=True)
 
 
 def _count_cells(c: Count) -> str:
@@ -263,51 +259,53 @@ def _count_cells(c: Count) -> str:
     return f"<td>{num(c.count)}</td><td>{per}</td><td>{cov}</td>"
 
 
-def line_html(c: Count, q: Quality, css: str) -> str:
-    """Eine Zeile: betroffene Spiele und Prognosewert mit derselben Schwelle."""
-    if q.hit is None:                                      # keine Anomalie: nur die Vergleichsgruppe
+def prognosis_cell(q: Quality, one_season: bool) -> str:
+    if one_season:
+        return '<td class="c off">–<div class="si-why">nur bei mehreren Saisons</div></td>'
+    if q.prognosewert:
+        return f'<td class=c><span class="si-pw {q.prognosewert}">{q.prognosewert}</span></td>'
+    return f'<td class=c>–<div class="si-why">{escape(q.reason)}</div></td>'
+
+
+def line_html(c: Count, q: Quality, one_season: bool, no_threshold: bool) -> str:
+    """Eine Zeile: betroffene Spiele, Ergebnisqualität, Empfehlung und Prognosewert mit derselben Schwelle."""
+    if no_threshold:
+        cells = ("<td>–</td><td>–</td><td>–</td><td class=q>–</td><td>–</td>"
+                 + (f"<td>{pct(q.base)} %</td>" if q.base is not None else "<td>–</td>")
+                 + '<td>–</td><td class=s>–</td><td class=c colspan=2><span class="si-why">keine Schwelle</span></td>')
+        return f'<table class="si-t">{colgroup()}<tr class="grey">{cells}</tr></table>'
+    if q.rate is None:                                     # niemand über der Schwelle: nur die Vergleichsgruppe
         base = f"{pct(q.base)} %" if q.base is not None else "–"
-        rest = f"<td>–</td><td>{base}</td><td>–</td><td class=c>–</td>"
+        rest = f"<td>–</td><td>{base}</td><td>–</td><td class=s>–</td>"
     else:
-        rest = (f"<td>{pct(q.hit)} %</td><td>{pct(q.base)} %</td><td><b>{pct(q.gain, True)}</b></td>"
+        rest = (f"<td>{pct(q.rate)} %</td><td>{pct(q.base)} %</td><td><b>{pct(q.gain, True)}</b></td>"
                 f"<td class=s>{pct(q.low, True)} bis {pct(q.high, True)}</td>")
-    css = (css + " grey") if q.recommendation == TOO_FEW else css
-    cells = _count_cells(c) + f"<td class=q>{num(q.hits)}</td>" + rest + f"<td class=c>{pill(q.recommendation)}</td>"
+    css = "grey" if q.recommendation == TOO_FEW else ""
+    cells = (_count_cells(c) + f"<td class=q>{num(q.hits)}</td>" + rest
+             + f"<td class=c>{pill(q.recommendation)}</td>" + prognosis_cell(q, one_season))
     return f'<table class="si-t">{colgroup()}<tr class="{css}">{cells}</tr></table>'
 
 
-def total_html(r: KpiSensitivity) -> str:
-    rate = f"{pct(r.total_hits / r.total_cases * 100)} %" if r.total_cases else "–"
-    cells = (_count_cells(r.light[TOTAL]) + f"<td class=q>{num(r.total_hits)}</td><td>{rate}</td>"
-             + "<td class=c>–</td>" * 4)
-    return f'<table class="si-t">{colgroup()}<tr class="tot">{cells}</tr></table>'
-
-
-def kpi_block(kpi: str, per_league: dict[str, Limits], result_for) -> dict[str, float | None]:
-    """Vier Zeilen und Total für einen KPI; gibt die Eingaben zurück. result_for(limits) rechnet den KPI aus."""
+def kpi_block(kpi: str, per_league: dict[str, Limits], result_for, one_season: bool) -> dict[str, float | None]:
+    """Zwei Zeilen (mehr, weniger) für einen KPI; gibt die Eingaben zurück. result_for(limits) rechnet den KPI aus."""
     number, _, title = TOP_KPIS[kpi].partition(" – ")
     start = defaults(per_league)
     with st.container(key=f"sens_kpi_{kpi}"):
         values, slots = {}, {}
-        for part in (*PARTS, TOTAL):
+        for part in PARTS:
             c = st.columns(RATIO, vertical_alignment="center")
-            if part == "ln":                                   # KPI-Name in der Mitte der fünf Zeilen
+            if part == MEHR:
                 c[0].markdown(f'<div class="si-kpi"><b>{escape(number)}</b><small>{escape(title)}</small></div>',
                               unsafe_allow_html=True)
-            if part == TOTAL:
-                c[1].markdown('<div class="si-lab t">Total</div>', unsafe_allow_html=True)
-                c[2].markdown('<div class="si-lab c">–</div>', unsafe_allow_html=True)
-            else:
-                c[1].markdown(f'<div class="si-lab{" s" if part[0] == "s" else ""}">{LABEL[part]}</div>',
-                              unsafe_allow_html=True)
-                with c[2]:
-                    values[part] = threshold_input(kpi, part, start[part])
+            c[1].markdown(f'<div class="si-lab">{LABEL[part]}</div>', unsafe_allow_html=True)
+            with c[2]:
+                values[part] = threshold_input(kpi, part, start[part], placeholder(per_league, part))
             slots[part] = c[3]
-        r = result_for(effective(values, per_league))
-        for part, count, quality in (("lp", r.light[POS], r.quality[POS]), ("sp", r.strong[POS], r.strong_quality[POS]),
-                                     ("ln", r.light[NEG], r.quality[NEG]), ("sn", r.strong[NEG], r.strong_quality[NEG])):
-            slots[part].markdown(line_html(count, quality, "str" if part[0] == "s" else ""), unsafe_allow_html=True)
-        slots[TOTAL].markdown(total_html(r), unsafe_allow_html=True)
+        lim = effective(values, per_league)
+        r = result_for(lim)
+        for part in PARTS:
+            none = (lim.get(part) is None) if isinstance(lim, Limits) else all(x.get(part) is None for x in lim.values())
+            slots[part].markdown(line_html(r.counts[part], r.quality[part], one_season, none), unsafe_allow_html=True)
     return values
 
 
@@ -318,17 +316,154 @@ def own_values_css(chosen: dict[str, dict[str, float | None]], starts: dict[str,
     return f"<style>{', '.join(keys)} {{color:#1d5fb4; font-weight:700;}}</style>" if keys else ""
 
 
-def definitions() -> None:
-    with st.expander("Definitionen und Änderungen"):
-        st.markdown("**Wann gilt eine Anomalie als eingetroffen?** Verglichen wird der tatsächliche Wert im Spiel mit "
-                    "der Ligareferenz, die vor dem Spiel galt (KPI-Regelwerk, Abschnitt 11). Gleichstand zählt in keiner "
-                    "Richtung als eingetroffen.")
-        st.markdown("\n".join(f"- **{TOP_KPIS[k]}:** {t}" for k, t in EVENT_TEXTS.items()))
-        st.markdown("**Grundlage:** jedes Spiel so berechnet, als wäre es noch nicht gespielt (Stichtag = Spieldatum, "
-                    "Spieltag = Gameday); nur abgeschlossene Spieltage. Nicht verwendet: die Referenzsaison (älteste "
-                    "Saison der Datenbank), vorläufige Werte (z. B. Aufsteiger) und nicht berechenbare Werte.")
-        st.markdown(STAGES_TEXT)
-        st.markdown("**Änderungen an den Definitionen**\n\n" + "\n".join(f"- {d}: {t}" for d, t in DEFINITION_CHANGES))
+# --- Erklärfeld (Spezifikation 18.11.2026, Abschnitt 4.2) -------------------------------------------------------------
+
+def _example() -> dict | None:
+    """Beispiel aus der gültigen Schwellendatei: Bundesliga, Schüsse aufs Tor, weniger."""
+    config = get_thresholds()
+    s = config.get("Bundesliga", "kpi09").negativ
+    if s is None or s.spiele is None or s.trefferquote is None:
+        return None
+    hits = round(s.spiele * float(s.trefferquote) / 100)
+    seasons = config.saisons.replace("/20", "/").replace("-", "–") if config.saisons else ""
+    return {"t": _n(s.schwelle), "n": s.spiele, "h": hits, "q": round(float(s.trefferquote)),
+            "b": round(float(s.vergleichsgruppe)), "g": round(float(s.mehrwert)), "lo": round(float(s.spanne_links)),
+            "hi": round(float(s.spanne_rechts)), "st": s.saisons_positiv or "", "pw": s.prognosewert,
+            "seasons": seasons}
+
+
+def explanation() -> None:
+    """Rahmen und Einstieg (immer sichtbar), danach aufklappbare Erklärungen je Spalte."""
+    st.markdown(
+        "<div class='si-box'><h4>Wie kommen die Werte in dieser Tabelle zustande?</h4>Wir schauen in die Vergangenheit: "
+        "Wie oft ist eingetroffen, was eine Auffälligkeit angekündigt hat? Die Tabelle zeigt das Spalte für Spalte. Am "
+        "Ende steht der <b>Prognosewert</b>: Er sagt, ob und wie stark wir uns auf eine solche Auffälligkeit verlassen "
+        "können. Die Felder unten erklären jede Spalte genauer.</div>", unsafe_allow_html=True)
+    e = _example()
+    if e:
+        st.markdown(f"""<div class='si-box'><h4>Beispiel: Bundesliga, Schüsse aufs Tor, „weniger“</h4>
+<small>Stand Saisons {escape(e["seasons"])}</small><ol>
+<li><b>Abweichung in %:</b> Für jedes Spiel rechnen wir vor dem Anpfiff aus, wie viele Schüsse aufs Tor zu erwarten sind
+– aus den letzten 10 Spielen beider Teams. Das vergleichen wir mit dem Ligaschnitt der letzten 20 Spieltage. Liegt die
+Erwartung mehr als <b>{e["t"]} %</b> darunter (die <b>Schwelle</b> dieser Zeile), zählt das Spiel als auffällig. Jede Liga
+hat je Kennzahl und Richtung ihre eigene Schwelle.</li>
+<li><b>Trefferquote:</b> In {e["n"]} früheren Spielen lag die Erwartung mehr als {e["t"]} % unter dem Ligaschnitt.
+Danach haben wir nachgeschaut, was im Spiel wirklich passiert ist: In {e["h"]} dieser {e["n"]} Spiele fielen tatsächlich
+weniger Schüsse aufs Tor als im Ligaschnitt. Die Auffälligkeit lag also in <b>{e["q"]} %</b> der Fälle richtig.</li>
+<li><b>Vergleichsgruppe und Mehrwert in Pp.:</b> Bei <i>allen</i> Spielen – auch denen ohne Auffälligkeit – fielen nur
+in {e["b"]} % weniger Schüsse als im Ligaschnitt. Der <b>Mehrwert in Pp.</b> ist {e["q"]} − {e["b"]} =
+<b>+{e["g"]} Prozentpunkte</b>: Mit Auffälligkeit trifft es in {e["g"]} von 100 Spielen öfter zu als im Normalfall.</li>
+<li><b>Spanne (Wilson 95 %):</b> Auch ein guter Wert kann Glück sein. Die Spanne zeigt, wie stark der Mehrwert zufällig
+schwanken kann. Hier liegt er mit 95 % Sicherheit zwischen <b>+{e["lo"]} und +{e["hi"]} Pp.</b> Selbst im ungünstigsten
+Fall bleibt ein Vorteil von {e["lo"]} Treffern pro 100 Spiele.</li>
+<li><b>Empfehlung:</b> Dieses Feld fasst Anzahl Spiele, Mehrwert und Spanne zu einem Urteil zusammen – hilft die
+Auffälligkeit oder nicht? Die möglichen Urteile sind <i>Zu wenige Daten, Negativ, Funktioniert, Funktioniert leicht,
+Keine relevante Verbesserung</i> und <i>Noch unklar</i>. Hier: <b>Funktioniert</b>. Wie jedes Urteil zustande kommt, steht
+unten unter „Empfehlung“.</li>
+<li><b>Prognosewert:</b> Er sagt, wie stark wir uns auf die Auffälligkeit verlassen können: <b>hoch</b>, <b>mittel</b>,
+<b>gering</b> oder <b>–</b> (nicht verlässlich genug). Ihn gibt es nur, wenn die Empfehlung „Funktioniert“ lautet und der
+Vorteil in fast jeder Saison da war (hier in {escape(e["st"]).replace("/", " von ")}). Hier: {e["q"]} % Trefferquote und
++{e["g"]} Pp. ergeben <b>{e["pw"]}</b>. Die genauen Regeln stehen unten unter „Prognosewert“.</li></ol></div>""",
+                    unsafe_allow_html=True)
+    with st.expander("Abweichung in % und Schwelle"):
+        st.markdown(f"""**Abweichung in %:** Wie stark die Erwartung für ein Spiel vom Ligaschnitt abweicht. Die Erwartung stammt aus den letzten 10 Spielen beider Teams (bis zwei Tage vor dem Anpfiff), der Ligaschnitt aus den 20 Spieltagen davor. Beispiel: erwartet 7,8 Schüsse, Ligaschnitt 9,0 Schüsse → −13,3 %.
+
+**Schwelle:** Ab dieser Abweichung gilt ein Spiel als auffällig. Gezählt wird, was darüber liegt: Bei 10 % zählt −10,01 %, −10,00 % nicht.
+
+**Es gibt keine einheitliche Schwelle, sondern je Liga, Kennzahl und Richtung (*mehr* / *weniger*) höchstens eine.** Festgelegt werden sie nach einer festen Regel:
+1. Wir probieren {", ".join(_n(c) for c in R.candidates[:-1])} und {_n(R.candidates[-1])} % aus.
+2. In Frage kommen nur Schwellen mit der Empfehlung **Funktioniert**, deren Vorteil zudem **stabil** ist (siehe „Prognosewert“).
+3. Davon nehmen wir die mit dem **besten Prognosewert**; bei Gleichstand die mit **mehr Spielen**, damit Auffälligkeiten nicht zu selten werden.
+4. Kommt keine in Frage, gibt es für diese Kennzahl in dieser Liga und Richtung keine Schwelle – sie wird nie ausgezeichnet.
+
+Die gültigen Schwellen werden einmal pro Saison nach Saisonende neu bestimmt und freigegeben (Knopf „Schwellenvorschlag berechnen“ unten). In der Tabelle kannst du andere Werte ausprobieren; was von der gültigen Schwelle abweicht, ist blau. Bei „Alle Ligen“ zählt jede Liga mit ihrer eigenen Schwelle, solange das Feld leer ist.""")
+    with st.expander("Anzahl Spiele, Ø pro Spieltag, Spieltagsabdeckung"):
+        st.markdown("**Anzahl Spiele:** So viele Spiele lagen über der Schwelle (vorläufige Werte, z. B. bei Aufsteigern, "
+                    "zählen nicht). **Ø pro Spieltag:** so viele solche Spiele im Schnitt je Spieltag (0,50 = an jedem "
+                    "zweiten Spieltag eines). **Spieltagsabdeckung:** an wie vielen von 100 Spieltagen es mindestens ein "
+                    "solches Spiel gab.")
+    with st.expander("Anzahl eingetroffen und Trefferquote"):
+        st.markdown("**Eingetroffen** heisst: Der echte Wert im Spiel lag über (*mehr*) bzw. unter (*weniger*) dem "
+                    "Ligaschnitt, der **vor** dem Spiel galt. Genau gleich zählt nicht.\n\n"
+                    + "\n".join(f"- {TOP_KPIS[k].partition(' – ')[2]}: {t}" for k, t in EVENT_TEXTS.items())
+                    + "\n\n**Trefferquote** = eingetroffen ÷ Spiele mit bekanntem Ergebnis.")
+    with st.expander("Vergleichsgruppe (alle Spiele) und Mehrwert in Pp."):
+        st.markdown("**Vergleichsgruppe:** Wie oft trat dasselbe bei **allen** Spielen ein, mit und ohne Auffälligkeit? "
+                    "Das ist der Normalfall – wichtig, weil manches ohnehin oft passiert: 60 % Treffer sind nichts wert, "
+                    "wenn es sowieso in 60 % der Spiele passiert.\n\n**Mehrwert in Pp.** = Trefferquote − "
+                    "Vergleichsgruppe, in Prozentpunkten. +12 Pp. heisst: Mit Auffälligkeit trifft es in 12 von 100 "
+                    "Spielen öfter zu als im Normalfall.")
+    with st.expander("Spanne (Wilson 95 %)"):
+        st.markdown("Wirfst du eine Münze zehnmal und es kommt siebenmal Kopf, ist sie deshalb noch nicht gezinkt – das "
+                    "kann Glück sein. Genauso kann ein guter Mehrwert aus wenigen Spielen Zufall sein.\n\n"
+                    "Die **Spanne** (berechnet mit dem Wilson-Verfahren) zeigt, in welchem Bereich der *echte* Mehrwert "
+                    "mit 95 % Sicherheit liegt. Je mehr Spiele, desto enger die Spanne.\n"
+                    "- **Gutes Beispiel:** Mehrwert +12 Pp., Spanne **+5 bis +18 Pp.** (227 Spiele). Selbst im "
+                    "ungünstigsten Fall bleiben +5 Pp. – der Vorteil ist kaum Zufall.\n"
+                    "- **Schwaches Beispiel:** Mehrwert +12 Pp., Spanne **−4 bis +30 Pp.** (nur 35 Spiele). Der Mehrwert "
+                    "sieht gleich gut aus, aber im ungünstigsten Fall wäre die Auffälligkeit sogar schlechter als der "
+                    "Normalfall – das kann reines Glück sein.\n\n"
+                    "**Linker Wert** = ungünstigster Fall, **rechter Wert** = günstigster Fall. Für unsere Urteile zählt "
+                    "vor allem der linke Wert. (Fachlich: Newcombe-Methode aus zwei Wilson-Intervallen.)")
+    with st.expander("Empfehlung"):
+        st.markdown(f"""Die Empfehlung fasst Anzahl Spiele, Mehrwert und Spanne zu einem Urteil zusammen. Geprüft wird von oben nach unten, **die erste passende Stufe gilt**:
+1. **Zu wenige Daten:** weniger als {R.min_cases} Spiele. Für ein Urteil reicht das nicht – so wie fünf Münzwürfe nichts beweisen.
+2. **Negativ:** mindestens {R.min_cases} Spiele, und sogar der rechte Wert der Spanne liegt unter 0. Die Auffälligkeit liegt öfter daneben als der Normalfall.
+3. **Funktioniert:** mindestens {R.min_cases} Spiele, Mehrwert mindestens +{_n(R.works_gain)} Pp., **und** der linke Wert der Spanne liegt über +{_n(R.works_low)} Pp. Auch im ungünstigsten Fall ein klarer Vorteil.
+4. **Funktioniert leicht:** mindestens {R.min_cases} Spiele, Mehrwert mindestens +{_n(R.light_gain)} Pp., und der linke Wert liegt nicht unter −{_n(-R.light_floor)} Pp. Wahrscheinlich ein kleiner Vorteil, aber nicht gesichert.
+5. **Keine relevante Verbesserung:** mindestens {R.min_cases} Spiele, und sogar der rechte Wert liegt unter +{_n(R.relevant_high)} Pp. Die Auffälligkeit schadet nicht, hilft aber kaum.
+6. **Noch unklar:** mindestens {R.min_cases} Spiele, aber nichts davon passt – meist, weil die Spanne sehr breit ist. Mehr Spiele würden helfen.
+
+Für den Prognosewert zählt nur „Funktioniert“. Die anderen Stufen zeigen, warum eine Zeile nicht reicht.""")
+    with st.expander("Prognosewert"):
+        a, b = R.stable_share
+        st.markdown(f"""Der Prognosewert sagt, wie stark wir uns auf eine Auffälligkeit verlassen können. Er bestimmt auch die Reihenfolge der **Top Anomalien**: zuerst hoch, dann mittel, dann gering, jeweils nach Grösse der Abweichung – mit höchstens zwei Spielen je Liga, damit alle Ligen vorkommen.
+
+**Voraussetzungen:**
+1. Die Empfehlung lautet **Funktioniert**.
+2. **Stabil:** Der Mehrwert war in mindestens **{"zwei Dritteln" if (a, b) == (2, 3) else f"{a}/{b}"} der Saisons** einzeln positiv (bei 7 Saisons: in {R.stable_needed(7)}). So fällt eine Zeile heraus, die nur dank einer einzigen Ausnahmesaison gut aussieht.
+
+**Die vier Stufen:**
+- **hoch:** Trefferquote **ab {_n(R.high_rate)} %** und Mehrwert **ab +{_n(R.high_gain)} Pp.** Etwa 6 von 10 Treffern und klar besser als der Normalfall. Das +{_n(R.high_gain)} verhindert, dass etwas nur deshalb „hoch“ wird, weil es ohnehin oft passiert (z. B. „wenig Tore in der 1. Halbzeit“: schon bei allen Spielen rund 64 %).
+- **mittel:** Trefferquote **ab {_n(R.medium_rate)} %** (oder ab {_n(R.high_rate)} % mit Mehrwert unter +{_n(R.high_gain)} Pp.).
+- **gering:** Trefferquote **ab {_n(R.low_rate)} %**. Nachweislich besser als der Normalfall, aber nur knapp über „jedes zweite Mal“.
+- **–:** Voraussetzungen nicht erfüllt oder Trefferquote unter {_n(R.low_rate)} %. Der Grund steht grau daneben. Solche Zeilen werden nie ausgezeichnet.
+
+Bei einer **einzelnen Saison** lässt sich die Stabilität nicht prüfen: Die Spalte ist dann ausgegraut mit „–“ und dem Hinweis „nur bei mehreren Saisons“.
+
+**Wichtig:** Der Prognosewert ist **keine Wahrscheinlichkeit für das nächste Spiel**, sondern die Bilanz der Vergangenheit. Weil wir die beste Schwelle auswählen, sind die Werte etwas zu optimistisch: In einer neuen Saison liegt die Trefferquote erfahrungsgemäss einige Prozentpunkte tiefer. Prüfen kannst du das, indem du oben nur die letzte Saison wählst.""")
+    with st.expander("Grundlage der Berechnung"):
+        st.markdown("Jedes frühere Spiel wird so berechnet, als wäre es noch nicht gespielt – nur mit Daten, die vor dem "
+                    "Anpfiff bekannt waren. Ausgewertet werden die gewählten Saisons, nur abgeschlossene Spieltage. Nicht "
+                    "verwendet werden die älteste Saison der Datenbank (sie liefert nur die Vorsaison-Werte) und "
+                    "vorläufige Werte (Teams mit weniger als 10 Spielen, z. B. Aufsteiger).")
+
+
+# --- Schwellenvorschlag ----------------------------------------------------------------------------------------------
+
+def proposal_section(cases, matchdays_all, seasons: list[str]) -> None:
+    """Vorschlag aller Kombinationen Liga × KPI × Richtung mit den gewählten Saisons (nur Anzeige und Download)."""
+    st.markdown("#### Schwellenvorschlag")
+    st.markdown("<p class='si-note'>Rechnet für alle Ligen, Kennzahlen und Richtungen die Schwelle nach der festen Regel "
+                "(siehe „Abweichung in % und Schwelle“) mit den links gewählten Saisons. Für die gültige Datei: einmal "
+                "pro Saison nach Saisonende mit „Alle Saisons“. Nichts wird gespeichert – die Übernahme erfolgt nach "
+                "Freigabe über GitHub.</p>", unsafe_allow_html=True)
+    if not st.button("Schwellenvorschlag berechnen", key="sens_proposal"):
+        return
+    leagues = [lg.name for lg in get_active_leagues()]
+    with st.spinner("Rechne alle Kombinationen …"):
+        df = proposal(cases[cases["season"].isin(seasons)], matchdays_all[matchdays_all["season"].isin(seasons)],
+                      leagues, list(TOP_KPIS))
+    if df.empty:
+        st.info("Keine Kombination erfüllt die Bedingungen.")
+        return
+    show = df.assign(KPI=df["kpi"].map(TOP_KPIS), Stabil=df["saisons_positiv"].astype(str) + "/" + df["saisons"].astype(str))
+    show = show[["liga", "KPI", "richtung", "schwelle", "prognosewert", "spiele", "trefferquote", "vergleichsgruppe",
+                 "mehrwert", "spanne_links", "Stabil"]]
+    st.dataframe(show.round(2), hide_index=True, use_container_width=True)
+    span = f"{seasons[0]}-{seasons[-1]}" if seasons else ""
+    st.download_button("Vorschlag als schwellen.toml herunterladen", proposal_toml(df, span, date.today().isoformat()),
+                       file_name="schwellen_vorschlag.toml", mime="text/plain", key="sens_proposal_dl")
 
 
 # --- Seite ---------------------------------------------------------------------------------------------------------
@@ -355,8 +490,8 @@ def render() -> None:
         sel = settings_panel(cases)
     with right:
         chosen = cases[cases["season"].isin(sel["seasons"])]
-        matchdays = get_closed_matchdays()
-        matchdays = matchdays[matchdays["season"].isin(sel["seasons"])]
+        all_matchdays = get_closed_matchdays()
+        matchdays = all_matchdays[all_matchdays["season"].isin(sel["seasons"])]
         if sel["league"] != ALL:
             chosen = chosen[chosen["league"] == sel["league"]]
             matchdays = matchdays[matchdays["league"] == sel["league"]]
@@ -373,21 +508,17 @@ def render() -> None:
         st.button("↺ Auf gültige Schwellen zurücksetzen", on_click=_reset, key="sens_reset")
         follow_league(sel["league"])
         valid = valid_limits(sel["league"])
+        one_season = len(sel["seasons"]) < 2
         head()
         chosen_values = {}
         for kpi in TOP_KPIS:
             chosen_values[kpi] = kpi_block(kpi, valid[kpi],
-                                           lambda lim, k=kpi: evaluate(chosen, matchdays, {k: lim})[0])
+                                           lambda lim, k=kpi: evaluate(chosen, matchdays, {k: lim})[0], one_season)
         st.markdown(own_values_css(chosen_values, {k: defaults(v) for k, v in valid.items()}), unsafe_allow_html=True)
         st.markdown("<p class='si-note'>Gezählt wird, was <b>über</b> der Schwelle liegt: Bei 15 % zählt +15,00 % nicht, "
-                    "+15,01 % schon. „Leicht“ enthält die starken Spiele. <b>Total</b> = leicht positiv + leicht negativ "
-                    "(die starken sind darin enthalten und werden nicht nochmals gezählt). Blau = abweichend von "
-                    "schwellen.toml. Unter 50 Spielen ist die Zeile grau.</p>"
-                    "<p class='si-note'>Leeres Feld „je Liga“ (KPI 03 bei „Alle Ligen“): Jede Liga zählt mit ihrer "
-                    "gültigen Schwelle. Eine eingetragene Zahl gilt für alle Ligen; liegt stark dadurch unter leicht, "
-                    "gilt stark = leicht.</p>"
-                    "<p class='si-note'>Die Empfehlung beruht auf den gewählten Saisons (historisch). Bestätigen mit "
-                    "einer einzelnen Saison, z. B. „Saison 2025/26“.</p>",
+                    "+15,01 % schon. Blau = abweichend von schwellen.toml. Unter 50 Spielen ist die Zeile grau. "
+                    "Leeres Feld: keine Schwelle („keine“) bzw. bei „Alle Ligen“ je Liga die gültige („je Liga“).</p>",
                     unsafe_allow_html=True)
-        definitions()
+        explanation()
+        proposal_section(cases, all_matchdays, sel["seasons"])
     ui.footer()

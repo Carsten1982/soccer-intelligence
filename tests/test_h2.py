@@ -41,10 +41,10 @@ def test_teams_wrong_structure(tmp_path, text):
         load_teams(tmp_path / "teams.toml")
 
 
-@pytest.mark.parametrize("text, message", [
-    ("standard = 35\n", "muss ein Abschnitt"),
-    ("abweichung = 1\n[standard]\nleicht = 20\nstark = 35\n", r"\[\[abweichung\]\]"),
-    ("abweichung = [1]\n[standard]\nleicht = 20\nstark = 35\n", r"\[\[abweichung\]\]"),
+@pytest.mark.parametrize("text, message", [                    # seit 0.19: [grundlage] und [[schwelle]]
+    ("grundlage = 35\n", "muss ein Abschnitt"),
+    ("schwelle = 1\n", r"\[\[schwelle\]\]"),
+    ("schwelle = [1]\n", r"\[\[schwelle\]\]"),
 ])
 def test_thresholds_wrong_structure(tmp_path, text, message):
     (tmp_path / "schwellen.toml").write_text(text, encoding="utf-8")

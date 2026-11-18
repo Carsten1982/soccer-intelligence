@@ -1,6 +1,6 @@
 """Kompakte Liga-Tabelle mit KPI 01–09 (Dashboard-Briefing 4.1, Design abgenommen am 08.11.2026).
 
-Je Begegnung eine Zeile: Nummer, Spiel, Datum (seit 0.16), Formkurve und je KPI 02–09 der Hauptwert mit Anomalie-Punkt
+Je Begegnung eine Zeile: Nummer, Spiel, Datum (seit 0.16), Formkurve und je KPI 02–09 der Hauptwert mit Punkt nach Prognosewert (seit 0.19)
 (KPI 03: Abweichung zur 2,5-Tore-Marke, weil sein Hauptwert dem von KPI 02 entspricht). Ein Klick auf die
 Zeile klappt alle Details auf (HTML <details>, ohne JavaScript): je KPI Einstufung, Hauptwert, Abweichung,
 Ligareferenz, Teamwerte, Datenbasis, Überschrift und Text.
@@ -14,12 +14,13 @@ from dataclasses import dataclass
 from html import escape
 
 from core.kpis import (
-    FORM_SAMPLE, LIGHT, NONE, PLACEHOLDER, SAMPLE, STRONG, FormTeam, KpiResult, MatchKpis, de, de_signed, round_display,
+    FORM_SAMPLE, HIGH, LOW, MEDIUM, NONE, PLACEHOLDER, SAMPLE, FormTeam, KpiResult, MatchKpis, de, de_signed, round_display,
 )
 from core.top import TOP_KPIS
 
 FORM_TITLES = {"S": "Sieg", "U": "Unentschieden", "N": "Niederlage"}
-ANOMALY_LABEL = {NONE: "Keine Anomalie", LIGHT: "Leichte Anomalie", STRONG: "Starke Anomalie"}
+ANOMALY_LABEL = {NONE: "Keine Auffälligkeit", HIGH: "Auffällig · Prognosewert hoch",
+                 MEDIUM: "Auffällig · Prognosewert mittel", LOW: "Auffällig · Prognosewert gering"}
 VORLAEUFIG_HINT = "Vorläufig: weniger Spiele als im KPI-Regelwerk vorgesehen"
 
 
@@ -76,10 +77,33 @@ def form_marks(ft: FormTeam) -> str:
     return f'<span class="si-formrow" title="{ft.anzahl} von {FORM_SAMPLE} Spielen">{"".join(marks)}</span>'
 
 
+def shown(r: KpiResult) -> str | None:
+    """Einstufung für die Anzeige: vorläufige Werte sind nie auffällig (Regelwerk 2.2)."""
+    if r.anomalie is None:
+        return None
+    return NONE if r.vorlaeufig else r.anomalie
+
+
 def anomaly_cell(anomaly: str | None) -> str:
     if anomaly is None:
         return PLACEHOLDER
     return f'<span class="si-dot si-anom-{anomaly}" title="{ANOMALY_LABEL[anomaly]}"></span>'
+
+
+def derivation(r: KpiResult) -> str:
+    """Herleitung des Prognosewerts aus der Schwellendatei (Entscheidung E12): Schwelle, Trefferquote, Mehrwert."""
+    s = r.signal
+    if s is None or r.vorlaeufig:
+        return ""
+    sign = "+" if (r.abweichung_rund or 0) > 0 else "−"
+    parts = [f"Schwelle {sign}{de(s.schwelle)} %"]
+    if s.trefferquote is not None and s.vergleichsgruppe is not None:
+        parts.append(f"Trefferquote {de(s.trefferquote)} % (alle Spiele {de(s.vergleichsgruppe)} %)")
+    if s.mehrwert is not None:
+        parts.append(f"Mehrwert {de_signed(s.mehrwert)} Pp.")
+    if s.spiele is not None:
+        parts.append(f"{s.spiele} Spiele")
+    return '<div class="si-kc-d">Herleitung: ' + escape(" · ".join(parts)) + "</div>"
 
 
 def v_badge(r: KpiResult) -> str:
@@ -106,10 +130,10 @@ def compact_value(col: KpiColumn, r: KpiResult) -> str:
 
 
 def compact_cell(col: KpiColumn, r: KpiResult) -> str:
-    label = ANOMALY_LABEL.get(r.anomalie, "nicht berechenbar")
+    label = ANOMALY_LABEL.get(shown(r), "nicht berechenbar")
     title = escape(f"{col.number} – {col.name}: {label}" + (" (vorläufig)" if r.vorlaeufig else ""))
     return (f'<div class="si-cc si-ckv" title="{title}"><span class="si-num">{compact_value(col, r)}</span>'
-            f'{anomaly_cell(r.anomalie)}{v_badge(r)}</div>')
+            f'{anomaly_cell(shown(r))}{v_badge(r)}</div>')
 
 
 # --- Detail-Kärtchen ----------------------------------------------------------------
@@ -137,12 +161,12 @@ def detail_card(col: KpiColumn, r: KpiResult, k: MatchKpis) -> str:
         basis = f"{r.heim.spiele} / {r.auswaerts.spiele} Spiele"
         if r.referenz is not None:
             basis += f" · Liga {r.referenz.spiele} Spiele"
-    label = ANOMALY_LABEL.get(r.anomalie, "nicht berechenbar")
+    label = ANOMALY_LABEL.get(shown(r), "nicht berechenbar")
     text = ""
     if r.ueberschrift:
         text = f"<b>{escape(r.ueberschrift)}</b>" + (f" {escape(r.text)}" if r.text else "")
     return (
-        f'<div class="si-kc"><div class="si-kc-h">{anomaly_cell(r.anomalie)}<b>{col.number}</b>&nbsp;{escape(col.name)}'
+        f'<div class="si-kc"><div class="si-kc-h">{anomaly_cell(shown(r))}<b>{col.number}</b>&nbsp;{escape(col.name)}'
         f'<span class="si-kc-a">{label}</span></div>'
         f'<div class="si-kc-m"><div><span>Hauptwert</span><b>{value_text(r, r.hauptwert_rund)}</b></div>'
         f'<div><span>Abweichung</span><b>{pct(r.abweichung_rund)}</b></div>'
@@ -150,6 +174,7 @@ def detail_card(col: KpiColumn, r: KpiResult, k: MatchKpis) -> str:
         + _team_lines(k, team1, team2)
         + f'<div class="si-kc-b">Datenbasis: {basis} {v_badge(r)}</div>'
         + (f'<div class="si-kc-x">{text}</div>' if text else "")
+        + derivation(r)
         + "</div>"
     )
 
@@ -208,10 +233,11 @@ def compact_table_html(rows: list[TableRow | tuple[str, str, str, MatchKpis | No
 
 
 LEGEND_HTML = (
-    '<div class="si-legend">Anomalie: '
-    '<span class="si-dot si-anom-keine"></span> keine '
-    '<span class="si-dot si-anom-leicht"></span> leicht '
-    '<span class="si-dot si-anom-stark"></span> stark'
+    '<div class="si-legend">Prognosewert: '
+    '<span class="si-dot si-anom-hoch"></span> hoch '
+    '<span class="si-dot si-anom-mittel"></span> mittel '
+    '<span class="si-dot si-anom-gering"></span> gering '
+    '<span class="si-dot si-anom-keine"></span> nicht auffällig'
     ' &nbsp;·&nbsp; Form: <span class="si-dot si-form-S"></span> Sieg '
     '<span class="si-dot si-form-U"></span> Unentschieden <span class="si-dot si-form-N"></span> Niederlage'
     f' &nbsp;·&nbsp; <span class="si-v">V</span> vorläufig (unter {SAMPLE} Spielen)'

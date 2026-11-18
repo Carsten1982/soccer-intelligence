@@ -1,6 +1,6 @@
 # Soccer Intelligence – KPI-Regelwerk
 
-**Spezifikation v2.6** · Stand 14.11.2026 · KPI 01–09 gültig und umgesetzt (KPI 05–09, zwei Nachkommastellen und Top-Anomalien über KPI 02–09 seit Etappe H, eingespielt 08.11.2026) · KPI 10–13 Entwurf (Abschnitt 10)
+**Spezifikation v2.7** · Stand 18.11.2026 · Einstufung mit Prognosewert seit Version 0.19 · KPI 01–09 gültig und umgesetzt (KPI 05–09, zwei Nachkommastellen und Top-Anomalien über KPI 02–09 seit Etappe H, eingespielt 08.11.2026) · KPI 10–13 Entwurf (Abschnitt 10)
 
 > **Massgebliche Quelle seit 31.10.2026.** Änderungen werden nur noch in dieser Datei gemacht, mit Datum in der Änderungshistorie bzw. im `CHANGELOG.md`.
 > Das Word-Dokument „Definition der Dashboard-KPIs (final)“ (Arbeitsstand 30.10.2026) liegt nur noch als Archiv im Ordner `word/` und wird nicht mehr gepflegt.
@@ -14,6 +14,7 @@ Abschnitt 8 sammelt offene Punkte.
 | Datum | Änderung | Abschnitt |
 |---|---|---|
 | 27.10.2026 | Erstfassung KPIs 01–04 | alle |
+| 18.11.2026 | **v2.7** (Version 0.19, Spezifikation und Freigabe Carsten 18.11.2026): **Auffälligkeit und Prognosewert** statt leicht/stark – Schwellen je Liga, KPI und Richtung mit Prognosewert hoch/mittel/gering (23 Kombinationen), Herleitung über die Sensitivitätsanalyse (Funktioniert mit Rand > +2 Pp., Stabilität, Prognosewert, Schwellenvorschlag); Top-Anomalien nach Prognosewert mit Liga-Mix; offener Punkt 17 erledigt | 2.2, 2.3, 2.5, 2.6, 8, 11 |
 | 14.11.2026 | **v2.6** (Version 0.13, Festlegung Carsten): neue gültige Schwellen aus der Sensitivitätsanalyse – je KPI positiv und negativ getrennt, KPI 03 je Liga (feste Marke 2,5); Sensitivitätsanalyse bewertet auch die starke Schwelle (vier Zeilen je KPI), Grundquote heisst im Tab „Vergleichsgruppe (alle Spiele)“; Rangfolge der Top-Anomalien unverändert. Keine Änderung an KPI-Formeln, Rundung oder Testfällen (diese gelten weiter mit ±20/±35) | 2.2, 2.6, 11 |
 | 11.11.2026 | **v2.5** (Version 0.12, Freigabe Carsten): Sensitivitätsanalyse statt Spielwiese – vier Schwellen je KPI (leicht/stark, positiv/negativ, ungleich möglich, nur Simulation), Häufigkeit mit Ø pro Spieltag und Spieltagsabdeckung über abgeschlossene Spieltage, Ergebnisqualität gegen die Grundquote aller Spiele mit Wilson/Newcombe-Spanne und Empfehlung in sechs Stufen; Urteil vorher/nachher entfällt. Keine Änderung an KPI-Formeln, Rundung, gültigen Schwellen oder Testfällen | 11 |
 | 10.11.2026 | **v2.4** (Version 0.11, Freigabe Carsten): Referenzsaison = älteste Saison der Datenbank, liefert nur die Vorsaison und wird nie ausgewertet; Saisonwechsel durch Entfernen der ältesten Saison aus der Datei. Neue Saisonauswahl der Simulation. Keine Änderung an Formeln, Rundung, Schwellen oder Testfällen | 1.2, 11.2, 11.4, 11.5 |
@@ -96,43 +97,70 @@ Relative Abweichung = (KPI-Wert der Begegnung − Referenzwert) / Referenzwert �
 
 Negativ = unter dem Referenzwert, positiv = darüber.
 
-### 2.2 Schwellenwerte (positiv und negativ getrennt, seit Version 0.13)
+### 2.2 Auffälligkeit und Prognosewert (seit Version 0.19, Entscheidungen Carsten 17./18.11.2026)
 
-Eingestuft wird die auf **zwei** Nachkommastellen gerundete Abweichung (2.3), positiv und negativ mit eigenen Schwellen:
+Bis Version 0.18 gab es zwei Stufen „leicht“ und „stark“ je KPI. Seit 0.19 gibt es **eine** Auffälligkeit, bewertet mit
+dem **Prognosewert** (Spezifikation vom 18.11.2026, Herleitung in Abschnitt 11):
 
-| Gerundete Abweichung | Einstufung |
-|---|---|
-| zwischen leicht negativ und leicht positiv (inkl.) | keine Anomalie |
-| über leicht positiv bis stark positiv (inkl.) · unter leicht negativ bis stark negativ (inkl.) | leichte Anomalie |
-| über stark positiv · unter stark negativ | starke Anomalie |
+- **Schwellen je Liga, KPI und Richtung** (*mehr* = positive, *weniger* = negative Abweichung), höchstens eine je
+  Kombination, als Betrag in Prozent. Kombinationen ohne Schwelle sind **nie** auffällig.
+- **Auffällig** ist ein KPI, wenn der Betrag der auf zwei Nachkommastellen gerundeten Abweichung (2.3) **grösser** als die
+  Schwelle seiner Richtung ist (mehr: > +Schwelle, weniger: < −Schwelle). Genau auf der Schwelle: nicht auffällig.
+- **Prognosewert** einer Auffälligkeit = Prognosewert der Schwelle: **hoch**, **mittel** oder **gering**. Er steht mit der
+  Schwelle in der Datei und wird nicht live nachgerechnet.
+- **Vorläufige Werte** (1.x, z. B. Aufsteiger) sind nie auffällig. KPI 01 wird nicht eingestuft.
+- **Herleitung der Schwellen** (Regel, keine Handanpassung): Kandidaten 10, 15, 20, 25, 30, 35 %. In Frage kommen nur
+  Kandidaten mit Empfehlung **Funktioniert** (11.3: mindestens 50 Spiele, Mehrwert ≥ +5 Pp., linker Rand der Spanne
+  > +2 Pp.), die **stabil** sind (Mehrwert in mindestens zwei Dritteln der Saisons einzeln positiv, aufgerundet). Davon
+  gilt der mit dem besten Prognosewert, bei Gleichstand der mit mehr Spielen. Ohne Kandidaten: keine Schwelle.
+- **Prognosewert** eines Kandidaten: hoch = Trefferquote ≥ 60 % **und** Mehrwert ≥ +8 Pp.; mittel = Trefferquote ≥ 55 %
+  (auch ≥ 60 % mit Mehrwert unter +8 Pp.); gering = Trefferquote ≥ 50 %; darunter kein Prognosewert.
+- **Datei und Ablauf:** `app/config/schwellen.toml` (`[grundlage]` mit Saisons, Berechnungs- und Freigabedatum,
+  `[[schwelle]]` je Kombination mit Herleitung). Neuberechnung **einmal pro Saison nach Saisonende** mit allen
+  abgeschlossenen Saisons: Schwellenvorschlag in der Sensitivitätsanalyse, Freigabe durch Carsten, Übernahme über GitHub
+  (Neubau, CHANGELOG), nie aus dem Dashboard. Die Fassung bis 0.18 liegt in `app/config/archiv/schwellen_2026-11-14.toml`.
 
-- Grenzfälle: genau auf einer Schwelle zählt zur schwächeren Stufe (z. B. KPI 02: genau +20,00 % = keine, genau +30,00 % = leicht).
-- KPI 01 erhält **keine** Anomalie-Einstufung.
-- **Gültige Schwellen (Festlegung Carsten 14.11.2026, Version 0.13)**, ermittelt mit der Sensitivitätsanalyse (Abschnitt 11) über alle Ligen und die Saisons 2019/20–2025/26. Je KPI gilt eine Schwelle für alle Ligen; ein Test „Vergangenheit gegen Zukunft“ (Schwellen aus 2019/20–2023/24, geprüft an 2024/25–2025/26) zeigte, dass Schwellen je Liga schlechter treffen (Mehrwert +3,41 statt +4,31 Pp.). Ausnahme ist **KPI 03**: Er misst an der festen Marke 2,5 Tore, nicht an der Ligareferenz, darum steckt das Torniveau der Liga schon in der Abweichung (Ø aller Paarungen: Bundesliga +26 %, LaLiga +3 %); er erhält Schwellen je Liga.
+**Gültige Schwellen (Freigabe Carsten 18.11.2026, Saisons 2019/20–2025/26), 23 von 64 Kombinationen:**
 
-| KPI | leicht positiv | stark positiv | leicht negativ | stark negativ |
-|---|---|---|---|---|
-| 02 Erwartete Tore | +20 | +30 | −15 | −25 |
-| 03 Over 2.5 – Bundesliga | +35 | +40 | −5 | −10 |
-| 03 Over 2.5 – Premier League | +30 | +40 | −10 | −15 |
-| 03 Over 2.5 – Serie A | +30 | +40 | −10 | −20 |
-| 03 Over 2.5 – LaLiga | +20 | +30 | −15 | −25 |
-| 04 Gelbe Karten | +15 | +35 | −20 | −30 |
-| 05 Ecken | +15 | +20 | −10 | −15 |
-| 06 Tore 1. Halbzeit | +15 | +25 | −20 | −30 |
-| 07 Tore 2. Halbzeit | +25 | +30 | −20 | −25 |
-| 08 Beide Teams treffen | +20 | +25 | −30 | −35 |
-| 09 Schüsse aufs Tor | +15 | +20 | −10 | −15 |
+| Liga | KPI | Richtung | Schwelle | Prognosewert |
+|---|---|---|---:|---|
+| Bundesliga | 04 Gelbe Karten | mehr | 10 % | gering |
+| Bundesliga | 06 Tore 1. Halbzeit | weniger | 10 % | mittel |
+| Bundesliga | 08 Beide Teams treffen | weniger | 35 % | hoch |
+| Bundesliga | 09 Schüsse aufs Tor | mehr | 15 % | hoch |
+| Bundesliga | 09 Schüsse aufs Tor | weniger | 10 % | hoch |
+| Premier League | 02 Erwartete Tore | weniger | 10 % | mittel |
+| Premier League | 03 Over 2.5 Goals | mehr | 35 % | hoch |
+| Premier League | 04 Gelbe Karten | mehr | 10 % | mittel |
+| Premier League | 06 Tore 1. Halbzeit | weniger | 25 % | hoch |
+| Premier League | 08 Beide Teams treffen | mehr | 25 % | hoch |
+| Premier League | 09 Schüsse aufs Tor | mehr | 10 % | mittel |
+| Serie A | 02 Erwartete Tore | weniger | 15 % | hoch |
+| Serie A | 03 Over 2.5 Goals | mehr | 30 % | hoch |
+| Serie A | 04 Gelbe Karten | weniger | 15 % | hoch |
+| Serie A | 05 Ecken | mehr | 10 % | mittel |
+| Serie A | 05 Ecken | weniger | 10 % | hoch |
+| Serie A | 09 Schüsse aufs Tor | weniger | 10 % | hoch |
+| LaLiga | 02 Erwartete Tore | mehr | 20 % | hoch |
+| LaLiga | 03 Over 2.5 Goals | mehr | 25 % | hoch |
+| LaLiga | 04 Gelbe Karten | mehr | 25 % | hoch |
+| LaLiga | 04 Gelbe Karten | weniger | 10 % | mittel |
+| LaLiga | 09 Schüsse aufs Tor | mehr | 10 % | hoch |
+| LaLiga | 09 Schüsse aufs Tor | weniger | 10 % | hoch |
 
-  Alle Angaben in %. Wo keine Abweichung passt (z. B. KPI 03 einer neu aktivierten Liga), gilt der Standard ±20,00 % / ±35,00 %. Schwach und nach der nächsten Saison erneut zu prüfen: KPI 07 negativ und KPI 03 positiv in der Bundesliga.
-- **Einstellbar pro Liga und KPI (beschlossen 08.11.2026, seit 0.13 positiv/negativ getrennt):** Die Schwellen stehen in `app/config/schwellen.toml`: ein Standardwert und Abweichungen je Liga, je KPI oder je Liga und KPI, jeweils mit `leicht`/`stark` (gleich für beide Richtungen) oder den vier Feldern `leicht_positiv`, `stark_positiv`, `leicht_negativ`, `stark_negativ` (negative Werte mit Minus). Vorrang: Liga und KPI > nur KPI > nur Liga > Standard. Änderungen nur bewusst über die Datei (mit Neubau, Git und CHANGELOG), nicht über das Dashboard. Die gültigen Schwellen werden im Bereich *Datenqualität* angezeigt. Die Sensitivitätsanalyse rechnet andere Schwellen nur durch, sie übernimmt sie nicht.
-- Die bestätigten Testfälle (`docs/tests/`) rechnen weiterhin mit dem Standard ±20 / ±35; sie prüfen die Formeln, nicht die gültigen Schwellen.
+Trefferquote, Vergleichsgruppe, Mehrwert, Spanne und Stabilität je Zeile stehen in der Datei und im Bereich
+*Datenqualität*; Auswertungen und Prüfsaisons in `docs/tests/pruefprotokoll_prognosewert.md`.
+
+- Die bestätigten Testfälle (`docs/tests/`) wurden mit dem Standard ±20/±35 erstellt. Seit 0.19 prüfen sie die Formeln
+  und Texte mit der Schwelle 20 % in beiden Richtungen (`tests/test_kpis.LEGACY`): „leicht“ und „stark“ der Testfälle
+  bedeuten dort „auffällig“. Die Einstufung nach der gültigen Datei prüfen die Testfälle P1–P25 (Spezifikation 18.11.2026)
+  und die Gegenrechnung (`tests/test_schwellen.py`).
 
 ### 2.3 Rundung
 
 - Gerechnet wird **immer mit ungerundeten Werten**.
 - Erst das Endergebnis wird gerundet, kaufmännisch (ab 5 aufrunden), auf **zwei Nachkommastellen** – bei **allen** KPIs und allen angezeigten Werten: Teamwerte, Ligareferenz, Hauptwert, Abweichung, Teamabweichungen (KPI 03), BTTS-Quoten (KPI 08), auch in den Texten (**Entscheidung Carsten, 08.11.2026**, gilt ab Etappe H; vorher eine Nachkommastelle). Grund: Nachvollziehbarkeit. Mit einer Stelle wirkten kleine Werte widersprüchlich (Beispiel KPI 06 Newcastle – Liverpool: Anzeige 1,3 gegen 1,2, gerechnet 1,25 gegen 1,205 = +3,73 %). Darstellung auf der öffentlichen Website: offener Punkt 15.
-- Die Einstufung erfolgt anhand der auf zwei Stellen **gerundeten** Abweichung. Beispiel: +20,004 % → +20,00 % → keine Anomalie; +20,04 % → leichte Anomalie (bis 08.11.2026 wäre +20,04 % auf +20,0 % gerundet worden → keine). In den Testfällen KPI 02–09 ändert sich dadurch keine Einstufung.
+- Die Einstufung erfolgt anhand der auf zwei Stellen **gerundeten** Abweichung. Beispiel mit Schwelle 20 %: +20,004 % → +20,00 % → nicht auffällig; +20,04 % → auffällig.
 - Technisch mit **Dezimalarithmetik** (Python `decimal`, `ROUND_HALF_UP`), **nicht** mit `round()`. Grund: `round()` rundet z. B. 2,675 auf 2,67 (richtig 2,68) und rundete mit einer Stelle 4,35 auf 4,3 und 2,65 auf 2,6.
 - Weitergerechnet wird mit dem ungerundeten Wert. Beispiel KPI 02 BL-1: Abweichung mit der Ligareferenz 3,2444… = +34,08 %; mit der angezeigten 3,24 ergäbe sich fälschlich +34,26 %.
 
@@ -140,14 +168,14 @@ Eingestuft wird die auf **zwei** Nachkommastellen gerundete Abweichung (2.3), po
 
 - **Frontend-Texte** mit „mehr / weniger / über / unter“: Abweichung **ohne Vorzeichen** („16,67 % über dem Liga-Durchschnitt“).
 - **Kennzahlenfelder**: Vorzeichen **immer** anzeigen („−25,00 %“).
-- **Frontend-Texte ohne „mehr / weniger / über / unter“** (Fall „Keine Anomalie“ bei KPI 02, 04 und 05–09): Vorzeichen **immer** anzeigen („Die Abweichung vom Liga-Durchschnitt beträgt +7,01 %.“ bzw. „… −8,90 %.“). Ohne Vorzeichen wäre die Richtung nicht erkennbar.
+- **Frontend-Texte ohne „mehr / weniger / über / unter“** (Fall „nicht auffällig“ bei KPI 02, 04 und 05–09): Vorzeichen **immer** anzeigen („Die Abweichung vom Liga-Durchschnitt beträgt +7,01 %.“ bzw. „… −8,90 %.“). Ohne Vorzeichen wäre die Richtung nicht erkennbar.
 - Bei genau **0,00 %** steht nie ein Vorzeichen. Das gilt auch, wenn ein kleiner negativer Wert auf „−0,00“ gerundet würde: Anzeige „0,00“, keine Richtung (*ergänzt 08.11.2026*). In den echten Daten kommt das nicht vor; der Code prüft die Regel mit einem eigenen Formattest.
 - Als Minuszeichen wird „−“ (U+2212) verwendet, nicht der Bindestrich „-“.
 
 ### 2.5 Einheitlicher Aufbau der KPI-Karten (ab KPI 02)
 
 1. Hauptwert
-2. Anomalie-Einstufung (keine / leicht / stark) und Richtung (positiv / negativ)
+2. Einstufung (nicht auffällig / auffällig mit Prognosewert hoch, mittel, gering; seit 0.19) und Richtung (positiv / negativ); im Dashboard dazu die Herleitung (Schwelle, Trefferquote, Vergleichsgruppe, Mehrwert)
 3. Relative Abweichung in Prozent
 4. Referenzwert und beide Teamwerte
 5. Datenbasis: Anzahl Spiele je Team, ggf. „vorläufig“; bei KPIs mit möglichen fehlenden Statistikwerten (KPI 04, 05, 09) zusätzlich die Anzahl Referenzspiele
@@ -155,32 +183,35 @@ Eingestuft wird die auf **zwei** Nachkommastellen gerundete Abweichung (2.3), po
 
 Schwellenwerte, Rundung, Vorzeichen und die Regeln für fehlende Daten werden **zentral** umgesetzt und gelten für alle KPIs.
 
-### 2.6 Auswahl der Top-Anomalien (ligaübergreifend)
+### 2.6 Auswahl der Top-Anomalien (ligaübergreifend, seit Version 0.19 nach Prognosewert)
 
-**Zweck:** Legt fest, welche Begegnungen des aktuellen Spieltags im Bereich „Top Anomalien“ (`/dashboard`) und später auf der Startseite der öffentlichen Website erscheinen. Die Auswahl erfolgt **zentral in der Berechnungslogik**, nicht im Frontend.
+**Zweck:** Legt fest, welche Begegnungen im Bereich „Top Anomalien“ (`/dashboard`) und im Ranking der Startseite der
+öffentlichen Website erscheinen. Die Auswahl erfolgt **zentral in der Berechnungslogik** (`app/core/top.py`).
 
-**Grundlage:**
-- Begegnungen des aktuellen Spieltags aller aktiven Ligen (aktueller Spieltag gemäss `04_Spielplan.md`, Abschnitt 4).
-- **KPI 02–09** mit leichter oder starker Anomalie (**Entscheidung Carsten, 08.11.2026**, gilt ab Etappe H; bis dahin nur KPI 02 und 04). Damit ist auch KPI 03 wieder dabei.
-- KPI 01 hat keine Anomalie-Einstufung und wird nicht berücksichtigt. KPI 10–13 sind nie Teil der Top-Anomalien.
-- **Gewichtung vorerst unverändert** (bestätigt 14.11.2026 mit den neuen Schwellen, Version 0.13): Es gilt die bisherige Rangfolge nach Stufe und Prozent (unten); mit den neuen Schwellen verschiebt sich der Mix (z. B. KPI 06 positiv häufiger). Probelauf mit allen Spieltagen 2025/26 über vier Ligen: Anteil an den Top-4-Einträgen KPI 03 39 %, KPI 08 27 %, KPI 06 18 %, KPI 04 10 %, KPI 07 7 %, KPI 02, 05 und 09 nie. Ziel ist ein ausgewogener Mix je Spieltag; die Gewichtung wird zusammen mit der Schwellen-Analyse erarbeitet (offener Punkt 17).
+**Grundlage:** je aktiver Liga der anstehende Spieltag samt Nachhol- und vorgezogenen Spielen an seinen Tagen
+(Sonderspiele davor als eigener Block), wenn er höchstens 14 Tage entfernt ist (`07`, Abschnitt 4.7). Nur Spiele vor
+dem Anpfiff und mit Werten. KPI 02–09, die nach 2.2 **auffällig** sind. Diese Regel löst den offenen Punkt 17
+(Gewichtung der Top Anomalien).
 
-**Ausschlüsse:**
-- Vorläufige KPI-Werte
-- Begegnungen mit Status „verschoben“ oder „abgesagt“
-- Begegnungen ohne Anomalie
+**Ausschlüsse:** vorläufige KPI-Werte · Begegnungen mit Status „verschoben“ oder „abgesagt“ · Begegnungen ohne
+Auffälligkeit.
 
-**Rangfolge und Auswahl:**
-1. Starke Anomalien vor leichten.
-2. Innerhalb derselben Stufe: grösserer Betrag der (gerundeten) relativen Abweichung zuerst.
-3. Bei Gleichstand: früheres Spieldatum (`Datum von`).
-4. Danach: Reihenfolge der Begegnungen in der Spielplan-Datei.
-5. Pro Begegnung höchstens ein Eintrag. Haben mehrere KPIs derselben Begegnung eine Anomalie, zählt nur der KPI mit dem höchsten Rang; bei Gleichstand der KPI mit der kleineren Nummer.
-6. Höchstens vier Einträge. Gibt es weniger, werden nur diese angezeigt. Die Liste wird nicht aufgefüllt.
+**Rangfolge und Auswahl (Entscheidungen Carsten 17./18.11.2026):**
+1. Prognosewert **hoch** vor **mittel** vor **gering** (keine Mischformel mit der Abweichung).
+2. Innerhalb derselben Stufe: grösserer Betrag der gerundeten relativen Abweichung zuerst.
+3. Bei Gleichstand: früheres Spieldatum (`Datum von`), dann Reihenfolge der Ligen in der Konfiguration und der
+   Begegnungen in der Spielplan-Datei.
+4. Pro Begegnung höchstens ein Eintrag: der KPI mit dem höchsten Prognosewert, dann der grössten Abweichung; bei
+   Gleichstand der KPI mit der kleineren Nummer.
+5. **Liga-Mix:** höchstens zwei Einträge je Liga. Nur wenn danach weniger als vier gewählt sind, wird mit den
+   übersprungenen Begegnungen in derselben Rangfolge aufgefüllt.
+6. Höchstens vier Einträge; mit „gering“ wird aufgefüllt, bis vier erreicht sind. Gibt es weniger Auffälligkeiten,
+   werden weniger angezeigt (Hinweis „Aktuell nur x auffällige Spiele.“); nie mit nicht auffälligen Begegnungen auffüllen.
+   Steht ein Eintrag „gering“ in der Liste, erscheint „Ergänzt mit Spielen geringer Verlässlichkeit.“
 
-**Keine Anomalien:** Hinweis „Für den aktuellen Spieltag liegen keine Anomalien vor.“
+**Keine Auffälligkeiten:** Hinweis „Für die anstehenden Spiele liegen keine Auffälligkeiten vor.“
 
-**Gültigkeit:** gilt für das interne Dashboard und die spätere öffentliche Website.
+**Gültigkeit:** gilt für das interne Dashboard und die öffentliche Website (Ranking der Startseite).
 
 ---
 
@@ -398,7 +429,7 @@ Diese Punkte sollten vor der Umsetzung im Code geklärt werden:
     gespielten Spiel ein Statistikwert, würde ein älteres Spiel nachgezogen (innerhalb Saison und Vorsaison), statt mit
     9 Spielen und „vorläufig“ zu rechnen. Heute praktisch ohne Wirkung (2025/26 und 2026/27: kein Spiel mit fehlendem
     Wert bei Ecken, Gelben oder Schüssen aufs Tor). Für die KPI-Überarbeitung vorgemerkt; erfordert neue Testfälle.
-17. **Gewichtung der Top-Anomalien** (08.11.2026): Mit der bisherigen Rangfolge (Stufe, dann Prozent) kommen KPIs mit grossen relativen Ausschlägen (KPI 03, 06, 08) fast immer nach oben, KPI 02, 05 und 09 nie. Probelauf Claude (2025/26, vier Ligen, Anteil an den Top-4-Einträgen): bisherige Regel KPI 03 39 % · 08 27 % · 06 18 % · 04 10 % · 07 7 % · 02/05/09 0 %; mit „höchstens 1 Eintrag je KPI“ 03 24 % · 06 25 % · 08 24 % · 04 19 % · 07 7 % · 02/05/09 0 %; Rang nach **Seltenheit** (wie ungewöhnlich ist die Abweichung für diesen KPI in dieser Liga, verglichen mit der Vorsaison) plus höchstens 1 je KPI: 04 20 % · 08 18 % · 06 15 % · 07 13 % · 09 12 % · 02 11 % · 05 6 % · 03 4 %, im Schnitt 4 verschiedene KPIs je Spieltag. **Entscheidung Carsten:** vorerst bisherige Regel über KPI 02–09; die Gewichtung wird mit der Schwellen-Analyse (Etappe I) erarbeitet. Ziel: ein schöner Mix je Spieltag.
+17. **Gewichtung der Top-Anomalien** (08.11.2026): Mit der bisherigen Rangfolge (Stufe, dann Prozent) kommen KPIs mit grossen relativen Ausschlägen (KPI 03, 06, 08) fast immer nach oben, KPI 02, 05 und 09 nie. Probelauf Claude (2025/26, vier Ligen, Anteil an den Top-4-Einträgen): bisherige Regel KPI 03 39 % · 08 27 % · 06 18 % · 04 10 % · 07 7 % · 02/05/09 0 %; mit „höchstens 1 Eintrag je KPI“ 03 24 % · 06 25 % · 08 24 % · 04 19 % · 07 7 % · 02/05/09 0 %; Rang nach **Seltenheit** (wie ungewöhnlich ist die Abweichung für diesen KPI in dieser Liga, verglichen mit der Vorsaison) plus höchstens 1 je KPI: 04 20 % · 08 18 % · 06 15 % · 07 13 % · 09 12 % · 02 11 % · 05 6 % · 03 4 %, im Schnitt 4 verschiedene KPIs je Spieltag. **Entscheidung Carsten:** vorerst bisherige Regel über KPI 02–09; die Gewichtung wird mit der Schwellen-Analyse (Etappe I) erarbeitet. Ziel: ein schöner Mix je Spieltag. **Erledigt 18.11.2026 (Version 0.19):** Rangfolge nach Prognosewert mit Liga-Mix (2.2, 2.6).
 
 Für die Umsetzung blockierend ist keiner dieser Punkte: Die Testfälle legen für 2, 6, 9 und 10 jeweils eine Annahme fest. Wird eine Annahme geändert, sind die betroffenen Testfälle anzupassen.
 
@@ -608,35 +639,35 @@ Fehlt der Wert im Spiel oder ist er keine ganze Zahl, zählt das Spiel für dies
 ### 11.2 Grundlage, Schwellen und Häufigkeit
 
 - **Fälle:** alle Spiele der gewählten Saisons (und Liga), je so berechnet, als wären sie noch nicht gespielt (Stichtag = Spieldatum, Spieltag = `Gameday`). Nicht verwendet: die Referenzsaison (Abschnitt 1.2), vorläufige Werte (z. B. Aufsteiger, fehlende Statistikwerte) und nicht berechenbare Werte.
-- **Abgeschlossene Spieltage:** Spieltag = Liga + Saison + `Gameday`, je Liga gezählt. Abgeschlossen = alle Spiele gespielt; ein Spieltag mit offenem Nachholspiel zählt, sobald ein späterer Spieltag derselben Saison vollständig ist; ein halb gespielter letzter Spieltag zählt nicht. Nur Spiele abgeschlossener Spieltage fliessen ein. Bei „Alle Ligen“ erscheint immer ein Hinweis mit den Spieltagen je Liga (Bundesliga 34, andere 38 je Saison; laufende Saison unterschiedlich weit).
-- **Schwellen:** je KPI vier Werte – leicht positiv, stark positiv, leicht negativ, stark negativ (ungleich möglich). Positiv 0 oder grösser, negativ 0 oder kleiner, höchstens eine Nachkommastelle (mehr wird kaufmännisch gerundet), stark betragsmässig nie kleiner als leicht (gleich erlaubt; wird bei der Eingabe angepasst). Ausgangswerte: die gültigen Schwellen aus `schwellen.toml` (2.2) der gewählten Liga; eigene Werte blau. **Schwellen je Liga** (seit 0.13: KPI 03) bei „Alle Ligen“: Das Feld bleibt leer („je Liga“) und jede Liga zählt mit ihrer gültigen Schwelle; eine eingetragene Zahl gilt für alle Ligen (liegt stark dadurch unter leicht, gilt stark = leicht). Beim Wechsel der Liga zeigen unveränderte Felder den gültigen Wert der neuen Auswahl, eigene Eingaben bleiben stehen; beim Wechsel der Saison bleibt alles stehen.
-- **Anomalie:** gerundete Abweichung **über** der Schwelle (positiv: > Schwelle, negativ: < Schwelle); genau auf der Schwelle zählt nicht. **Leicht zählt die starken mit** (alles über der leichten Schwelle); stark = alles über der starken Schwelle.
-- **Darstellung (seit 0.13):** je KPI vier Zeilen (leicht positiv, stark positiv, leicht negativ, stark negativ), jede mit Häufigkeit und Ergebnisqualität (11.3) der eigenen Schwelle, dazu Total.
-- **Anzahl Spiele:** Spiele mit Anomalie; Total = leicht positiv + leicht negativ (die starken sind darin enthalten und werden nicht nochmals gezählt).
-- **Ø pro Spieltag:** Anzahl ÷ Anzahl abgeschlossener Spieltage der Auswahl; Total = leicht positiv + leicht negativ.
-- **Spieltagsabdeckung:** Spieltage mit mindestens einer solchen Anomalie ÷ alle abgeschlossenen Spieltage × 100; Total = Spieltage mit mindestens einer leicht positiven **oder** leicht negativen.
+- **Abgeschlossene Spieltage:** Spieltag = Liga + Saison + `Gameday`, je Liga gezählt. Abgeschlossen = alle Spiele gespielt; ein Spieltag mit offenem Nachholspiel zählt, sobald ein späterer Spieltag derselben Saison vollständig ist; ein halb gespielter letzter Spieltag zählt nicht. Nur Spiele abgeschlossener Spieltage fliessen ein. Bei „Alle Ligen“ erscheint immer ein Hinweis mit den Spieltagen je Liga.
+- **Schwellen (seit 0.19):** je KPI eine Schwelle je Richtung (*mehr* / *weniger*) als Betrag mit höchstens einer Nachkommastelle; leeres Feld = keine Schwelle bzw. bei „Alle Ligen“ je Liga die gültige. Vorbelegt mit den gültigen Schwellen aus `schwellen.toml` (2.2); eigene Werte blau.
+- **Auffällig:** Betrag der gerundeten Abweichung **über** der Schwelle; genau auf der Schwelle zählt nicht.
+- **Darstellung (seit 0.19):** je KPI zwei Zeilen (mehr, weniger), jede mit Häufigkeit, Ergebnisqualität, Empfehlung und Prognosewert.
+- **Anzahl Spiele, Ø pro Spieltag, Spieltagsabdeckung:** je Zeile (Anzahl ÷ abgeschlossene Spieltage; Spieltage mit mindestens einem solchen Spiel ÷ alle abgeschlossenen Spieltage × 100).
 
-### 11.3 Ergebnisqualität und Empfehlung
+### 11.3 Ergebnisqualität, Empfehlung, Stabilität und Prognosewert
 
-Bewertet wird jede Zeile mit ihrer eigenen Schwelle: leicht (zählt die starken mit) und seit Version 0.13 auch stark (nur die starken).
-
-- **Anzahl eingetroffen:** Ereignis nach 11.1 eingetreten; Total = leicht positiv + leicht negativ.
-- **Trefferquote:** eingetroffen ÷ Spiele mit Anomalie **und bekanntem Ergebnis** (fehlt der Wert im Spiel, zählt das Spiel hier nicht; darum kann die Zahl unter „Anzahl Spiele“ um wenige Spiele grösser sein); Total aus den aufsummierten Fällen.
-- **Grundquote, im Tab „Vergleichsgruppe (alle Spiele)“:** Anteil **aller** Spiele der Auswahl (mit und ohne Anomalie, ohne vorläufige), in denen dasselbe Ereignis eintrat. Unabhängig von allen Schwellen und darum für leicht und stark derselben Richtung gleich (Entscheidung 11.11.2026; bis Version 0.11: „Spiele ohne Anomalie“). Bezeichnung im Tab seit 0.13 „Vergleichsgruppe (alle Spiele)“, nicht „neutrale“ Vergleichsgruppe, weil sie auch die Spiele mit Anomalie enthält.
-- **Mehrwert:** Trefferquote − Grundquote, in Prozentpunkten (Pp.).
-- **Spanne (Wilson 95 %):** 95-%-Intervall des Mehrwerts nach Newcombe (Methode 10, aus zwei Wilson-Intervallen). Geprüft an den veröffentlichten Beispielen (56/70 gegen 48/80: +5,24 bis +33,39 Pp.).
+- **Anzahl eingetroffen:** Ereignis nach 11.1 eingetreten.
+- **Trefferquote:** eingetroffen ÷ Spiele über der Schwelle **mit bekanntem Ergebnis**.
+- **Vergleichsgruppe (alle Spiele):** Anteil **aller** Spiele der Auswahl (mit und ohne Auffälligkeit, ohne vorläufige), in denen dasselbe Ereignis eintrat (Entscheidung 11.11.2026, bestätigt 18.11.2026: nicht „Spiele ohne Auffälligkeit“, damit die Schwelle der anderen Richtung das Ergebnis nicht beeinflusst).
+- **Mehrwert:** Trefferquote − Vergleichsgruppe, in Prozentpunkten (Pp.).
+- **Spanne (Wilson 95 %):** 95-%-Intervall des Mehrwerts nach Newcombe (Methode 10, aus zwei Wilson-Intervallen). Geprüft an den veröffentlichten Beispielen (56/70 gegen 48/80: +5,24 bis +33,39 Pp.). Die Spanne ist eher vorsichtig, weil die auffälligen Spiele auch in der Vergleichsgruppe sind; ein Bootstrap über Spieltage ändert die Auswahl nicht (Prüfrunde 18.11.2026).
 - **Empfehlung:** die erste zutreffende Regel gilt; massgeblich sind die auf zwei Stellen gerundeten Werte.
 
 | Reihenfolge | Empfehlung | Regel |
 |---|---|---|
-| 1 | Zu wenige Daten (Zeile grau) | unter 50 Spielen mit Anomalie |
-| 2 | Negativ | oberer Rand der Spanne < 0 |
-| 3 | Funktioniert | Mehrwert ≥ +5,00 Pp. und unterer Rand > 0 |
-| 4 | Funktioniert leicht | Mehrwert ≥ +2,00 Pp. und unterer Rand ≥ −5,00 Pp. |
-| 5 | Keine relevante Verbesserung | oberer Rand < +5,00 Pp. |
+| 1 | Zu wenige Daten (Zeile grau) | unter 50 Spielen |
+| 2 | Negativ | rechter Rand der Spanne < 0 |
+| 3 | Funktioniert | Mehrwert ≥ +5,00 Pp. und linker Rand **> +2,00 Pp.** (seit 0.19; bis 0.18: > 0) |
+| 4 | Funktioniert leicht | Mehrwert ≥ +2,00 Pp. und linker Rand ≥ −5,00 Pp. |
+| 5 | Keine relevante Verbesserung | rechter Rand < +5,00 Pp. |
 | 6 | Noch unklar | alles übrige |
 
-Im Tab steht unter „Definitionen und Änderungen“ eine leicht verständliche Erklärung der sechs Stufen (Wunsch Carsten 14.11.2026). Die Empfehlung beruht auf den gewählten Saisons (historisch). Bestätigt wird eine Schwelle mit einer einzelnen, neueren Saison (z. B. „Saison 2025/26“). Alle Zahlen mit zwei Nachkommastellen, kaufmännisch gerundet.
+- **Stabilität (seit 0.19):** Mehrwert je Saison einzeln berechnet; stabil, wenn er in mindestens zwei Dritteln der gewählten Saisons positiv ist (aufgerundet: 7 Saisons → 5, 6 → 4).
+- **Prognosewert (seit 0.19):** nur bei Empfehlung „Funktioniert“ und stabil: hoch = Trefferquote ≥ 60,00 % und Mehrwert ≥ +8,00 Pp.; mittel = Trefferquote ≥ 55,00 %; gering = Trefferquote ≥ 50,00 %; sonst „–“ mit Grund („Empfehlung: …“, „nicht stabil (x von n Saisons)“, „Trefferquote unter 50 %“). Bei nur einer Saison: „–“, Spalte ausgegraut, „nur bei mehreren Saisons“.
+- **Schwellenvorschlag (seit 0.19):** für alle Ligen, KPIs und Richtungen die Schwelle nach 2.2 (Kandidaten 10–35 %, beste Stufe, dann mehr Spiele), als Tabelle und Datei zum Herunterladen; Grundlage der jährlichen Neuberechnung von `schwellen.toml`.
+- **Erklärfeld (seit 0.19):** Rahmen, ein Beispiel durch alle Spalten (Werte aus der gültigen Datei) und aufklappbare Erklärungen je Spalte; Kurzhilfe (ⓘ) an jeder Spalte mit Verweis auf das Erklärfeld. Alle Grenzwerte kommen aus einer Stelle im Code (`app/core/sensitivity.py`, `RULES`). Die Änderungshistorie steht nur hier (11.5).
+- **Hinweis:** Die Werte sind etwas zu optimistisch, weil die beste Schwelle ausgewählt wird; in einer neuen Saison liegt die Trefferquote erfahrungsgemäss einige Prozentpunkte tiefer (Prüfrunde 18.11.2026, `docs/tests/pruefprotokoll_prognosewert.md`).
 
 ### 11.4 Saisons
 
@@ -664,3 +695,4 @@ Werden Anomalien später neu definiert, wird das hier mit Datum festgehalten und
 | 10.11.2026 | Referenzsaison (1.2) statt fest 2020/21; neue Saisonauswahl (11.4); Definition „eingetroffen“ unverändert (Version 0.11) |
 | 11.11.2026 | Sensitivitätsanalyse: vier Schwellen, Ø pro Spieltag, Spieltagsabdeckung, Grundquote aller Spiele, Wilson/Newcombe-Spanne, Empfehlung in sechs Stufen; Urteil vorher/nachher entfällt (Version 0.12) |
 | 14.11.2026 | Neue gültige Schwellen (2.2), mit der Sensitivitätsanalyse festgelegt; Ergebnisqualität auch für die starke Schwelle, vier Zeilen je KPI; Definition „eingetroffen“ unverändert (Version 0.13) |
+| 18.11.2026 | Auffälligkeit und Prognosewert statt leicht/stark (2.2, 2.6): eine Schwelle je Liga, KPI und Richtung; Empfehlung „Funktioniert“ mit linkem Rand > +2 Pp.; Stabilität und Prognosewert; Schwellenvorschlag; Erklärfeld neu, Änderungshistorie nur noch hier; Definition „eingetroffen“ unverändert (Version 0.19, Freigabe Carsten) |
