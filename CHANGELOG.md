@@ -16,6 +16,7 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 - **Claude** · Bereinigungen: **B1** Index je Liga für Team- und Referenzspiele (Fälle der Sensitivitätsanalyse 52,8 s → 5,2 s, Vorladen entsprechend kürzer; Vollvergleich identisch), **B3** gleitendes Fenster im Spielplan-Import, **B4** letzte Zeilenschleife ersetzt, **B5** Spielplan einlesen 0,75 s → 0,53 s (identisch), **B6** `st.iframe` statt `components.html` für das Anmelde-Cookie (im Browser geprüft).
 - **Claude** · Tests: Gegenrechnung T13 prüft jetzt auch Empfehlung, Stabilität und Prognosewert; Raster-Test der Regeln (alle Stufen); Tabelle = Datei für alle 23 Schwellen (echte Datenbank); Index = bisherige Filter; Top-Text und Reiterfolge; Schwellen je Liga und Liga-Wechsel; Versionsnummer der Website; Schusssumme als Hinweis; gleitendes Fenster. Gesamt 627 Tests.
 - **Claude** · Doku: `01` (Abschnitt 0, Entscheidung, 8, 8.1), `02` (5, 5.1), `03` (5, Punkte 2, 10, 11, 12), `05` v5.7, `08`, Prüfprotokoll (Nachtrag 0.19.1), RELEASE.md.
+- **Carsten** · Entscheidung: Der Begriff **„Prognosewert“ (hoch / mittel / gering) heisst künftig „Signalqualität“ (stark / mittel / gering)**, im Dashboard und auf der Website; die Designs passt Carsten an. Umsetzung im nächsten Release (`01`, Abschnitt 2).
 
 ## 18.11.2026 – Version 0.18 eingespielt, Version 0.19: Auffälligkeit und Prognosewert (statt leicht/stark)
 
