@@ -116,8 +116,9 @@ Regeln:
 | `/de/methodik/` | `/en/methodology/` |
 | `/de/glossar/` | `/en/glossary/` |
 | `/de/impressum/` | `/en/legal-notice/` |
-| `/de/datenschutz/` | `/en/privacy/` |
+| `/de/datenschutz/` | `/en/privacy-policy/` |
 | `/de/kontakt/` | `/en/contact/` |
+| `/de/cookie-einstellungen/` | `/en/cookie-settings/` |
 
 - **Slug in beiden Sprachen gleich** (aus den API-Namen, z. B. `vfb-stuttgart-bayern-muenchen-1550203`); nur die
   Pfadwörter werden übersetzt. So ergibt sich die Adresse der anderen Sprache mit einer Regel.
@@ -129,6 +130,11 @@ Regeln:
   ausser a–z und 0–9 werden zu einem Bindestrich; keine doppelten Bindestriche, keine am Anfang oder Ende.
   Beispiele: „1. FC Köln“ → `1-fc-koeln`, „Brighton & Hove Albion“ → `brighton-hove-albion`, „Atlético Madrid“ →
   `atletico-madrid`.
+- **Cookie-Einstellungen:** `noindex`, nicht in der Sitemap.
+- **404 je Sprachverzeichnis:** unbekannte Adresse unter `/de/` → deutsche Seite „nicht gefunden“, unter `/en/` → englische; sonst deutsch.
+- **Neue Mannschaft:** Der Slug entsteht immer automatisch aus dem API-Namen. Fehlt im Namenverzeichnis ein deutscher oder englischer Anzeigename, zeigt die Seite bis dahin den API-Namen und meldet das intern (Datenimport/API); die Veröffentlichung wird nicht blockiert. Ein späterer Anzeigename ändert den Slug nicht.
+- **Wiederholungsspiel mit neuer ID:** eigene Seite; die alte Seite bleibt erreichbar und wird nie gelöscht (mit ihrem Status, z. B. „Abgebrochen“).
+- **Fehlende Übersetzung:** kommt nicht vor, solange alle Seiten in beiden Sprachen existieren. Falls künftig (z. B. dritte Sprache): kein `hreflang`-Eintrag für diese Seite, der Sprachwechsel führt auf die Startseite der Zielsprache. Fehlt nur ein einzelner Text, gilt der deutsche (Fallback der Sprachdatei).
 - **Texte:** alle Website-Texte zusätzlich englisch (`texte/en.json`), Inhalte (Methodik, Glossar, rechtliche Seiten)
   aus dem finalen Content in beiden Sprachen; Teamnamen bleiben die API-Namen.
 
