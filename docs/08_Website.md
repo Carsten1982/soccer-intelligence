@@ -263,6 +263,15 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
 
 ## 10. Offene Punkte
 
+- **SEO-Check, Beschlüsse Carsten 19.11.2026:**
+  - *0.21* Kein `eventStatus` (z. B. verschoben): solche Seiten sind `noindex` und haben kein `SportsEvent`; Nachholspiele
+    mit Werten tragen nur das neue `startDate`.
+  - *0.21* Keine Event-Rich-Results angestrebt: `SportsEvent` als reine Auszeichnung, ohne Ort.
+  - *0.20* Impressum und Datenschutz `index` und in der Sitemap (Cookie-Einstellungen bleiben `noindex`).
+  - *0.20* H1 der Spielseite visuell versteckt („nur für Screenreader und Suchmaschinen“, gleicher Text wie das
+    Scoreboard; CSS-Klasse für Screenreader, nicht `display:none`).
+  - *0.20* Benannte Stufen in SEO-Texten gross wie im Glossar („High signal quality“ bzw. „Signalqualität stark“).
+  - *0.20* Startseiten-Text „Die interessantesten Abweichungen und Prognosen des kommenden Spieltags.“ bleibt (Carsten).
 - **Beschlüsse Carsten 19.11.2026 (Themen 1–7, neun Fragen):**
   - *0.20* **Kachel Sonderspiel:** „Nachholspiel · Spieltag 13“ / „Rescheduled · Matchday 13“, „Vorgezogen · Spieltag 23“ /
     „Brought forward · Matchday 23“.
