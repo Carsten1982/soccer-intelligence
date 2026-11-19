@@ -263,6 +263,20 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
 
 ## 10. Offene Punkte
 
+- **Für 0.20 beschlossen (Carsten 19.11.2026): Technik, SEO und Indexierung (Thema 4).**
+  - Alle Texte, Zahlen und Zustände stehen im ausgelieferten HTML, auch alle Tabs der Spieltag-Seite und alle Ebenen
+    und Tabellen der Methodik; JavaScript blendet nur ein und aus.
+  - Bei Dateifehlern („Die Daten werden gerade geprüft.“) Status **503 mit `Retry-After`**; Impressum, Datenschutz,
+    Kontakt und Cookie-Einstellungen bleiben mit 200 erreichbar.
+  - **Indexierung:** kommende Spiele und Spiele ab dem Livegang (mit Schnappschuss) indexierbar und in der Sitemap;
+    laufende Saison vor dem Livegang und Vorsaison 2025/26 erreichbar, aber `noindex` und nicht in der Sitemap;
+    Saisons 2018/19–2024/25 zunächst ohne Seiten (404).
+  - **Nichts verbauen für den Rückblick (Version 2/3):** Adressschema gilt für alle Saisons, einmal veröffentlichte
+    Adressen werden nie gelöscht (sonst 301); Schnappschüsse ab 0.20 vor jedem Anpfiff und einmalig nachträglich für
+    laufende Saison und Vorsaison (gekennzeichnet); Schnappschuss-Format mit Versionsnummer; Indexierung zentral in der
+    Konfiguration (`index_ab`, `seiten_ab_saison`); Sitemap als Index mit Teilen je Liga und Saison; Archivseiten je
+    Spieltag ohne Eintrag in der Navigation (nur von Spielseiten verlinkt); Ergebnis und Schnappschuss je Spiel als
+    Grundlage der späteren Bilanz.
 - **Für 0.20 beschlossen (Carsten 19.11.2026): Englisch zum Livegang** mit gleichem Slug in beiden Sprachen, übersetzten Pfadwörtern, `hreflang` und Regeln für Sonderzeichen (Abschnitt 4.1).
 - **Für 0.20 beschlossen (Carsten 19.11.2026): Adressschema** nach Abschnitt 4.1 (ID am Ende, API-Namen, 301-Weiterleitungen, `/de/` für alle Seiten ab dem Livegang).
 - **Für 0.20 beschlossen (Carsten 19.11.2026): kein Live-Status.** Ab dem Anpfiff gilt ein Spiel als gespielt: ausgegraut, markiert mit „Gespielt“, sobald importiert mit dem Endstand. Es bleibt an seinem Platz in den Top Anomalien (Startseite) und auf der Spieltag-Seite, bis der Spieltag endet; die Werte vor dem Spiel (Schnappschuss) bleiben sichtbar. Der Chip „Ergebnis folgt“ und der Glossar-Begriff entfallen, auch auf der Spielseite (`07`, 4.7). Präzisierung (Carsten 19.11.2026): **bis Anpfiff + 2 Stunden** normal ohne Beschriftung (während des Spiels nichts), **ab Anpfiff + 2 Stunden** ausgegraut mit „Gespielt“, **ab Import des Endstands** ausgegraut mit Endstand. Sichtbarkeit: reguläre Spiele bis zum Ende ihres Spieltags (Abend des letzten regulären Spiels), Sonderspiele bis zu ihrem eigenen Tagesende, Top Anomalien bis zum Ende des Blocks (4.2, 4.7).
