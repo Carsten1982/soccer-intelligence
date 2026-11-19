@@ -105,6 +105,33 @@ Regeln:
   (`/spiel/<id>`, `/spieltag/<liga>`) leiten dauerhaft auf die neuen weiter.
 - Ein Vereinsname ändert sich → neue lesbare Adresse, alte leitet per 301 weiter; die ID bleibt.
 
+**Englisch zum Livegang (Entscheidung Carsten 19.11.2026):** Die Website erscheint deutsch und englisch.
+
+| Deutsch | Englisch |
+|---|---|
+| `/de/` | `/en/` |
+| `/de/spieltag/<liga>/` | `/en/matchday/<liga>/` |
+| `/de/spieltag/<liga>/<saison>/<nr>/` | `/en/matchday/<liga>/<saison>/<nr>/` |
+| `/de/spiel/<liga>/<slug>-<id>/` | `/en/match/<liga>/<slug>-<id>/` |
+| `/de/methodik/` | `/en/methodology/` |
+| `/de/glossar/` | `/en/glossary/` |
+| `/de/impressum/` | `/en/legal-notice/` |
+| `/de/datenschutz/` | `/en/privacy/` |
+| `/de/kontakt/` | `/en/contact/` |
+
+- **Slug in beiden Sprachen gleich** (aus den API-Namen, z. B. `vfb-stuttgart-bayern-muenchen-1550203`); nur die
+  Pfadwörter werden übersetzt. So ergibt sich die Adresse der anderen Sprache mit einer Regel.
+- **Liga-Teil in beiden Sprachen gleich:** `bundesliga`, `premier-league`, `serie-a`, `la-liga`.
+- Jede Seite verweist mit `hreflang` (de, en, x-default = de) auf beide Fassungen; Sprachwechsel führt auf dieselbe Seite.
+- **Ohne Liga:** `/de/spieltag/` bzw. `/en/matchday/` leiten auf die Standardliga weiter (Bundesliga, F8; 302, weil
+  die Standardliga sich ändern kann).
+- **Sonderzeichen in Namen:** Apostrophe werden ersatzlos entfernt; „&“, Punkte, Leerzeichen und alle übrigen Zeichen
+  ausser a–z und 0–9 werden zu einem Bindestrich; keine doppelten Bindestriche, keine am Anfang oder Ende.
+  Beispiele: „1. FC Köln“ → `1-fc-koeln`, „Brighton & Hove Albion“ → `brighton-hove-albion`, „Atlético Madrid“ →
+  `atletico-madrid`.
+- **Texte:** alle Website-Texte zusätzlich englisch (`texte/en.json`), Inhalte (Methodik, Glossar, rechtliche Seiten)
+  aus dem finalen Content in beiden Sprachen; Teamnamen bleiben die API-Namen.
+
 
 
 ## 5. Seite Spieltag (Übergabe, Abschnitt 6)
@@ -230,6 +257,7 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
 
 ## 10. Offene Punkte
 
+- **Für 0.20 beschlossen (Carsten 19.11.2026): Englisch zum Livegang** mit gleichem Slug in beiden Sprachen, übersetzten Pfadwörtern, `hreflang` und Regeln für Sonderzeichen (Abschnitt 4.1).
 - **Für 0.20 beschlossen (Carsten 19.11.2026): Adressschema** nach Abschnitt 4.1 (ID am Ende, API-Namen, 301-Weiterleitungen, `/de/` für alle Seiten ab dem Livegang).
 - **Für 0.20 beschlossen (Carsten 19.11.2026): kein Live-Status.** Ab dem Anpfiff gilt ein Spiel als gespielt: ausgegraut, markiert mit „Gespielt“, sobald importiert mit dem Endstand. Es bleibt an seinem Platz in den Top Anomalien (Startseite) und auf der Spieltag-Seite, bis der Spieltag endet; die Werte vor dem Spiel (Schnappschuss) bleiben sichtbar. Der Chip „Ergebnis folgt“ und der Glossar-Begriff entfallen, auch auf der Spielseite (`07`, 4.7). Präzisierung (Carsten 19.11.2026): **bis Anpfiff + 2 Stunden** normal ohne Beschriftung (während des Spiels nichts), **ab Anpfiff + 2 Stunden** ausgegraut mit „Gespielt“, **ab Import des Endstands** ausgegraut mit Endstand. Sichtbarkeit: reguläre Spiele bis zum Ende ihres Spieltags (Abend des letzten regulären Spiels), Sonderspiele bis zu ihrem eigenen Tagesende, Top Anomalien bis zum Ende des Blocks (4.2, 4.7).
 - **Für 0.20 beschlossen (Carsten 19.11.2026): Datenstand 48 Stunden.** Daten bis 48 Stunden alt sind normal, die Website schlägt keinen Alarm. Erst wenn der letzte erfolgreiche Import mehr als 48 Stunden zurückliegt, erscheint der Hinweis „Spielplan zuletzt aktualisiert am …“ (bisher ab mehr als 3 Tagen; `07`, 4.3, S9). Intern meldet der E-Mail-Alarm (0.21) schon den ersten Ausfall.
@@ -243,7 +271,7 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
 - Methodik-Seite mit den besprochenen Änderungen (Mehrwert = Trefferquote − Grundquote aller Spiele, Prozentpunkte statt Prozent).
 - Methodik-Seite: eine oder zwei (Übergabe 10, Punkt 9).
 - Livegang: Impressum, Datenschutz, rechtliche Prüfung „keine Wettberatung“, statischer Export und nginx, Weiterleitung `/` statt Platzhalter.
-- Mehrsprachigkeit (EN, IT, ES): Übersetzungen, Namenstabellen, Adressen je Sprache (später).
+- Mehrsprachigkeit: Englisch zum Livegang (Abschnitt 4.1); IT und ES später.
 
 ## 11. Versionen
 
