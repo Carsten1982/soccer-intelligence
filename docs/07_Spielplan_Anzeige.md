@@ -230,6 +230,8 @@ Dazu kommen die Vermerke „Nachholspiel“ und „vorgezogen“ am Spiel.
 - Eine Liga nimmt teil, wenn ihr Block **höchstens 14 Tage** entfernt ist. Sonst steht in der Kopfzeile z. B. „Bundesliga: Winterpause bis 07.01.“.
 - Spiele ohne Werte (4.5) nehmen nicht teil. Jedes Spiel kommt genau einmal vor.
 
+**Ab 0.20 (Entscheidung Carsten 19.11.2026): Gespielte Spiele bleiben stehen.** Die Top-Anomalien-Liste eines Blocks wird vor dem ersten Anpfiff festgelegt und bleibt, bis der Block endet. Gespielte Spiele bleiben auf ihrem Platz, **ausgegraut** und mit **„Gespielt“** markiert, nach dem Import mit dem **Endstand**; es rückt kein anderes Spiel nach. Kein Live-Status, kein „Ergebnis folgt“. Gilt gleich für Dashboard und Website (Startseite, Spieltag-Seite, Matchdetail). Ersetzt die Regel „nur Spiele vor dem Anpfiff“ und Testfall A23.
+
 ### 4.8 Festlegungen bei der Umsetzung (Version 0.16)
 
 Wo die Abschnitte 4.1–4.7 offen liessen, wie etwas genau gilt, ist es so umgesetzt (Tests `tests/test_anzeige.py`):
