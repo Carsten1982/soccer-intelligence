@@ -270,11 +270,19 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
   Dortmund – Gladbach am 20.03.2027 zeigte am 21.11.2026 „auffällig · gering“). Ab 0.20 gilt die Regel auf allen Seiten:
   Scoreboard und „Zurück zum Spieltag“ bleiben, statt der Kennzahlen steht der „Werte ab“-Hinweis (Wortlaut DE/EN nach
   Freigabe Carsten), keine Bewertung, damit `noindex` (0.21).
-  Wortlaut (Freigabe Carsten 19.11.2026): Vorspiel steht aus – „Werte ab Sa, 5. Dezember – sobald beide Teams ihr
-  vorheriges Ligaspiel gespielt haben.“ / „Values from Sat 5 December – once both teams have played their previous
-  league match.“; Ergebnis noch nicht übernommen – „Werte folgen, sobald das Ergebnis vom 28. November übernommen ist.“ /
-  „Values will follow once the result from 28 November has been processed.“; Kachel – „Werte ab 5. Dez.“ / „Values from
-  5 Dec“.
+  Wortlaut (Freigabe Carsten 19.11.2026): Vorspiel steht aus – „Werte ab Sa 05.12. – sobald beide Teams ihr vorheriges
+  Ligaspiel gespielt haben.“ / „Values from Sat 5 Dec – once both teams have played their previous league match.“;
+  Ergebnis noch nicht übernommen – „Werte folgen, sobald das Ergebnis vom 28.11. übernommen ist.“ / „Values will follow
+  once the result from 28 Nov has been processed.“; Kachel – „Werte ab 5.12.“ / „Values from 5 Dec“.
+  Regeln: vorheriges Spiel = zeitlich letztes angesetztes Ligaspiel vor dem Anpfiff (über die Saisongrenze; verschobene
+  usw. zählen nicht, Nachholspiele schon); Aufsteiger ohne vorheriges Spiel: keine Sperre („Zu wenig Daten“); „Werte ab“ =
+  Tag nach dem späteren ausstehenden Vorspiel (erwartetes Datum), „Ergebnis vom“ = späteres fehlendes Vorspiel.
+  **Anpfiff ohne Werte:** Der Schnappschuss wartet, bis die Vorspiel-Ergebnisse übernommen sind, und rechnet dann mit den
+  Daten vor dem Spiel (Vermerk „Werte nachträglich mit den Daten vor dem Spiel berechnet.“); bis dahin ab Anpfiff + 2 h
+  ausgegraut mit „Gespielt“, ohne Werte; „Werte ab …“ erscheint nach dem Anpfiff nie.
+  SEO/Social: Description „{Heimteam} – {Auswärtsteam} ({Liga}, {n}. Spieltag, {Datum}): Die Werte folgen, sobald beide
+  Teams ihr vorheriges Ligaspiel gespielt haben.“ / „{Home} – {Away} ({League}, Matchday {n}, {date}): Values will follow
+  once both teams have played their previous league match.“; og:title „{Heimteam} – {Auswärtsteam}“; kein SportsEvent.
 - **Für 0.20 beschlossen (Carsten 19.11.2026): Archivseite und Glossar ohne eigenen Entwurf.** Archivseite aus der
   Spieltag-Seite abgeleitet (gleiche Kacheln mit Endstand, Kopf „<Liga> · Spieltag <nr> · Saison <saison>“, Pfeile zum
   vorherigen und nächsten Spieltag, keine Tabs, nicht in der Navigation). Glossar als Textseite im Stil der Methodik,
