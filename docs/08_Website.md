@@ -263,6 +263,12 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
 
 ## 10. Offene Punkte
 
+- **Für 0.21 beschlossen (Carsten 19.11.2026): Spielseiten ohne Werte.** Eine Spielseite ist indexierbar und in der
+  Sitemap, wenn sie im Index-Fenster liegt (Thema 4), keinen der fünf ausschliessenden Status hat und **mindestens eine
+  bewertete Kennzahl** zeigt; sonst `noindex,follow` und nicht in der Sitemap (Seite bleibt erreichbar). Eine Funktion
+  entscheidet für Seite und Sitemap. Teilweise vorläufige Spiele sind indexierbar; gespielte Spiele behalten den Stand
+  ihres Schnappschusses; abgebrochene oder ausgesetzte Spiele sind `noindex`, bis sie als beendet Werte zeigen; ein
+  verschobenes Spiel wird mit neuem Termin und Werten indexierbar (Adresse unverändert).
 - **Release-Zuschnitt (Carsten 19.11.2026):** Der Umfang von 0.20 ist mit den bis hier beschlossenen Punkten abgeschlossen. Weitere Beschlüsse aus der Abstimmung mit dem Design- und Content-Chat kommen in **0.21** (zusammen mit E-Mail, Cookie-Banner, GA4, Search Console, robots.txt und Sitemap); danach 1.0 (Qualität und Livegang).
 - **Für 0.20 beschlossen (Carsten 19.11.2026): Technik, SEO und Indexierung (Thema 4).**
   - Alle Texte, Zahlen und Zustände stehen im ausgelieferten HTML, auch alle Tabs der Spieltag-Seite und alle Ebenen
