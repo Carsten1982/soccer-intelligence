@@ -263,6 +263,13 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
 
 ## 10. Offene Punkte
 
+- **Lücke gefunden (19.11.2026), Behebung in 0.20: „Werte ab …“ auf der Website.** Das Dashboard zeigt Werte erst,
+  wenn beide Teams ihr vorheriges Ligaspiel gespielt haben und das Ergebnis übernommen ist (`core/anzeige.values_gate`,
+  `07`, 4.5); vorher steht „Werte ab …“. Die Website wendet diese Regel bisher nur im Ranking der Startseite an: Kacheln
+  der Spieltag-Seite und Matchdetail zeigen auch für weit entfernte Spiele Werte und Auffälligkeiten (geprüft:
+  Dortmund – Gladbach am 20.03.2027 zeigte am 21.11.2026 „auffällig · gering“). Ab 0.20 gilt die Regel auf allen Seiten:
+  Scoreboard und „Zurück zum Spieltag“ bleiben, statt der Kennzahlen steht der „Werte ab“-Hinweis (Wortlaut DE/EN nach
+  Freigabe Carsten), keine Bewertung, damit `noindex` (0.21).
 - **Für 0.20 beschlossen (Carsten 19.11.2026): Archivseite und Glossar ohne eigenen Entwurf.** Archivseite aus der
   Spieltag-Seite abgeleitet (gleiche Kacheln mit Endstand, Kopf „<Liga> · Spieltag <nr> · Saison <saison>“, Pfeile zum
   vorherigen und nächsten Spieltag, keine Tabs, nicht in der Navigation). Glossar als Textseite im Stil der Methodik,
