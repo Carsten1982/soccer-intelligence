@@ -12,7 +12,16 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 
 **Bereit zum Einspielen:** Version 0.19.1 – Anpassungen nach der Abnahme von 0.19 (Carsten 18.11.2026): Text unter den Top Anomalien mit Zwischentiteln, Reiter Sensitivitätsanalyse vor Datenqualität, überarbeitete Erklärtexte der Sensitivitätsanalyse, Schwellen je Liga sichtbar (Fehler beim Liga-Wechsel behoben), KPI 03 mit Satz bei genau 0,00 %, „Schüsse < aufs Tor + daneben“ nur noch Hinweis, Website-CSS/JS mit Versionsnummer (kein Strg+F5 mehr), Bereinigungen B1, B3–B6 (Sensitivitätsanalyse rund zehnmal schneller), Gegenrechnung auch für Empfehlung, Stabilität und Prognosewert.
 
-**Als Nächstes:** Umbenennung Prognosewert → **Signalqualität stark / mittel / gering** (Entscheidung 18.11.2026) · Designentwurf Dashboard (Design-Briefing 18.11.2026) und danach Website mit Prognosewert (Release B) · Website: Methodik, Impressum, Datenschutz und Livegang · 2 Wochen halbautomatischer Betrieb, danach Datum für den automatischen Tausch festlegen (`app/config/import.toml`) · E-Mail-Benachrichtigung · Phase 2: Wettquoten, Verletzungen, Tabellenstände (rückwirkend) · Rundum-Prüfung des Codes · KPI-Erweiterungen und Freigabe je Liga · Phase 3: primäre Auffälligkeit je Spiel, neue KPIs.
+**Als Nächstes – Releaseplan bis zum Livegang (Freigabe Carsten 19.11.2026):**
+
+| Release | Schwerpunkt | Inhalt (Details: `08_Website.md`, Abschnitt 10; Briefings des Design-Chats) | Voraussetzungen |
+|---|---|---|---|
+| **0.20 Fundament** | Rechenlogik, Datenregeln, Dashboard | Umbenennung Signalqualität stark/mittel/gering; Schnappschuss je Spiel (stündlich, versioniert, nachträglich für laufende Saison und Vorsaison); Statusmodell (Zu wenig Daten, AWD-Absicherung, Gespielt nach Anpfiff + 2 h, kein Nachrücken in den Top Anomalien, „Werte ab …“ auf allen Seiten, Sonderspiel-Nummer und Zählform); 48-Stunden-Grenze; Dashboard angepasst | keine |
+| **0.21 Neue Website** | Templates, Sprachen, Adressen, SEO | Templates T1–T7, T9–T11 nach den Entwürfen; DE/EN mit Anzeigenamen je Sprache; Adressen `/de/`, `/en/`, 301, Canonical, hreflang, 404, 503; Indexierungsregeln, robots.txt, Sitemap; Titles/Descriptions/Social/JSON-LD; Tabs ohne JS, Fokus, Kontraste, axe-core; Caching; Excel-Download Methodik | Texte Archiv/Glossar, offene Glossar-Vorschläge |
+| **0.22 Betrieb & Einwilligung** | E-Mail, Kontakt, Cookies, Analytics | **Spezifikation E-Mail-Alarme (offen, vor Beginn von 0.22)**; E-Mail über Hostinger-Postfach; Kontaktformular-Versand; Alarme (API, Import, Freigabe, Schnappschuss); Cookie-Hinweis und Cookie-Einstellungen; Tag Manager und GA4 nach Zustimmung; Search Console | Postfach, GA4-/GTM-IDs |
+| **1.0 Qualität & Livegang** | Prüfung, Korrekturen, Umschalten | Qualitätschecks (Compound Engineering, Web Quality Skills, Lighthouse, axe mit echten Daten); Befunde beheben; Domain umschalten, `/` → `/de/`, Vorschau-Passwort weg, `index_ab` setzen, Sitemap einreichen | Impressum mit Projektadresse, juristische Prüfung DE/EN, Nutzungsrechte API-Football, Hosting-Angabe |
+
+Danach: Rückblick für Fans (Version 2/3) · E-Mail-Benachrichtigung über den Alarm hinaus · Phase 2: Wettquoten, Verletzungen, Tabellenstände · Phase 3: primäre Auffälligkeit je Spiel, neue KPIs · Rundum-Prüfung des Codes.
 
 | Version | Etappe | Inhalt | Eingespielt | Git | Tests |
 |---|---|---|---|---|---|

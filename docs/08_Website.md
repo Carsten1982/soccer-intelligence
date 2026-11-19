@@ -263,6 +263,7 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
 
 ## 10. Offene Punkte
 
+- **Beschluss Carsten 19.11.2026: Englischer Match-Title mit „vs“** (Glossar): „{Home} vs {Away} · {League}, Matchday {n} {Season} | Soccer Intelligence“; Deutsch mit Gedankenstrich. Anzeigenamen je Sprache aus einer Namenstabelle (Glossar Abschnitt 11), Slug weiter aus dem Namen der Datenquelle (0.21). **Releaseplan** 0.20 / 0.21 / 0.22 / 1.0 freigegeben (`01`, Abschnitt 0); Spezifikation der E-Mail-Alarme offen, vor Beginn von 0.22.
 - **SEO-Check, Beschlüsse Carsten 19.11.2026:**
   - *0.21* Kein `eventStatus` (z. B. verschoben): solche Seiten sind `noindex` und haben kein `SportsEvent`; Nachholspiele
     mit Werten tragen nur das neue `startDate`.
