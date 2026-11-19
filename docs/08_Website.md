@@ -263,6 +263,34 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
 
 ## 10. Offene Punkte
 
+- **Beschlüsse Carsten 19.11.2026 (Themen 1–7, neun Fragen):**
+  - *0.20* **Kachel Sonderspiel:** „Nachholspiel · Spieltag 13“ / „Rescheduled · Matchday 13“, „Vorgezogen · Spieltag 23“ /
+    „Brought forward · Matchday 23“.
+  - *0.20* **Zählform** im Tab nur mit Sonderspielen: „1 Nachholspiel“ / „1 rescheduled match“ (Mehrzahl entsprechend).
+  - *0.20* **Am grünen Tisch:** Status nur bei nie gespielten Spielen; gespielte, später umgewertete Spiele bleiben normal
+    gespielt mit Ergebnis auf dem Platz. Absicherung: Meldet die API für ein Spiel mit Ergebnis in der Datenbank `AWD`,
+    wird „gewertet“ für die Anzeige ignoriert und intern gemeldet.
+  - *0.20* **Tabs ohne JavaScript:** alle Tabs untereinander mit Überschrift und Sprungliste (Anker); das Skript schaltet
+    die Tab-Ansicht erst ein, wenn es läuft. Aufklapper mit `<details>`.
+  - *0.20* **Caching:** Daten und Berechnungen im Speicher bis zur nächsten Dateiänderung; HTML bei jedem Aufruf gebaut, mit
+    `Cache-Control: max-age=300`; 503 mit `no-store`; CSS, JS, Schriften 30 Tage (Versionsnummer `?v=`). Kein statischer
+    Export.
+  - *bereits umgesetzt (0.17)* **Schriften** selbst gehostet (Outfit, Inter, variable WOFF2, `font-display: swap`, OFL);
+    keine Google-Fonts-Links aus den Entwürfen.
+  - *0.21* **Kontaktformular:** Versand per E-Mail über das Hostinger-Postfach (Zugang in `.env`), `Reply-To` = Absender,
+    keine Speicherung; Pflichtfelder E-Mail, Nachricht, Einverständnis, Sicherheitsfrage; Prüfung auf dem Server;
+    verstecktes Feld; höchstens 3 Nachrichten pro Stunde und Besucher (IP nur kurz im Speicher); Inhalt nie in Protokollen;
+    funktioniert ohne JavaScript; Fehlertext „Deine Nachricht konnte nicht gesendet werden. Bitte versuche es in ein paar
+    Minuten noch einmal.“ / „Your message could not be sent. Please try again in a few minutes.“ plus Feldfehler;
+    Abschnitt Kontaktformular in der Datenschutzerklärung.
+  - *0.21* **Cookie-Wahl:** eigenes Cookie `cookie_wahl` (`zugestimmt`/`abgelehnt`), 6 Monate, `SameSite=Lax`, `Secure`;
+    vor Zustimmung nichts von Google (auch kein Tag Manager); Cookie-Einstellungen funktionieren ohne JavaScript;
+    automatischer Browser-Test: keine Anfrage an Google vor der Zustimmung.
+  - *0.20* **Barrierefreiheit:** WCAG AA auch für ausgegraute Kacheln (Text mindestens 4,5:1, „Gespielt“ als Text);
+    Kontrast-Check der Entwurfsfarben im Design-Chat; automatische Prüfung mit axe-core; Lighthouse vor 1.0.
+  - *Entwicklung:* Frist veralteter Spielplan 48 Stunden ab letztem erfolgreichem Lauf (0.20); Prüfung fehlender
+    englischer Schlüssel vor jedem Release als Warnung (0.20); Anstosszeiten bereits in Europe/Zurich (seit 0.14),
+    Zeitzonenangabe in strukturierten Daten (0.21); Wiederholungsspiel wie beschlossen (0.20).
 - **Lücke gefunden (19.11.2026), Behebung in 0.20: „Werte ab …“ auf der Website.** Das Dashboard zeigt Werte erst,
   wenn beide Teams ihr vorheriges Ligaspiel gespielt haben und das Ergebnis übernommen ist (`core/anzeige.values_gate`,
   `07`, 4.5); vorher steht „Werte ab …“. Die Website wendet diese Regel bisher nur im Ranking der Startseite an: Kacheln
