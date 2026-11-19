@@ -201,6 +201,7 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
 
 ## 10. Offene Punkte
 
+- **Für 0.20 beschlossen (Carsten 19.11.2026):** Fehlen für ein Spiel die Daten für eine Bewertung (zu wenig Spiele, z. B. Aufsteiger, oder technische Lücke), lautet der Text neutral **„Für dieses Spiel liegen nicht genug Daten für eine Bewertung vor.“** statt „Die statistische Datengrundlage ist zu schwach.“ Der Begriff „Nicht gewertet“ wird dabei durch einen eindeutigen Begriff ersetzt (Vorschlag „Zu wenig Daten“; Wortlaut mit dem finalen Content). Hero bei keiner Auffälligkeit mit dynamischer Zahl: „Keine der {n} Kennzahlen überschreitet ihre Schwelle.“ (n = gewertete Kennzahlen).
 - Startseite: maximale Anzahl im Ranking (vorerst 4, wie Dashboard).
 - Methodik-Seite mit den besprochenen Änderungen (Mehrwert = Trefferquote − Grundquote aller Spiele, Prozentpunkte statt Prozent).
 - Methodik-Seite: eine oder zwei (Übergabe 10, Punkt 9).
