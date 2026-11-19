@@ -263,6 +263,23 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
 
 ## 10. Offene Punkte
 
+- **Für 0.20 beschlossen (Carsten 19.11.2026): Archivseite und Glossar ohne eigenen Entwurf.** Archivseite aus der
+  Spieltag-Seite abgeleitet (gleiche Kacheln mit Endstand, Kopf „<Liga> · Spieltag <nr> · Saison <saison>“, Pfeile zum
+  vorherigen und nächsten Spieltag, keine Tabs, nicht in der Navigation). Glossar als Textseite im Stil der Methodik,
+  verlinkt im Footer und von der Methodik. Texte DE/EN sowie SEO-Title und -Description liefert Carsten
+  (Vorschlag von Claude für die Archivseite).
+- **Für 0.21 beschlossen (Carsten 19.11.2026):**
+  - **Zeitzone:** alle Anstosszeiten in mitteleuropäischer Zeit; Hinweis „Alle Anstoßzeiten in mitteleuropäischer Zeit
+    (MEZ/MESZ).“ bzw. „All kick-off times in Central European Time (CET/CEST).“
+  - **Archivseiten im Index:** indexierbar, wenn der Spieltag nach dem Livegang begonnen hat (Index-Fenster),
+    unabhängig vom Status einzelner Spiele; davor begonnene Spieltage `noindex,follow`; nur indexierbare Archivseiten in
+    der Sitemap; Spielseiten folgen ihrer eigenen Regel.
+  - **Navigation:** verlinkt direkt auf `/de/spieltag/bundesliga/` bzw. `/en/matchday/bundesliga/`; die Weiterleitung
+    `/de/spieltag/` (302) bleibt für eingetippte Adressen, ohne `hreflang` und Canonical.
+  - **Index-Fenster kommender Spiele:** indexierbar, sobald das Spiel in einem Tab der Spieltag-Seite erscheint
+    (anstehender Spieltag und Spieltage mit erstem Spiel bis heute + 6; Sonderspiele ab 7 Tagen vorher).
+  - **Strukturierte Daten:** `SportsEvent` (mit `startDate` inkl. Zeitzone) nur auf indexierbaren Spielseiten; auf
+    `noindex`-Seiten nur `BreadcrumbList`.
 - **Für 0.21 beschlossen (Carsten 19.11.2026): Spielseiten ohne Werte.** Eine Spielseite ist indexierbar und in der
   Sitemap, wenn sie im Index-Fenster liegt (Thema 4), keinen der fünf ausschliessenden Status hat und **mindestens eine
   bewertete Kennzahl** zeigt; sonst `noindex,follow` und nicht in der Sitemap (Seite bleibt erreichbar). Eine Funktion
