@@ -272,6 +272,10 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
     Scoreboard; CSS-Klasse für Screenreader, nicht `display:none`).
   - *0.20* Benannte Stufen in SEO-Texten gross wie im Glossar („High signal quality“ bzw. „Signalqualität stark“).
   - *0.20* Startseiten-Text „Die interessantesten Abweichungen und Prognosen des kommenden Spieltags.“ bleibt (Carsten).
+  - *0.20* **Title der Spielseite mit Spieltag und Saison** (eindeutig auch über Saisons und Wiederholungsspiele):
+    „{Heim} – {Gast} · {Liga}, {n}. Spieltag {Saison} | Soccer Intelligence“ bzw. „{Home} – {Away} · {League}, Matchday {n}
+    {Season} | Soccer Intelligence“, z. B. „VfB Stuttgart – Bayern München · Bundesliga, 13. Spieltag 2025/26 | Soccer
+    Intelligence“.
 - **Beschlüsse Carsten 19.11.2026 (Themen 1–7, neun Fragen):**
   - *0.20* **Kachel Sonderspiel:** „Nachholspiel · Spieltag 13“ / „Rescheduled · Matchday 13“, „Vorgezogen · Spieltag 23“ /
     „Brought forward · Matchday 23“.
