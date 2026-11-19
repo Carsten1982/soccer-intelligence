@@ -263,6 +263,7 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
 
 ## 10. Offene Punkte
 
+- **Release-Zuschnitt (Carsten 19.11.2026):** Der Umfang von 0.20 ist mit den bis hier beschlossenen Punkten abgeschlossen. Weitere Beschlüsse aus der Abstimmung mit dem Design- und Content-Chat kommen in **0.21** (zusammen mit E-Mail, Cookie-Banner, GA4, Search Console, robots.txt und Sitemap); danach 1.0 (Qualität und Livegang).
 - **Für 0.20 beschlossen (Carsten 19.11.2026): Technik, SEO und Indexierung (Thema 4).**
   - Alle Texte, Zahlen und Zustände stehen im ausgelieferten HTML, auch alle Tabs der Spieltag-Seite und alle Ebenen
     und Tabellen der Methodik; JavaScript blendet nur ein und aus.
