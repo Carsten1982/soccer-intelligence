@@ -10,7 +10,6 @@ dem Importtag; der Spielplan ist der heutige.
 
 from __future__ import annotations
 
-import json
 import re
 import threading
 import tomllib
@@ -24,6 +23,7 @@ from core import settings
 from core.anzeige import results_index
 from core.config import League, load_leagues, load_teams
 from core.files import file_key
+from core.importstand import last_successful_run
 from core.fixtures import FixturesLoad, load_fixtures
 from core.kpis import MatchKpis, prepare_league
 from core.loader import DatabaseLoad, load_database
@@ -34,7 +34,6 @@ from core.thresholds import ThresholdConfig, load_thresholds
 from . import einstellungen as W
 
 TZ = ZoneInfo(settings.TIMEZONE)
-FEHLGESCHLAGEN = ("fehlgeschlagen", "Fehler – nicht übernehmbar")     # wie state.FAILED_RUNS
 DATUM = re.compile(r"^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?$")
 
 
@@ -76,17 +75,9 @@ def zeitreise(text: str | None, echt: Zeitpunkt) -> tuple[Zeitpunkt, bool]:
 
 
 def letzter_import(import_dir) -> datetime | None:
-    """Beginn des letzten erfolgreichen Importlaufs (Europe/Zurich), None ohne Lauf. Liest nur /import."""
-    for bericht in sorted((import_dir / "laeufe").glob("*/bericht.json"), reverse=True):
-        try:
-            rep = json.loads(bericht.read_text(encoding="utf-8"))
-            if rep.get("status") in FEHLGESCHLAGEN or not rep.get("start"):
-                continue
-            start = datetime.fromisoformat(rep["start"])
-            return (start.astimezone(TZ) if start.tzinfo else start).replace(tzinfo=None, microsecond=0)
-        except (OSError, ValueError, TypeError, AttributeError):
-            continue
-    return None
+    """Beginn des letzten erfolgreichen Importlaufs (Europe/Zurich), None ohne Lauf. Liest nur /import
+    (core/importstand.py, gleiche Funktion wie das Dashboard)."""
+    return last_successful_run(import_dir)
 
 
 # --- Bestand -------------------------------------------------------------------------------------------
@@ -198,6 +189,18 @@ class Daten:
         self.bestand()                                     # Dateistand prüfen, bevor der Schlüssel gebildet wird
         return self._merken(("ergebnisse", self._schluessel, liga, bis),
                             lambda: results_index(self.prepared(liga, bis)))
+
+    def werte(self, liga: str, row, zp: Zeitpunkt):
+        """Die Werte, die die Seiten für ein Spiel zeigen (seit 0.20, core/schnappschuss.shown_values): vor dem
+        Anstoss die aktuell berechneten, ab dem Anstoss der Schnappschuss bzw. die nachträgliche Berechnung.
+        row = Zeile aus spielplan(liga) bzw. anzeige.prepare."""
+        from core import schnappschuss as S
+        live = self.kpis(liga, row.saison, int(row.spieltag), zp.bis).get(int(row.reihenfolge))
+        league = self.bestand().leagues.get(liga)
+        plan = self.spielplan(liga)
+        if league is None or plan is None:
+            return S.Shown(live, S.LIVE)
+        return S.shown_values(self.import_dir, league.url, row, live, zp.jetzt, self.ergebnisse(liga, zp.bis), plan)
 
     def kpis(self, liga: str, saison: str, spieltag: int, bis: date | None) -> dict[int, MatchKpis | None]:
         """KPI-Ergebnisse je Spiel eines Spieltags (Schlüssel: Reihenfolge im Spielplan-Blatt)."""

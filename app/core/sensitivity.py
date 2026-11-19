@@ -1,4 +1,4 @@
-"""Sensitivitätsanalyse, Teil Auswertung (seit Version 0.12; Version 0.19: Prognosewert; KPI-Regelwerk 11).
+"""Sensitivitätsanalyse, Teil Auswertung (seit Version 0.12; Version 0.19: Prognosewert, seit 0.20 Signalqualität; KPI-Regelwerk 11).
 
 Wertet die Fälle aus core/simulation.py (build_cases) mit frei einstellbaren Schwellen aus:
 
@@ -6,7 +6,7 @@ Wertet die Fälle aus core/simulation.py (build_cases) mit frei einstellbaren Sc
 - Häufigkeit: Anzahl, Ø pro Spieltag, Spieltagsabdeckung;
 - Ergebnisqualität: Trefferquote, Vergleichsgruppe (alle Spiele), Mehrwert, Spanne (Newcombe aus zwei
   Wilson-Intervallen, 95 %), Empfehlung in sechs Stufen;
-- Stabilität (Mehrwert je Saison positiv) und Prognosewert hoch / mittel / gering;
+- Stabilität (Mehrwert je Saison positiv) und Signalqualität stark / mittel / gering;
 - Schwellenvorschlag aller Kombinationen Liga × KPI × Richtung (proposal), Grundlage der Datei schwellen.toml.
 
 Auffällig = Betrag der gerundeten Abweichung grösser als die Schwelle (mehr: > +Schwelle, weniger: < −Schwelle); genau
@@ -43,7 +43,7 @@ class Rules:
     light_floor: Decimal = Decimal(-5)      # … und linker Rand nicht unter … Pp.
     relevant_high: Decimal = Decimal(5)     # „Keine relevante Verbesserung“: rechter Rand unter … Pp.
     stable_share: tuple[int, int] = (2, 3)  # stabil: Mehrwert in mindestens 2/3 der Saisons positiv (aufgerundet)
-    high_rate: Decimal = Decimal(60)        # Prognosewert hoch: Trefferquote ab … %
+    high_rate: Decimal = Decimal(60)        # Signalqualität stark: Trefferquote ab … %
     high_gain: Decimal = Decimal(8)         # … und Mehrwert ab … Pp.
     medium_rate: Decimal = Decimal(55)      # mittel: Trefferquote ab … %
     low_rate: Decimal = Decimal(50)         # gering: Trefferquote ab … %
@@ -174,7 +174,7 @@ def recommendation(cases: int, gain: float | None, low: float | None, high: floa
 
 def prognosis(recommend: str, rate: float | None, gain: float | None, seasons_positive: int, seasons: int,
               rules: Rules = RULES) -> tuple[str | None, str]:
-    """(Prognosewert, Grund) einer Zeile: HIGH/MEDIUM/LOW oder None mit Grund (Regelwerk 2.2 und 11.3)."""
+    """(Signalqualität, Grund) einer Zeile: HIGH/MEDIUM/LOW oder None mit Grund (Regelwerk 2.2 und 11.3)."""
     if seasons < 2:
         return None, ONE_SEASON
     if recommend != WORKS:
@@ -203,8 +203,8 @@ class Quality:
     recommendation: str
     seasons_positive: int = 0   # Saisons mit positivem Mehrwert
     seasons: int = 0            # ausgewertete Saisons
-    prognosewert: str | None = None
-    reason: str = ""            # Grund, wenn kein Prognosewert
+    signalqualitaet: str | None = None
+    reason: str = ""            # Grund, wenn keine Signalqualität
 
 
 def _gain(rows: pd.DataFrame, mask: pd.Series, event: str) -> tuple[int, int, int, int]:
@@ -274,8 +274,8 @@ def matchday_summary(matchdays: pd.DataFrame) -> dict[str, int]:
 def proposal(cases: pd.DataFrame, matchdays: pd.DataFrame, leagues: list[str], kpis: list[str],
              rules: Rules = RULES) -> pd.DataFrame:
     """Je Liga, KPI und Richtung die gültige Schwelle nach Regelwerk 2.2: Kandidaten (rules.candidates) mit
-    Prognosewert; die beste Stufe, bei Gleichstand die mit mehr Spielen. Ohne Kandidaten: keine Zeile.
-    Spalten: liga, kpi, richtung, schwelle, prognosewert, spiele, eingetroffen, je_spieltag, trefferquote,
+    Signalqualität; die beste Stufe, bei Gleichstand die mit mehr Spielen. Ohne Kandidaten: keine Zeile.
+    Spalten: liga, kpi, richtung, schwelle, signalqualitaet, spiele, eingetroffen, je_spieltag, trefferquote,
     vergleichsgruppe, mehrwert, spanne_links, spanne_rechts, saisons_positiv, saisons."""
     closed = _closed(cases, matchdays)
     out = []
@@ -288,19 +288,19 @@ def proposal(cases: pd.DataFrame, matchdays: pd.DataFrame, leagues: list[str], k
                 for c in rules.candidates:
                     m = _mask(rows, Limits(Decimal(c), Decimal(c)), d)
                     q = _quality(rows, m, EVENT[d], rules)
-                    if q.prognosewert is None:
+                    if q.signalqualitaet is None:
                         continue
-                    key = (RANK[q.prognosewert], q.cases)
+                    key = (RANK[q.signalqualitaet], q.cases)
                     if best is None or key > best[0]:
                         best = (key, c, q, int(m.sum()))
                 if best is None:
                     continue
                 _, c, q, n_all = best
-                out.append(dict(liga=league, kpi=kpi, richtung=d, schwelle=c, prognosewert=q.prognosewert,
+                out.append(dict(liga=league, kpi=kpi, richtung=d, schwelle=c, signalqualitaet=q.signalqualitaet,
                                 spiele=q.cases, eingetroffen=q.hits, je_spieltag=n_all / n_md if n_md else None,
                                 trefferquote=q.rate, vergleichsgruppe=q.base, mehrwert=q.gain, spanne_links=q.low,
                                 spanne_rechts=q.high, saisons_positiv=q.seasons_positive, saisons=q.seasons))
-    return pd.DataFrame(out, columns=["liga", "kpi", "richtung", "schwelle", "prognosewert", "spiele", "eingetroffen",
+    return pd.DataFrame(out, columns=["liga", "kpi", "richtung", "schwelle", "signalqualitaet", "spiele", "eingetroffen",
                                       "je_spieltag", "trefferquote", "vergleichsgruppe", "mehrwert", "spanne_links",
                                       "spanne_rechts", "saisons_positiv", "saisons"])
 
@@ -311,7 +311,7 @@ def proposal_toml(df: pd.DataFrame, seasons: str, computed: str) -> str:
              "", "[grundlage]", f'saisons = "{seasons}"', f'berechnet = "{computed}"', 'freigabe = ""', ""]
     for r in df.itertuples(index=False):
         lines += ["[[schwelle]]", f'liga = "{r.liga}"', f'kpi = "{r.kpi}"', f'richtung = "{r.richtung}"',
-                  f"schwelle = {r.schwelle}", f'prognosewert = "{r.prognosewert}"', f"spiele = {r.spiele}",
+                  f"schwelle = {r.schwelle}", f'signalqualitaet = "{r.signalqualitaet}"', f"spiele = {r.spiele}",
                   f"trefferquote = {_round(r.trefferquote)}", f"vergleichsgruppe = {_round(r.vergleichsgruppe)}",
                   f"mehrwert = {_round(r.mehrwert)}", f"spanne_links = {_round(r.spanne_links)}",
                   f"spanne_rechts = {_round(r.spanne_rechts)}",

@@ -1,6 +1,6 @@
 # Soccer Intelligence – Datenlieferung über API-Football (Spezifikation)
 
-**Version 0.6** · Stand 15.11.2026 · **Status: freigegeben von Carsten am 15.11.2026; v0.4: Ergebnis des Vollvergleichs; v0.5: Tagesbetrieb umgesetzt (Version 0.14); v0.6: Ergebnis-Import v1.1 nach Review (R1–R9, Abschnitt 10.1) und Spielplan nach `07_Spielplan_Anzeige.md` (Version 0.15)** · Grundlage: Entwurf v0.1 (ChatGPT,
+**Version 0.7** · Stand 19.11.2026 (v0.7: stündlicher Schnappschuss-Lauf, Version 0.20) · **Status: freigegeben von Carsten am 15.11.2026; v0.4: Ergebnis des Vollvergleichs; v0.5: Tagesbetrieb umgesetzt (Version 0.14); v0.6: Ergebnis-Import v1.1 nach Review (R1–R9, Abschnitt 10.1) und Spielplan nach `07_Spielplan_Anzeige.md` (Version 0.15)** · Grundlage: Entwurf v0.1 (ChatGPT,
 15.11.2026), kritisch geprüft und ergänzt von Claude (v0.2); Entscheidungen E1–E12 von Carsten am 15.11.2026 (v0.3).
 
 Diese Datei ist die einzige Stelle für die Datenlieferung: Datenquelle, Feldzuordnung, Abläufe, Abfragebudget und
@@ -204,6 +204,11 @@ Sensitivitätsanalyse danach: unverändert ausser KPI 04 stark (Mehrwert positiv
 
 **Rhythmus:** täglich um 04:00 Europe/Zurich (E8, geändert 15.11.2026: auch am Wochenende, synchron zu den Spieltagen). Geprüft mit der 2-Tage-Regel: Wochenendspiele sind am
 Montag da, Montagsspiele am Dienstag, Spiele unter der Woche am Folgetag, also immer vor dem nächsten Spieltag.
+
+**Seit 0.20 zusätzlich stündlich:** der Schnappschuss-Lauf im selben Container (`importer/schnappschuss.py`): Werte jedes
+Spiels ab einer Stunde vor dem Anpfiff einfrieren, fehlende nachholen, erstes Ergebnis festhalten; nach jeder Übernahme
+sofort ein weiterer Lauf. Er liest nur `data/` und schreibt nur nach `/import/schnappschuesse/` (Regeln: `07`, 4.9).
+Keine Abfragen bei API-Football.
 
 **Ablauf je Lauf:**
 

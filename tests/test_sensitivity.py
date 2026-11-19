@@ -1,8 +1,8 @@
-"""Sensitivitätsanalyse, Auswertung (Regelwerk 11; seit Version 0.19 eine Schwelle je Richtung und Prognosewert).
+"""Sensitivitätsanalyse, Auswertung (Regelwerk 11; seit Version 0.19 eine Schwelle je Richtung und Prognosewert, seit 0.20 Signalqualität).
 
 T1–T13 wie seit Version 0.12 (Häufigkeit, Spieltage, Ergebnisqualität, Gegenrechnung), angepasst an eine Schwelle je
 Richtung; dazu die Testfälle P4–P16 der Spezifikation vom 18.11.2026 (Empfehlung mit Rand > +2, Stabilität,
-Prognosewert, Wahl der Schwelle, einzelne Saison).
+Signalqualität, Wahl der Schwelle, einzelne Saison).
 """
 
 from __future__ import annotations
@@ -112,7 +112,7 @@ def test_t8_quality_by_hand():
     up = [1.0] * 7 + [0.0] * 3 + [1.0] * 38 + [0.0] * 52
     q = evaluate(cases([3000] * 10 + [0] * 90, up=up), days(1), {"kpi02": lim(20, 20)})[0].quality[MEHR]
     assert (q.cases, q.hits, q.rate, q.base) == (10, 7, 70.0, 45.0)
-    assert math.isclose(q.gain, 25.0) and q.recommendation == TOO_FEW and q.prognosewert is None
+    assert math.isclose(q.gain, 25.0) and q.recommendation == TOO_FEW and q.signalqualitaet is None
 
 
 def test_newcombe_published_examples():
@@ -144,7 +144,7 @@ def test_p4_to_p10_recommendation(n, gain, low, high, expected):
     assert recommendation(n, gain, low, high) == expected
 
 
-# --- P11, P12, P16: Stabilität und Prognosewert ------------------------------------------------------------------------
+# --- P11, P12, P16: Stabilität und Signalqualität ------------------------------------------------------------------------
 
 def test_p11_stability_two_thirds_of_seasons():
     assert RULES.stable_needed(7) == 5 and RULES.stable_needed(6) == 4 and RULES.stable_needed(3) == 2
@@ -184,7 +184,7 @@ def test_quality_with_stability_and_prognosis_from_cases():
     d = pd.concat([days(1, season=s) for s in ("A", "B", "C")])
     q = evaluate(c, d, {"kpi02": lim(20, 20)})[0].quality[MEHR]
     assert (q.cases, q.hits, q.seasons, q.seasons_positive) == (120, 84, 3, 3)
-    assert q.recommendation == WORKS and q.prognosewert == HIGH
+    assert q.recommendation == WORKS and q.signalqualitaet == HIGH
 
 
 # --- P13–P15: Wahl der Schwelle (Schwellenvorschlag) -------------------------------------------------------------------
@@ -205,17 +205,17 @@ def _proposal_cases(spec):
 
 
 def test_p13_better_level_beats_more_games():
-    # bis 20 %: 200 Spiele je Saison mit 55,5 % (mittel); ab 25 % nur die 50 mit 70 % (hoch) -> 25 % gewinnt
+    # bis 20 %: 200 Spiele je Saison mit 55,5 % (mittel); ab 25 % nur die 50 mit 70 % (stark) -> 25 % gewinnt
     c, d = _proposal_cases([(2200, 150, 76), (2600, 50, 35)])
     df = proposal(c, d, ["L"], ["kpi02"])
     row = df[df["richtung"] == MEHR].iloc[0]
-    assert (row.schwelle, row.prognosewert) == (25, HIGH)
+    assert (row.schwelle, row.signalqualitaet) == (25, HIGH)
 
 
 def test_p14_same_level_more_games_wins():
     c, d = _proposal_cases([(3600, 120, 84)])                # alle Auffälligkeiten über 35 %: 10 % … 35 % gleich
     row = proposal(c, d, ["L"], ["kpi02"]).iloc[0]
-    assert (row.schwelle, row.prognosewert) == (10, HIGH)
+    assert (row.schwelle, row.signalqualitaet) == (10, HIGH)
 
 
 def test_p15_no_candidate_no_row_and_toml():
@@ -224,7 +224,7 @@ def test_p15_no_candidate_no_row_and_toml():
     assert df.empty
     c, d = _proposal_cases([(3600, 120, 84)])
     text = proposal_toml(proposal(c, d, ["L"], ["kpi02"]), "A-C", "2026-11-18")
-    assert '[[schwelle]]\nliga = "L"\nkpi = "kpi02"\nrichtung = "mehr"\nschwelle = 10\nprognosewert = "hoch"' in text
+    assert '[[schwelle]]\nliga = "L"\nkpi = "kpi02"\nrichtung = "mehr"\nschwelle = 10\nsignalqualitaet = "stark"' in text
     assert 'freigabe = ""' in text
 
 
@@ -260,7 +260,7 @@ def counter():
     return events, closed
 
 
-LEVELS_SEEN: set = set()         # Prognosewerte, die T13 über alle Varianten gesehen hat (Abdeckung, siehe unten)
+LEVELS_SEEN: set = set()         # Signalqualitäten, die T13 über alle Varianten gesehen hat (Abdeckung, siehe unten)
 PER_LEAGUE = {"Bundesliga": (35, 5), "Premier League": (30, 10), "Serie A": (30, 10), "LaLiga": (20, 15)}
 
 
@@ -297,10 +297,10 @@ def test_t13_counter_calculation(cases_2018, matchdays_2018, counter, limits, le
             assert (q.cases, q.hits) == ref[:2], (r.kpi, d)
             for got, exp in zip((q.rate, q.base, q.gain, q.low, q.high), ref[2:]):
                 assert (got is None and exp is None) or math.isclose(got, exp, abs_tol=1e-9), (r.kpi, d, got, exp)
-            # seit 0.19.1: Empfehlung, Stabilität und Prognosewert ebenfalls unabhängig nachgerechnet
-            got = (q.recommendation, q.seasons_positive, q.seasons, q.prognosewert)
+            # seit 0.19.1: Empfehlung, Stabilität und Signalqualität ebenfalls unabhängig nachgerechnet
+            got = (q.recommendation, q.seasons_positive, q.seasons, q.signalqualitaet)
             assert got == rating[r.kpi][key], (r.kpi, d, got, rating[r.kpi][key])
-            LEVELS_SEEN.add(q.prognosewert)
+            LEVELS_SEEN.add(q.signalqualitaet)
 
 
 def test_t15_limits_per_league():
@@ -347,7 +347,7 @@ def test_counter_rules_agree_with_app_on_a_grid():
 def test_table_with_valid_thresholds_equals_file():
     """Mit der echten Datenbank: Die Tabelle der Sensitivitätsanalyse zeigt je Liga mit den gültigen Schwellen und
     „Alle Saisons“ (2019/20–2025/26) genau die Werte der Datei (Spiele, Trefferquote, Vergleichsgruppe, Mehrwert,
-    Saisons positiv, Prognosewert) – für alle 23 Schwellen, also auch mittel und gering."""
+    Saisons positiv, Signalqualität) – für alle 23 Schwellen, also auch mittel und gering."""
     from conftest import REAL_DATABASE
     if not REAL_DATABASE.exists():
         pytest.skip("echte Datenbank nicht vorhanden")
@@ -373,9 +373,9 @@ def test_table_with_valid_thresholds_equals_file():
                     continue
                 q = r.quality[direction]
                 got = (q.cases, round(q.rate, 2), round(q.base, 2), round(q.gain, 2),
-                       f"{q.seasons_positive}/{q.seasons}", q.prognosewert)
+                       f"{q.seasons_positive}/{q.seasons}", q.signalqualitaet)
                 want = (signal.spiele, float(signal.trefferquote), float(signal.vergleichsgruppe),
-                        float(signal.mehrwert), signal.saisons_positiv, signal.prognosewert)
+                        float(signal.mehrwert), signal.saisons_positiv, signal.signalqualitaet)
                 assert got == want, (lg.name, r.kpi, direction, got, want)
                 checked.add((lg.name, r.kpi, direction))
     assert len(checked) == 23

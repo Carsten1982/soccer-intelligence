@@ -1,8 +1,9 @@
 """Anzeige kommender Spieltage (Version 0.16): Testfälle A1–A27 aus docs/07_Spielplan_Anzeige.md, Abschnitt 7.2.
 
 Ohne Netz und ohne Streamlit: kleine, feste Spielpläne (4 Teams, 2 Spiele je Spieltag) und die echten Saisonlisten
-2026/27 aller vier Ligen (Stand 15.11.2026, tests/referenz/api). „Jetzt“ und der Tag des letzten Importlaufs werden
-übergeben (Europe/Zurich, ohne Zeitzonenangabe).
+2026/27 aller vier Ligen (Stand 15.11.2026, tests/referenz/api). „Jetzt“ und der Beginn des letzten Importlaufs
+werden übergeben (Europe/Zurich, ohne Zeitzonenangabe). Seit 0.20: Gespielt ab Anpfiff + 2 Stunden, Datenstand
+48 Stunden, Top-Block ohne Nachrücken, „Werte ab“ nach dem Anstoss nie (Testfälle A28–A35).
 """
 
 from __future__ import annotations
@@ -52,8 +53,9 @@ def at(text: str) -> datetime:
 
 
 def view(fx, now: str, imported: int | None = 0):
+    """imported = vor wie vielen Tagen der letzte erfolgreiche Lauf begann (gleiche Uhrzeit), None = nie."""
     now_dt = at(now)
-    return A.upcoming(fx, now_dt, None if imported is None else now_dt.date() - timedelta(days=imported))
+    return A.upcoming(fx, now_dt, None if imported is None else now_dt - timedelta(days=imported))
 
 
 def keys(v) -> list:
@@ -105,8 +107,10 @@ def test_kickoff_time_open_and_old_plan_count_until_day_end():
 
 
 def test_stale_boundary_and_christmas():
-    assert not A.is_stale(d("2026-11-13"), d("2026-11-16"))                 # 3 Tage: in Ordnung
-    assert A.is_stale(d("2026-11-12"), d("2026-11-16")) and A.is_stale(None, d("2026-11-16"))
+    """A28 (seit 0.20): veraltet erst nach mehr als 48 Stunden ab Beginn des letzten erfolgreichen Laufs."""
+    assert not A.is_stale(at("2026-11-14T04:00"), at("2026-11-16T04:00"))      # genau 48 Stunden: in Ordnung
+    assert A.is_stale(at("2026-11-14T04:00"), at("2026-11-16T04:01")) and A.is_stale(None, at("2026-11-16T10:00"))
+    assert A.is_stale(at("2026-11-13T04:00"), at("2026-11-16T03:00"))         # bis 0.19.1 (3 Tage) noch aktuell
     assert A._has_christmas(d("2026-12-20"), d("2027-01-08"))
     assert not A._has_christmas(d("2026-12-26"), d("2027-01-08")) and not A._has_christmas(d("2026-09-06"),
                                                                                           d("2026-09-25"))
@@ -129,7 +133,7 @@ def test_a2_played_game_stays_with_result_until_sunday_evening():
     cell = A.date_cell(next(sec.games.itertuples()), at("2026-11-08T12:00"), {(S, "A", "B"): (2, 1)})
     assert (cell.text, cell.strong, cell.grey, cell.played) == ("Fr 06.11. · ", "2:1", True, True)
     waiting = A.date_cell(next(sec.games.itertuples()), at("2026-11-08T12:00"), {})
-    assert waiting.strong == "Ergebnis folgt" and waiting.grey
+    assert waiting.strong == "Gespielt" and waiting.grey and waiting.played          # seit 0.20 statt „Ergebnis folgt“
 
 
 def test_a3_laliga_friday_to_monday():
@@ -279,7 +283,7 @@ def test_a18_new_season(days, notice):
     start = d("2027-08-20")
     fx = plan(rnd(34, d("2027-05-22"), saison=S), rnd(1, start, start + timedelta(days=2), saison="2027/2028"))
     now = datetime.combine(start - timedelta(days=days), datetime.min.time())
-    v = A.upcoming(fx, now, now.date())
+    v = A.upcoming(fx, now, now)
     if notice:
         assert (v.notice.kind, v.notice.text) == (A.SEASON_START, "Saisonstart am Fr 20.08.2027")
         assert [(s.saison, s.spieltag) for s in v.sections] == [(S, 34)]
@@ -296,7 +300,8 @@ def test_a19_stale_import_hides_pause_notice():
     assert v.notice.kind == A.STALE and keys(v) == [(10, "")]
     v = view(fx, "2026-11-16T10:00", imported=None)
     assert v.notice.text.startswith("unbekannt")
-    assert view(fx, "2026-12-23T10:00", imported=3).notice.kind == A.WINTER
+    assert view(fx, "2026-12-23T10:00", imported=2).notice.kind == A.WINTER       # 48 Stunden: noch aktuell (0.20)
+    assert view(fx, "2026-12-23T10:00", imported=3).notice.kind == A.STALE        # bis 0.19.1 noch aktuell
 
 
 # --- A20: Navigation ----------------------------------------------------------------------------------------
@@ -368,47 +373,49 @@ def test_previous_game_ignores_postponed():
 
 # --- A23–A26: Top Anomalien und Tagesgrenze ---------------------------------------------------------------------
 
-def test_a23_top_block_only_games_before_kickoff():
+def test_a23_top_block_keeps_kicked_off_games():
+    """A23 (geändert in 0.20, Entscheidung Carsten 19.11.2026): angepfiffene Spiele bleiben im Block, kein Nachrücken."""
     fx = plan(game(10, d("2026-11-20"), "20:30", "A", "B"), game(10, d("2026-11-21"), "18:30", "C", "D"),
               game(10, d("2026-11-22"), "15:30", "E", "F"))
-    b = A.top_block(fx, at("2026-11-21T16:00"), d("2026-11-21"))
-    assert list(zip(b.games["heim"], b.games["gast"])) == [("C", "D"), ("E", "F")]
-    assert b.header == "Spieltag 10 · noch 2 Spiele" and b.takes_part
+    b = A.top_block(fx, at("2026-11-21T16:00"), at("2026-11-21T04:00"))
+    assert list(zip(b.games["heim"], b.games["gast"])) == [("A", "B"), ("C", "D"), ("E", "F")]
+    assert b.remaining == 2 and b.header == "Spieltag 10 · noch 2 Spiele" and b.takes_part
     assert len(view(fx, "2026-11-21T16:00").sections[0].games) == 3           # Ligaseite: mit Freitagsspiel
-    b = A.top_block(fx, at("2026-11-22T18:00"), d("2026-11-22"))
-    assert b.remaining == 0 and b.header == "Spieltag 10 · alle Spiele angepfiffen"
+    b = A.top_block(fx, at("2026-11-22T18:00"), at("2026-11-22T04:00"))
+    assert len(b.games) == 3 and b.remaining == 0 and b.header == "Spieltag 10 · alle Spiele angepfiffen"
+    assert A.top_block(fx, at("2026-11-23T00:00"), at("2026-11-23T00:00")) is None   # Ende des Spieltags
 
 
 def test_a24_catchup_on_same_weekend_belongs_to_block():
     fx = plan(rnd(1, d("2026-08-21"), d("2026-08-23")), game(15, d("2026-12-11"), "20:30", "A", "B"),
               game(15, d("2026-12-13"), "15:30", "C", "D"),
               game(1, d("2026-12-13"), "18:30", "E", "F", hint="Nachholspiel"))
-    b = A.top_block(fx, at("2026-12-10T10:00"), d("2026-12-10"))
+    b = A.top_block(fx, at("2026-12-10T10:00"), at("2026-12-10T04:00"))
     assert len(b.games) == 3 and b.label == "Spieltag 15" and b.header == "Spieltag 15 · noch 3 Spiele"
     assert keys(view(fx, "2026-12-10T10:00")) == [(15, ""), (1, "Nachholspiel")]   # Ligaseite: zwei Abschnitte
 
 
 def test_a24_early_games_form_own_block_until_their_day_ends():
     fx = real_plan("laliga", d("2026-12-01"))
-    b = A.top_block(fx, at("2026-12-01T10:00"), d("2026-12-01"))
+    b = A.top_block(fx, at("2026-12-01T10:00"), at("2026-12-01T04:00"))
     assert b.header == "Spieltag 23 · vorgezogen · noch 2 Spiele" and len(b.games) == 2
-    b = A.top_block(fx, at("2026-12-02T22:00"), d("2026-12-02"))
+    b = A.top_block(fx, at("2026-12-02T22:00"), at("2026-12-02T04:00"))
     assert b.header == "Spieltag 23 · vorgezogen · alle Spiele angepfiffen"
-    b = A.top_block(fx, at("2026-12-03T08:00"), d("2026-12-03"))
+    b = A.top_block(fx, at("2026-12-03T08:00"), at("2026-12-03T04:00"))
     assert b.label == "Spieltag 15" and len(b.games) == 10
 
 
 @pytest.mark.parametrize("days, takes_part", [(18, False), (15, False), (14, True)])
 def test_a25_top_block_within_fourteen_days(days, takes_part):
-    b = A.top_block(BREAK, datetime(2026, 9, 25) - timedelta(days=days), d("2026-09-25") - timedelta(days=days))
+    b = A.top_block(BREAK, datetime(2026, 9, 25) - timedelta(days=days), datetime(2026, 9, 25) - timedelta(days=days))
     assert b.takes_part is takes_part
     assert b.header == ("Spieltag 5 · noch 2 Spiele" if takes_part else "Spielpause bis 24.09.")
 
 
 def test_a25_top_header_winter_break_real():
     fx = real_plan("bundesliga", d("2026-12-23"))
-    assert A.top_block(fx, at("2026-12-23T10:00"), d("2026-12-23")).header == "Winterpause bis 07.01."
-    assert A.top_block(fx, at("2026-12-23T10:00"), d("2026-12-18")).header == "nächster Spieltag am Fr 08.01."
+    assert A.top_block(fx, at("2026-12-23T10:00"), at("2026-12-23T04:00")).header == "Winterpause bis 07.01."
+    assert A.top_block(fx, at("2026-12-23T10:00"), at("2026-12-18T04:00")).header == "nächster Spieltag am Fr 08.01."
 
 
 def test_a26_day_boundary_sunday_evening():
@@ -464,3 +471,72 @@ def test_preview_rows_for_import_tab():
                            "Winterpause bis 07.01.", "–")
     fx = plan(rnd(1, d("2026-11-20"), d("2026-11-22")), game(1, d("2026-11-21"), "15:30", "E", "F", status="verschoben"))
     assert A.preview(fx, at("2026-11-16T10:00")).shown == "Spieltag 1 · Fr 20.11. – So 22.11. (1 Spiel verschoben)"
+
+
+# --- A29–A35: Statusmodell seit 0.20 (Entscheidungen Carsten 19.11.2026) -----------------------------------------
+
+def test_a29_played_two_hours_after_kickoff():
+    """Bis Anpfiff + 2 Stunden normal (auch während des Spiels nichts), danach „Gespielt“, mit Ergebnis der Endstand."""
+    fxp = A.prepare(plan(game(1, d("2026-11-21"), "15:30")))
+    g = next(fxp.itertuples())
+    assert g.gespielt_ab == at("2026-11-21T17:30") == A.played_from(g)
+    for now in ("2026-11-21T15:29", "2026-11-21T15:30", "2026-11-21T17:29"):
+        assert A.date_cell(g, at(now), {}) == A.DateCell("", "Sa 21.11. · 15:30"), now
+        assert not A.is_played(g, at(now), {})
+    cell = A.date_cell(g, at("2026-11-21T17:30"), {})
+    assert (cell.text, cell.strong, cell.grey, cell.played) == ("Sa 21.11. · ", "Gespielt", True, True)
+    assert A.is_played(g, at("2026-11-21T17:30"), {})
+    assert A.date_cell(g, at("2026-11-22T04:30"), {(S, "A", "B"): (2, 1)}).strong == "2:1"
+
+
+def test_a30_without_kickoff_time_played_from_midnight():
+    fxp = A.prepare(plan(game(1, d("2026-11-21"), "", termin="Zeit offen"),
+                         game(1, d("2026-11-21"), "", "C", "D")))
+    for g in fxp.itertuples():
+        assert g.gespielt_ab == at("2026-11-22T00:00")
+        assert not A.date_cell(g, at("2026-11-21T23:59"), {}).played
+        assert A.date_cell(g, at("2026-11-22T00:00"), {}).strong == "Gespielt"
+
+
+def test_a31_inactive_never_played_and_result_counts_at_once():
+    fxp = A.prepare(plan(game(1, d("2026-11-21"), "15:30", status="verschoben"), game(1, d("2026-11-21"), "15:30", "C", "D")))
+    post, normal = list(fxp.itertuples())
+    assert not A.is_played(post, at("2026-11-23T10:00"), {(S, "A", "B"): (1, 0)})
+    assert A.is_played(normal, at("2026-11-21T16:00"), {(S, "C", "D"): (1, 0)})     # Ergebnis vor + 2 h (Zeitreise)
+
+
+def test_a32_values_from_structured_and_never_after_kickoff():
+    fx = plan(rnd(1, d("2026-11-06"), d("2026-11-08")), game(2, d("2026-11-13"), "20:30", "A", "C"),
+              game(2, d("2026-11-15"), "15:30", "B", "D"), game(3, d("2026-11-17"), "20:30", "B", "A"))
+    fxp = A.prepare(fx)
+    res = played(fx, "2026-11-12T00:00")
+    b_a = next(r for r in fxp.itertuples() if r.spieltag == 3)
+    gate = A.values_from(fxp, b_a, at("2026-11-12T10:00"), res)
+    assert gate.ab == d("2026-11-16") and gate.ergebnis_vom is None
+    assert gate.text == A.values_gate(fxp, b_a, at("2026-11-12T10:00"), res)
+    gate = A.values_from(fxp, b_a, at("2026-11-16T10:00"), res)                       # gespielt, nicht übernommen
+    assert gate.ab is None and gate.ergebnis_vom == d("2026-11-15")
+    assert [team for team, _ in A.missing_previous(fxp, b_a, res)] == ["B", "A"]
+    assert A.values_from(fxp, b_a, at("2026-11-17T20:30"), res) is None              # ab dem Anstoss nie (4a)
+    assert A.missing_previous(fxp, b_a, played(fx, "2026-11-16T00:00")) == []
+
+
+def test_a33_awarded_but_played_stays_played(tmp_path):
+    """Absicherung gegen nachträgliches „gewertet“ (AWD): Ergebnis vom Platz in der Datenbank → gespielt."""
+    from openpyxl import Workbook
+
+    from core.config import League
+    from core.fixtures import STATUS_AWARDED, STATUS_PLANNED, load_fixtures
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Bundesliga"
+    ws.append(["Saison", "Spieltag", "Datum von", "Datum bis", "Heimmannschaft", "Gastmannschaft", "Status"])
+    ws.append([S, 1, datetime(2026, 8, 21), datetime(2026, 8, 21), "A", "B", STATUS_AWARDED])   # gespielt
+    ws.append([S, 1, datetime(2026, 8, 22), datetime(2026, 8, 22), "C", "D", STATUS_AWARDED])   # nie gespielt
+    wb.save(tmp_path / "plan.xlsx")
+    db = {"Bundesliga": pd.DataFrame({"Season": [S, S], "homeTeam": ["A", "C"], "awayTeam": ["B", "E"]})}
+    fx = load_fixtures(tmp_path / "plan.xlsx", [League("Bundesliga", "bundesliga", 18, True)], db)
+    df = fx.leagues["Bundesliga"]
+    assert list(df["status"]) == [STATUS_PLANNED, STATUS_AWARDED]
+    hits = [i for i in fx.issues if i.check == "Gewertet, aber gespielt"]
+    assert len(hits) == 1 and hits[0].match == "A – B (Spieltag 1)" and not fx.has_errors

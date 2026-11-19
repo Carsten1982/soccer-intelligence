@@ -7,7 +7,6 @@ automatisch neu ein – ohne Neustart des Containers, auch bei gleicher Grösse 
 
 from __future__ import annotations
 
-import json
 from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
@@ -17,6 +16,7 @@ import streamlit as st
 from core import settings
 from core.config import League, Team, active_leagues, load_leagues, load_teams
 from core.files import file_key as _file_key
+from core.importstand import last_successful_run
 from core.fixtures import FixturesLoad, load_fixtures
 from core.frequency import anomaly_frequency
 from core.issues import FEHLER, HINWEIS, WARNUNG
@@ -153,20 +153,11 @@ def get_results(league: League) -> dict:
     return _cached_results(str(path), _file_key(path)).get(league.name, {})
 
 
-FAILED_RUNS = ("fehlgeschlagen", "Fehler – nicht übernehmbar")
-
-
-def last_import_day() -> date | None:
-    """Tag des letzten erfolgreichen Importlaufs (Spielplan v2.1, S9), None ohne Lauf. Liest nur /import."""
+def last_import() -> datetime | None:
+    """Beginn des letzten erfolgreichen Importlaufs (Spielplan v2.1, S9; 48-Stunden-Grenze seit 0.20), None ohne
+    Lauf. Liest nur /import (core/importstand.py, gleiche Funktion wie die Website)."""
     from importer.einstellungen import IMPORT_DIR
-    for report in sorted((IMPORT_DIR / "laeufe").glob("*/bericht.json"), reverse=True):
-        try:
-            rep = json.loads(report.read_text(encoding="utf-8"))
-            if rep.get("status") not in FAILED_RUNS and rep.get("start"):
-                return datetime.fromisoformat(rep["start"]).date()
-        except (OSError, ValueError, TypeError, AttributeError):
-            continue
-    return None
+    return last_successful_run(IMPORT_DIR)
 
 
 # --- Schwellenwerte (app/config/schwellen.toml) ------------------------------------------

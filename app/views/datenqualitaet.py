@@ -193,7 +193,7 @@ def _thresholds_section() -> None:
     """Gültige Schwellenwerte (Briefing 6.3, Etappe H): nur Anzeige, Änderung bewusst über die Datei."""
     from core.thresholds import describe
     config = get_thresholds()
-    st.markdown("#### Gültige Schwellen und Prognosewerte")
+    st.markdown("#### Gültige Schwellen und Signalqualität")
     st.caption(f"Aus `app/config/schwellen.toml` (berechnet mit den Saisons {config.saisons or '–'}, Freigabe "
                f"{config.freigabe or '–'}) · je Liga, KPI und Richtung höchstens eine Schwelle · auffällig, wenn die auf "
                "zwei Nachkommastellen gerundete Abweichung über der Schwelle liegt (genau auf der Schwelle: nicht "
@@ -209,7 +209,7 @@ def _thresholds_section() -> None:
 def _frequency_section() -> None:
     _thresholds_section()
     st.markdown("#### Häufigkeit je Liga und KPI")
-    st.caption("Wie oft sind KPI 02–09 auffällig, und mit welchem Prognosewert? Grundlage: alle Spiele der letzten "
+    st.caption("Wie oft sind KPI 02–09 auffällig, und mit welcher Signalqualität? Grundlage: alle Spiele der letzten "
                "abgeschlossenen Saison, jeweils so berechnet, als wären sie noch nicht gespielt; vorläufige Werte "
                "(z. B. Aufsteiger) sind nie auffällig und separat gezählt.")
     db = get_database()

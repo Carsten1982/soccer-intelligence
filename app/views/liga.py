@@ -9,7 +9,8 @@ veralteter Datenstand). Welche Spiele erscheinen, entscheidet core/anzeige.py; h
 Mit den Pfeilen lässt sich ein einzelner Spieltag wählen: zurück alle Spieltage der Saison und der Vorsaison,
 vorwärts höchstens 2 über den anstehenden hinaus. Die Auswahl steht in der Adresse (?spieltag=14, bei einer anderen
 Saison zusätzlich &saison=2025-26). Die KPIs werden immer so berechnet, als wäre das Spiel noch nicht gespielt
-(Stichtag „Datum von“); berechnet in core/results.py, zwischengespeichert in state.get_matchday_kpis.
+(Stichtag „Datum von“); berechnet in core/results.py, zwischengespeichert in state.get_matchday_kpis. Seit 0.20
+zeigen angepfiffene Spiele die Werte ihres Schnappschusses (core/schnappschuss.py), wie die Website.
 """
 
 from __future__ import annotations
@@ -20,9 +21,11 @@ from html import escape
 import streamlit as st
 
 from core import anzeige as A
+from core import schnappschuss as S
 from core.config import League
 from core.matchday import PARAM_MATCHDAY, PARAM_SEASON, season_param, season_short
-from state import get_database, get_fixtures, get_results, get_round_kpis, last_import_day, now
+from importer.einstellungen import IMPORT_DIR
+from state import get_database, get_fixtures, get_results, get_round_kpis, last_import, now
 from views import components as ui
 from views import kpi_table
 from views.registry import PAGES
@@ -85,7 +88,7 @@ def notice_html(n: A.Notice) -> str:
     if n.kind == A.STALE:
         return (f'<div class="si-note si-note-stale">⚠ {escape(n.title)} <b>{escape(n.text)}</b> – '
                 f'{escape(n.detail)} <small>(wenn der letzte erfolgreiche Importlauf älter als '
-                f'{A.STALE_DAYS} Tage ist)</small></div>')
+                f'{A.STALE_HOURS} Stunden ist)</small></div>')
     text = f" – {escape(n.text)}" if n.text else ""
     detail = f" {escape(n.detail)}" if n.detail else ""
     return f'<div class="si-note"><b>{escape(n.title)}</b>{text}{detail}</div>'
@@ -117,14 +120,20 @@ def section_rows(league: League, sec: A.Section, fxp, at: datetime, results: dic
         key = (g.saison, int(g.spieltag))
         if key not in kpis:
             kpis[key] = get_round_kpis(league, *key)
-        k = kpis[key].get(int(g.reihenfolge))
         cell = A.date_cell(g, at, results)
-        gate = None
-        if cell.active and not cell.played and k is not None:
-            gate = A.values_gate(fxp, g, at, results)
+        # ab dem Anstoss die Werte des Schnappschusses (seit 0.20), vorher die aktuell berechneten
+        shown = S.shown_values(IMPORT_DIR, league.url, g, kpis[key].get(int(g.reihenfolge)), at, results, fxp)
+        k, gate = shown.kpis, None
+        if shown.quelle == S.WAITING:
+            gate = WAITING_TEXT
+        elif cell.active and k is not None:
+            gate = A.values_gate(fxp, g, at, results)               # nach dem Anstoss nie (seit 0.20)
         rows.append(kpi_table.TableRow(g.heim, g.gast, "", k if cell.active else None,      # Status steht im Datum
                                        date_html(cell), cell.grey, gate, g.hinweis if single else ""))
     return rows
+
+
+WAITING_TEXT = "Werte folgen nachträglich, sobald das Ergebnis des vorherigen Spiels übernommen ist"
 
 
 def render_section(league: League, sec: A.Section, fxp, at: datetime, results: dict, single: bool = False) -> None:
@@ -133,10 +142,10 @@ def render_section(league: League, sec: A.Section, fxp, at: datetime, results: d
     st.markdown(kpi_table.compact_table_html(rows), unsafe_allow_html=True)
 
 
-LEGEND_UPCOMING = ('<div class="si-legend">Gespielte Spiele grau, mit Ergebnis (bzw. „Ergebnis folgt“ bis zur '
-                   'Übernahme); ihre KPI-Werte bleiben stehen (vor dem Spiel berechnet). Abschnitte zeitlich sortiert, '
-                   'Spieltagsnummer immer die offizielle. „Werte ab …“: erst wenn beide Teams ihr vorheriges Spiel '
-                   'gespielt haben.</div>')
+LEGEND_UPCOMING = ('<div class="si-legend">Gespielte Spiele ab Anpfiff + 2 Stunden grau mit „Gespielt“, nach der '
+                   'Übernahme mit Ergebnis; ihre KPI-Werte bleiben stehen (Schnappschuss vor dem Spiel). Abschnitte '
+                   'zeitlich sortiert, Spieltagsnummer immer die offizielle. „Werte ab …“: erst wenn beide Teams ihr '
+                   'vorheriges Spiel gespielt haben.</div>')
 
 
 # --- Seite --------------------------------------------------------------------------------------------
@@ -174,7 +183,7 @@ def render(league: League) -> None:
         return
 
     at = now()
-    view = A.upcoming(fixtures, at, last_import_day())
+    view = A.upcoming(fixtures, at, last_import())
     keys = A.choices(fixtures, view.anchor)
     selected, invalid = requested(dict(st.query_params), keys, view.anchor)
     _header(league, selected, keys, view, at)

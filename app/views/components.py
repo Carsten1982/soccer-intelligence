@@ -63,7 +63,7 @@ CSS = f"""
 .si-form {{display:inline-block; width:.8rem; text-align:center; color:#9aa6b8; margin:0 .08rem;}}
 .si-form-S {{background:#2e9e5b;}} .si-form-U {{background:#9aa6b8;}} .si-form-N {{background:#d64545;}}
 .si-anom-keine {{background:#e3e8ef; box-shadow:inset 0 0 0 1px #c3ccd8;}}
-/* Prognosewert (seit 0.19, Zwischenstand bis zum Designentwurf): eine Farbe in drei Stufen */
+/* Signalqualität (seit 0.20; 0.19 Prognosewert, Zwischenstand bis zum Designentwurf): eine Farbe in drei Stufen */
 .si-anom-hoch {{background:#0f766e;}} .si-anom-mittel {{background:#4fb3a9;}}
 .si-anom-gering {{background:#d2efeb; box-shadow:inset 0 0 0 1.5px #4fb3a9;}}
 .si-kc-d {{color:{SLATE}; font-size:.74rem; margin-top:.2rem;}}
@@ -141,6 +141,8 @@ details.si-cdet[open] .si-chev {{transform:rotate(90deg);}}
 .si-card-kpi {{color:{SLATE}; font-size:.85rem;}}
 .si-card-value {{font-size:1rem; margin:.3rem 0 .5rem 0;}}
 .si-card .si-desc {{font-size:.85rem; line-height:1.35;}}
+.si-card-played {{background:#F4F7F2; color:#5B6B61;}}   /* gespielt (seit 0.20): weniger Farbe, Kontrast 4,5:1 */
+.si-card-played .si-card-match, .si-card-played .si-card-meta b {{color:#5B6B61;}}
 
 /* Abstand oben verkleinert (Navigation -> Überschrift, Änderung 31.10.2026) */
 [data-testid="stMainBlockContainer"] {{padding-top:61px !important;}}

@@ -1,6 +1,6 @@
 """Häufigkeit der Anomalien (Dashboard-Briefing, Kapitel 6.3).
 
-Für jede Liga und jeden KPI mit Einstufung (02–09): Wie oft ist die Kennzahl auffällig, und mit welchem Prognosewert
+Für jede Liga und jeden KPI mit Einstufung (02–09): Wie oft ist die Kennzahl auffällig, und mit welcher Signalqualität
 (hoch / mittel / gering, seit Version 0.19)? Grundlage sind alle Spiele der letzten abgeschlossenen Saison, jeweils so berechnet,
 als wären sie noch nicht gespielt (Stichtag = Spieldatum, Spieltag = Gameday).
 Dient der Überprüfung der Schwellenwerte (Schwellen aus app/config/schwellen.toml).
@@ -63,8 +63,8 @@ def anomaly_frequency(prepared: pd.DataFrame, league: League, thresholds: Thresh
         flagged = c[HIGH] + c[MEDIUM] + c[LOW]
         rows.append({
             "KPI": TOP_KPIS[kpi], "Spiele": len(games),
-            "nicht auffällig": c[NONE], "hoch": c[HIGH], "mittel": c[MEDIUM], "gering": c[LOW],
+            "nicht auffällig": c[NONE], "stark": c[HIGH], "mittel": c[MEDIUM], "gering": c[LOW],
             "vorläufig": c["vorlaeufig"], "nicht berechenbar": c[NOT_RATED],
-            "Anteil auffällig": _share(flagged, rated), "Anteil hoch": _share(c[HIGH], rated),
+            "Anteil auffällig": _share(flagged, rated), "Anteil stark": _share(c[HIGH], rated),
         })
     return season, pd.DataFrame(rows)

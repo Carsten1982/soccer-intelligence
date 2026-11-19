@@ -35,20 +35,21 @@
     "nummer": "{n}. Spieltag",
     "datenstand": "Aktueller Datenstand: {datum}",
     "partien": {
-      "eins": "1 Partie",
-      "mehr": "{n} Partien"
+      "eins": "1 Spiel",
+      "mehr": "{n} Spiele"
     },
     "auffaellig": {
-      "null": "keine mit Auffälligkeit",
-      "mehr": "{n} mit Auffälligkeit"
+      "null": "keine auffälligen Spiele",
+      "eins": "1 auffälliges Spiel",
+      "mehr": "{n} auffällige Spiele"
     },
     "nachholspiel": {
-      "eins": "plus 1 Nachholspiel",
-      "mehr": "plus {n} Nachholspiele"
+      "eins": "1 Nachholspiel",
+      "mehr": "{n} Nachholspiele"
     },
     "vorgezogen": {
-      "eins": "plus 1 vorgezogenes Spiel",
-      "mehr": "plus {n} vorgezogene Spiele"
+      "eins": "1 vorgezogenes Spiel",
+      "mehr": "{n} vorgezogene Spiele"
     },
     "tabs": "Spieltag wählen",
     "tab": "{n}. Spieltag · ab {datum}",
@@ -59,27 +60,37 @@
     "wie_lesen": "Wie lese ich das?",
     "erklaerung_gruen_titel": "Grüne Kacheln:",
     "erklaerung_gruen": "Bei diesen Partien liegt mindestens eine Kennzahl über der Schwelle ihrer Liga – sie ist auffällig.",
-    "erklaerung_stufe_titel": "Prognosewert:",
-    "erklaerung_stufe": "Zeigt, wie oft sich solche Auffälligkeiten früher bestätigt haben: hoch, mittel oder gering. Dunkelgrün = hoch.",
+    "erklaerung_stufe_titel": "Signalqualität:",
+    "erklaerung_stufe": "Zeigt, wie oft sich solche Auffälligkeiten früher bestätigt haben: stark, mittel oder gering. Dunkelgrün = stark.",
     "erklaerung_weiss_titel": "Weiße Kacheln:",
     "erklaerung_weiss": "Keine Auffälligkeit bei dieser Partie.",
     "h1_vorne": "Alle Spiele im",
-    "h1_akzent": "Überblick"
+    "h1_akzent": "Überblick",
+    "nur_sonderspiele": {
+      "nachholspiel": {
+        "eins": "1 Nachholspiel",
+        "mehr": "{n} Nachholspiele"
+      },
+      "vorgezogen": {
+        "eins": "1 Spiel vorgezogen",
+        "mehr": "{n} Spiele vorgezogen"
+      }
+    }
   },
   "stufe": {
-    "hoch": "Prognosewert hoch",
-    "mittel": "Prognosewert mittel",
-    "gering": "Prognosewert gering",
-    "mittel_gering": "Prognosewert mittel oder gering",
+    "stark": "Signalqualität stark",
+    "mittel": "Signalqualität mittel",
+    "gering": "Signalqualität gering",
+    "mittel_gering": "Signalqualität mittel oder gering",
     "ohne": "Ohne Auffälligkeit",
     "normal": "Normal",
-    "nicht_gewertet": "nicht gewertet"
+    "zu_wenig_daten": "zu wenig Daten"
   },
   "chip": {
-    "hoch": "Prognosewert hoch",
-    "mittel": "Prognosewert mittel",
-    "gering": "Prognosewert gering",
-    "nicht_gewertet": "Nicht gewertet",
+    "stark": "Signalqualität stark",
+    "mittel": "Signalqualität mittel",
+    "gering": "Signalqualität gering",
+    "zu_wenig_daten": "Zu wenig Daten",
     "verschoben": "Verschoben",
     "abgesagt": "Abgesagt",
     "abgebrochen": "Abgebrochen",
@@ -87,7 +98,11 @@
     "gewertet": "Am grünen Tisch gewertet",
     "nachholspiel": "Nachholspiel",
     "vorgezogen": "Vorgezogen",
-    "ergebnis_folgt": "Ergebnis folgt"
+    "gespielt": "Gespielt",
+    "nachholspiel_nr": "Nachholspiel · Spieltag {n}",
+    "vorgezogen_nr": "Vorgezogen · Spieltag {n}",
+    "werte_ab": "Werte ab {datum}",
+    "werte_folgen": "Werte folgen"
   },
   "termin": {
     "zeit_offen": "Zeit offen",
@@ -201,7 +216,7 @@
     "prozent_titel": "Prozentzahl:",
     "prozent": "Abweichung des Spielwerts vom Ligaschnitt.",
     "farben_titel": "Farben:",
-    "farben": "Grün steht für überdurchschnittliche, Rot für unterdurchschnittliche Werte. Dunkel bedeutet Prognosewert hoch, hell mittel oder gering."
+    "farben": "Grün steht für überdurchschnittliche, Rot für unterdurchschnittliche Werte. Dunkel bedeutet Signalqualität stark, hell mittel oder gering."
   },
   "spiel": {
     "seitentitel": "{heim} gegen {gast} – {liga} – Soccer Intelligence",
@@ -219,24 +234,23 @@
       "-": "Noch kein Spiel"
     },
     "endstand": "Endstand {ergebnis}",
-    "ergebnis_folgt": "Ergebnis folgt",
     "auffaelligstes": "Auffälligstes Merkmal",
     "gesamtbild": "Gesamtbild",
     "keine_titel": "Keine statistischen Auffälligkeiten",
-    "keine_text": "Alle {n} Kennzahlen liegen im Normalbereich. Die größte Abweichung: {name} {wert}.",
+    "keine_text": "Keine der {n} Kennzahlen überschreitet ihre Schwelle. Größte Abweichung: {name} {wert}.",
     "bewertung": "Bewertung",
-    "nicht_gewertet": "Nicht gewertet",
-    "nicht_gewertet_text": "Die statistische Datengrundlage ist zu schwach.",
-    "nicht_gewertet_leer_text": "Die statistische Datengrundlage ist zu schwach. Es liegen noch keine Werte vor.",
-    "hinweis_nicht_gewertet_titel": "Nicht gewertet:",
-    "hinweis_nicht_gewertet": "Die statistische Datengrundlage für dieses Spiel ist zu schwach. Die Werte siehst du trotzdem, wir stufen sie aber nicht als Abweichung ein.",
-    "hinweis_nicht_gewertet_leer": "Für dieses Spiel liegen noch keine Werte vor, weil die statistische Datengrundlage zu schwach ist. Das betrifft vor allem Aufsteiger zu Saisonbeginn.",
+    "zu_wenig_daten": "Zu wenig Daten",
+    "zu_wenig_daten_text": "Für dieses Spiel liegen nicht genug Daten für eine Bewertung vor.",
+    "zu_wenig_daten_leer_text": "Für dieses Spiel liegen nicht genug Daten für eine Bewertung vor.",
+    "hinweis_zu_wenig_daten_titel": "Zu wenig Daten:",
+    "hinweis_zu_wenig_daten": "Für dieses Spiel liegen nicht genug Daten für eine Bewertung vor.",
+    "hinweis_zu_wenig_daten_leer": "Für dieses Spiel liegen nicht genug Daten für eine Bewertung vor.",
     "hinweis_nachholspiel_titel": "Nachholspiel:",
     "hinweis_nachholspiel": "Dieses Spiel gehört zu einem früheren Spieltag und wird am {datum} nachgeholt.",
     "hinweis_vorgezogen_titel": "Vorgezogen:",
     "hinweis_vorgezogen": "Dieses Spiel gehört zum {spieltag} und wird vorgezogen am {datum} gespielt.",
     "hinweis_gespielt_titel": "Gespielt:",
-    "hinweis_gespielt": "Die Werte wurden vor dem Spiel berechnet.",
+    "hinweis_gespielt": "Die Werte wurden mit den Daten vor dem Spiel berechnet.",
     "zeitpunkt_uhr": "{tag} um {uhr} Uhr",
     "status_titel": "Status",
     "status_text": "Für dieses Spiel gibt es keine Werte.",
@@ -255,7 +269,16 @@
     "aufteilung": "{name}: {heim} {wert_heim}, {gast} {wert_gast}",
     "methodik": "Wie entstehen diese Werte?",
     "alle_spiele": "Alle Spiele des Spieltags",
-    "nicht_gefunden": "Dieses Spiel gibt es nicht."
+    "nicht_gefunden": "Dieses Spiel gibt es nicht.",
+    "gespielt": "Gespielt",
+    "keine_text_eins": "Die einzige gewertete Kennzahl überschreitet ihre Schwelle nicht. Abweichung: {name} {wert}.",
+    "hinweis_nachtraeglich": "Werte nachträglich mit den Daten vor dem Spiel berechnet.",
+    "hinweis_korrigiert_titel": "Endstand:",
+    "hinweis_korrigiert": "Ergebnis nachträglich korrigiert",
+    "werte_ab_titel": "Werte folgen",
+    "werte_ab": "Werte ab {datum} – sobald beide Teams ihr vorheriges Ligaspiel gespielt haben.",
+    "werte_folgen": "Werte folgen, sobald das Ergebnis vom {datum} übernommen ist.",
+    "werte_wartet": "Die Werte werden nachträglich mit den Daten vor dem Spiel berechnet, sobald das Ergebnis des vorherigen Ligaspiels übernommen ist."
   },
   "start": {
     "seitentitel": "Soccer Intelligence – Fußballspiele durchleuchtet",

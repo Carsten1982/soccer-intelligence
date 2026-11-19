@@ -20,7 +20,7 @@
     {% endif %}
   </div>
   <div class="zeile trenn"><span>{{ t('spiel.vergleichswert_marke') if k.vergleich_art == 'marke' else t('spiel.ligaschnitt') }}</span><b>{{ zahl(k.vergleich, k) }}</b></div>
-  <div class="zeile trenn"><span>{{ t('spiel.abweichung') }}</span><b class="{{ 'farbe-' ~ k.richtung if k.stufe in ('hoch', 'mittel', 'gering') else '' }}">{{ prozent(k.abweichung) }}{% if k.abweichung is not none %} · {{ t('stufe.' ~ k.stufe) }}{% endif %}</b></div>
+  <div class="zeile trenn"><span>{{ t('spiel.abweichung') }}</span><b class="{{ 'farbe-' ~ k.richtung if k.stufe in ('stark', 'mittel', 'gering') else '' }}">{{ prozent(k.abweichung) }}{% if k.abweichung is not none %} · {{ t('stufe.' ~ k.stufe) }}{% endif %}</b></div>
   <button type="button" class="zuklappen" data-zuklappen hidden aria-label="{{ t('spiel.zahlen_detail_zu', name=t('kennzahl.' ~ k.kpi ~ '.name')) }}">{{ t('spiel.zuklappen') }}{{ chevron() }}</button>
 </div>
 {%- endmacro %}
@@ -38,7 +38,7 @@
       <div class="sb-liga">{{ t('spiel.kopfzeile', liga=t('liga.' ~ seite.liga_key), spieltag=t('spieltag.nummer', n=seite.spieltag)) }}</div>
       <div class="sb-wann">
         <span>{{ wann }}</span>
-        {% if seite.sonderspiel %}<span class="sb-chip">{{ t('chip.' ~ seite.sonderspiel) }}</span>{% endif %}
+        {% if seite.sonderspiel %}<span class="sb-chip">{{ t('chip.' ~ seite.sonderspiel ~ '_nr', n=seite.spieltag) }}</span>{% endif %}
         {% if seite.status %}<span class="sb-chip">{{ t('chip.' ~ seite.status) }}</span>{% endif %}
       </div>
       <div class="sb-teams">
@@ -105,16 +105,16 @@
 </div>
 {% endif %}
 
-{% if seite.bewertung == 'nicht_gewertet' %}
+{% if seite.bewertung == 'zu_wenig_daten' %}
 <div class="eng abschnitt-notiz">
-  <div class="notiz" role="note">{{ info_icon() }}<p><b>{{ t('spiel.hinweis_nicht_gewertet_titel') }}</b> {{ t('spiel.hinweis_nicht_gewertet_leer') if seite.ohne_werte else t('spiel.hinweis_nicht_gewertet') }}</p></div>
+  <div class="notiz" role="note">{{ info_icon() }}<p><b>{{ t('spiel.hinweis_zu_wenig_daten_titel') }}</b> {{ t('spiel.hinweis_zu_wenig_daten_leer') if seite.ohne_werte else t('spiel.hinweis_zu_wenig_daten') }}</p></div>
 </div>
 {% endif %}
 
 {% if seite.uebrige and seite.bewertung != 'status' %}
 <div class="eng abschnitt-detail">
   <div class="kopfzeile-mitte">
-    <h2 class="h2-klein">{{ t('spiel.kennzahlen') if seite.bewertung == 'nicht_gewertet' else t('spiel.normalbereich') }}</h2>
+    <h2 class="h2-klein">{{ t('spiel.kennzahlen') if seite.bewertung == 'zu_wenig_daten' else t('spiel.normalbereich') }}</h2>
     <details class="lesen">{{ lesen_knopf() }}{{ lesen_ligaschnitt() }}</details>
   </div>
   <div class="normal-liste">
@@ -123,7 +123,7 @@
       <summary class="normal-zeile" aria-label="{{ t('spiel.zahlen_detail') }}: {{ t('kennzahl.' ~ k.kpi ~ '.name') }}">
         <span class="oben">
           <span class="ikon normal"><svg class="icon" width="20" height="20" aria-hidden="true"><use href="#ic-{{ k.icon }}"/></svg></span>
-          <span class="name">{{ t('kennzahl.' ~ k.kpi ~ '.name') }}{% if k.stufe == 'nicht_gewertet' and seite.bewertung != 'nicht_gewertet' %} <span class="vermerk">· {{ t('stufe.nicht_gewertet') }}</span>{% endif %}</span>
+          <span class="name">{{ t('kennzahl.' ~ k.kpi ~ '.name') }}{% if k.stufe == 'zu_wenig_daten' and seite.bewertung != 'zu_wenig_daten' %} <span class="vermerk">· {{ t('stufe.zu_wenig_daten') }}</span>{% endif %}</span>
           <span class="wert">{{ prozent(k.abweichung) }}</span>
           <span class="chev klein">{{ chevron() }}</span>
         </span>

@@ -1,4 +1,4 @@
-"""Schwellen und Prognosewerte aus app/config/schwellen.toml (KPI-Regelwerk 2.2, seit Version 0.19)."""
+"""Schwellen und Signalqualität aus app/config/schwellen.toml (KPI-Regelwerk 2.2, seit Version 0.19)."""
 
 from decimal import Decimal
 from pathlib import Path
@@ -20,33 +20,34 @@ def write(tmp_path, text: str) -> Path:
     return p
 
 
-ENTRY = '[[schwelle]]\nliga = "Bundesliga"\nkpi = "kpi09"\nrichtung = "weniger"\nschwelle = 10\nprognosewert = "hoch"\n'
+ENTRY = '[[schwelle]]\nliga = "Bundesliga"\nkpi = "kpi09"\nrichtung = "weniger"\nschwelle = 10\nsignalqualitaet = "stark"\n'
 
 
 def test_lookup_per_league_kpi_direction(tmp_path):
     cfg = load_thresholds(write(tmp_path, '[grundlage]\nsaisons = "2019/2020-2025/2026"\nfreigabe = "2026-11-18"\n'
                                 + ENTRY + ENTRY.replace('"weniger"', '"mehr"').replace("10", "15.5")
-                                .replace('"hoch"', '"gering"') + 'spiele = 86\ntrefferquote = 65.12\n'), LEAGUES)
+                                .replace('"stark"', '"gering"') + 'spiele = 86\ntrefferquote = 65.12\n'), LEAGUES)
     t = cfg.get("Bundesliga", "kpi09")
     assert t.negativ == Signal(Decimal(10), HIGH)
-    assert t.positiv.schwelle == Decimal("15.5") and t.positiv.prognosewert == LOW and t.positiv.spiele == 86
+    assert t.positiv.schwelle == Decimal("15.5") and t.positiv.signalqualitaet == LOW and t.positiv.spiele == 86
     assert t.positiv.trefferquote == Decimal("65.12")
     assert cfg.get("Bundesliga", "kpi02") == NO_THRESHOLDS == Thresholds()          # ohne Eintrag: nie auffällig
     assert cfg.get("Serie A", "kpi09") == NO_THRESHOLDS
     assert (cfg.saisons, cfg.freigabe) == ("2019/2020-2025/2026", "2026-11-18")
     rows = describe(cfg, LEAGUES)
     assert [r["Richtung"] for r in rows] == ["mehr", "weniger"]
-    assert rows[0]["Schwelle"] == "+15,50 %" and rows[1]["Schwelle"] == "−10,00 %" and rows[1]["Prognosewert"] == "hoch"
+    assert rows[0]["Schwelle"] == "+15,50 %" and rows[1]["Schwelle"] == "−10,00 %" and rows[1]["Signalqualität"] == "stark"
 
 
 @pytest.mark.parametrize("text, message", [
     ("[standard]\nleicht = 20\nstark = 35\n", "altes Format"),
-    ('[[schwelle]]\nkpi = "kpi09"\nrichtung = "mehr"\nschwelle = 10\nprognosewert = "hoch"\n', "'liga' fehlt"),
+    ('[[schwelle]]\nkpi = "kpi09"\nrichtung = "mehr"\nschwelle = 10\nsignalqualitaet = "stark"\n', "'liga' fehlt"),
     (ENTRY.replace('richtung = "weniger"\n', ""), "'richtung' fehlt"),
     (ENTRY.replace("schwelle = 10\n", ""), "'schwelle' fehlt"),
-    (ENTRY.replace('prognosewert = "hoch"\n', ""), "'prognosewert' fehlt"),
+    (ENTRY.replace('signalqualitaet = "stark"\n', ""), "'signalqualitaet' fehlt"),
     (ENTRY.replace('"weniger"', '"negativ"'), "Richtung 'negativ' unbekannt"),
-    (ENTRY.replace('"hoch"', '"stark"'), "Prognosewert 'stark' unbekannt"),
+    (ENTRY.replace('"stark"', '"hoch"'), "Signalqualität 'hoch' unbekannt"),
+    (ENTRY.replace("signalqualitaet", "prognosewert"), "heisst seit Version 0.20"),
     (ENTRY.replace("schwelle = 10", "schwelle = 0"), "grösser als 0"),
     (ENTRY.replace("schwelle = 10", "schwelle = true"), "Zahl erwartet"),
     (ENTRY.replace('"kpi09"', '"kpi01"'), "unbekannter KPI"),

@@ -1,6 +1,6 @@
 """Kompakte Liga-Tabelle mit KPI 01–09 (Dashboard-Briefing 4.1, Design abgenommen am 08.11.2026).
 
-Je Begegnung eine Zeile: Nummer, Spiel, Datum (seit 0.16), Formkurve und je KPI 02–09 der Hauptwert mit Punkt nach Prognosewert (seit 0.19)
+Je Begegnung eine Zeile: Nummer, Spiel, Datum (seit 0.16), Formkurve und je KPI 02–09 der Hauptwert mit Punkt nach Signalqualität (seit 0.20)
 (KPI 03: Abweichung zur 2,5-Tore-Marke, weil sein Hauptwert dem von KPI 02 entspricht). Ein Klick auf die
 Zeile klappt alle Details auf (HTML <details>, ohne JavaScript): je KPI Einstufung, Hauptwert, Abweichung,
 Ligareferenz, Teamwerte, Datenbasis, Überschrift und Text.
@@ -19,8 +19,8 @@ from core.kpis import (
 from core.top import TOP_KPIS
 
 FORM_TITLES = {"S": "Sieg", "U": "Unentschieden", "N": "Niederlage"}
-ANOMALY_LABEL = {NONE: "Keine Auffälligkeit", HIGH: "Auffällig · Prognosewert hoch",
-                 MEDIUM: "Auffällig · Prognosewert mittel", LOW: "Auffällig · Prognosewert gering"}
+ANOMALY_LABEL = {NONE: "Keine Auffälligkeit", HIGH: "Auffällig · Signalqualität stark",
+                 MEDIUM: "Auffällig · Signalqualität mittel", LOW: "Auffällig · Signalqualität gering"}
 VORLAEUFIG_HINT = "Vorläufig: weniger Spiele als im KPI-Regelwerk vorgesehen"
 
 
@@ -91,7 +91,7 @@ def anomaly_cell(anomaly: str | None) -> str:
 
 
 def derivation(r: KpiResult) -> str:
-    """Herleitung des Prognosewerts aus der Schwellendatei (Entscheidung E12): Schwelle, Trefferquote, Mehrwert."""
+    """Herleitung der Signalqualität aus der Schwellendatei (Entscheidung E12): Schwelle, Trefferquote, Mehrwert."""
     s = r.signal
     if s is None or r.vorlaeufig:
         return ""
@@ -233,8 +233,8 @@ def compact_table_html(rows: list[TableRow | tuple[str, str, str, MatchKpis | No
 
 
 LEGEND_HTML = (
-    '<div class="si-legend">Prognosewert: '
-    '<span class="si-dot si-anom-hoch"></span> hoch '
+    '<div class="si-legend">Signalqualität: '
+    '<span class="si-dot si-anom-stark"></span> stark '
     '<span class="si-dot si-anom-mittel"></span> mittel '
     '<span class="si-dot si-anom-gering"></span> gering '
     '<span class="si-dot si-anom-keine"></span> nicht auffällig'

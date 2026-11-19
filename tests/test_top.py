@@ -1,6 +1,6 @@
-"""Auswahl der Top Anomalien (KPI-Regelwerk 2.6, seit Version 0.19 nach Prognosewert mit Liga-Mix).
+"""Auswahl der Top Anomalien (KPI-Regelwerk 2.6, seit Version 0.19 mit Liga-Mix, seit 0.20 nach Signalqualität).
 
-Die Auswahl verwendet von jedem KPI-Ergebnis nur Einstufung (Prognosewert), gerundete Abweichung und „vorläufig“.
+Die Auswahl verwendet von jedem KPI-Ergebnis nur Einstufung (Signalqualität), gerundete Abweichung und „vorläufig“.
 Darum genügen hier schlanke Platzhalter statt vollständig berechneter KPIs. Testfälle P17–P20 und P23–P25 der
 Spezifikation vom 18.11.2026.
 """

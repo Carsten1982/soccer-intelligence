@@ -1,6 +1,6 @@
 # Soccer Intelligence – Technisches Setup und Betrieb
 
-**Stand:** 18.11.2026 · **Verantwortlich:** Carsten Thiele · **Mitwirkende:** ChatGPT (Server-Setup, Review), Claude (Daten, Architektur, Code)
+**Stand:** 19.11.2026 · **Verantwortlich:** Carsten Thiele · **Mitwirkende:** ChatGPT (Server-Setup, Review), Claude (Daten, Architektur, Code)
 
 Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abläufe und Architektur. Fachliche Regeln stehen in `02`–`06`, Änderungen im `CHANGELOG.md`, das aktuelle Release in `RELEASE.md`.
 
@@ -8,9 +8,9 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 
 ## 0. Stand und Versionen
 
-**In Betrieb:** Version 0.19 (seit 18.11.2026) – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit **Auffälligkeit und Prognosewert** (23 Schwellen je Liga, KPI und Richtung, KPI-Regelwerk 2.2), Top Anomalien nach Prognosewert mit Liga-Mix, Datenqualität und Sensitivitätsanalyse; Datenbank 2018/19–2026/27 mit Referenzsaison 2018/19 (KPI-Regelwerk 1.2). Seit 15.11.2026 **Datenimport über API-Football**: Container `soccer-import` (täglich 04:00), Reiter „Datenimport/API“ mit Freigabe (halbautomatisch) und Entscheiden, Spielplan der laufenden Saison und der Vorsaison aus der API (Status nur aus der API, Nachholspiele mit KPIs), Ergebnis-Import nach `06`, Abschnitt 10.1, Teamnamen von API-Football (Abschnitt 6.5). Anmeldemaske unter `/dashboard` (Benutzername und Passwort-Hash in `.env`, 12 Stunden angemeldet), Platzhalterseite unter `/`. Ligaseiten mit kommenden Spieltagen in Abschnitten, Spalte Datum, Pausen-Boxen; Top Anomalien je Liga der nächste Block vor dem Anpfiff (`07`, Abschnitt 4). Vorschau der öffentlichen Website unter `/vorschau` mit Passwortabfrage (Container `soccer-vorschau`): Startseite, Spieltag und Matchdetail je Paarung nach den Entwürfen, Zeitreise `?datum=…` (`08_Website.md`).
+**In Betrieb:** Version 0.19.1 (seit 19.11.2026) – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit **Auffälligkeit und Prognosewert** (23 Schwellen je Liga, KPI und Richtung, KPI-Regelwerk 2.2), Top Anomalien mit Liga-Mix, Datenqualität und Sensitivitätsanalyse (Schwellen je Liga sichtbar); Datenbank 2018/19–2026/27 mit Referenzsaison 2018/19 (KPI-Regelwerk 1.2). Seit 15.11.2026 **Datenimport über API-Football**: Container `soccer-import` (täglich 04:00), Reiter „Datenimport/API“ mit Freigabe (halbautomatisch) und Entscheiden, Spielplan der laufenden Saison und der Vorsaison aus der API (Status nur aus der API, Nachholspiele mit KPIs), Ergebnis-Import nach `06`, Abschnitt 10.1, Teamnamen von API-Football (Abschnitt 6.5). Anmeldemaske unter `/dashboard` (Benutzername und Passwort-Hash in `.env`, 12 Stunden angemeldet), Platzhalterseite unter `/`. Ligaseiten mit kommenden Spieltagen in Abschnitten, Spalte Datum, Pausen-Boxen; Top Anomalien je Liga der nächste Block vor dem Anpfiff (`07`, Abschnitt 4). Vorschau der öffentlichen Website unter `/vorschau` mit Passwortabfrage (Container `soccer-vorschau`): Startseite, Spieltag und Matchdetail je Paarung nach den Entwürfen, Zeitreise `?datum=…` (`08_Website.md`).
 
-**Bereit zum Einspielen:** Version 0.19.1 – Anpassungen nach der Abnahme von 0.19 (Carsten 18.11.2026): Text unter den Top Anomalien mit Zwischentiteln, Reiter Sensitivitätsanalyse vor Datenqualität, überarbeitete Erklärtexte der Sensitivitätsanalyse, Schwellen je Liga sichtbar (Fehler beim Liga-Wechsel behoben), KPI 03 mit Satz bei genau 0,00 %, „Schüsse < aufs Tor + daneben“ nur noch Hinweis, Website-CSS/JS mit Versionsnummer (kein Strg+F5 mehr), Bereinigungen B1, B3–B6 (Sensitivitätsanalyse rund zehnmal schneller), Gegenrechnung auch für Empfehlung, Stabilität und Prognosewert.
+**Bereit zum Einspielen:** Version 0.20 „Fundament“ – Begriff **Signalqualität stark / mittel / gering** überall (Werte unverändert, Vollvergleich); **Schnappschuss je Spiel** (stündlich im Container `soccer-import`, eine unveränderliche Datei je Spiel, nachträglich für laufende Saison und Vorsaison, Überwachung im Reiter Datenimport/API; `07`, 4.9); **Statusmodell**: gespielt ab Anpfiff + 2 Stunden (ohne Anstosszeit ab Mitternacht), kein „Ergebnis folgt“, Top Anomalien ohne Nachrücken (gespielte ausgegraut), „Werte ab …“ auch auf Spieltag-Seite und Matchdetail der Website, „Zu wenig Daten“, Absicherung gegen nachträgliches „gewertet“, Sonderspiele mit Spieltagsnummer und neuer Zählform; Datenstand veraltet erst nach **48 Stunden**.
 
 **Als Nächstes – Releaseplan bis zum Livegang (Freigabe Carsten 19.11.2026):**
 
@@ -25,7 +25,8 @@ Danach: Rückblick für Fans (Version 2/3) · E-Mail-Benachrichtigung über den 
 
 | Version | Etappe | Inhalt | Eingespielt | Git | Tests |
 |---|---|---|---|---|---|
-| 0.19.1 | Nach Abnahme 0.19 | Texte Top Anomalien und Sensitivitätsanalyse, Reiter getauscht, Schwellen je Liga sichtbar, KPI 03 bei 0,00 %, Schusssumme als Hinweis, Cache-Versionsnummer der Website, Bereinigungen B1, B3–B6, Gegenrechnung Prognosewert | ausstehend | – | 627 |
+| 0.20 | Fundament | Signalqualität stark/mittel/gering; Schnappschuss je Spiel; Statusmodell (gespielt ab Anpfiff + 2 h, kein Nachrücken, „Werte ab“ auf allen Seiten, Zu wenig Daten, AWD-Absicherung, Sonderspiel-Nummer, Zählform); 48-Stunden-Grenze; ein Importstand für Dashboard und Website | ausstehend | – | 645 |
+| 0.19.1 | Nach Abnahme 0.19 | Texte Top Anomalien und Sensitivitätsanalyse, Reiter getauscht, Schwellen je Liga sichtbar, KPI 03 bei 0,00 %, Schusssumme als Hinweis, Cache-Versionsnummer der Website, Bereinigungen B1, B3–B6, Gegenrechnung Prognosewert | 19.11.2026 | `537b4a4` | 627 |
 | 0.19 | Prognosewert | Auffälligkeit und Prognosewert statt leicht/stark: Schwellen je Liga, KPI und Richtung (23), Top Anomalien mit Liga-Mix, Sensitivitätsanalyse mit Prognosewert, Erklärfeld und Schwellenvorschlag | 18.11.2026 | `cd45076` | 619 |
 | 0.18 | Website: drei Seiten | Startseite (1d), Spieltag (3d) und Matchdetail je Paarung (2i) genau nach den Entwürfen; Entscheidungen Q1–Q7; Foto nur auf dem Server (`website-bilder/`); Vorladen beim Start | 17.11.2026 | `fbdd5d9` | 617 |
 | 0.17 | Website: Spieltag | Öffentliche Website als Vorschau unter `/vorschau` (Container `soccer-vorschau`, Passwortabfrage): Design-Grundlagen, Schriften selbst gehostet, Sprachdatei mit ß, Seite Spieltag mit Tabs, Kacheln, Pausen, Datenstand, Zeitreise | 17.11.2026 | `49c2056` | 600 |
@@ -76,7 +77,7 @@ Ausbaustufen:
 
 | Datum | Entscheidung |
 |---|---|
-| 18.11.2026 | **Begriff „Prognosewert“ wird „Signalqualität“** (Carsten): Stufen **stark / mittel / gering** statt hoch / mittel / gering, im Dashboard und auf der Website, in Code, Schwellendatei, Doku und Designs. Umsetzung im nächsten Release (mit dem Frontend). Achtung: „stark“ meinte bis 0.18 die Grösse der Abweichung (leicht/stark); ab der Umsetzung nur noch die Signalqualität. |
+| 18.11.2026 | **Begriff „Prognosewert“ wird „Signalqualität“** (Carsten): Stufen **stark / mittel / gering** statt hoch / mittel / gering, im Dashboard und auf der Website, in Code, Schwellendatei, Doku und Designs. Umgesetzt in 0.20 (Vollvergleich: Werte gleich, nur „hoch“ → „stark“). Achtung: „stark“ meinte bis 0.18 die Grösse der Abweichung (leicht/stark); ab der Umsetzung nur noch die Signalqualität. |
 | 18.11.2026 | **Nach Abnahme 0.19 (Carsten):** Text unter den Top Anomalien mit Zwischentiteln (Wortlaut Carsten mit zwei Präzisierungen), Reiter Sensitivitätsanalyse vor Datenqualität, Erklärtexte der Sensitivitätsanalyse überarbeitet, Schwellen je Liga unter dem Feld, Zeilen ohne Schwelle bleiben leer (keine Vorbelegung), KPI 03 bei genau 0,00 % mit eigenem Satz, Aufsteiger-Anzeige bestätigt, „Schüsse < aufs Tor + daneben“ nur noch Hinweis, Cache-Versionsnummer der Website, Bereinigungen B1, B3–B6 in 0.19.1. |
 | 18.11.2026 | **Auffälligkeit und Prognosewert** statt leicht/stark (Carsten, nach Gegenprüfung durch ChatGPT und Prüfrunde): Schwellen je Liga, KPI und Richtung nach fester Regel aus der Sensitivitätsanalyse (Funktioniert mit Rand > +2 Pp., stabil in zwei Dritteln der Saisons, Prognosewert hoch/mittel/gering), keine Handanpassung, Top Anomalien nach Prognosewert mit Liga-Mix, Neuberechnung einmal pro Saison mit Freigabe über GitHub. Details: KPI-Regelwerk 2.2, 2.6, 11; `docs/tests/pruefprotokoll_prognosewert.md`. |
 | 09.11.2026 | **GitHub ist die einzige Quelle** (Carsten): Änderungen entstehen nur noch auf GitHub (Claude Code mit dem Repository verbunden, Pull Request mit automatischen Tests, Freigabe durch Carsten mit „Squash and merge“). Der Server holt mit `tools/einspielen.sh github` ab und ändert selbst nichts mehr. Das Paket `release.zip` bleibt als Ersatz (Abschnitt 6.1). |
@@ -438,7 +439,7 @@ app/
 │   ├── teamnamen.toml    Teamnamen von API-Football je Team-ID, mit bisheriger Schreibweise (0.14)
 │   ├── zuordnung_api.csv feste Zuordnung eigene Spiel-ID ↔ API-ID, 11'978 Spiele (0.15)
 │   ├── import.toml       Datenimport: Datum für den automatischen Tausch (0.14)
-│   ├── schwellen.toml    Schwellen und Prognosewerte je Liga, KPI und Richtung (seit 0.19; Etappe H: leicht/stark)
+│   ├── schwellen.toml    Schwellen und Signalqualität je Liga, KPI und Richtung (seit 0.19, Feld `signalqualitaet` seit 0.20)
 │   └── archiv/           frühere Fassungen, z. B. schwellen_2026-11-14.toml (leicht/stark bis 0.18)
 ├── core/                 Kernlogik ohne Oberfläche (testbar)
 │   ├── settings.py       Pfade, Pflichtblätter, Version
@@ -450,12 +451,15 @@ app/
 │   ├── config.py         Einlesen der Konfiguration (Etappe B)
 │   ├── fixtures.py       Spielplan einlesen und prüfen (Etappe B)
 │   ├── matchday.py       aktueller Spieltag, Spieltagsübersicht (Etappe B)
-│   ├── anzeige.py        kommende Spieltage: Abschnitte, Pausen, Navigation, „Werte ab“, Top-Block, Vorschau (0.16)
+│   ├── anzeige.py        kommende Spieltage: Abschnitte, Pausen, Navigation, „Werte ab“, Top-Block, Vorschau (0.16);
+│   │                     seit 0.20 gespielt ab Anpfiff + 2 h, 48-Stunden-Grenze, values_from
+│   ├── schnappschuss.py  Schnappschuss je Spiel: genau speichern/lesen, nie überschreiben, was die Seiten zeigen (0.20)
+│   ├── importstand.py    Beginn des letzten erfolgreichen Importlaufs, für Dashboard und Website (0.20)
 │   ├── overview.py       Übersicht der Datenbank (Spiele je Saison)
 │   ├── kpis.py           KPI 01–09 gemäss Regelwerk (Etappen C und H)
-│   ├── thresholds.py     Schwellen und Prognosewerte aus schwellen.toml (seit 0.19 je Liga, KPI und Richtung)
+│   ├── thresholds.py     Schwellen und Signalqualität aus schwellen.toml (seit 0.19 je Liga, KPI und Richtung)
 │   ├── results.py        KPI-Ergebnisse aller Begegnungen eines Spieltags (H.1)
-│   ├── top.py            Auswahl der Top Anomalien (seit 0.19 nach Prognosewert mit Liga-Mix)
+│   ├── top.py            Auswahl der Top Anomalien (seit 0.19 nach Signalqualität mit Liga-Mix)
 │   ├── simulation.py     Ergebniskontrolle und Simulation der Schwellen (Etappe I.1)
 │   └── frequency.py      Häufigkeit der Anomalien (Etappe C)
 ├── website/              öffentliche Website (0.17, 08_Website.md): daten (Laden, Zeitreise), start, spieltag, spiel
@@ -463,7 +467,8 @@ app/
 │                         (Sprachdatei), format, statisch/ (CSS, Schriften, site.js), vorschau (Webserver unter /vorschau)
 ├── importer/             Datenimport über API-Football (0.14): client (Abfragen, Obergrenze, Rohdaten), convert (58
 │                         Spalten, Tor-Ereignisse), spielplan, teams, erzeugen (neue Fassung + Bericht), dienst (Zeitplan,
-│                         Freigabe), entscheide (Entscheide aus dem Reiter, 0.15); core/zuordnung.py = eigene ID ↔ API-ID
+│                         Freigabe), entscheide (Entscheide aus dem Reiter, 0.15), schnappschuss (stündlicher Lauf, 0.20);
+│                         core/zuordnung.py = eigene ID ↔ API-ID
 └── views/                Bereiche: Top Anomalien, je Liga, Datenqualität, Datenimport/API (datenimport.py, 0.14); components.py = Stil, Kopfbereich,
                           Sperrhinweis; kpi_table.py = kompakte Liga-Tabelle mit Aufklappen (Etappe H);
                           simulation.py = Bereich Simulation – Spielwiese (Etappe I.1)
@@ -504,6 +509,7 @@ werden alle offenen Punkte abgearbeitet. Bedingung jeder Bereinigung: KPI-Ergebn
 | B4 | `app/core/validation.py`, Prüfung „Team mehrfach im Spieltag“ | `groupby`/`duplicated` statt zeilenweiser Prüfung, Meldungen unverändert | Code-Prüfung 16.11.2026, P3c | **erledigt 0.19.1:** war bereits mit `duplicated()` umgesetzt; letzte Zeilenschleife durch `itertuples()` ersetzt |
 | B5 | `app/core/fixtures.py` `_parse_sheet()`, `_plausibility()` | `itertuples()` statt `iterrows()` (nur mit Messung) | Code-Prüfung 16.11.2026, P3d | **erledigt 0.19.1:** Zeilen als `dict` statt `iterrows()`; Spielplan einlesen 0,75 s → 0,53 s, Ergebnis und alle 156 Meldungen identisch |
 | B6 | `app/anmeldung.py` `_set_cookie()` | `st.components.v1.html` durch `st.iframe` ersetzen (Streamlit meldet im Protokoll: „will be removed after 2026-06-01“). Mit streamlit 1.66.1 noch lauffähig; spätestens vor einem Streamlit-Update, mit Browser-Test der Anmeldung | Umsetzung 0.16 (Protokoll der Probe) | **erledigt 0.19.1:** `st.iframe` statt `components.html`; im Browser geprüft (Cookie gesetzt, 12 Stunden, zweiter Tab angemeldet); auf dem Server mit HTTPS prüfen |
+| B7 | `app/state.py` `last_import_day()`, `app/website/daten.py` `letzter_import()` | Gleiche Funktion doppelt (Liste der Fehlstatus zweimal) – eine Fassung für Dashboard und Website, mit Uhrzeit | Umsetzung 0.20 (48-Stunden-Grenze) | **erledigt 0.20:** `core/importstand.last_successful_run` |
 
 ---
 

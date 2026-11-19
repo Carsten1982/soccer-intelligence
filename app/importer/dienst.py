@@ -5,6 +5,8 @@
 - Entscheide aus dem Reiter (späte Korrekturen, Endstand gegen Tor-Ereignisse) kommen ebenfalls als Anfrage und werden
   in /import/entscheidungen.json festgehalten (entscheide.py); jeder Lauf wendet sie an.
 - Rohdaten älter als 12 Monate löscht der Dienst (R9).
+- Seit 0.20 einmal je Stunde der Schnappschuss-Lauf (importer/schnappschuss.py, Regeln in core/schnappschuss.py):
+  Werte jedes Spiels ab einer Stunde vor dem Anpfiff einfrieren; nach jeder Übernahme sofort ein weiterer Lauf.
 - Es wartet immer höchstens eine Fassung; ein neuer Lauf ersetzt die wartende (er baut auf der gültigen auf).
 - Freigabe: Das Dashboard legt eine Anfrage in /import/anfragen/ ab („uebernehmen“ oder „verwerfen“); der Dienst prüft
   sie innerhalb von 30 Sekunden. Übernommen wird nur ohne Fehler und nur, wenn die gültigen Dateien seit dem Lauf
@@ -34,6 +36,7 @@ from core.config import load_leagues
 
 from . import einstellungen as E
 from . import entscheide
+from . import schnappschuss
 from .client import ApiClient, ImportFehler, used_today
 from .erzeugen import build, save_report, sha256
 from .teams import load_team_names
@@ -169,7 +172,8 @@ def _finish(base: Path, run_id: str, by: str, stamp: str) -> None:
     state = load_state(base)
     if state.get("wartend") == run_id:
         state["wartend"] = None
-        save_state(base, state)
+    state["letzter_schnappschuss"] = None          # neue Daten: wartende Schnappschüsse gleich nachholen (0.20)
+    save_state(base, state)
     (base / HANDOVER).unlink(missing_ok=True)
 
 
@@ -296,7 +300,20 @@ def main(argv: list[str]) -> None:
         if due(load_state(base), now):
             rep = run(base, data_dir, now)
             print(now.isoformat(timespec="seconds"), "Lauf", rep["lauf"], "->", rep["status"], rep.get("meldung", ""), flush=True)
+        if schnappschuss.due(load_state(base), now):
+            snap_hour(base, data_dir, now)
         time.sleep(30)
+
+
+def snap_hour(base: Path, data_dir: Path, now: datetime) -> dict:
+    """Schnappschuss-Lauf und Stunde im Zustand vermerken (seit 0.20)."""
+    rep = schnappschuss.run(base, data_dir, now)
+    state = load_state(base)
+    state["letzter_schnappschuss"] = now.strftime("%Y-%m-%dT%H")
+    save_state(base, state)
+    print(now.isoformat(timespec="seconds"), "Schnappschüsse:", rep["neu"], "neu,", rep["wartend_anzahl"], "wartend",
+          "–", rep["fehler"] or "ok", flush=True)
+    return rep
 
 
 if __name__ == "__main__":

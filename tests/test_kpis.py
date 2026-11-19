@@ -30,7 +30,7 @@ MATCHDAYS = {"Bundesliga": 34, "Premier League": 38, "Serie A": 38, "LaLiga": 38
 TOL = 1e-9
 
 # Die bestätigten Testfälle (docs/tests) wurden mit der Standardschwelle ±20 % (bis Version 0.18 „leicht“) erstellt.
-# Seit Version 0.19 gibt es je Richtung eine Schwelle mit Prognosewert. Für die Testfälle gilt darum die Schwelle 20 %
+# Seit Version 0.19 gibt es je Richtung eine Schwelle mit Signalqualität (bis 0.19 Prognosewert). Für die Testfälle gilt darum die Schwelle 20 %
 # in beiden Richtungen: Texte und Überschriften der Fälle bleiben gültig; „leicht“ und „stark“ heissen dort „auffällig“.
 LEGACY = Thresholds(Signal(Decimal(20), LOW), Signal(Decimal(20), LOW))
 

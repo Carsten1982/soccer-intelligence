@@ -1,6 +1,6 @@
 # Soccer Intelligence – Spielplan
 
-**Stand:** 07.11.2026 · **Status:** Datei seit 31.10.2026 auf dem Server (`data/Spielplan.xlsx`). Seit 07.11.2026 mit vier Blättern (Bundesliga, Premier League, Serie A, LaLiga).
+**Stand:** 19.11.2026 (Prüfregel „Gewertet, aber gespielt“, 0.20) · **Status:** Datei seit 31.10.2026 auf dem Server (`data/Spielplan.xlsx`). Seit 07.11.2026 mit vier Blättern (Bundesliga, Premier League, Serie A, LaLiga).
 **Datei:** `/docker/football-dashboard/data/Spielplan.xlsx`
 
 ---
@@ -128,6 +128,10 @@ Die Ergebnisse erscheinen auf der Seite **Datenqualität**, getrennt von den Pr�
 - Bekannter Aufsteiger ohne Daten in der Datenbank
 - Team ohne Ligaspiele in der Saison des Spiels und der Vorsaison, z. B. Schalke (*ergänzt und bestätigt 31.10.2026*); KPIs erscheinen als „–“
 - Leeres Tabellenblatt einer noch nicht aktiven Liga
+- **Gewertet, aber gespielt** (seit 0.20): Status „gewertet“ (API AWD/WO) für eine Paarung, deren Ergebnis vom Platz in
+  der Datenbank steht. Das Spiel gilt beim Einlesen als gespielt (Status „geplant“) und zeigt dieses Ergebnis; die Datei
+  bleibt unverändert. „Am grünen Tisch gewertet“ erscheint nur bei nie gespielten Spielen (Entscheidungsprotokoll
+  19.11.2026, Nr. 1; `07`, 4.9)
 
 ---
 

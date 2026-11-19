@@ -7,13 +7,19 @@ Festlegungen Carsten 17.11.2026:
 - Q1  Erwartungswert = Hauptwert der Kennzahl. Nur bei Gelben Karten ist er die Summe der Teamwerte (zweiteilige
       Leiste „Heim + Gast“); bei allen anderen der Mittelwert, dargestellt als „Je Mannschaft“.
 - Q2  Über 2,5 Tore: Vergleichswert ist die feste Marke 2,5 (kein Ligaschnitt), Erwartungswert in Toren.
-- Q4  Einzelne vorläufige Kennzahl: ohne Stufe, schraffiert, unter „Im Normalbereich“. Das Spiel ist nur dann
-      „nicht gewertet“, wenn alle Kennzahlen vorläufig sind (F2).
-- Q5  Gespieltes Spiel: Endstand bzw. „Ergebnis folgt“ statt Anstoss, Werte wie vor dem Spiel.
+- Q4  Einzelne vorläufige Kennzahl: ohne Stufe, schraffiert, unter „Im Normalbereich“. Das Spiel hat nur dann
+      „zu wenig Daten“ (bis 0.19.1 „nicht gewertet“), wenn alle Kennzahlen vorläufig sind (F2).
+- Q5  Gespieltes Spiel: Endstand bzw. „Gespielt“ statt Anstoss, Werte wie vor dem Spiel.
+
+Seit 0.20 (Entscheidungsprotokoll 19.11.2026, Nr. 2, 2a, 4a): gespielt ab Anpfiff + 2 Stunden; ab dem Anstoss die
+Werte des Schnappschusses (Hinweis, wenn sie nachträglich berechnet wurden oder das Ergebnis korrigiert wurde); vor
+dem Anstoss statt der Kennzahlen „Werte ab …“, solange ein Vorspiel aussteht.
 """
 
 from __future__ import annotations
 
+from core import anzeige as A
+from core import schnappschuss as S
 from core.fixtures import INACTIVE_STATUS
 from core.kpis import LEVELS, RANK, MatchKpis
 from core.top import TOP_KPIS
@@ -37,9 +43,9 @@ def kennzahl(key: str, r) -> dict:
     abw = _f(r.abweichung_rund) if r is not None else None
     vorl = r is None or r.vorlaeufig or abw is None
     if vorl:
-        stufe = "nicht_gewertet"
+        stufe = "zu_wenig_daten"
     elif r.anomalie in LEVELS:
-        stufe = r.anomalie                     # Prognosewert hoch / mittel / gering (seit 0.19)
+        stufe = r.anomalie                     # Signalqualität stark / mittel / gering (seit 0.20)
     else:
         stufe = "normal"
     return {
@@ -75,25 +81,28 @@ def spiel_daten(daten: Daten, spiel_id: int, zp: Zeitpunkt) -> dict | None:
     if web is None:
         return None
     b = daten.bestand()
-    kpis: MatchKpis | None = daten.kpis(liga, row.saison, int(row.spieltag), zp.bis).get(int(row.reihenfolge))
+    werte = daten.werte(liga, row, zp)
+    kpis: MatchKpis | None = werte.kpis
     ergebnisse = daten.ergebnisse(liga, zp.bis)
     score = ergebnisse.get((row.saison, row.heim, row.gast))
+    gate = A.values_from(daten.spielplan(liga), row, zp.jetzt, ergebnisse)
+    ohne = gate is not None or werte.quelle == S.WAITING          # „Werte ab …“ bzw. Schnappschuss wartet
 
     if row.status in INACTIVE_STATUS:
         zustand = "status"
-    elif score is not None or zp.jetzt >= row.anstoss_zeit:
+    elif score is not None or zp.jetzt >= A.played_from(row):
         zustand = "gespielt"
     else:
         zustand = "offen"
 
     kennzahlen = [kennzahl(k, getattr(kpis, k, None) if kpis is not None else None) for k in TOP_KPIS]
-    if zustand == "status":                     # verschoben, abgesagt …: keine Werte zeigen (wie Kachel, F5)
+    if zustand == "status" or ohne:             # verschoben, abgesagt … bzw. noch ohne Werte (wie Kachel, F5)
         kennzahlen = []
     ohne_werte = all(k["erwartung"] is None for k in kennzahlen)
-    nicht_gewertet = all(k["stufe"] == "nicht_gewertet" for k in kennzahlen)
+    zu_wenig_daten = all(k["stufe"] == "zu_wenig_daten" for k in kennzahlen)
     auffaellig = sorted((k for k in kennzahlen if k["stufe"] in LEVELS), key=lambda k: (-RANK[k["stufe"]], -k["betrag"]))
     uebrige = sorted((k for k in kennzahlen if k["stufe"] not in LEVELS), key=lambda k: -k["betrag"])
-    gewertet = [k for k in kennzahlen if k["stufe"] != "nicht_gewertet"]
+    gewertet = [k for k in kennzahlen if k["stufe"] != "zu_wenig_daten"]
     groesste = max(gewertet, key=lambda k: k["betrag"]) if gewertet else None
 
     return {
@@ -110,8 +119,12 @@ def spiel_daten(daten: Daten, spiel_id: int, zp: Zeitpunkt) -> dict | None:
         "ergebnis": list(score) if score else None,
         "form_heim": form(kpis.form_home if kpis is not None else None),
         "form_gast": form(kpis.form_away if kpis is not None else None),
-        "bewertung": "status" if zustand == "status" else "nicht_gewertet" if nicht_gewertet else
-                     "auffaellig" if auffaellig else "normal",
+        "bewertung": "status" if zustand == "status" else "werte_ab" if ohne else
+                     "zu_wenig_daten" if zu_wenig_daten else "auffaellig" if auffaellig else "normal",
+        "werte_ab": gate.ab.isoformat() if gate is not None and gate.ab else None,
+        "ergebnis_vom": gate.ergebnis_vom.isoformat() if gate is not None and gate.ergebnis_vom else None,
+        "nachtraeglich": zustand == "gespielt" and werte.quelle in (S.LATE, S.WAITING),
+        "korrigiert": zustand == "gespielt" and werte.korrigiert,
         "ohne_werte": ohne_werte,
         "auffaellig": auffaellig,
         "uebrige": uebrige,

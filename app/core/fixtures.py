@@ -316,6 +316,32 @@ def _team_checks(
     return issues, notes
 
 
+def _awarded_but_played(league: League, df: pd.DataFrame, db_games: pd.DataFrame | None
+                        ) -> tuple[pd.DataFrame, list[Issue]]:
+    """Absicherung gegen nachträgliches „gewertet“ (seit 0.20, Entscheidungsprotokoll 19.11.2026, Nr. 1; `07`, 4.1).
+
+    „Am grünen Tisch gewertet“ gilt nur für nie gespielte Spiele. Meldet die API für ein Spiel AWD/WO, dessen Ergebnis
+    vom Platz schon in der Datenbank steht (das Spiel wurde gespielt und später anders gewertet), bleibt es ein
+    gespieltes Spiel mit dem Ergebnis vom Platz: Status „geplant“, die Spalte API-Status behält AWD/WO. Die Datei wird
+    dabei nicht verändert, nur die eingelesene Fassung."""
+    if db_games is None or db_games.empty or not df["status"].eq(STATUS_AWARDED).any():
+        return df, []
+    played = set(zip(db_games["Season"], db_games["homeTeam"], db_games["awayTeam"]))
+    hit = df["status"].eq(STATUS_AWARDED) & pd.Series(
+        [(s, h, a) in played for s, h, a in zip(df["saison"], df["heim"], df["gast"])], index=df.index)
+    if not hit.any():
+        return df, []
+    df = df.copy()
+    df.loc[hit, "status"] = STATUS_PLANNED
+    issues = [Issue(
+        HINWEIS, league.name, "Gewertet, aber gespielt",
+        "Der Spielplan meldet „gewertet“, die Datenbank hat das Ergebnis vom Platz: Das Spiel gilt als gespielt "
+        "und zeigt dieses Ergebnis.",
+        match=_label(r["heim"], r["gast"], r["spieltag"]), excel_row=int(r["excel_row"]),
+    ) for _, r in df[hit].iterrows()]
+    return df, issues
+
+
 # --- Hauptfunktion -------------------------------------------------------
 
 def load_fixtures(
@@ -388,6 +414,8 @@ def load_fixtures(
         df, issues = _parse_sheet(league.name, raw)
         result.issues += issues
         if not df.empty:
+            df, awarded = _awarded_but_played(league, df, db_leagues.get(league.name))
+            result.issues += awarded
             result.issues += _plausibility(league, df)
             team_issues, notes = _team_checks(league, df, db_leagues.get(league.name), known_extra)
             result.issues += team_issues

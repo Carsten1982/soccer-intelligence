@@ -4,7 +4,8 @@ Zeigt den Stand des Datenimports aus /import (nur lesend): Statusleiste, die war
 - „Ihre Entscheidung“: späte Korrekturen der API und Endstände, die nicht zu den Tor-Ereignissen passen (je zwei Buttons),
 - Block A · Ergebnisse (Vollständigkeit, Qualität, Korrekturen, neue Spiele) und
 - Block B · Spielplan (Änderungen nach Gruppen),
-sowie das Protokoll der letzten 14 Tage. Alle Buttons legen nur eine Anfrage in /import/anfragen ab; den Tausch und das
+sowie das Protokoll der letzten 14 Tage und seit 0.20 den Stand der Schnappschüsse (Überwachung; E-Mail-Alarm ab
+0.22). Alle Buttons legen nur eine Anfrage in /import/anfragen ab; den Tausch und das
 Festhalten der Entscheide macht der Container soccer-import (das Dashboard schreibt nie in die Excel-Dateien).
 """
 
@@ -437,6 +438,34 @@ def history(reps: list[dict]) -> None:
                 unsafe_allow_html=True)
 
 
+def snapshot_box(stand: dict | None, now: datetime) -> str:
+    """Stand des stündlichen Schnappschuss-Laufs (seit 0.20, core/schnappschuss.py): Werte je Spiel vor dem Anpfiff."""
+    if not stand:
+        return ('<div class="di-h">Schnappschüsse (Werte vor dem Anpfiff)</div><p class="di-note">Noch kein Lauf. Der '
+                'Container soccer-import legt sie stündlich an; sofort: <code>docker exec soccer-import python -m '
+                'importer.schnappschuss</code>.</p>')
+    run = datetime.fromisoformat(stand["lauf"])
+    age = now.replace(tzinfo=None) - run
+    css = "di-bad" if stand.get("fehler") or age > timedelta(hours=2) else "di-ok"
+    sign = "✕" if css == "di-bad" else "✓"
+    waiting = stand.get("wartend") or []
+    rows = [[escape(league), num(c.get("neu")), num(c.get("vorhanden")), num(c.get("wartend"))]
+            for league, c in (stand.get("ligen") or {}).items()]
+    text = (f'<div class="di-h">Schnappschüsse (Werte vor dem Anpfiff)</div>'
+            f'<p class="di-note">Letzter Lauf <b class="{css}">{_when(stand["lauf"])} {sign}</b> · neu '
+            f'{num(stand.get("neu"))} (davon nachträglich {num(stand.get("neu_nachtraeglich"))}) · erste Ergebnisse '
+            f'{num(stand.get("ergebnisse_neu"))} · Dauer {stand.get("dauer_s", "–")} s · stündlich, nach jeder '
+            f'Übernahme sofort</p>')
+    if stand.get("fehler"):
+        text += f'<p class="di-note di-bad">Fehler: {escape(stand["fehler"])}</p>'
+    if rows:
+        text += _table(["Liga", "neu", "vorhanden", "wartet auf Vorspiel-Ergebnis"], rows)
+    if waiting:
+        text += ('<p class="di-note">Wartet (Anpfiff nah oder vorbei, Ergebnis des vorherigen Spiels fehlt): '
+                 + escape("; ".join(waiting)) + "</p>")
+    return text
+
+
 def render() -> None:
     st.markdown(CSS, unsafe_allow_html=True)
     ui.header(subtitle="Datenimport/API")
@@ -461,5 +490,7 @@ def render() -> None:
     else:
         st.success("Keine neuen Daten zur Freigabe. Die gültigen Dateien sind auf dem Stand des letzten übernommenen Laufs.")
     history(reps)
+    from importer.schnappschuss import load_status
+    st.markdown(snapshot_box(load_status(base), now), unsafe_allow_html=True)
     st.caption(f"Gültige Datenbank: {settings.DATABASE_FILENAME} · Prüfregeln und Einzelheiten der Daten: Bereich Datenqualität")
     ui.footer()

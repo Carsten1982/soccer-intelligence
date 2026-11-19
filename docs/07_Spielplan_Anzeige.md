@@ -1,6 +1,6 @@
 # Soccer Intelligence – Spielplan, Import und Anzeige kommender Spieltage (Spezifikation)
 
-**Version:** 2.1 · **Stand:** 15.11.2026
+**Version:** 2.2 · **Stand:** 19.11.2026 (2.2: Statusmodell und Schnappschuss, umgesetzt in 0.20)
 **Grundlage:**
 - v2.0 und die Rückmeldung von ChatGPT („Prüfpunkte v2.0“)
 - Entscheidungen Carsten vom 15.11.2026: S1–S10, O1, O2
@@ -18,7 +18,7 @@
 - feste Zuordnungsdatei (S6)
 - Top Anomalien nur vor Anpfiff (S7)
 - „Werte ab“ präzisiert (S8)
-- Datenstand höchstens 3 Tage alt (S9)
+- Datenstand höchstens 3 Tage alt (S9; seit 0.20: 48 Stunden)
 - Saisonwechsel (S10)
 - „Spielpause“ statt „Länderspielpause“ und einheitlich 14 Tage (O1)
 - Abschnitte innerhalb von heute bis heute + 6 (O2)
@@ -214,8 +214,9 @@ Die ganze Logik steht als reine Funktionen in `app/core/anzeige.py` (anstehender
 | kommend, bestätigt | „Fr 20.11. · 20:30“ |
 | Zeit offen | „Sa 06.12. · Zeit offen“ |
 | vorläufig | „Wochenende 06./07.02. · Termin offen“ |
+| angepfiffen, bis Anpfiff + 2 Stunden (seit 0.20) | wie kommend („Fr 20.11. · 20:30“), nichts Zusätzliches |
 | gespielt | „Fr 20.11. · 2:1“ (Ergebnis aus der Datenbank) |
-| gespielt, Ergebnis noch nicht übernommen | „Fr 20.11. · Ergebnis folgt“ |
+| ab Anpfiff + 2 Stunden, Ergebnis noch nicht übernommen | „Fr 20.11. · Gespielt“ (seit 0.20; bis 0.19.1 ab dem Anstoss „Ergebnis folgt“); ohne Anstosszeit ab Mitternacht nach dem Spieltag |
 | verschoben / abgesagt / abgebrochen / ausgesetzt / gewertet | der jeweilige Status |
 
 Dazu kommen die Vermerke „Nachholspiel“ und „vorgezogen“ am Spiel.
@@ -226,7 +227,7 @@ Dazu kommen die Vermerke „Nachholspiel“ und „vorgezogen“ am Spiel.
   - Normal ist das der anstehende Spieltag; in einer englischen Woche unter der Woche nur dieser.
   - **Sonderspiele, die in die Tage dieses Spieltags fallen, gehören zum Block.** Beispiel: Spieltag 15 Fr–So plus ein Nachholspiel von Spieltag 1 am Sonntag ergibt einen Block mit 11 Spielen. Auf der Ligaseite sind es dagegen zwei Abschnitte (Sp. 15 und Sp. 1).
   - Sonderspiele **vor** dem nächsten Spieltag bilden einen eigenen Block bis zu ihrem Tagesende. Beispiel LaLiga: am 01./02.12. die zwei vorgezogenen Spiele von Spieltag 23, ab 03.12. Spieltag 15.
-- **Nur Spiele vor dem Anpfiff:** Ein Spiel verschwindet zur geplanten Anstosszeit aus den Top Anomalien. Es gibt keine Live-Daten. Auf der Ligaseite bleibt es mit Ergebnis.
+- ~~**Nur Spiele vor dem Anpfiff:** Ein Spiel verschwindet zur geplanten Anstosszeit aus den Top Anomalien.~~ Bis 0.19.1; seit 0.20 siehe unten. Es gibt keine Live-Daten. Auf der Ligaseite bleibt es mit Ergebnis.
 - Eine Liga nimmt teil, wenn ihr Block **höchstens 14 Tage** entfernt ist. Sonst steht in der Kopfzeile z. B. „Bundesliga: Winterpause bis 07.01.“.
 - Spiele ohne Werte (4.5) nehmen nicht teil. Jedes Spiel kommt genau einmal vor.
 
@@ -240,9 +241,9 @@ Wo die Abschnitte 4.1–4.7 offen liessen, wie etwas genau gilt, ist es so umges
 |---|---|
 | Pause | Abstand zwischen dem Ende des letzten beendeten Spieltags und dem ersten Tag des nächsten **mehr als 14 Tage**. Die Box steht während der ganzen Pause, ab 14 Tagen vor dem Spieltag zusammen mit ihm (Entwurf C) |
 | Sonderspiele | erscheinen im selben Fenster wie weitere Spieltage: Termin heute bis heute + 6. Ohne weiteren regulären Spieltag der Saison (4.3, „ein Spiel noch offen“) erscheinen sie unabhängig vom Abstand |
-| „Gespielt“ | ab dem geplanten Anstoss; ohne bekannte Uhrzeit (Zeit offen, alter Spielplan) ab Tagesende. Mit Ergebnis in der Datenbank immer „gespielt“. „Status offen“ (3.1) erscheint nur im Bericht des Imports; die Ligaseite zeigt „Ergebnis folgt“ |
+| „Gespielt“ | seit 0.20 ab Anpfiff + 2 Stunden, ohne bekannte Uhrzeit (Zeit offen, alter Spielplan) ab Mitternacht nach dem Spieltag (bis 0.19.1: ab dem Anstoss bzw. Tagesende, „Ergebnis folgt“). Mit Ergebnis in der Datenbank immer „gespielt“. „Status offen“ (3.1) erscheint nur im Bericht des Imports |
 | „Werte ab“ | genannt werden nur Teams, deren Vorspiel heute oder später ist; beide im selben Spieltag: „beide Teams spielen vorher noch (Spieltag N)“. Lag das fehlende Vorspiel an einem früheren Tag: „Werte folgen, sobald das Ergebnis vom … übernommen ist“. Verschobene, abgesagte, abgebrochene, ausgesetzte und gewertete Spiele zählen nicht als Vorspiel. Ergebnis gesucht über Saison + Heim + Gast |
-| Letzter erfolgreicher Importlauf (S9) | neuester Lauf in `/import/laeufe/`, dessen Status nicht „fehlgeschlagen“ oder „Fehler – nicht übernehmbar“ ist. Ohne Lauf: Box „Spielplan zuletzt aktualisiert am unbekannt“ |
+| Letzter erfolgreicher Importlauf (S9) | neuester Lauf in `/import/laeufe/`, dessen Status nicht „fehlgeschlagen“ oder „Fehler – nicht übernehmbar“ ist; massgebend ist seit 0.20 sein **Beginn mit Uhrzeit** (`core/importstand.py`, für Dashboard und Website), veraltet nach mehr als 48 Stunden. Ohne Lauf: Box „Spielplan zuletzt aktualisiert am unbekannt“ |
 | „Ein Spiel der Saison noch offen“ (4.3) | angesetzt heute oder später, oder verschoben bzw. ausgesetzt |
 | Pfeile ohne Auswahl | ◀ zum Spieltag vor dem anstehenden; ▶ zum anstehenden, wenn er (noch) nicht als Abschnitt erscheint, sonst zum nächsten. Schaltfläche „Zu den kommenden Spielen“ zurück |
 | Top Anomalien, Sonderspiele davor | Block = die Sonderspiele des frühesten Tages; Kopfzeile bis Tagesende, nach dem letzten Anpfiff „alle Spiele angepfiffen“ (ebenso beim Spieltag) |
@@ -251,6 +252,30 @@ Wo die Abschnitte 4.1–4.7 offen liessen, wie etwas genau gilt, ist es so umges
 | Abschnitt mit nicht gezeigten Spielen | Hinweis in der Kopfzeile, z. B. „(1 Spiel verschoben – beim Blättern sichtbar)“ |
 
 ---
+
+### 4.9 Statusmodell und Schnappschuss (seit 0.20, Entscheidungsprotokoll 19.11.2026 Nr. 1–2a, 4a)
+
+**Prüfreihenfolge je Spiel:** Status → gespielt → „Werte ab …“ → zu wenig Daten → Signalqualität.
+
+| Zustand | Regel | Umsetzung |
+|---|---|---|
+| Ausschliessender Status | verschoben, abgesagt, abgebrochen, ausgesetzt, gewertet: keine Werte, nie ein Endstand | wie bisher |
+| **Absicherung „gewertet“** | „Am grünen Tisch gewertet“ nur für nie gespielte Spiele. Meldet die API AWD/WO für ein Spiel, dessen Ergebnis vom Platz in der Datenbank steht, bleibt es gespielt mit diesem Ergebnis (Status „geplant“, Hinweis „Gewertet, aber gespielt“ in der Datenqualität) | `core/fixtures._awarded_but_played` beim Einlesen; die Datei bleibt unverändert |
+| Gespielt | ab Anpfiff + 2 Stunden bzw. ohne Anstosszeit ab Mitternacht nach dem Spieltag ausgegraut mit „Gespielt“, nach dem Import mit Endstand; bis dahin normal, kein Live-Status | `anzeige.played_from`, `is_played`, `date_cell` |
+| „Werte ab …“ | wie 4.5; nach dem Anstoss nie | `anzeige.values_from` (Datum für die Website, Text für das Dashboard), `missing_previous` |
+| Zu wenig Daten | alle 8 Kennzahlen vorläufig oder keine Werte (bis 0.19.1 „nicht gewertet“) | Website |
+| Top Anomalien | der Block enthält alle Spiele; die Liste steht vor dem ersten Anpfiff fest, gespielte bleiben ausgegraut, keines rückt nach (4.7) | `anzeige.top_block`, `core/top.Candidate.played` |
+
+**Schnappschuss je Spiel** (`core/schnappschuss.py`, Lauf `importer/schnappschuss.py`):
+
+- **Wann:** Der Container `soccer-import` prüft einmal je volle Stunde (und sofort nach jeder Übernahme) alle angesetzten Spiele der laufenden Saison und der Vorsaison mit API-ID, deren Anpfiff höchstens eine Stunde entfernt oder schon vorbei ist. Ohne Anstosszeit gilt der Anstoss wie überall als 23:59.
+- **Was:** alle KPI-Ergebnisse, wie Dashboard und Website sie zeigen (Teamwerte, Ligareferenz, Formkurve, Einstufung mit Schwellen und Signalqualität), verlustfrei (Brüche als Text), mit Formatnummer, App-Version, Prüfsummen von Datenbank und Schwellen.
+- **Unveränderlich:** eine Datei je Spiel, `/import/schnappschuesse/<liga>/<saison>/<API-ID>.json`; sie wird einmal angelegt und nie überschrieben.
+- **Wartet** auf die Ergebnisse der vorherigen Spiele beider Teams (4.5). Fehlt der Schnappschuss beim Anstoss, wird er nachgeholt, sobald es geht, und als **nachträglich** markiert. So entstehen beim ersten Lauf auch die Schnappschüsse aller gespielten Spiele beider Saisons.
+- **Anzeige:** vor dem Anstoss die aktuell berechneten Werte; ab dem Anstoss die des Schnappschusses („Die Werte wurden mit den Daten vor dem Spiel berechnet.“). Fehlt er: nachträglich mit den Daten vor dem Spiel berechnet, mit Hinweis; fehlt dazu noch ein Vorspiel-Ergebnis, keine Werte, bis er nachgeholt ist.
+- **Korrekturen:** Das erste Ergebnis eines Spiels wird einmal festgehalten (`<API-ID>.ergebnis.json`). Weicht die Datenbank später ab (Korrekturen der Quelle bis 7 Tage), zeigt die Seite den neuen Endstand und „Ergebnis nachträglich korrigiert“; die Werte bleiben.
+- **Überwachung:** Stand des letzten Laufs in `/import/schnappschuesse/stand.json` und im Reiter Datenimport/API (neu, nachträglich, wartend, Fehler; rot nach einem Fehler oder wenn der letzte Lauf älter als 2 Stunden ist). E-Mail-Alarm ab 0.22.
+- **Bekannte Einschränkungen:** Ein Spiel, das nach dem ersten Anpfiff des Blocks noch verschoben wird, fällt aus den Top Anomalien (es hat keine Werte mehr); ein abgebrochenes oder abgesagtes Spiel zeigt bis zum nächsten Import „Gespielt“.
 
 ## 5. Reiter „Datenimport/API“ (Entwurf 2 vom 15.11.2026)
 
@@ -330,11 +355,18 @@ Wo die Abschnitte 4.1–4.7 offen liessen, wie etwas genau gilt, ist es so umges
 | A20 | Navigation | zurück alle Spieltage beider Saisons; vorwärts genau 2 |
 | A21 | Team hat sein vorheriges Spiel noch nicht gespielt | keine Werte, „Werte ab <Tag nach dem späteren Spiel>“ |
 | A22 | Vorheriges Spiel ist ein Nachholspiel mit höherer Spieltagsnummer-Reihenfolge | massgebend ist der echte Termin |
-| A23 | Top Anomalien: Freitagsspiel beendet, Samstag offen (Z7) | Freitagsspiel nur noch auf der Ligaseite |
+| A23 | Top Anomalien: Freitagsspiel beendet, Samstag offen (Z7) | seit 0.20: Freitagsspiel bleibt im Block (ausgegraut), „noch 2 Spiele“; bis 0.19.1 nur noch auf der Ligaseite |
 | A24 | Top Anomalien: Spieltag 15 + Nachholspiel Sp. 1 am selben Wochenende | ein Block mit 11 Spielen; Ligaseite zwei Abschnitte |
 | A25 | Top Anomalien: Block in 20 bzw. 14 Tagen | ausgeschlossen mit Hinweis bzw. dabei |
 | A26 | Tagesgrenze: Spiel So 21:00 | bis So 23:59 sichtbar, Mo nicht mehr |
 | A27 | Echte Saisonlisten aller vier Ligen 2026/27, mehrere Stichtage | erwartete Abschnitte und Hinweise |
+| A28 | Letzter erfolgreicher Lauf vor genau 48 Stunden bzw. 48 Stunden und 1 Minute (0.20) | aktuell bzw. veraltet |
+| A29 | Anstoss 15:30: 15:29, 15:30, 17:29, 17:30 (0.20) | bis 17:29 Termin, ab 17:30 „Gespielt“; mit Ergebnis der Endstand |
+| A30 | Ohne Anstosszeit (Zeit offen bzw. leer) (0.20) | „Gespielt“ ab Mitternacht nach dem Spieltag |
+| A31 | Verschobenes Spiel; Ergebnis vor Anpfiff + 2 h (Zeitreise) (0.20) | nie gespielt; mit Ergebnis sofort gespielt |
+| A32 | „Werte ab“ als Datum und nach dem Anstoss (0.20) | Datum bzw. „Ergebnis vom“; ab dem Anstoss nie |
+| A33 | API meldet „gewertet“ für ein gespieltes Spiel (0.20) | bleibt gespielt mit Ergebnis vom Platz, Hinweis in der Datenqualität |
+| SN1–SN10 | Schnappschuss (`tests/test_schnappschuss.py`, 0.20) | genau gespeichert, nie überschrieben, Lauf je Stunde, Warten, nachträglich, Korrektur, Anzeige vor/nach dem Anstoss |
 
 ---
 
@@ -360,7 +392,7 @@ Wo die Abschnitte 4.1–4.7 offen liessen, wie etwas genau gilt, ist es so umges
 | S4 | Ligaseite nach ursprünglichem Spieltag; Top Anomalien nach zeitlichem Block |
 | S5 | Gleichstand → früheres Fenster; ohne reguläre Spiele kein Hauptzeitraum |
 | S6 | feste, geprüfte Zuordnungsdatei eigene ID ↔ API-ID |
-| S7 | Top Anomalien nur vor dem Anpfiff |
+| S7 | Top Anomalien nur vor dem Anpfiff (seit 0.20: Liste steht vor dem ersten Anpfiff fest, gespielte bleiben ausgegraut, 4.7) |
 | S8 | „Werte ab“ = Tag nach dem späteren der beiden vorherigen Spiele (nach echtem Termin) |
 | S9 | Pausen- und Sommerpausenhinweise nur bei Lauf höchstens 3 Tage alt (ab 0.20: höchstens 48 Stunden) |
 | S10 | neue Saison wird Standard ab dem ersten angesetzten Spiel; in der Sommerpause Hinweis und letzter Spieltag |
