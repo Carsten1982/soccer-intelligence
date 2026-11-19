@@ -78,6 +78,35 @@
 
 Reihenfolge der Ligen auf der Website (Entwurf): Bundesliga, La Liga, Premier League, Serie A.
 
+### 4.1 Adressschema ab 0.20 (Entscheidung Carsten 19.11.2026)
+
+**Spiel-ID** = Fixture-ID von API-Football (z. B. `1550203`): bleibt bei Verschiebungen gleich und ist über alle Ligen und
+Saisons eindeutig; Spiele des Altbestands (2018/19–2025/26) haben sie über `app/config/zuordnung_api.csv`. Bei einem
+späteren Anbieterwechsel bleibt diese Nummer unsere feste ID (Zuordnung neuer Nummern).
+
+| Adresse | Seite |
+|---|---|
+| `/de/` | Startseite |
+| `/de/spieltag/<liga>/` | Spieltag (kommende Spiele) |
+| `/de/spieltag/<liga>/<saison>/<nr>/` | Archivseite je Spieltag, `<saison>` z. B. `2025-26` |
+| `/de/spiel/<liga>/<heim>-<gast>-<id>/` | Matchdetail, z. B. `/de/spiel/bundesliga/vfb-stuttgart-bayern-muenchen-1550203/` |
+| `/de/methodik/`, `/de/glossar/`, `/de/impressum/`, `/de/datenschutz/`, `/de/kontakt/` | Inhaltsseiten |
+
+Regeln:
+- **Eindeutig ist nur die ID am Ende.** Liga und Teamnamen dienen der Lesbarkeit; Namen = **API-Namen** wie angezeigt
+  (keine eigene Namensliste; Spielseiten sind kein SEO-Ziel).
+- **Namen in Adressen:** Kleinschreibung, ä → ae, ö → oe, ü → ue, ß → ss, übrige Akzente entfernt (Atlético → atletico),
+  alles andere als ein Zeichen ausser a–z und 0–9 → Bindestrich, keine doppelten Bindestriche.
+- **Liga-Teil:** `bundesliga`, `premier-league`, `serie-a`, `la-liga`.
+- **Weicht eine Adresse mit gültiger ID ab** (andere Liga, alter Vereinsname, fehlender Schrägstrich am Ende,
+  Grossbuchstaben): dauerhafte Weiterleitung **301** auf die richtige Adresse. Unbekannte ID: 404.
+- Jede Seite trägt ein `canonical`-Tag mit ihrer richtigen Adresse.
+- **`/de/` gilt ab dem Livegang für alle Seiten**; `/` leitet auf `/de/` weiter. Alte Adressen der Vorschau
+  (`/spiel/<id>`, `/spieltag/<liga>`) leiten dauerhaft auf die neuen weiter.
+- Ein Vereinsname ändert sich → neue lesbare Adresse, alte leitet per 301 weiter; die ID bleibt.
+
+
+
 ## 5. Seite Spieltag (Übergabe, Abschnitt 6)
 
 ### 5.1 Aufbau (seit 0.18 nach Entwurf 3d)
@@ -201,6 +230,7 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
 
 ## 10. Offene Punkte
 
+- **Für 0.20 beschlossen (Carsten 19.11.2026): Adressschema** nach Abschnitt 4.1 (ID am Ende, API-Namen, 301-Weiterleitungen, `/de/` für alle Seiten ab dem Livegang).
 - **Für 0.20 beschlossen (Carsten 19.11.2026): kein Live-Status.** Ab dem Anpfiff gilt ein Spiel als gespielt: ausgegraut, markiert mit „Gespielt“, sobald importiert mit dem Endstand. Es bleibt an seinem Platz in den Top Anomalien (Startseite) und auf der Spieltag-Seite, bis der Spieltag endet; die Werte vor dem Spiel (Schnappschuss) bleiben sichtbar. Der Chip „Ergebnis folgt“ und der Glossar-Begriff entfallen, auch auf der Spielseite (`07`, 4.7). Präzisierung (Carsten 19.11.2026): **bis Anpfiff + 2 Stunden** normal ohne Beschriftung (während des Spiels nichts), **ab Anpfiff + 2 Stunden** ausgegraut mit „Gespielt“, **ab Import des Endstands** ausgegraut mit Endstand. Sichtbarkeit: reguläre Spiele bis zum Ende ihres Spieltags (Abend des letzten regulären Spiels), Sonderspiele bis zu ihrem eigenen Tagesende, Top Anomalien bis zum Ende des Blocks (4.2, 4.7).
 - **Für 0.20 beschlossen (Carsten 19.11.2026): Datenstand 48 Stunden.** Daten bis 48 Stunden alt sind normal, die Website schlägt keinen Alarm. Erst wenn der letzte erfolgreiche Import mehr als 48 Stunden zurückliegt, erscheint der Hinweis „Spielplan zuletzt aktualisiert am …“ (bisher ab mehr als 3 Tagen; `07`, 4.3, S9). Intern meldet der E-Mail-Alarm (0.21) schon den ersten Ausfall.
 - **Für 0.20 beschlossen (Carsten 19.11.2026): fehlender Schnappschuss.** Der Schnappschuss läuft stündlich als eigener Schritt (unabhängig von API und Freigabe) mit den Daten, die die Website gerade zeigt, für alle Spiele mit Anpfiff in der nächsten Stunde. Fehlt er trotzdem (Container-Ausfall), wird er beim nächsten Lauf aus den Daten vor dem Spiel nachträglich erstellt, gekennzeichnet („Werte nachträglich mit den Daten vor dem Spiel berechnet“) und in einer späteren Bilanz gesondert ausweisbar; Meldung im Reiter Datenimport/API, ab 0.21 per E-Mail.
