@@ -187,6 +187,7 @@ Die ganze Logik steht als reine Funktionen in `app/core/anzeige.py` (anstehender
 | Neue Saison, 1. Spieltag in höchstens 14 Tagen | 1. Spieltag; die neue Saison ist jetzt Standard |
 
 - **Datenstand (S9):** Pausen- und Sommerpausenhinweise erscheinen nur, wenn der **letzte erfolgreiche Importlauf höchstens 3 Tage** zurückliegt. Sonst steht stattdessen „Spielplan zuletzt aktualisiert am …“, auch während der Saison.
+  - **Ab 0.20 (Entscheidung Carsten 19.11.2026): Grenze 48 Stunden statt 3 Tage.** Daten bis 48 Stunden alt gelten als aktuell (ein ausgefallener Tag löst keinen Hinweis aus). Liegt der letzte erfolgreiche Importlauf **mehr als 48 Stunden** zurück, erscheint auf Website und Dashboard der Hinweis „Spielplan zuletzt aktualisiert am …“, und Pausenhinweise entfallen. Intern meldet der E-Mail-Alarm (0.21) schon den ersten fehlgeschlagenen Lauf.
 - **Saisonwechsel (S10):** Die neue Saison wird Standard, sobald sie mindestens ein angesetztes Spiel hat. Die Vorsaison bleibt über die Pfeile erreichbar.
 - Erwartung 2026/27:
   - Die Bundesliga zeigt ab 21.12. den Hinweis „Winterpause – nächster Spieltag am Fr 08.01.“ und ab 25.12. zusätzlich Spieltag 15.
@@ -359,7 +360,7 @@ Wo die Abschnitte 4.1–4.7 offen liessen, wie etwas genau gilt, ist es so umges
 | S6 | feste, geprüfte Zuordnungsdatei eigene ID ↔ API-ID |
 | S7 | Top Anomalien nur vor dem Anpfiff |
 | S8 | „Werte ab“ = Tag nach dem späteren der beiden vorherigen Spiele (nach echtem Termin) |
-| S9 | Pausen- und Sommerpausenhinweise nur bei Lauf höchstens 3 Tage alt |
+| S9 | Pausen- und Sommerpausenhinweise nur bei Lauf höchstens 3 Tage alt (ab 0.20: höchstens 48 Stunden) |
 | S10 | neue Saison wird Standard ab dem ersten angesetzten Spiel; in der Sommerpause Hinweis und letzter Spieltag |
 | O1 | einheitlich mehr als 14 Tage; „Winterpause“ (inkl. 25.12.) oder „Spielpause“ |
 | O2 | weitere Spieltage heute bis heute + 6 automatisch als Abschnitt |
