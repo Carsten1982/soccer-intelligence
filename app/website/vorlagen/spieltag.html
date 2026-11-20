@@ -1,55 +1,22 @@
 {% extends "basis.html" %}
-{% from "teile.html" import deko_feld, pfeil_zurueck, pfeil_rechts, lesen_knopf, warnbox, pausenkarte %}
-{#- Seite Spieltag (seit 0.18 genau nach Entwurf 3d „Spieltag_P1“; Konzept 08, Abschnitt 5). Texte aus der
-    Sprachdatei, Werte aus website.spieltag.spieltag_daten (Codes). -#}
-
-{% macro kachel(s) -%}
-{% set art = {'stark': 'kachel--stark', 'mittel': 'kachel--leicht', 'gering': 'kachel--leicht', 'ohne': '', 'zu_wenig_daten': 'kachel--status',
-              'werte_ab': '', 'status': 'kachel--status', 'gespielt': 'kachel--gespielt'}[s.art] %}
-{% set innen %}
-  <span class="teams">
-    <span class="team">{{ s.heim }}</span>
-    <span class="gegen">{{ t('spieltag.gegen') }}</span>
-    <span class="team">{{ s.gast }}</span>
-    <span class="wann">{{ termin(s) }}</span>
-  </span>
-  <span class="rechts">
-    <span class="chips">
-      {%- if s.art in ('stark', 'mittel', 'gering') %}<span class="kchip kchip--{{ stil(s.art) }}">{{ t('chip.' ~ s.art) }}</span>{% endif %}
-      {%- if s.art == 'zu_wenig_daten' %}<span class="kchip kchip--status">{{ t('chip.zu_wenig_daten') }}</span>{% endif %}
-      {%- if s.art == 'werte_ab' %}<span class="kchip kchip--status">{{ t('chip.werte_ab', datum=tag_monat(s.werte_ab)) if s.werte_ab else t('chip.werte_folgen') }}</span>{% endif %}
-      {%- if s.art == 'status' %}<span class="kchip kchip--status">{{ t('chip.' ~ s.status) }}</span>{% endif %}
-      {%- if s.art == 'gespielt' %}{% if s.ergebnis %}<span class="kchip kchip--ergebnis">{{ ergebnis(s.ergebnis) }}</span>{% else %}<span class="kchip kchip--status">{{ t('chip.gespielt') }}</span>{% endif %}{% endif %}
-      {%- if s.sonderspiel %}<span class="kchip kchip--status">{{ t('chip.' ~ s.sonderspiel ~ '_nr', n=s.spieltag) }}</span>{% endif %}
-    </span>
-    {% if s.link %}<span class="kpfeil" aria-hidden="true">{{ pfeil_rechts() }}</span>{% endif %}
-  </span>
-{% endset %}
-{% if s.link %}
-<a class="kachel {{ art }}" href="{{ url('/spiel/' ~ s.id) }}" aria-label="{{ t('spieltag.zum_spiel', heim=s.heim, gast=s.gast) }}">{{ innen }}</a>
-{% else %}
-<div class="kachel {{ art }}">{{ innen }}</div>
-{% endif %}
-{%- endmacro %}
-
-{% macro zusammenfassung(tab) -%}
-{{ t('spieltag.nummer', n=tab.spieltag) }}
-{%- if tab.von %} · {{ zeitraum(tab.von, tab.bis) }}{% endif %}
- · {{ zaehlform(tab) }} · {{ tn('spieltag.auffaellig', tab.auffaellig) }}
-{%- endmacro %}
+{% from "teile.html" import deko_feld, pfeil_zurueck, warnbox, pausenkarte with context %}
+{% from "kachel.html" import kachel, legende, zusammenfassung with context %}
+{#- Seite Spieltag (seit 0.18; seit 0.21 nach Entwurf „Spieltag_P1“ in Deutsch und Englisch; Konzept 08, Abschnitt 5).
+    Ohne JavaScript stehen alle Spieltage untereinander mit Überschrift und Sprungliste; das Skript schaltet die
+    Tab-Ansicht erst ein, wenn es läuft (Beschluss 19.11.2026). -#}
 
 {% block inhalt %}
 <div class="eng">
   <div class="hero hero-spieltag">
     {{ deko_feld() }}
     <div class="innen">
-      <a class="zurueck-hell" href="{{ url('/') }}">{{ pfeil_zurueck() }}{{ t('kopf.startseite') }}</a>
+      <a class="zurueck-hell" href="{{ link('start') }}">{{ pfeil_zurueck() }}{{ t('kopf.startseite') }}</a>
       <h1>{{ t('spieltag.h1_vorne') }} <span class="akzent">{{ t('spieltag.h1_akzent') }}</span></h1>
       <p>{{ t('spieltag.intro') }}</p>
       <nav aria-label="{{ t('spieltag.ligen') }}">
         <ul class="ligawahl">
         {% for lg in seite.ligen %}
-          <li><a href="{{ url('/spieltag/' ~ lg.liga) }}"{% if lg.liga == seite.liga %} aria-current="page"{% endif %}>
+          <li><a href="{{ link('spieltag', liga=lg.liga) }}"{% if lg.liga == seite.liga %} aria-current="page"{% endif %}>
             <span class="name">{{ t('liga.' ~ lg.key) }}</span>
             <span class="info">{% if lg.pause %}{{ t('pause.' ~ lg.pause ~ '.zeile') }}{% elif lg.spieltag %}{{ t('spieltag.nummer', n=lg.spieltag) }}{% else %}–{% endif %}</span>
           </a></li>
@@ -66,43 +33,45 @@
   {% if seite.veraltet %}{{ warnbox(t('veraltet.titel', datum=veraltet_text), t('veraltet.text')) }}{% endif %}
 
   {% if seite.zustand == 'gesperrt' %}
-  {{ pausenkarte(t('fehler.daten_titel'), t('fehler.daten_titel'), t('fehler.daten_text')) }}
+  {{ pausenkarte(t('fehler.hinweis'), t('fehler.daten_titel'), t('fehler.daten_text')) }}
   {% elif seite.zustand == 'pause' %}
   {{ pausenkarte(t('pause.' ~ seite.pause.art ~ '.zeile'), t('pause.' ~ seite.pause.art ~ '.titel', datum=pause_datum),
-                 t('pause.' ~ seite.pause.art ~ '.text', liga=t('liga.' ~ seite.liga_key))) }}
+                 t('pause.' ~ seite.pause.art ~ '.text', liga=t('liga_im.' ~ seite.liga_key))) }}
   {% else %}
+  {% set mehrere = seite.tabs|length > 1 %}
   <div data-tabs>
-    {% for tab in seite.tabs %}<p class="zusammenfassung" data-sub>{{ zusammenfassung(tab) }}</p>{% endfor %}
-    {% if seite.tabs|length > 1 %}
+    {% if mehrere %}
+    <nav class="sprungliste" data-sprungliste aria-label="{{ t('spieltag.tabs') }}">
+      {% for tab in seite.tabs %}{% if not loop.first %}<a href="#tab-{{ loop.index }}">{{ t('spieltag.zu', n=tab.spieltag) }}</a>{% endif %}{% endfor %}
+    </nav>
     <div class="tabs" role="group" aria-label="{{ t('spieltag.tabs') }}" hidden>
       {% for tab in seite.tabs %}
       <button type="button" data-tab aria-pressed="{{ 'true' if loop.first else 'false' }}" aria-controls="tab-{{ loop.index }}">{{ t('spieltag.tab', n=tab.spieltag, datum=datum_kurz(tab.von)) }}</button>
       {% endfor %}
     </div>
     {% endif %}
-    <div class="legende" aria-label="{{ t('spieltag.legende') }}">
-      <span class="eintrag"><span class="muster muster--stark" aria-hidden="true"></span>{{ t('stufe.stark') }}</span>
-      <span class="eintrag"><span class="muster muster--leicht" aria-hidden="true"></span>{{ t('stufe.mittel_gering') }}</span>
-      <span class="eintrag"><span class="muster" aria-hidden="true"></span>{{ t('stufe.ohne') }}</span>
-      <details class="lesen">
-        {{ lesen_knopf() }}
-        <div class="hinweisbox"><ul>
-          <li><b>{{ t('spieltag.erklaerung_gruen_titel') }}</b> {{ t('spieltag.erklaerung_gruen') }}</li>
-          <li><b>{{ t('spieltag.erklaerung_stufe_titel') }}</b> {{ t('spieltag.erklaerung_stufe') }}</li>
-          <li><b>{{ t('spieltag.erklaerung_weiss_titel') }}</b> {{ t('spieltag.erklaerung_weiss') }}</li>
-        </ul></div>
-      </details>
-    </div>
+    {{ legende() }}
     {% for tab in seite.tabs %}
     <section id="tab-{{ loop.index }}" data-panel aria-label="{{ t('spieltag.nummer', n=tab.spieltag) }}">
-      {% if tab.auffaellig == 0 and tab.bewertet > 0 %}<div class="notiz" role="note"><p>{{ t('spieltag.keine_abweichungen') }}</p></div>{% endif %}
+      {% if mehrere %}<h3 class="tab-titel" data-tabtitel>{{ t('spieltag.nummer', n=tab.spieltag) }}</h3>{% endif %}
+      <p class="zusammenfassung">{{ zusammenfassung(tab) }}</p>
+      {% if tab.auffaellig == 0 and tab.bewertet > 0 %}<div class="liste-notiz" role="note">{{ t('spieltag.keine_abweichungen') }}</div>{% endif %}
       <ul class="partien">
         {% for s in tab.spiele %}<li>{{ kachel(s) }}</li>{% endfor %}
       </ul>
     </section>
     {% endfor %}
   </div>
+  <p class="zeitzone-hinweis">{{ t('allgemein.zeitzone') }}</p>
   {% endif %}
+</div>
+
+<div class="eng">
+  <section class="seo" aria-labelledby="seo-titel">
+    <h2 id="seo-titel">{{ t('spieltag.seo_titel') }}</h2>
+    <p>{{ t('spieltag.seo_1') }}</p>
+    <p><strong>{{ t('spieltag.seo_2_fett') }}</strong> {{ t('spieltag.seo_2') }} <a href="{{ link('methodik') }}">{{ t('spieltag.seo_2_link') }}</a>.</p>
+  </section>
 </div>
 <div class="abstand-unten"></div>
 {% endblock %}

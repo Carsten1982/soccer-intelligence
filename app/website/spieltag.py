@@ -26,6 +26,7 @@ from core.fixtures import HINT_CATCHUP, HINT_EARLY, INACTIVE_STATUS, TERMIN_PROV
 from core.kpis import LEVELS, RANK, MatchKpis
 from core.top import TOP_KPIS
 
+from . import adressen as AD
 from . import einstellungen as W
 from .daten import Bestand, Daten, Zeitpunkt
 
@@ -44,14 +45,21 @@ PAUSE = {A.WINTER: "winterpause", A.BREAK: "spielpause", A.SUMMER: "sommerpause"
 def einstufen(row, kpis: MatchKpis | None, jetzt, ergebnisse: dict, gate: A.Gate | None = None) -> dict:
     """art, status, ergebnis, „Werte ab“ und stärkste Abweichung einer Partie (Konzept 5.3). kpis = die Werte, die
     die Seite zeigt (vor dem Anstoss aktuell berechnet, danach der Schnappschuss); gate = anzeige.values_from."""
-    out = {"art": "ohne", "status": None, "ergebnis": None, "staerkste": None, "werte_ab": None}
+    out = {"art": "ohne", "status": None, "ergebnis": None, "staerkste": None, "werte_ab": None, "qualitaet": None}
     if row.status in INACTIVE_STATUS:
         return {**out, "art": "status", "status": row.status}
     score = ergebnisse.get((row.saison, row.heim, row.gast))
     if score is not None or jetzt >= A.played_from(row):
-        return {**out, "art": "gespielt", "ergebnis": list(score) if score else None}
+        q = qualitaet(kpis)             # Archiv (seit 0.21): Kachel mit Endstand und der Stufe des Schnappschusses
+        return {**out, "art": "gespielt", "ergebnis": list(score) if score else None, "qualitaet": q["art"]}
     if gate is not None:                       # vor dem Anstoss noch ohne Werte (seit 0.20)
         return {**out, "art": "werte_ab", "werte_ab": gate.ab.isoformat() if gate.ab else None}
+    return {**out, **qualitaet(kpis)}
+
+
+def qualitaet(kpis: MatchKpis | None) -> dict:
+    """art (stark/mittel/gering/ohne/zu_wenig_daten) und stärkste Abweichung aus den Werten eines Spiels."""
+    out = {"art": "ohne", "staerkste": None}
     gewertet = []
     for key in TOP_KPIS:                       # die 8 Kennzahlen KPI 02–09
         r = getattr(kpis, key, None) if kpis is not None else None
@@ -78,7 +86,7 @@ def spiel_eintrag(row, kpis: MatchKpis | None, jetzt, ergebnisse: dict, team_ids
     stufe = einstufen(row, kpis, jetzt, ergebnisse, gate)
     api_id = None if row.api_id is None or row.api_id != row.api_id else int(row.api_id)   # NaN -> None
     return {
-        "id": api_id,
+        "id": api_id, "slug": AD.spiel_slug(row.heim, row.gast, api_id) if api_id is not None else "",
         "heim": row.heim, "gast": row.gast,
         "heim_id": team_ids.get((liga, row.heim)), "gast_id": team_ids.get((liga, row.gast)),
         "saison": row.saison, "spieltag": int(row.spieltag),
@@ -196,4 +204,50 @@ def spieltag_daten(daten: Daten, web: W.WebLiga, zp: Zeitpunkt) -> dict:
         tab["sonderspiele"] = {"nachholspiel": sum(1 for s in spiele if s["sonderspiel"] == "nachholspiel"),
                                "vorgezogen": sum(1 for s in spiele if s["sonderspiel"] == "vorgezogen")}
     seite["tabs"] = tabs
+    return seite
+
+
+# --- Archivseite je Spieltag (seit 0.21; Template-Briefing 6, Konzept 08, Abschnitt 10) ------------------------------
+
+def archiv_daten(daten: Daten, web: W.WebLiga, saison: str, nr: int, zp: Zeitpunkt) -> dict | None:
+    """Alle Spiele eines vergangenen Spieltags mit Endstand und den Werten vor dem Spiel (Schnappschuss), Pfeile zum
+    vorherigen und nächsten Spieltag. None, wenn es den Spieltag nicht gibt oder er noch nicht begonnen hat."""
+    b: Bestand = daten.bestand()
+    seite = {"seite": "archiv", "liga": web.slug, "liga_key": web.key, "saison": saison, "spieltag": int(nr),
+             "jetzt": zp.jetzt.isoformat(timespec="minutes"),
+             "stand": zp.stand.isoformat(timespec="minutes") if zp.stand else None, "zeitreise": zp.zeitreise,
+             "gesperrt": b.gesperrt, "veraltet": A.is_stale(zp.stand, zp.jetzt), "spiele": [], "vorher": None,
+             "nachher": None, "nachher_aktuell": False, "beginn": None, "partien": 0, "auffaellig": 0,
+             "sonderspiele": {"nachholspiel": 0, "vorgezogen": 0}}
+    fixtures = b.fx.leagues.get(web.name)
+    if fixtures is None or fixtures.empty:
+        return None
+    fxp = daten.spielplan(web.name)
+    spiele = fxp[(fxp["saison"] == saison) & (fxp["spieltag"] == int(nr))]
+    if spiele.empty or spiele["datum_von"].min() > zp.jetzt.date():           # nur begonnene Spieltage
+        return None
+    regulaer = spiele[spiele["hinweis"] == ""]
+    seite["beginn"] = (regulaer if len(regulaer) else spiele)["datum_von"].min().isoformat()
+    ergebnisse = daten.ergebnisse(web.name, zp.bis)
+    eintraege = []
+    for g in A.sort_games(spiele).itertuples():
+        werte = daten.werte(web.name, g, zp)
+        gate = A.values_from(fxp, g, zp.jetzt, ergebnisse)
+        if gate is None and werte.quelle == S.WAITING:
+            gate = A.Gate("Werte folgen nachträglich")
+        e = spiel_eintrag(g, werte.kpis, zp.jetzt, ergebnisse, b.team_ids, web.name, gate)
+        e.pop("_sort")
+        eintraege.append(e)
+    seite["spiele"] = eintraege
+    seite["partien"] = sum(1 for s in eintraege if not s["sonderspiel"])
+    seite["auffaellig"] = sum(1 for s in eintraege if (s["qualitaet"] or s["art"]) in AUFFAELLIG)
+    for art in ("nachholspiel", "vorgezogen"):
+        seite["sonderspiele"][art] = sum(1 for s in eintraege if s["sonderspiel"] == art)
+    nummern = sorted({int(x) for x in fxp.loc[fxp["saison"] == saison, "spieltag"]})
+    if int(nr) - 1 in nummern:
+        seite["vorher"] = int(nr) - 1
+    if int(nr) + 1 in nummern:
+        seite["nachher"] = int(nr) + 1
+        naechste = fxp[(fxp["saison"] == saison) & (fxp["spieltag"] == int(nr) + 1)]
+        seite["nachher_aktuell"] = bool(naechste["datum_von"].min() > zp.jetzt.date())   # noch nicht begonnen
     return seite

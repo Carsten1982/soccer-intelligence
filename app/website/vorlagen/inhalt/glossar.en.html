@@ -1,0 +1,82 @@
+{#- Glossary (en, since 0.21; no separate draft, styled like the methodology page). PROPOSAL for approval
+    (RELEASE.md). Terms follow the English glossary (release version, 19 Nov 2026), British English. -#}
+
+{% macro kopf() %}<h1>Glossary</h1><p>The key terms used on Soccer Intelligence, explained briefly – from deviation to signal quality.</p>{% endmacro %}
+
+{% macro begriff(name, id='') -%}
+<div class="begriff"{% if id %} id="{{ id }}"{% endif %}><dt>{{ name }}</dt><dd>{{ caller() }}</dd></div>
+{%- endmacro %}
+
+{% macro rumpf() %}
+<nav class="tiefe" aria-labelledby="glossar-sprung">
+  <p class="tiefe-titel" id="glossar-sprung">On this page</p>
+  <ul class="pillen">
+    <li><a class="pille" href="#grundbegriffe">Key terms</a></li>
+    <li><a class="pille" href="#kennzahlen">Metrics</a></li>
+    <li><a class="pille" href="#spielstatus">Match status</a></li>
+    <li><a class="pille" href="#datenstand">Data and times</a></li>
+  </ul>
+</nav>
+
+<section class="ebene" id="grundbegriffe" aria-labelledby="grundbegriffe-titel">
+  <h2 class="ebene-titel" id="grundbegriffe-titel">Key terms</h2>
+  <dl class="begriffe">
+    {% call begriff("Standout match") %}A match in which at least one metric crosses the threshold for its league. Its tile is highlighted on the matchday page.{% endcall %}
+    {% call begriff("Statistical anomaly") %}A metric whose deviation from the league average is greater than the threshold for its league. A value exactly at the threshold does not count: with a threshold of 15%, 15.00% is not an anomaly, 15.01% is.{% endcall %}
+    {% call begriff("Expected value") %}The value we expect for a match. It is based on the last 10 league matches played by both teams, using data from the current and previous seasons. Only matches played at least two days before kick-off are included.{% endcall %}
+    {% call begriff("League average") %}The league average across the 20 matchdays before the match. It is the reference for every metric. For Over 2.5 goals, the fixed reference value is 2.5.{% endcall %}
+    {% call begriff("Deviation") %}How far the expected value differs from the league average, expressed as a percentage and rounded to two decimal places. A plus sign means above average, a minus sign below average.{% endcall %}
+    {% call begriff("Threshold") %}The limit from which a deviation counts as a statistical anomaly. Each league has at most one threshold per metric and direction. Where none is set, the metric is never flagged. The thresholds are recalculated once per season.{% endcall %}
+    {% call begriff("Direction") %}Whether a value is above or below the league average. Each direction has its own threshold.{% endcall %}
+    {% call begriff("Signal quality") %}This shows how often similar statistical anomalies were confirmed by actual match results in previous seasons. The rating has three levels: high, medium and low. It is not a probability and does not guarantee what will happen in the next match.{% endcall %}
+    {% call begriff("Success rate") %}The share of past matches above the threshold in which the expected result actually occurred.{% endcall %}
+    {% call begriff("Baseline") %}The same share across all matches in the league, regardless of the threshold (the normal rate).{% endcall %}
+    {% call begriff("Uplift") %}How many percentage points higher the success rate is compared with all matches.{% endcall %}
+    {% call begriff("Range") %}The range in which the uplift is likely to lie based on the available data (95% confidence interval using the Wilson method). The fewer matches, the wider the range. It measures the uncertainty in the data and does not guarantee anything about future matches.{% endcall %}
+    {% call begriff("Provisional (P)") %}If a team has played fewer than 10 matches with a value, for example because it has just been promoted, we still show the value. However, it is never flagged as a statistical anomaly.{% endcall %}
+  </dl>
+</section>
+
+<section class="ebene" id="kennzahlen" aria-labelledby="kennzahlen-titel">
+  <h2 class="ebene-titel" id="kennzahlen-titel">Metrics</h2>
+  <p>All metrics are based on the last 10 league matches played by both teams and are compared with the league average.</p>
+  <dl class="begriffe">
+    {% call begriff(t('kennzahl.kpi02.name')) %}The average number of goals scored by both sides in the matches of the two teams, as the average of both teams. Not an expected goals (xG) model and not a forecast of the number of goals.{% endcall %}
+    {% call begriff(t('kennzahl.kpi03.name')) %}How far the average goal value of both teams is above or below the fixed reference value of 2.5 goals. Not a probability of more than 2.5 goals.{% endcall %}
+    {% call begriff(t('kennzahl.kpi04.name')) %}The yellow cards both teams have received themselves on average, added together.{% endcall %}
+    {% call begriff(t('kennzahl.kpi05.name')) %}The corners of both sides in the matches of the two teams (taken and conceded), as the average of both teams.{% endcall %}
+    {% call begriff(t('kennzahl.kpi06.name') ~ ' / ' ~ t('kennzahl.kpi07.name')) %}Like Expected total goals, but only with the goals of the first or the second half.{% endcall %}
+    {% call begriff(t('kennzahl.kpi08.name')) %}How often both sides scored at least one goal in the matches of the two teams, as a percentage. Not a probability for the upcoming match.{% endcall %}
+    {% call begriff(t('kennzahl.kpi09.name')) %}The shots on target of both sides in the matches of the two teams (taken and conceded), as the average of both teams.{% endcall %}
+    {% call begriff("Last 5 matches") %}The results of each team's last five league matches, from oldest to newest: W = Win, D = Draw, L = Loss, "–" = no match yet. Descriptive only, never flagged as an anomaly.{% endcall %}
+  </dl>
+</section>
+
+<section class="ebene" id="spielstatus" aria-labelledby="spielstatus-titel">
+  <h2 class="ebene-titel" id="spielstatus-titel">Match status</h2>
+  <dl class="begriffe">
+    {% call begriff("Played") %}From two hours after kick-off, a match is greyed out and marked as played. The final score follows with the next data update. The values remain those calculated before the match.{% endcall %}
+    {% call begriff("Final score") %}The result after the final whistle, for example "Played · 2:1".{% endcall %}
+    {% call begriff("Rescheduled match") %}A match from an earlier matchday that is played later.{% endcall %}
+    {% call begriff("Brought forward") %}A match from a later matchday that is played earlier.{% endcall %}
+    {% call begriff("Postponed") %}The match has been delayed and no new date has been set yet ("Date TBC"). As soon as there is a new date, it becomes a rescheduled match or a match brought forward.{% endcall %}
+    {% call begriff("Cancelled") %}The match will not take place.{% endcall %}
+    {% call begriff("Abandoned") %}The match has been terminated without being completed.{% endcall %}
+    {% call begriff("Suspended") %}The match has been stopped and may be resumed. Once it is finished, the page shows it like any played match.{% endcall %}
+    {% call begriff("Result awarded") %}The result has been awarded by the relevant authority without the match being played. For this status and for Postponed, Cancelled, Abandoned and Suspended, the page shows no values and no rating.{% endcall %}
+    {% call begriff("Not enough data") %}There is not enough data to rate the match, for example because all metrics are provisional. If only one metric is affected, the match stays rated; that metric is listed without a level under the normal range.{% endcall %}
+    {% call begriff("Values from …") %}The values appear once both teams have played their previous league match and its result has been processed, usually the day after the previous matchday.{% endcall %}
+  </dl>
+</section>
+
+<section class="ebene" id="datenstand" aria-labelledby="datenstand-titel">
+  <h2 class="ebene-titel" id="datenstand-titel">Data and times</h2>
+  <dl class="begriffe">
+    {% call begriff("Data as of") %}The time of the last update. The data is updated once a day at 04:00.{% endcall %}
+    {% call begriff("Fixture list last updated") %}This notice appears if the last successful update is more than 48 hours old. New matches or changes to match dates may then not yet be reflected.{% endcall %}
+    {% call begriff("Break, winter break, summer break") %}Periods in which no matches are played in a league. The page then shows the next matchday or the start of the season.{% endcall %}
+    {% call begriff("Kick-off times") %}All kick-off times in Central European Time (CET/CEST).{% endcall %}
+  </dl>
+  <p class="liste-notiz gross" role="note">How the values are calculated is explained on the <a href="{{ link('methodik') }}">methodology page</a>. Soccer Intelligence provides statistical analyses, not betting advice.</p>
+</section>
+{% endmacro %}

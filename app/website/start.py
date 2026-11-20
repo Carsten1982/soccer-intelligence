@@ -16,6 +16,7 @@ from __future__ import annotations
 from core import anzeige as A
 from core.top import Candidate, select_top
 
+from . import adressen as AD
 from . import einstellungen as W
 from .daten import Daten, Zeitpunkt
 from .spieltag import SONDERSPIEL, _termin
@@ -68,6 +69,8 @@ def start_daten(daten: Daten, zp: Zeitpunkt) -> dict:
         seite["ranking"].append({
             "rang": e.rank, "liga": web.slug, "liga_key": web.key, "spieltag": c.matchday,
             "id": None if row is None or row.api_id is None or row.api_id != row.api_id else int(row.api_id),
+            "slug": "" if row is None or row.api_id is None or row.api_id != row.api_id else
+                    AD.spiel_slug(c.home, c.away, int(row.api_id)),
             "heim": c.home, "gast": c.away, "datum": c.datum_von.isoformat(),
             "anstoss": row.anstoss if row is not None and _termin(row) == "bestaetigt" else None,
             "termin": _termin(row) if row is not None else "bestaetigt",

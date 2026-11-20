@@ -1,0 +1,102 @@
+{#- Bausteine der Methodik-Seite (seit 0.21 nach Entwurf „Methodik_10“), für beide Sprachen gleich. Zahlen aus
+    website/methodik.py (Schwellendatei), Texte aus der Sprachdatei (Gruppe „methodik“). Einbinden „with context“. -#}
+{% from "teile.html" import q_chip, q_balken with context %}
+
+{% macro tiefe() -%}
+<nav class="tiefe" aria-labelledby="tiefe-titel">
+  <p class="tiefe-titel" id="tiefe-titel">{{ t('methodik.tiefe_titel') }}</p>
+  <ul>
+    {% for n in ('1', '2', '3') %}<li><a class="pille" href="#ebene{{ n }}">{{ t('methodik.tiefe.' ~ n ~ '.name') }}</a><span>{{ t('methodik.tiefe.' ~ n ~ '.text') }}</span></li>{% endfor %}
+  </ul>
+</nav>
+{%- endmacro %}
+
+{% macro schritte(liste) -%}
+{#- liste: [(Titel, Text)]; nummerierte Schritte mit Verbindungslinie (Entwurf Ebene 1) -#}
+<ol class="schritte">
+  {% for titel, text in liste %}<li class="schritt"><span class="schritt-nr" aria-hidden="true"><span class="nr">{{ loop.index }}</span></span><div class="schritt-inhalt"><p class="schritt-titel">{{ titel }}</p><p>{{ text }}</p></div></li>{% endfor %}
+</ol>
+{%- endmacro %}
+
+{% macro stufen_karten(texte) -%}
+{#- texte: {stufe: Satz} -#}
+<ul class="stufen-karten">
+  {% for st in stufen %}<li>{{ q_chip(st, kurz=true) }}<p>{{ texte[st] }}</p></li>{% endfor %}
+</ul>
+{%- endmacro %}
+
+{% macro werte(zeilen) -%}
+{#- zeilen: [(Bezeichnung, Wert, hervorheben)] -#}
+<dl class="werte">
+  {% for name, wert, hervor in zeilen %}<div class="wert-zeile{% if hervor %} hervor{% endif %}"><dt>{{ name }}</dt><dd>{{ wert }}</dd></div>{% endfor %}
+</dl>
+{%- endmacro %}
+
+{% macro haken(text) -%}
+<span class="pruef-haken"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0A6B45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg><span>{{ text }}</span></span>
+{%- endmacro %}
+
+{% macro regeln(texte) -%}
+{#- texte: {stufe: Regel} -#}
+<ul class="regeln">
+  {% for st in stufen %}<li><span class="regel-chip">{{ q_chip(st, kurz=true) }}</span><span class="regel-text">{{ texte[st] }}</span></li>{% endfor %}
+</ul>
+{%- endmacro %}
+
+{% macro aufklapp(titel) -%}
+<details class="aufklapp">
+  <summary><span>{{ titel }}</span><span class="aufklapp-chev" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></summary>
+  <div class="aufklapp-inhalt">{{ caller() }}</div>
+</details>
+{%- endmacro %}
+
+{% macro teile_text(lg) -%}
+{%- set teile = [] -%}
+{%- for st in stufen %}{% if lg[st] %}{% set _ = teile.append(t('methodik.teil', n=lg[st], stufe=t('stufe_kurz.' ~ st))) %}{% endif %}{% endfor -%}
+{{ teile|join(', ') }}
+{%- endmacro %}
+
+{% macro ligen_tabellen(m) -%}
+{#- Tabellen je Liga. Ohne JavaScript stehen alle untereinander (mit Ligenname); mit Skript wählt man die Liga
+    über die Schaltflächen (gleiches Skript wie die Tabs des Spieltags). -#}
+<div data-tabs class="ligen-tabs">
+  <div class="tabs tabs--pillen" role="group" aria-label="{{ t('methodik.ligen_aria') }}" hidden>
+    {% for lg in m.ligen %}<button type="button" data-tab aria-pressed="{{ 'true' if loop.first else 'false' }}" aria-controls="liga-{{ lg.slug }}">{{ t('liga.' ~ lg.key) }}</button>{% endfor %}
+  </div>
+  {% for lg in m.ligen %}
+  <section id="liga-{{ lg.slug }}" data-panel aria-label="{{ t('liga.' ~ lg.key) }}">
+    <h4 class="tab-titel" data-tabtitel>{{ t('liga.' ~ lg.key) }}</h4>
+    <div class="tabelle-rahmen" role="region" tabindex="0" aria-label="{{ t('methodik.tabelle_titel', liga=t('liga.' ~ lg.key)) }}">
+      <table class="tabelle tabelle--breit">
+        <caption class="unsichtbar">{{ t('methodik.tabelle_titel', liga=t('liga.' ~ lg.key)) }}</caption>
+        <thead><tr><th scope="col">{{ t('methodik.spalte.kennzahl') }}</th><th scope="col">{{ t('methodik.spalte.richtung') }}</th><th scope="col">{{ t('methodik.spalte.schwelle') }}</th><th scope="col">{{ t('methodik.spalte.signal') }}</th></tr></thead>
+        <tbody>
+          {% for z in lg.zeilen %}<tr><th scope="row">{{ t('kennzahl.' ~ z.kpi ~ '.name') }}</th><td>{{ t('methodik.richtung.' ~ z.richtung) }}</td><td>{{ z.schwelle }}</td><td>{{ q_chip(z.stufe, kurz=true) }}</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="liga-zusammenfassung">{{ t('methodik.zusammenfassung', liga=t('liga.' ~ lg.key), schwellen=tn('methodik.schwellen', lg.anzahl), teile=teile_text(lg)) }}</p>
+  </section>
+  {% endfor %}
+</div>
+{%- endmacro %}
+
+{% macro uebersicht(m) -%}
+<div class="tabelle-rahmen">
+  <table class="tabelle">
+    <caption class="unsichtbar">{{ t('methodik.uebersicht_titel') }}</caption>
+    <thead><tr><th scope="col">{{ t('methodik.spalte.liga') }}</th><th scope="col">{{ t('methodik.spalte.schwellen') }}</th></tr></thead>
+    <tbody>
+      {% for lg in m.ligen %}<tr><th scope="row"><b>{{ t('liga.' ~ lg.key) }}</b></th><td>{{ lg.anzahl }} ({{ teile_text(lg) }})</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{%- endmacro %}
+
+{% macro download(m, titel, text) -%}
+<section class="download" aria-labelledby="download-titel">
+  <h2 id="download-titel">{{ titel }}</h2>
+  <p>{{ text }}</p>
+  <div class="knopfreihe"><a class="knopf-voll gross" href="{{ link('methodik') }}{{ m.download }}" download="{{ m.download }}">{{ t('methodik.download_knopf') }}<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12M6 11l6 6 6-6M5 20h14"/></svg></a></div>
+</section>
+{%- endmacro %}

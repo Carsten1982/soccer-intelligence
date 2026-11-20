@@ -1,0 +1,58 @@
+{#- Datenschutzerklärung (en, seit 0.21 nach Entwurf „Datenschutz“; juristische Prüfung vor dem Livegang offen). Betreiberangaben aus der Server-Konfiguration. -#}
+{% macro kopf() %}<h1>Privacy policy</h1>{% endmacro %}
+
+{% macro rumpf() %}
+<div class="inhaltskarte">
+
+      <nav class="inhaltsverzeichnis" aria-label="On this page">
+        <div>On this page</div>
+        <ul><li><a href="#verantwortlich">Controller and data collected</a></li><li><a href="#kontakt">Contact by email and contact form</a></li><li><a href="#google-analytics">Google Analytics</a></li><li><a href="#google-search-console">Google Search Console</a></li><li><a href="#kein-marketing">No use for marketing purposes</a></li><li><a href="#deine-rechte">Your rights</a></li></ul>
+      </nav>
+
+      <section>
+        <h2 id="verantwortlich">Controller and data collected</h2>
+        <p>The person responsible for processing your personal data on this website is {{ betreiber.name or t('start.fan_name') }}{% for zeile in betreiber.adresse %}, {{ zeile }}{% endfor %}, operator of Soccer Intelligence (contact details in the <a href="{{ link('impressum') }}">Legal notice</a>). We handle your data confidentially and comply with applicable data protection laws, in particular the Swiss Federal Act on Data Protection (FADP) and, where applicable, the General Data Protection Regulation (GDPR).</p>
+        <p>When you visit Soccer Intelligence, certain data may be collected for technical reasons. This includes, for example, your IP address, the time of access, the pages viewed and technical information about the browser you use. This data is used solely for the technical operation, security and troubleshooting of the website.</p>
+      </section>
+
+      <section>
+        <h2 id="kontakt">Contact by email and contact form</h2>
+        <p>If you contact us by email or via the contact form, we process the information you provide (your email address, your message and, if you wish, your name) in order to handle your enquiry and reply to you. We do not use this information for any other purpose or disclose it to third parties. We delete it once your enquiry has been dealt with and no statutory retention obligations apply.</p>
+      </section>
+
+      <section>
+        <h2 id="google-analytics">Google Analytics</h2>
+        <p>We use Google Analytics 4, a web analytics service provided by Google Ireland Limited (Gordon House, Barrow Street, Dublin 4, Ireland). Google LLC (1600 Amphitheatre Parkway, Mountain View, CA 94043, USA) may also process data in this context. We use Google Analytics to measure how many people visit our pages, which pages are most popular and how the website is used. This helps us improve Soccer Intelligence and make it easier to understand.</p>
+        <h3>What data is collected</h3>
+        <p>Google Analytics can collect the following data:</p>
+        <ul><li>Pages viewed, clicks and actions on the website</li><li>Approximate location at country and region level</li><li>Device type, browser, operating system, screen size and language</li><li>Source of the visit (e.g. search engine or direct access)</li><li>Time and duration of the visit</li><li>A randomly generated identifier stored in a cookie or similar storage in your browser</li></ul>
+        <p>Google Analytics 4 does not store IP addresses. We have configured the service with data protection in mind: Google signals and personalised advertising features are switched off, data sharing with Google for its own purposes is disabled, and data is automatically deleted after 14 months.</p>
+        <h3>Consent and withdrawal</h3>
+        <p>Google Analytics only becomes active once you expressly consent via the cookie notice. Without your consent, no data is sent to Google Analytics. You can withdraw your consent at any time with effect for the future by changing your <a href="{{ link('cookie') }}">cookie settings</a> on this website. Processing carried out up to that point remains lawful. Alternatively, you can prevent Google Analytics from collecting data by using the <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer">Google browser add-on</a> verhindern.</p>
+        <h3>Legal basis</h3>
+        <p>Where the GDPR applies (for example, to visitors from the EU), processing is based on your consent (Art. 6(1)(a) GDPR). Under the Swiss Federal Act on Data Protection, we process your data transparently and only within the scope of your consent. Our interest is to understand how the website is used and to improve it.</p>
+        <h3>Transfer to the USA</h3>
+        <p>Data may be transferred to Google servers in the USA. Google LLC is certified under the EU-U.S. Data Privacy Framework and the Swiss-U.S. Data Privacy Framework. This ensures an adequate level of data protection for such transfers. In addition, Google has entered into data processing agreements with us. You can find further information in <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google's privacy policy</a>.</p>
+      </section>
+
+      <section>
+        <h2 id="google-search-console">Google Search Console</h2>
+        <p>We use Google Search Console, a free service provided by Google Ireland Limited. It shows us how Soccer Intelligence appears in Google Search, for example, which search terms cause our pages to appear in search results and how often they are clicked. It also alerts us to technical errors.</p>
+        <p>Search Console does not collect any data about your visit to our website. The reports are provided by Google and made available to us only in aggregated form, meaning that we cannot identify individual visitors. To verify ownership of the website, we add a technical verification record (a DNS record or an invisible meta tag). No visitor data is collected in this process. Google's data processing is governed by <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google's privacy policy</a>.</p>
+      </section>
+
+      <section>
+        <h2 id="kein-marketing">No use for marketing purposes</h2>
+        <p>The data collected is not used for personalised advertising or marketing purposes. We do not display advertisements or use remarketing or advertising features. Google Analytics is used solely to improve the website.</p>
+        <p>Should we use additional tools in the future, this privacy policy will be updated to inform you about the associated data processing.</p>
+      </section>
+
+      <section>
+        <h2 id="deine-rechte">Your rights</h2>
+        <p>You have the right to request access to your personal data, to have inaccurate data corrected or deleted, to request restrictions on its processing or object to its processing, and to request the transfer of your data. To exercise these rights, please contact us via the <a href="{{ link('kontakt') }}">contact form</a> or using the contact details provided in the <a href="{{ link('impressum') }}">Legal notice</a>.</p>
+        <p>If you believe that we are not processing your data lawfully, you can contact the competent supervisory authority. In Switzerland, this is the Federal Data Protection and Information Commissioner (FDPIC).</p>
+        <p>Last updated: <time datetime="2026-11-22">22 November 2026</time></p>
+      </section>
+
+    </div>
+{% endmacro %}

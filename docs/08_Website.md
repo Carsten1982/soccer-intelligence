@@ -54,27 +54,43 @@
 | Teil | Umsetzung |
 |---|---|
 | Programmteil | `app/website/` im bestehenden Projekt (gleiche Datenbank, gleicher Rechenkern) |
-| Seiten | HTML-Vorlagen (Jinja2, gemeinsame Bausteine in `vorlagen/teile.html`) + eine CSS-Datei mit den Farben und Massen der Entwürfe; wenig JavaScript (`statisch/site.js`: Tabs der englischen Woche, „Zuklappen“ im Matchdetail), alles funktioniert auch ohne. Keine Inline-Stile (Content-Security-Policy), Balkenbreiten über Klassen `.w0`–`.w100`. Seit 0.19.1 hängt an CSS und JS eine Versionsnummer (`?v=` + Prüfsumme des Inhalts): Nach einem Release lädt der Browser geänderte Dateien neu, ohne Strg+F5 |
-| Texte | Sprachdatei `app/website/texte/de.json` mit Schlüsseln (Übergabe 9.1); Mehrzahl als eigene Varianten; Fallback Deutsch |
-| Formate | `app/website/format.py`: Datum „Sa 21.11.“, Prozent „+47,36 %“ mit echtem Minus „−“, Ergebnis „2 : 1“; je Sprache eine Tabelle (jetzt nur `de`) |
+| Seiten | HTML-Vorlagen (Jinja2, gemeinsame Bausteine in `vorlagen/teile.html`, Kachel in `kachel.html`, Methodik-Bausteine in `methodik_teile.html`, lange Texte je Sprache in `vorlagen/inhalt/<seite>.<sprache>.html`) + eine CSS-Datei mit den Farben und Massen der Entwürfe P1 (seit 0.21); wenig JavaScript (`statisch/site.js`: Tabs der englischen Woche und der Methodik-Tabellen, „Zuklappen“ auf der Spielseite, Sprachmenü schliesst mit Escape und Klick daneben), alles funktioniert auch ohne. Keine Inline-Stile (Content-Security-Policy), Balkenbreiten über Klassen `.w0`–`.w100`. Seit 0.19.1 hängt an CSS und JS eine Versionsnummer (`?v=` + Prüfsumme des Inhalts): Nach einem Release lädt der Browser geänderte Dateien neu, ohne Strg+F5 |
+| Texte | Sprachdateien `app/website/texte/de.json` und (seit 0.21) `en.json` mit denselben Schlüsseln (Übergabe 9.1); Mehrzahl als eigene Varianten; Fallback Deutsch; ein Test prüft gleiche Schlüssel und Platzhalter in beiden Sprachen |
+| Formate | `app/website/format.py`: Datum „Sa 21.11.“ / „Sat 21 Nov“, Prozent „+47,36 %“ / „+47.36%“ mit echtem Minus „−“, Ergebnis „2 : 1“ (Spielseite) bzw. „2:1“ (Chips), Zeitraum „20.11. – 22.11.2026“ / „20–22 Nov 2026“; je Sprache eine Tabelle |
+| Adressen | `app/website/adressen.py` (seit 0.21): Pfadwörter je Sprache, Slugs, Erkennen einer Adresse mit 301/302/404 (Abschnitt 4.1) |
+| Suchmaschinen | `app/website/seo.py` (Index-Regeln für Seite und Sitemap, Title, Description, JSON-LD), `sitemap.py` (robots.txt, Sitemap-Index mit Teilen je Liga und Saison), Konfiguration `app/config/website.toml` (`index_ab`, `seiten_ab_saison`) – Abschnitt 4.2 |
+| Anzeigenamen | `app/website/namen.py` mit `app/config/teamnamen_anzeige.csv` (Liga; Name der Datenquelle; Deutsch; Englisch; Glossar Abschnitt 11). Fehlende Vereine zeigen den Namen der Datenquelle und stehen im Reiter Datenimport/API |
+| Methodik | `app/website/methodik.py` (seit 0.21): Zahlen und Tabellen aus `schwellen.toml`, Excel-Download beim Aufruf erzeugt |
+| Icons | `statisch/wurzel/`: `favicon.ico`, `favicon.svg`, `favicon-64.png`, `apple-touch-icon.png`, `og-image.png` (1200 × 630, sprachneutral), im Livebetrieb im Hauptverzeichnis der Domain |
 | Schriften | Outfit und Inter als variable WOFF2-Dateien (SIL Open Font License 1.1, Lizenzdateien liegen bei), nur lateinische Zeichen; erweiterte Zeichen lädt der Browser nur bei Bedarf |
 | Daten | `app/website/daten.py` lädt Datenbank, Spielplan, Schwellen und den Importstand, mit Zwischenspeicher je Dateistand |
 | Datenschnittstelle | Je Seite ein Datensatz mit **Codes statt Texten** (Abschnitt 5), als JSON abrufbar (`/vorschau/daten/…`). Daraus entsteht beim Livegang der statische Export |
 | Vorschau | Container `soccer-vorschau` (gleiches Programm-Abbild wie das Dashboard), kleiner Python-Webserver, erzeugt die Seiten bei jedem Aufruf neu (nötig für die Zeitreise). Nur lesend auf `data/`, `import/` und (seit 0.18) `website-bilder/` (Foto, Q6). Beim Start rechnet er Startseite und Spieltage einmal vor, damit schon der erste Aufruf schnell ist |
 | Zugang | Traefik-Router `Host(soccer-intelligence.com) && PathPrefix(/vorschau)` mit Passwortabfrage (BasicAuth, Hash in `.env` als `SOCCER_VORSCHAU_AUTH`), Anfragebremse, „noindex“ |
-| Livegang (später) | statischer Export nach `site/`, ausgeliefert von nginx (wie der Platzhalter); Erzeugen im Container `soccer-import` nach jeder Übernahme und alle 15 Minuten |
+| Livegang (1.0) | derselbe Dienst unter der Domain (Beschluss 19.11.2026: kein statischer Export; HTML bei jedem Aufruf, Browser-Zwischenspeicher 5 Minuten, Abschnitt 4.2) |
 
 ## 4. Seiten und Adressen
 
-| Adresse (Vorschau) | Seite | Version |
+Seit 0.21 gelten die Adressen aus Abschnitt 4.1 in beiden Sprachen; in der Vorschau steht `/vorschau` davor
+(z. B. `/vorschau/de/spieltag/bundesliga/`). Alte Vorschau-Adressen (`/vorschau/spieltag/<liga>`, `/vorschau/spiel/<id>`,
+`/vorschau/impressum` …) leiten dauerhaft (301) auf die neuen weiter.
+
+| Adresse (ohne `/vorschau`) | Seite | Version |
 |---|---|---|
-| `/vorschau/` | Startseite (in 0.17 Weiterleitung auf den Spieltag) | 0.18 |
-| `/vorschau/spieltag` | Weiterleitung auf `/vorschau/spieltag/bundesliga` (F8) | 0.18 |
-| `/vorschau/spieltag/<liga>` | Spieltag; `<liga>` = `bundesliga`, `la-liga`, `premier-league`, `serie-a` | 0.17 |
-| `/vorschau/spiel/<id>` | Matchdetail, **eine Seite je Paarung** des Spielplans (laufende Saison und Vorsaison); `<id>` = Spiel-ID von API-Football; unbekannte ID: Seite „nicht gefunden“ (404) | 0.18 |
-| `/vorschau/bilder/portrait.jpg` | Foto der Startseite aus `website-bilder/` (Q6); fehlt es: 404, die Startseite zeigt den Platzhalter | 0.18 |
-| `/vorschau/methodik`, `/impressum`, `/datenschutz` | Hinweis „folgt später“ | später |
-| `/vorschau/daten/start.json`, `/daten/spieltag/<liga>.json`, `/daten/spiel/<id>.json` | Datensätze der Seiten (Codes) | 0.17/0.18 |
+| `/` | 301 auf `/de/` | 0.21 |
+| `/de/`, `/en/` | Startseite | 0.18 / 0.21 |
+| `/de/spieltag/`, `/en/matchday/` | 302 auf die Standardliga (Bundesliga, F8) | 0.21 |
+| `/de/spieltag/<liga>/`, `/en/matchday/<liga>/` | Spieltag | 0.17 / 0.21 |
+| `/de/spieltag/<liga>/<2025-26>/<nr>/` | Archivseite je Spieltag (nur begonnene Spieltage, ab `seiten_ab_saison`) | 0.21 |
+| `/de/spiel/<liga>/<heim>-<gast>-<id>/`, `/en/match/…` | Spielseite, **eine je Paarung**; unbekannte ID oder Saison vor `seiten_ab_saison`: 404; abweichender Slug, andere Liga, fehlender Schrägstrich: 301 | 0.18 / 0.21 |
+| `/de/methodik/`, `/de/glossar/`, `/de/kontakt/`, `/de/impressum/`, `/de/datenschutz/` (englisch Abschnitt 4.1) | Inhaltsseiten (Abschnitt 7.3) | 0.21 |
+| `/de/cookie-einstellungen/`, `/en/cookie-settings/` | Hinweis „folgt“ bis 0.22 | 0.21 |
+| `/de/methodik/soccer-intelligence-schwellen.xlsx`, `/en/methodology/soccer-intelligence-thresholds.xlsx` | Excel-Datei der Methodik | 0.21 |
+| `/robots.txt`, `/sitemap.xml`, `/sitemaps/<teil>.xml` | Abschnitt 4.2 | 0.21 |
+| `/favicon.ico`, `/favicon.svg`, `/apple-touch-icon.png`, `/og-image.png` | Icons, Vorschaubild für soziale Netzwerke | 0.21 |
+| `/bilder/portrait.jpg` | Foto der Startseite aus `website-bilder/` (Q6); fehlt es: 404, die Startseite zeigt den Platzhalter | 0.18 |
+| `/daten/start.json`, `/daten/spieltag/<liga>.json`, `/daten/spiel/<id>.json` | Datensätze der Seiten (Codes) | 0.17/0.18 |
+| alles andere unter `/de/` bzw. `/en/` | „Seite nicht gefunden“ (404) in dieser Sprache, sonst deutsch | 0.21 |
 
 Reihenfolge der Ligen auf der Website (Entwurf): Bundesliga, La Liga, Premier League, Serie A.
 
@@ -93,8 +109,9 @@ späteren Anbieterwechsel bleibt diese Nummer unsere feste ID (Zuordnung neuer N
 | `/de/methodik/`, `/de/glossar/`, `/de/impressum/`, `/de/datenschutz/`, `/de/kontakt/` | Inhaltsseiten |
 
 Regeln:
-- **Eindeutig ist nur die ID am Ende.** Liga und Teamnamen dienen der Lesbarkeit; Namen = **API-Namen** wie angezeigt
-  (keine eigene Namensliste; Spielseiten sind kein SEO-Ziel).
+- **Eindeutig ist nur die ID am Ende.** Liga und Teamnamen dienen der Lesbarkeit; der Slug entsteht aus den **API-Namen**.
+  Angezeigt werden seit 0.21 die Anzeigenamen je Sprache (`teamnamen_anzeige.csv`, Glossar Abschnitt 11); sie ändern
+  den Slug nie.
 - **Namen in Adressen:** Kleinschreibung, ä → ae, ö → oe, ü → ue, ß → ss, übrige Akzente entfernt (Atlético → atletico),
   alles andere als ein Zeichen ausser a–z und 0–9 → Bindestrich, keine doppelten Bindestriche.
 - **Liga-Teil:** `bundesliga`, `premier-league`, `serie-a`, `la-liga`.
@@ -139,6 +156,33 @@ Regeln:
   aus dem finalen Content in beiden Sprachen; Teamnamen bleiben die API-Namen.
 
 
+
+### 4.2 Indexierung, Kopfbereich, Sitemap, Caching (seit 0.21, SEO-Briefing)
+
+- **Index-Regeln** (`seo.py`, eine Funktion je Seitenart für Seite und Sitemap): Spielseite indexierbar, wenn `index_ab`
+  gesetzt ist, der Anstoss ab `index_ab` liegt, das Spiel in einem Tab der Spieltag-Seite steht oder gespielt ist, kein
+  ausschliessender Status und kein „Werte ab“ vorliegt und mindestens eine Kennzahl bewertet ist. Archivseite
+  indexierbar, wenn der Spieltag ab dem Tag von `index_ab` begonnen hat. Inhaltsseiten, Startseite und Spieltag immer;
+  Cookie-Einstellungen und 404 nie. Nicht indexierbar = `noindex,follow`.
+- **Vor dem Livegang** ist `index_ab` in `app/config/website.toml` leer: nichts aus den Spiel- und Archivseiten ist
+  indexierbar, die Teile der Sitemap je Liga und Saison sind leer. Die Vorschau sendet immer `noindex, nofollow`; die
+  Vorschau-Leiste zeigt, ob die Seite nach dem Livegang in den Index käme.
+- **Kopfbereich:** Title und Description je Seite (Spielseite je Zustand, Description höchstens 155 Zeichen: zuerst auf
+  eine Kennzahl, dann ohne Signalqualität kürzen, notfalls am Wortende), `canonical`, `hreflang` de/en/x-default (= de),
+  Open Graph (`og:locale` de_CH/en_GB, Bild `og-image.png`), Twitter-Karte, JSON-LD: Startseite Organization + WebSite,
+  sonst BreadcrumbList + WebPage bzw. ContactPage; `SportsEvent` (mit `startDate` inkl. Zeitzone, ohne Ort und ohne
+  `eventStatus`) nur auf indexierbaren Spielseiten mit bekannter Anstosszeit. 404: ohne canonical und hreflang.
+- **robots.txt:** alles erlaubt (noindex-Seiten werden nicht gesperrt, sonst sähe Google das noindex nicht), Verweis auf
+  die Sitemap. **Sitemap:** `/sitemap.xml` ist ein Index mit `/sitemaps/seiten.xml` (Startseite, Spieltag je Liga,
+  Methodik, Glossar, Kontakt, Impressum, Datenschutz) und je Liga und Saison `/sitemaps/<liga>-<2026-27>.xml`; jeder
+  Eintrag mit beiden Sprachfassungen und x-default.
+- **Caching:** HTML `Cache-Control: public, max-age=300` (Vorschau und Fehlerseiten `no-store`); CSS, JS, Schriften und
+  Icons 30 Tage; Excel 1 Tag; Weiterleitungen `no-store`. **Dateifehler:** Start-, Spieltag-, Archiv- und Spielseiten
+  antworten mit **503**, `Retry-After: 600` und `no-store`; Inhaltsseiten bleiben mit 200 erreichbar.
+- **Barrierefreiheit:** Sprunglink „Zum Inhalt springen“, sichtbarer Fokus (dunkelgrün mit weissem Abstand, auf dunklen
+  Flächen in Akzentfarbe), Tabs und Aufklapper ohne JavaScript, Tabellen mit `caption` und `scope`, Kontraste nach
+  WCAG AA (Statuskachel #5B6B61, Formkreis „U“ #487560, Eingabefelder #7A8A81). Geprüft mit axe-core (WCAG 2.1 AA und
+  Best Practice) auf allen Seitenarten in beiden Sprachen, Desktop und Handy.
 
 ## 5. Seite Spieltag (Übergabe, Abschnitt 6)
 
@@ -227,6 +271,30 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
 
 **Foto (Q6):** Datei `portrait.jpg` im Ordner `/docker/football-dashboard/website-bilder/` auf dem Server (quadratisch, mindestens 230 × 230 Pixel, JPEG). Der Ordner ist nur lesend im Container `soccer-vorschau` eingebunden (`/bilder`), steht in `.gitignore` und kommt nie ins Programm-Abbild (Dockerfile kopiert nur `app/`). Ein neues Foto wirkt sofort (kein Neustart nötig; Browser-Zwischenspeicher bis 1 Stunde).
 
+### 7.3 Inhaltsseiten, Archiv und Fehlerseite (seit 0.21)
+
+- **Startseite, Spieltag, Spielseite** nach den Entwürfen P1 vom 19.11.2026 (Main_P1, Spieltag_P1, Spiel_P1): Ranking als
+  Karten mit Signalqualität (drei Balken), Kacheln je Stufe (stark/mittel/gering mit farbigem Streifen), Legende mit
+  „Wie lese ich das?“, Zeitzonen-Hinweis, „Weitere Spiele dieses Spieltags“ auf der Spielseite; Endstand auf Kacheln und
+  im Ranking kompakt „Gespielt · 2:1“, auf der Spielseite „Endstand 2 : 1“.
+- **Methodik** (Entwurf Methodik_10): drei Ebenen mit Sprungmarken (`#ebene1` bis `#ebene3`), ohne JavaScript alle
+  sichtbar. Zahlen aus `schwellen.toml`: Saisons, bewährte Kombinationen (von 8 Kennzahlen × 4 Ligen × 2 Richtungen),
+  Aufteilung stark/mittel/gering, Tabelle je Liga (Kennzahl, Richtung, Schwelle, Signalqualität) und Übersicht. Das
+  Rechenbeispiel (Bayern – Stuttgart, 30. Spieltag 2025/26) ist fester Text; ein Test prüft seine Zahlen gegen die
+  Schwellendatei. Excel-Datei mit allen Zahlen je Liga, Kennzahl und Richtung (Spiele, Trefferquote, Vergleichswert,
+  Mehrwert, Spanne, Saisons mit Vorteil) und einem Blatt „Grundlage“, beim Aufruf aus der Schwellendatei erzeugt.
+- **Glossar** (ohne Entwurf, im Stil der Methodik): Grundbegriffe, Kennzahlen, Spielstatus, Datenstand und Zeiten;
+  Begriffe nach dem Glossar (Release-Fassung 19.11.2026). Text ist ein Vorschlag zur Freigabe.
+- **Kontakt** (Entwurf Kontakt): Formular mit Pflichtfeldern, Sicherheitsfrage und verstecktem Feld; Versand ab 0.22,
+  bis dahin ist die Schaltfläche gesperrt mit Hinweis.
+- **Impressum, Datenschutz** (Entwürfe): Betreiberangaben nur aus `.env` auf dem Server (`SI_IMPRESSUM_NAME`,
+  `SI_IMPRESSUM_ADRESSE` mit „|“ getrennt, `SI_KONTAKT_EMAIL`); fehlen sie, steht ein Platzhalter. Juristische Prüfung
+  vor dem Livegang offen.
+- **Archivseite je Spieltag** (ohne Entwurf, aus der Spieltag-Seite abgeleitet): Kopf „<Liga> · Spieltag <nr> · Saison
+  <saison>“, Pfeile zum vorherigen und nächsten Spieltag (der aktuelle führt auf die Spieltag-Seite), Kacheln mit
+  Endstand und Signalqualität der Werte vor dem Spiel; „Zurück“ der Spielseite führt bei gespielten Spielen hierher.
+- **Seite nicht gefunden** (Entwurf Fehler_404): drei Schaltflächen (Startseite, Spieltag, Methodik), 404, noindex.
+
 ## 8. Testfälle (seit Version 0.17, `tests/test_website.py`)
 
 | Nr. | Situation | Erwartet |
@@ -246,7 +314,18 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
 | W13 | Echte Daten | alle vier Ligen an mehreren Tagen (wie A27) ohne Fehler; mit echten Dateien auch Startseite und Matchdetail jeder verlinkten Paarung |
 | W14 | Matchdetail | Q1 (Summe nur Gelbe Karten, sonst Mittelwert), Q2 (Marke 2,50), Q4 (einzelne vorläufige Kennzahl unter Normalbereich), Q5 (Endstand, Ergebnis folgt, Hinweis), nicht gewertet mit/ohne Werte, Status ohne Kennzahlen, Nachholspiel-Hinweis, Formkurve, Balken und Zahlen; **jede Paarung eines Spieltags und der ganzen Saison hat eine eigene Seite** (echte Saisonlisten); seit 0.20: Schnappschuss, nachträglich, korrigiert, „Werte ab“ auf der Seite, bis Anpfiff + 2 h normal |
 | W15 | Startseite | Ranking wie Dashboard (Prognosewert, Betrag, Liga-Mix, höchstens 4, einer je Spiel, ohne vorläufige und verschobene, nur vor dem Anpfiff); Zustände Spielpause, Winterpause, Sommerpause, Saisonstart, unbekannt (veraltet), keine, gesperrt; Tage-Zähler; seit 0.20 gespielte bleiben ausgegraut (kein Nachrücken), Endstand |
-| W16 | Sicherheit | keine Inline-Stile und -Skripte (Content-Security-Policy), jede Balkenbreite hat eine CSS-Klasse |
+| W16 | Sicherheit | keine Inline-Stile und -Skripte (Content-Security-Policy; JSON-LD ist Daten), jede Balkenbreite hat eine CSS-Klasse |
+| W17 | Adressen (0.21, `tests/test_website_021.py`) | Slugs, Pfade je Sprache, Erkennen mit 200/301/302/404, Sprachwechsel auf dieselbe Seite, alte Saisons 404 |
+| W18 | Archiv | Kopf, Endstand „Gespielt · 2:1“, Pfeile, nicht begonnener Spieltag 404, „Zurück“ der Spielseite ins Archiv |
+| W19 | Indexierung, Sitemap | Index-Regeln (Livegang, Fenster, Status, Werte ab, bewertete Kennzahl, Saison), robots.txt, Sitemap-Index, hreflang je Eintrag, vor dem Livegang leer |
+| W20 | Kopfbereich | canonical, hreflang, og:locale, Title; JSON-LD lesbar; 404 ohne canonical; Description höchstens 155 Zeichen ohne Wett-Wörter (Fehler gefunden: „Zu wenig Daten“ und Status wurden nicht gekürzt) |
+| W21 | Englisch | gleiche Schlüssel und Platzhalter in `de.json` und `en.json`, Formate, Anzeigenamen mit Rückfall auf die Datenquelle |
+| W22 | Caching, 503 | Kopfzeilen je Antwort, Icons, 503 mit Retry-After, Vorschaubild 1200 × 630 |
+| W23 | Ohne JavaScript | Sprungliste, Tab-Überschriften, Tab-Leiste versteckt; Kachelklassen und Signalqualität-Chips |
+| W24 | Methodik | Zahlen aus der Schwellendatei, Rechenbeispiel passt zur Schwellendatei, Excel-Download (Spalten, Zeilen, Zahlen) |
+| W25 | Inhaltsseiten | je Seite ein H1, Sprache, keine Inline-Stile, eindeutige IDs, Sprungmarken vorhanden; Betreiberangaben nur aus der Server-Konfiguration; keine privaten E-Mail-Adressen im Code |
+| W26 | Endstand | kompakt auf Kacheln, lang auf der Spielseite |
+| – | Browser (vor dem Release, nicht automatisch) | axe-core 4.10 auf allen Seitenarten DE/EN, 1280 und 390 px: keine Verstösse; 360 px ohne Querscrollen; Sprachmenü (Escape, Klick daneben), Tabs mit und ohne JavaScript, Download |
 
 ## 9. Annahmen (bitte in der Vorschau prüfen)
 
@@ -260,7 +339,12 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
 | A6 | Bei veraltetem Datenstand ohne anstehenden Spieltag: Warnbox und Karte „Nächster Spieltag am …“ ohne Pausennamen | S9: keine Pausenhinweise bei veraltetem Stand |
 | A7 | Die Pausen-Karte der Spieltag-Seite hat keinen Tage-Zähler (nur die Startseite, Q7) | Übergabe 6.4; Entwurf 3d bestätigt |
 | A8 | Navigation zu Methodik und Impressum zeigt bis zur Umsetzung „Diese Seite folgt später.“ | Seiten noch nicht im Umfang |
-| A9 | Vorschau-Leiste oben (Zeitpunkt, Eingabe) nur in der Vorschau, nicht Teil der Website | wie die Prototyp-Leiste des Entwurfs |
+| A9 | Vorschau-Leiste oben (Zeitpunkt, Eingabe, seit 0.21 Index-Status) nur in der Vorschau, nicht Teil der Website | wie die Prototyp-Leiste des Entwurfs |
+| A10 | Methodik: Die Angabe „Auffällige Spiele je Spieltag“ (Entwurf: z. B. Bundesliga stark 1,4 · mittel 1,9 · gering 1,4) fehlt vorerst; die Übersicht zeigt Anzahl der Schwellen je Stufe | Zahlen stehen nicht in `schwellen.toml` und lassen sich daraus nicht herleiten (Quelle offen) |
+| A11 | Methodik: Ebenen als Sprungmarken, alle Ebenen immer sichtbar (der Entwurf blendet tiefere Ebenen erst nach Wahl ein) | alles im HTML (Beschluss Thema 4), ohne JavaScript nutzbar |
+| A12 | Vorschaubild `og-image.png` sprachneutral: Logo, „Soccer Intelligence“ und die vier Ligen | ein Bild für beide Sprachen |
+| A13 | Glossar und Archivseite: Texte von Claude vorgeschlagen (Freigabe offen) | Beschluss 19.11.2026: ohne Entwurf |
+| A14 | Ranking der Startseite: gespieltes Spiel zeigt „Gespielt · 2:1“ wie die Kachel | Glossar Abschnitt 19 |
 
 ## 10. Offene Punkte
 
@@ -389,4 +473,5 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
 | 0.19 | Prognosewert statt stark/leicht in den Daten und Texten (Gestaltung unverändert bis zum neuen Entwurf); Ranking mit Liga-Mix |
 | 0.19.1 | CSS und JS mit Versionsnummer (`?v=`), damit nach einem Release kein Strg+F5 nötig ist |
 | 0.20 | Nur nötige Textanpassungen im heutigen Aussehen: Signalqualität stark/mittel/gering; Statusmodell (gespielt ab Anpfiff + 2 h, „Werte ab …“ auf Spieltag-Seite und Matchdetail, „Zu wenig Daten“); Werte gespielter Spiele aus dem Schnappschuss mit Hinweisen; Ranking ohne Nachrücken; Sonderspiele mit Nummer, neue Zählform; 48-Stunden-Grenze |
-| später | Methodik, Impressum, Datenschutz, Livegang |
+| 0.21 | **Neue Website** nach den Entwürfen P1: Deutsch und Englisch mit Adressen `/de/` und `/en/`, 301/302/404, Archiv je Spieltag; Methodik mit Excel-Download, Glossar, Kontakt (ohne Versand), Impressum, Datenschutz, Seite nicht gefunden; Index-Regeln, robots.txt, Sitemap, Title/Description/Open Graph/JSON-LD; Caching und 503; Tabs ohne JavaScript, Fokus, Kontraste, axe-core; Anzeigenamen je Sprache |
+| später | 0.22 Kontakt-Versand, Cookie-Wahl, GA4, E-Mail-Alarme; 1.0 Qualität und Livegang |

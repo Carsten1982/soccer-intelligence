@@ -1,10 +1,15 @@
 {% extends "basis.html" %}
-{% from "teile.html" import deko_mitte, pfeil_zurueck, pfeil_weiter, chevron, info_icon, symbole, balken, lesen_knopf, lesen_ligaschnitt %}
-{#- Seite Matchdetail (seit 0.18 nach Entwurf 2i „Spiel_P1“; Konzept 08, Abschnitt 7; Entscheidungen Q1–Q5).
-    Werte aus website.spiel.spiel_daten (Codes), Darstellungshilfen aus seiten.py. -#}
+{% from "teile.html" import deko_mitte, pfeil_zurueck, pfeil_weiter, pfeil_rechts, chevron, info_icon, symbole, balken, lesen_knopf, lesen_ligaschnitt, q_chip with context %}
+{#- Spielseite (seit 0.18; seit 0.21 nach Entwurf „Spiel_P1“ in Deutsch und Englisch; Konzept 08, Abschnitt 7;
+    Entscheidungen Q1–Q5). H1 visuell versteckt (gleicher Text wie das Scoreboard, Beschluss M10). Werte aus
+    website.spiel.spiel_daten (Codes), Darstellungshilfen aus seiten.py. -#}
 
 {% macro form(reihe) -%}
-<div class="sb-form">{% for f in reihe %}<span class="form-{{ f }}" title="{{ t('spiel.form.' ~ f) }}">{{ '–' if f == '-' else f }}</span>{% endfor %}</div>
+<div class="sb-form">{% for f in reihe %}<span class="form-{{ f }}" title="{{ t('spiel.form.' ~ f) }}">{{ '–' if f == '-' else t('spiel.form_kurz.' ~ f) }}</span>{% endfor %}</div>
+{%- endmacro %}
+
+{% macro schwelle(k) -%}
+{%- if k.abweichung is none %}–{% elif k.schwelle is none %}{{ t('spiel.schwelle_keine') }}{% elif k.richtung == 'hoch' %}{{ t('spiel.schwelle_ueber', wert=prozent(k.schwelle)) }}{% else %}{{ t('spiel.schwelle_unter', wert=prozent(k.schwelle)|replace('+', '−')) }}{% endif -%}
 {%- endmacro %}
 
 {% macro zahlen(k) -%}
@@ -12,21 +17,22 @@
   <div class="block">
     <div class="zeile"><span>{{ t('spiel.erwartungswert') }}</span><b>{{ zahl(k.erwartung, k) }}</b></div>
     {% if not k.summe %}<div class="klein">{{ t('spiel.je_mannschaft') }} · {{ t('spiel.mittelwert') }}</div>{% endif %}
-    <div class="zeile team"><span><i class="farbpunkt" aria-hidden="true"></i>{{ seite.heim }}</span><b>{{ zahl(k.heim, k) }}</b></div>
-    <div class="zeile team"><span><i class="farbpunkt gast" aria-hidden="true"></i>{{ seite.gast }}</span><b>{% if k.summe and k.gast is not none %}+ {% endif %}{{ zahl(k.gast, k) }}</b></div>
+    <div class="zeile team"><span><i class="farbpunkt" aria-hidden="true"></i>{{ heim_name }}</span><b>{{ zahl(k.heim, k) }}</b></div>
+    <div class="zeile team"><span><i class="farbpunkt gast" aria-hidden="true"></i>{{ gast_name }}</span><b>{% if k.summe and k.gast is not none %}+ {% endif %}{{ zahl(k.gast, k) }}</b></div>
     {% if k.summe and k.heim is not none and k.gast is not none %}
     {% set anteil = aufteilung(k) %}
-    <div class="aufteilung" role="img" aria-label="{{ t('spiel.aufteilung', name=t('kennzahl.' ~ k.kpi ~ '.name'), heim=seite.heim, gast=seite.gast, wert_heim=zahl(k.heim, k), wert_gast=zahl(k.gast, k)) }}"><span class="w{{ anteil }}"></span><span class="gast w{{ 100 - anteil }}"></span></div>
+    <div class="aufteilung" role="img" aria-label="{{ t('spiel.aufteilung', name=t('kennzahl.' ~ k.kpi ~ '.name'), heim=heim_name, gast=gast_name, wert_heim=zahl(k.heim, k), wert_gast=zahl(k.gast, k)) }}"><span class="w{{ anteil }}"></span><span class="gast w{{ 100 - anteil }}"></span></div>
     {% endif %}
   </div>
   <div class="zeile trenn"><span>{{ t('spiel.vergleichswert_marke') if k.vergleich_art == 'marke' else t('spiel.ligaschnitt') }}</span><b>{{ zahl(k.vergleich, k) }}</b></div>
-  <div class="zeile trenn"><span>{{ t('spiel.abweichung') }}</span><b class="{{ 'farbe-' ~ k.richtung if k.stufe in ('stark', 'mittel', 'gering') else '' }}">{{ prozent(k.abweichung) }}{% if k.abweichung is not none %} · {{ t('stufe.' ~ k.stufe) }}{% endif %}</b></div>
+  <div class="zeile trenn"><span>{{ t('spiel.schwelle') }}</span><b>{{ schwelle(k) }}</b></div>
+  <div class="zeile trenn"><span>{{ t('spiel.abweichung') }}</span><b class="{{ 'farbe-' ~ k.richtung if k.stufe in ('stark', 'mittel', 'gering') else '' }}">{{ prozent(k.abweichung) }}{% if k.abweichung is not none %} · {{ t('stufe_detail.' ~ k.stufe) }}{% endif %}</b></div>
   <button type="button" class="zuklappen" data-zuklappen hidden aria-label="{{ t('spiel.zahlen_detail_zu', name=t('kennzahl.' ~ k.kpi ~ '.name')) }}">{{ t('spiel.zuklappen') }}{{ chevron() }}</button>
 </div>
 {%- endmacro %}
 
 {% block kopf_rechts %}
-<a class="zurueck" href="{{ url('/spieltag/' ~ seite.liga) }}">{{ pfeil_zurueck() }}{{ t('kopf.zurueck_spieltag') }}</a>
+<a class="zurueck" href="{{ zurueck_url }}">{{ pfeil_zurueck() }}{{ t('kopf.zurueck_spieltag') }}</a>
 {% endblock %}
 
 {% block inhalt %}
@@ -40,16 +46,19 @@
         <span>{{ wann }}</span>
         {% if seite.sonderspiel %}<span class="sb-chip">{{ t('chip.' ~ seite.sonderspiel ~ '_nr', n=seite.spieltag) }}</span>{% endif %}
         {% if seite.status %}<span class="sb-chip">{{ t('chip.' ~ seite.status) }}</span>{% endif %}
+        {% if seite.zustand == 'gespielt' and seite.bewertung != 'status' and seite.ergebnis %}<span class="sb-chip">{{ t('chip.gespielt') }}</span>{% endif %}
+        {% if seite.bewertung == 'werte_ab' and seite.werte_ab %}<span class="sb-chip">{{ t('chip.werte_ab', datum=tag_monat(seite.werte_ab)) }}</span>{% endif %}
       </div>
+      <h1 class="unsichtbar">{{ h1 }}</h1>
       <div class="sb-teams">
         <div class="sb-team">
-          <div class="sb-name">{{ seite.heim }}</div>
+          <div class="sb-name">{{ heim_name }}</div>
           <div class="sb-strich"></div>
           {{ form(seite.form_heim) }}
         </div>
         <div class="sb-gegen">{{ t('spiel.gegen') }}</div>
         <div class="sb-team">
-          <div class="sb-name">{{ seite.gast }}</div>
+          <div class="sb-name">{{ gast_name }}</div>
           <div class="sb-strich gast"></div>
           {{ form(seite.form_gast) }}
         </div>
@@ -82,18 +91,18 @@
   </div>
   <div class="karten">
     {% for k in seite.auffaellig %}
-    <div class="karte {{ stil(k.stufe) }}">
+    <div class="karte karte--{{ k.stufe }}">
       <div class="oben">
         <div class="kopf-k">
           <span class="ikon"><svg class="icon" width="22" height="22" aria-hidden="true"><use href="#ic-{{ k.icon }}"/></svg></span>
-          <span class="name">{{ t('kennzahl.' ~ k.kpi ~ '.name') }}</span>
-          <span class="chip s-{{ stil(k.stufe) }}-{{ k.richtung }}">{{ t('stufe.' ~ k.stufe) }}</span>
+          <h3 class="name">{{ t('kennzahl.' ~ k.kpi ~ '.name') }}</h3>
+          {{ q_chip(k.stufe) }}
         </div>
         <div class="wertzeile">
           <span class="gross farbe-{{ k.richtung }}">{{ prozent(k.abweichung) }}</span>
           <span class="satz">{{ t('kennzahl.' ~ k.kpi ~ '.' ~ k.richtung) }}</span>
         </div>
-        {{ balken(balken_daten(k), 'b10') }}
+        <span class="balken-mit-text">{{ balken(balken_daten(k), 'b10') }}<span class="mc-avg">{{ t('lesen.ligaschnitt_kurz') }}</span></span>
       </div>
       <details class="detail">
         <summary aria-label="{{ t('spiel.zahlen_detail') }}: {{ t('kennzahl.' ~ k.kpi ~ '.name') }}"><span>{{ t('spiel.zahlen_detail') }}</span><span class="chev">{{ chevron() }}</span></summary>
@@ -111,7 +120,7 @@
 </div>
 {% endif %}
 
-{% if seite.uebrige and seite.bewertung != 'status' %}
+{% if seite.uebrige and seite.bewertung not in ('status', 'werte_ab') %}
 <div class="eng abschnitt-detail">
   <div class="kopfzeile-mitte">
     <h2 class="h2-klein">{{ t('spiel.kennzahlen') if seite.bewertung == 'zu_wenig_daten' else t('spiel.normalbereich') }}</h2>
@@ -124,7 +133,7 @@
         <span class="oben">
           <span class="ikon normal"><svg class="icon" width="20" height="20" aria-hidden="true"><use href="#ic-{{ k.icon }}"/></svg></span>
           <span class="name">{{ t('kennzahl.' ~ k.kpi ~ '.name') }}{% if k.stufe == 'zu_wenig_daten' and seite.bewertung != 'zu_wenig_daten' %} <span class="vermerk">· {{ t('stufe.zu_wenig_daten') }}</span>{% endif %}</span>
-          <span class="wert">{{ prozent(k.abweichung) }}</span>
+          <span class="wert {{ 'normal-' ~ k.richtung if k.richtung and k.stufe == 'normal' else '' }}">{{ prozent(k.abweichung) }}</span>
           <span class="chev klein">{{ chevron() }}</span>
         </span>
         <span class="unten">{{ balken(balken_daten(k), 'b8') }}</span>
@@ -136,6 +145,16 @@
 </div>
 {% endif %}
 
-<div class="eng methodik-link"><a href="{{ url('/methodik') }}">{{ t('spiel.methodik') }}</a></div>
-<div class="eng abschluss"><a href="{{ url('/spieltag/' ~ seite.liga) }}">{{ t('spiel.alle_spiele') }}{{ pfeil_weiter() }}</a></div>
+{% if seite.weitere %}
+<div class="eng abschnitt-detail weitere">
+  <h2 class="h2-klein">{{ t('spiel.weitere') }}</h2>
+  <ul class="weitere-liste">
+    {% for w in seite.weitere %}<li><a href="{{ link('spiel', liga=seite.liga, slug=w.slug) }}"><span>{{ team(seite.liga, w.heim) }} {{ t('spiel.trenner') }} {{ team(seite.liga, w.gast) }}</span>{{ pfeil_rechts('currentColor', 2.4, 18) }}</a></li>{% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+<div class="eng methodik-link"><a href="{{ link('methodik') }}">{{ t('spiel.methodik') }}</a></div>
+<div class="eng abschluss"><a href="{{ zurueck_url }}">{{ t('spiel.alle_spiele') }}{{ pfeil_weiter() }}</a></div>
+<div class="eng"><p class="zeitzone-hinweis">{{ t('allgemein.zeitzone') }}</p></div>
 {% endblock %}

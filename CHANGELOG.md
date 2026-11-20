@@ -5,6 +5,24 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 20.11.2026 – Version 0.21 „Neue Website“
+
+- **Carsten** · Auftrag: Release 0.21 nach dem freigegebenen Releaseplan (Templates nach den Entwürfen P1, Deutsch und Englisch, Adressen, SEO, Inhaltsseiten; Cookie-Wahl, Formular-Versand und GA4 erst 0.22). Archiv- und Glossartexte schlägt Claude vor.
+- **Claude** · **Vorlagen nach den Entwürfen P1** (Main_P1, Spieltag_P1, Spiel_P1, Methodik_10, Kontakt, Impressum, Datenschutz, Fehler_404): Ranking als Karten mit Signalqualität (drei Balken), Kacheln je Stufe, Legende, Sprachmenü, Sprunglink, Zeitzonen-Hinweis, „Weitere Spiele dieses Spieltags“, kompakter Endstand „Gespielt · 2:1“ auf Kacheln und im Ranking; neues CSS ohne Inline-Stile, Fokus und Kontraste nach WCAG AA.
+- **Claude** · **Deutsch und Englisch:** `texte/en.json` (gleiche Schlüssel und Platzhalter, Test), Formate je Sprache, Anzeigenamen der Vereine je Sprache (`app/config/teamnamen_anzeige.csv`, 78 Vereine; Slug bleibt der API-Name).
+- **Claude** · **Adressen** `/de/` und `/en/` (`website/adressen.py`): 301 für `/`, alte Vorschau-Adressen, falschen Slug, Grossbuchstaben und fehlenden Schrägstrich; 302 für `/de/spieltag/`; 404 in der Sprache des Verzeichnisses; **Archivseite je Spieltag**; Spielseiten älterer Saisons 404.
+- **Claude** · **Suchmaschinen** (`website/seo.py`, `website/sitemap.py`, `app/config/website.toml`): Index-Regeln für Seite und Sitemap aus einer Funktion (vor dem Livegang `index_ab` leer), robots.txt, Sitemap-Index je Liga und Saison mit hreflang, Title und Description je Zustand (höchstens 155 Zeichen), canonical, hreflang, Open Graph, JSON-LD; Icons und Vorschaubild.
+- **Claude** · **Inhaltsseiten:** Methodik mit drei Ebenen, Tabellen und Zahlen aus `schwellen.toml` und **Excel-Download** (`website/methodik.py`); Glossar (Vorschlag); Kontakt (Formular, Versand ab 0.22); Impressum und Datenschutz mit Betreiberangaben nur aus `.env`; Seite „nicht gefunden“.
+- **Claude** · **Betrieb:** HTML 5 Minuten im Browser zwischenspeichern (Vorschau und Fehler nie), Dateien 30 Tage; bei Dateifehlern 503 mit `Retry-After`; Tabs und Aufklapper ohne JavaScript; Reiter Datenimport/API meldet Vereine ohne Anzeigenamen (zurzeit 12 Aufsteiger).
+- **Claude** · Fehler gefunden und behoben: Description der Spielseite bei „Zu wenig Daten“, „Werte ab“ und Status wurde bei langen Vereinsnamen nicht auf 155 Zeichen gekürzt (Test W20). Methodik auf 360 px 5 px zu breit (versteckte Beschriftungen der Tabellen), behoben.
+- **Claude** · Tests: `tests/test_website_021.py` (W17–W26), `tests/test_website.py` an die neuen Adressen angepasst; axe-core 4.10 auf allen Seitenarten DE/EN (Desktop und Handy) ohne Befund.
+- **Claude** · Doku: `01` (0, 3, 4, 7, 8), `05` v5.9 (6.5), `08` (3, 4, 4.1, neu 4.2, neu 7.3, 8, 9, 11), RELEASE.md.
+
+## 20.11.2026 – Version 0.20 eingespielt
+
+- **Carsten** · Version 0.20 eingespielt (`10fa028`, Pull Request #20; Tests grün, Browser-Prüfung nach `RELEASE.md` mit „j“ bestätigt).
+- **Claude** · Stand nachgetragen (`01`, Abschnitt 0 und Versionstabelle).
+
 ## 19.11.2026 – Version 0.19.1 eingespielt, Version 0.20 „Fundament“
 
 - **Carsten** · Version 0.19.1 eingespielt (`537b4a4`). Fragerunde mit dem Design-Chat (Entscheidungsprotokoll 19.11.2026), Releaseplan 0.20/0.21/0.22/1.0 freigegeben; Auftrag: Frontend-Qualität bewerten und mit 0.20 beginnen.

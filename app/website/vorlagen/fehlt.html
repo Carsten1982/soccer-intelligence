@@ -1,0 +1,24 @@
+{% extends "basis.html" %}
+{% from "teile.html" import deko_feld, pfeil_zurueck with context %}
+{#- Seite „nicht gefunden“ (seit 0.21 nach Entwurf „Fehler_404“): Status 404, noindex, ohne canonical und hreflang,
+    in der Sprache des Verzeichnisses der Adresse. Drei Schaltflächen: Startseite, Spieltag, Methodik. -#}
+{% block inhalt %}
+<div class="eng">
+  <div class="hero hero-spieltag">
+    {{ deko_feld() }}
+    <div class="innen">
+      <a class="zurueck-hell" href="{{ link('start') }}">{{ pfeil_zurueck() }}{{ t('kopf.startseite') }}</a>
+      <h1>{{ t('fehler.titel') }}</h1>
+    </div>
+  </div>
+</div>
+<div class="eng abschnitt-inhalt">
+  <p class="text-gross">{{ t('fehler.text') }}</p>
+  <div class="knopfreihe">
+    <a class="knopf-voll" href="{{ link('start') }}">{{ t('fehler.knopf_start') }}</a>
+    <a class="knopf-rand" href="{{ link('spieltag', liga=standard_liga) }}">{{ t('fehler.knopf_spieltag') }}</a>
+    <a class="knopf-rand" href="{{ link('methodik') }}">{{ t('fehler.knopf_methodik') }}</a>
+  </div>
+</div>
+<div class="abstand-unten"></div>
+{% endblock %}

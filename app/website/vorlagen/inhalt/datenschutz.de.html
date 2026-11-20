@@ -1,0 +1,58 @@
+{#- Datenschutzerklärung (de, seit 0.21 nach Entwurf „Datenschutz“; juristische Prüfung vor dem Livegang offen). Betreiberangaben aus der Server-Konfiguration. -#}
+{% macro kopf() %}<h1>Datenschutzerklärung</h1>{% endmacro %}
+
+{% macro rumpf() %}
+<div class="inhaltskarte">
+
+      <nav class="inhaltsverzeichnis" aria-label="Auf dieser Seite">
+        <div>Auf dieser Seite</div>
+        <ul><li><a href="#verantwortlich">Verantwortlich und erfasste Daten</a></li><li><a href="#kontakt">Kontakt per E-Mail und Kontaktformular</a></li><li><a href="#google-analytics">Google Analytics</a></li><li><a href="#google-search-console">Google Search Console</a></li><li><a href="#kein-marketing">Keine Nutzung zu Marketingzwecken</a></li><li><a href="#deine-rechte">Deine Rechte</a></li></ul>
+      </nav>
+
+      <section>
+        <h2 id="verantwortlich">Verantwortlich und erfasste Daten</h2>
+        <p>Verantwortlich für die Bearbeitung deiner Daten auf dieser Website ist {{ betreiber.name or t('start.fan_name') }}{% for zeile in betreiber.adresse %}, {{ zeile }}{% endfor %}, Betreiber von Soccer Intelligence (Kontaktangaben im <a href="{{ link('impressum') }}">Impressum</a>). Wir behandeln deine Daten vertraulich und halten uns an die geltenden Datenschutzvorschriften, insbesondere das Schweizer Datenschutzgesetz (DSG) und, soweit anwendbar, die Datenschutz-Grundverordnung (DSGVO).</p>
+        <p>Beim Besuch von Soccer Intelligence können aus technischen Gründen bestimmte Daten erfasst werden. Dazu gehören beispielsweise die IP-Adresse, Zeitpunkt des Zugriffs, aufgerufene Seiten und technische Informationen zum verwendeten Browser. Diese Daten dienen ausschließlich dem technischen Betrieb, der Sicherheit und der Fehleranalyse der Website.</p>
+      </section>
+
+      <section>
+        <h2 id="kontakt">Kontakt per E-Mail und Kontaktformular</h2>
+        <p>Wenn du uns per E-Mail oder über das Kontaktformular schreibst, verarbeiten wir die von dir übermittelten Angaben (deine E-Mail-Adresse, deine Nachricht und, wenn du möchtest, deinen Namen), um deine Anfrage zu bearbeiten und dir zu antworten. Wir verwenden diese Angaben nicht für andere Zwecke und geben sie nicht an Dritte weiter. Wir löschen sie, sobald deine Anfrage erledigt ist und keine gesetzlichen Aufbewahrungspflichten bestehen.</p>
+      </section>
+
+      <section>
+        <h2 id="google-analytics">Google Analytics</h2>
+        <p>Wir verwenden Google Analytics 4, einen Webanalysedienst der Google Ireland Limited (Gordon House, Barrow Street, Dublin 4, Irland). Dabei kann auch die Google LLC (1600 Amphitheatre Parkway, Mountain View, CA 94043, USA) Daten verarbeiten. Mit Google Analytics messen wir, wie viele Personen unsere Seiten besuchen, welche Seiten gefragt sind und wie die Website genutzt wird. So können wir Soccer Intelligence besser und verständlicher machen.</p>
+        <h3>Welche Daten erfasst werden</h3>
+        <p>Google Analytics kann folgende Daten erfassen:</p>
+        <ul><li>aufgerufene Seiten, Klicks und Aktionen auf der Website</li><li>ungefährer Standort auf Ebene von Land und Region</li><li>Gerätetyp, Browser, Betriebssystem, Bildschirmgröße und Sprache</li><li>Herkunft des Besuchs (z. B. Suchmaschine oder direkter Aufruf)</li><li>Zeitpunkt und Dauer des Besuchs</li><li>eine zufällig erzeugte Kennung, die in einem Cookie oder einem vergleichbaren Speicher deines Browsers abgelegt wird</li></ul>
+        <p>Google Analytics 4 speichert keine IP-Adressen. Wir haben den Dienst datenschutzfreundlich eingestellt: Die Google-Signals und die Funktionen für personalisierte Werbung sind ausgeschaltet, die Datenweitergabe an Google für eigene Zwecke ist deaktiviert, und die Daten werden nach 14 Monaten automatisch gelöscht.</p>
+        <h3>Einwilligung und Widerruf</h3>
+        <p>Google Analytics wird erst aktiv, wenn du im Cookie-Hinweis ausdrücklich zustimmst. Ohne deine Zustimmung werden keine Daten an Google Analytics gesendet. Du kannst deine Einwilligung jederzeit mit Wirkung für die Zukunft widerrufen, indem du deine <a href="{{ link('cookie') }}">Cookie-Einstellungen</a> auf dieser Website änderst. Die bis dahin erfolgte Datenbearbeitung bleibt rechtmäßig. Alternativ kannst du die Erfassung durch Google Analytics mit dem <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer">Browser-Add-on von Google</a> verhindern.</p>
+        <h3>Rechtsgrundlage</h3>
+        <p>Soweit die DSGVO anwendbar ist (etwa bei Besucherinnen und Besuchern aus der EU), beruht die Verarbeitung auf deiner Einwilligung (Art. 6 Abs. 1 lit. a DSGVO). Nach dem Schweizer Datenschutzgesetz bearbeiten wir deine Daten transparent und nur im Rahmen deiner Zustimmung. Unser Interesse ist es, die Nutzung der Website zu verstehen und sie zu verbessern.</p>
+        <h3>Übermittlung in die USA</h3>
+        <p>Daten können an Google-Server in den USA übermittelt werden. Google LLC ist nach dem EU-U.S. Data Privacy Framework und dem Swiss-U.S. Data Privacy Framework zertifiziert. Damit gilt für diese Übermittlung ein angemessenes Datenschutzniveau. Ergänzend schließt Google mit uns Vertragsklauseln zur Datenbearbeitung ab. Weitere Informationen findest du in der <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Datenschutzerklärung von Google</a>.</p>
+      </section>
+
+      <section>
+        <h2 id="google-search-console">Google Search Console</h2>
+        <p>Wir nutzen die Google Search Console, einen kostenlosen Dienst der Google Ireland Limited. Er zeigt uns, wie Soccer Intelligence in der Google-Suche erscheint, zum Beispiel für welche Suchbegriffe unsere Seiten angezeigt und angeklickt werden, und weist uns auf technische Fehler hin.</p>
+        <p>Die Search Console erfasst keine Daten über deinen Besuch auf unserer Website. Die Auswertungen stammen von Google und erreichen uns nur zusammengefasst, sodass wir keine einzelnen Personen erkennen können. Zur Bestätigung, dass die Website uns gehört, hinterlegen wir einen technischen Nachweis (einen DNS-Eintrag oder einen unsichtbaren Meta-Tag). Dabei werden keine Daten von Besucherinnen und Besuchern erhoben. Für die Datenbearbeitung bei Google gilt die <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Datenschutzerklärung von Google</a>.</p>
+      </section>
+
+      <section>
+        <h2 id="kein-marketing">Keine Nutzung zu Marketingzwecken</h2>
+        <p>Die erfassten Daten werden nicht für personalisierte Werbung oder Marketingzwecke verwendet. Wir schalten keine Werbung und nutzen keine Remarketing- oder Werbefunktionen. Google Analytics dient ausschließlich dazu, die Website zu verbessern.</p>
+        <p>Sollten künftig weitere Tools eingesetzt werden, wird diese Datenschutzerklärung aktualisiert und über die damit verbundene Datenverarbeitung informiert.</p>
+      </section>
+
+      <section>
+        <h2 id="deine-rechte">Deine Rechte</h2>
+        <p>Du hast das Recht, Auskunft über deine bei uns gespeicherten Daten zu verlangen, sie berichtigen oder löschen zu lassen, ihre Bearbeitung einzuschränken oder ihr zu widersprechen und die Herausgabe deiner Daten zu verlangen. Schreib uns dazu über das <a href="{{ link('kontakt') }}">Kontaktformular</a> oder an die Adresse im <a href="{{ link('impressum') }}">Impressum</a>.</p>
+        <p>Wenn du der Meinung bist, dass wir deine Daten nicht rechtmäßig bearbeiten, kannst du dich an die zuständige Aufsichtsbehörde wenden. In der Schweiz ist das der Eidgenössische Datenschutz- und Öffentlichkeitsbeauftragte (EDÖB).</p>
+        <p>Stand dieser Datenschutzerklärung: <time datetime="2026-11-22">22.11.2026</time></p>
+      </section>
+
+    </div>
+{% endmacro %}

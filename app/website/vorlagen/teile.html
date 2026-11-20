@@ -1,5 +1,6 @@
-{#- Gemeinsame Bausteine der Website (seit 0.18): Symbole, Balken, „Wie lese ich das?“, Warnbox, Pausen-Karte.
-    Masse und Farben aus den Entwürfen 1d, 3d, 2i. -#}
+{#- Gemeinsame Bausteine der Website (seit 0.18; seit 0.21 nach den Entwürfen Main_P1, Spieltag_P1, Spiel_P1):
+    Symbole, Balken, Signalqualität-Chip, „Wie lese ich das?“, Warnbox, Pausen-Karte. Einbinden immer mit
+    „import … with context“, damit t(), link() usw. in der Sprache der Seite gelten. -#}
 
 {% macro pfeil_rechts(farbe='currentColor', breite=2.6, groesse=20) -%}
 <svg width="{{ groesse }}" height="{{ groesse }}" viewBox="0 0 24 24" fill="none" stroke="{{ farbe }}" stroke-width="{{ breite }}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
@@ -49,10 +50,20 @@
 
 {% macro lesen_ligaschnitt() -%}
 <div class="hinweisbox"><ul>
+  <li><b>{{ t('lesen.abweichung_titel') }}</b> {{ t('lesen.abweichung') }}</li>
   <li><b>{{ t('lesen.ligaschnitt_titel') }}</b> {{ t('lesen.ligaschnitt') }}</li>
-  <li><b>{{ t('lesen.prozent_titel') }}</b> {{ t('lesen.prozent') }}</li>
-  <li><b>{{ t('lesen.farben_titel') }}</b> {{ t('lesen.farben') }}</li>
+  <li><b>{{ t('lesen.richtung_titel') }}</b> {{ t('lesen.richtung') }}</li>
+  <li><b>{{ t('lesen.signal_titel') }}</b> {{ t('lesen.signal') }}</li>
 </ul></div>
+{%- endmacro %}
+
+{% macro q_balken(stufe) -%}
+<span class="q-balken q-{{ stufe }}" aria-hidden="true">{% for i in range(3) %}<span class="{{ 'an' if i < balken_zahl[stufe] else 'aus' }} h{{ i }}"></span>{% endfor %}</span>
+{%- endmacro %}
+
+{% macro q_chip(stufe, kurz=false, extra='') -%}
+{#- Signalqualität als Chip mit drei Balken (Entwürfe P1). kurz: „stark“ / „High“ mit Zusatz für Screenreader. -#}
+<span class="q-chip q-{{ stufe }} {{ extra }}">{{ q_balken(stufe) }}{% if kurz %}{{ t('stufe_kurz.' ~ stufe) }}<span class="unsichtbar">{{ t('stufe_kurz.zusatz') }}</span>{% else %}{{ t('stufe.' ~ stufe) }}{% endif %}</span>
 {%- endmacro %}
 
 {% macro lesen_knopf() -%}
