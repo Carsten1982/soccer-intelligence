@@ -1,6 +1,6 @@
 # Soccer Intelligence – Dashboard-Briefing
 
-**Version 5.10** · Stand 20.11.2026 (Version 0.21.1: Vorschau heute + 5 statt + 6, 4; Version 0.21: Vereine ohne Anzeigenamen der Website im Reiter Datenimport/API, 6.5; Version 0.20: Signalqualität stark/mittel/gering statt Prognosewert, gespielt ab Anpfiff + 2 Stunden, Top Anomalien ohne Nachrücken, Schnappschüsse im Reiter Datenimport/API, 48-Stunden-Grenze, 4, 5, 6.5; Version 0.19.1: Reiter-Reihenfolge, Text Top Anomalien, Schwellen je Liga in der Sensitivitätsanalyse; Version 0.19: Auffälligkeit und Prognosewert statt leicht/stark, 4.1, 5, 6.3, 6.4, 8; Version 0.14: Bereich Datenimport/API, 6.5; Version 0.15: Entwurf 2 mit Blöcken A/B und Entscheiden; Version 0.15.2: Anmeldemaske, 2.4; Version 0.16: kommende Spieltage, 4, 4.4, 5)
+**Version 5.11** · Stand 20.11.2026 (Version 0.22: Reiter Datenimport/API ohne Freigabe, Läufe heute, 6.5; Version 0.21.1: Vorschau heute + 5 statt + 6, 4; Version 0.21: Vereine ohne Anzeigenamen der Website im Reiter Datenimport/API, 6.5; Version 0.20: Signalqualität stark/mittel/gering statt Prognosewert, gespielt ab Anpfiff + 2 Stunden, Top Anomalien ohne Nachrücken, Schnappschüsse im Reiter Datenimport/API, 48-Stunden-Grenze, 4, 5, 6.5; Version 0.19.1: Reiter-Reihenfolge, Text Top Anomalien, Schwellen je Liga in der Sensitivitätsanalyse; Version 0.19: Auffälligkeit und Prognosewert statt leicht/stark, 4.1, 5, 6.3, 6.4, 8; Version 0.14: Bereich Datenimport/API, 6.5; Version 0.15: Entwurf 2 mit Blöcken A/B und Entscheiden; Version 0.15.2: Anmeldemaske, 2.4; Version 0.16: kommende Spieltage, 4, 4.4, 5)
 
 > **Massgebliche Quelle seit 31.10.2026.** Änderungen werden nur noch in dieser Datei gemacht, mit Datum in der Änderungshistorie bzw. im `CHANGELOG.md`.
 > Das Word-Dokument *Dashboard-Briefing v4.2* liegt nur noch als Archiv im Ordner `word/` und wird nicht mehr gepflegt. Änderungen seit 31.10.2026 sind im Text als „Änderung“ mit Datum gekennzeichnet.
@@ -402,8 +402,11 @@ Festhalten der Entscheide macht der Container `soccer-import`.
 - **Anzeigenamen der Website (Deutsch/Englisch)** (seit 0.21, `08`, 4.1): Vereine der jeweils neuesten Saison im
   Spielplan ohne Eintrag in `app/config/teamnamen_anzeige.csv`, mit Liga und Name der Datenquelle (sonst ✓). Die Website
   zeigt dort bis zum Nachtrag (über GitHub) den Namen der Datenquelle; die Veröffentlichung wird nicht blockiert.
-- Nach der Testphase (Datum `automatisch_ab`) verschwinden die Buttons; das Protokoll bleibt. Fassungen mit Fehlern,
-  kritischen Punkten oder neuen Warnungen werden nie automatisch übernommen.
+- **Seit 0.22 ohne Freigabe** (`06`, 10.2): fehlerfreie Fassungen werden sofort übernommen; der Kasten „Neue Daten
+  bereit“ mit den Buttons erscheint nur noch bei Fehlern oder neuen Warnungen. Sonst „Alles übernommen“ und darunter
+  „Ihre Entscheidung“ für zurückgehaltene Spiele (F1). Neu: **„Läufe heute“** (Zeit, Anlass: Kontrolllauf / nach dem
+  Spiel / Wiederholung, Status, geplante Läufe), Spalte **Anlass** im Protokoll, „nächster Lauf“ in der Statusleiste mit
+  Anlass, Betriebsart „nach jedem Spiel und um 04:00, ohne Freigabe“.
 
 ## 7. Verbindliche KPI-Spaltenstruktur
 

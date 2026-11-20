@@ -268,7 +268,7 @@ und Prüfregeln aus `app/core/`. Kein Eingriff in Traefik oder andere Container;
 | R8 | IDs | Keine neue Spalte. Jede id nur einmal **über alle Ligen** (Fehler), feste Zuordnung eigene ID ↔ API-ID in `app/config/zuordnung_api.csv` (11'978 Spiele, geprüft über Datum und Endstand). |
 | R9 | Rohdaten | 12 Monate aufbewahren, ältere Tagesordner löscht der Dienst. |
 
-### 10.2 Lauf nach jedem Spiel und Übernahme ohne Freigabe (ab Version 0.22) – Spezifikation zur Freigabe
+### 10.2 Lauf nach jedem Spiel und Übernahme ohne Freigabe (seit Version 0.22) – freigegeben von Carsten am 20.11.2026
 
 **Beschlüsse Carsten 20.11.2026:**
 
@@ -309,7 +309,7 @@ und Prüfregeln aus `app/core/`. Kein Eingriff in Traefik oder andere Container;
    | Stufe | Was bleibt | Wie lange |
    |---|---|---|
    | Täglich | jedes Backup vor einem Tausch | 14 Tage |
-   | Wöchentlich | das letzte Backup jedes Sonntags | 8 Wochen |
+   | Wöchentlich | das letzte Backup jeder Woche (Montag bis Sonntag) | 8 Wochen |
    | Monatlich | das letzte Backup jedes Monats | 12 Monate |
    | Saisonende | das Backup nach dem letzten Spieltag jeder Saison (ab 1. Juli: Saison der Vorsaison) | dauerhaft |
 
@@ -333,11 +333,17 @@ Wiederholung (höchstens zwei, nur bei Fehler oder fehlenden Werten), Übernahme
 zurückgehalten (nach F1), leere Werte nie 0, Backup-Staffel (Stichtage über Jahreswechsel und Saisonende), Tausch nur
 bei unveränderter Datei, Kontingent-Grenze; Probelauf mit Aufzeichnungen echter API-Antworten eines Samstags.
 
-**Fragen an Carsten vor der Umsetzung:**
-- **F1** Kritische Spiele einzeln zurückhalten statt die ganze Fassung zu sperren (Regel 4)? Vorschlag: ja.
-- **F2** Gibt es Fälle, in denen du trotzdem vor dem Schreiben gefragt werden willst (z. B. ein Spiel, das aus der
-  API-Liste verschwindet, also abgesagt oder gelöscht)? Vorschlag: nur die kritischen Fälle aus Regel 4.
-- **F3** Alles in 0.22, ohne E-Mail: Meldungen stehen bis 0.23 nur im Reiter Datenimport/API. Einverstanden?
+**Entscheide Carsten 20.11.2026:**
+- **F1** Kritische Spiele werden einzeln zurückgehalten, der Rest übernommen (Regel 4): **ja**.
+- **F2** Gefragt wird nur bei den kritischen Fällen aus Regel 4 sowie bei Fassungen mit Fehlern oder neuen Warnungen
+  (Prüfschranke): **ja**.
+- **F3** Ohne E-Mail in 0.22, Meldungen bis 0.23 nur im Reiter: **ja**.
+
+**Umsetzung (0.22):** `importer/laufplan.py` (Laufzeiten, Fälligkeit, Wiederholung, Backup-Staffel), `importer/dienst.py`
+(Anlass je Lauf: `kontrolle`, `spiel`, `wiederholung`; Ereignisprotokoll `import/ereignisse.jsonl`),
+`importer/erzeugen.py` (`recheck=False` für Läufe nach dem Spiel; kritische Punkte sperren nicht mehr),
+`app/config/import.toml` (`automatisch_ab = 2026-11-20`), Reiter Datenimport/API (Läufe heute, Anlass im Protokoll,
+Entscheide auch ohne wartende Fassung). Tests L1–L5 (`tests/test_import_022.py`).
 
 ## 11. Rohdatenspeicher
 

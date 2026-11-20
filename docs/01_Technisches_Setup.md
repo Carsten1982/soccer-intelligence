@@ -10,7 +10,7 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 
 **In Betrieb:** Version 0.21.2 (seit 20.11.2026) – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit Auffälligkeit und Signalqualität stark / mittel / gering (23 Schwellen), Top Anomalien, Datenqualität, Sensitivitätsanalyse, Datenimport über API-Football mit Schnappschuss je Spiel; Vorschau weiterer Spieltage ab heute + 5; Website-Vorschau unter `/vorschau` nach den Entwürfen vom 20.11. in Deutsch und Englisch (Archiv je Spieltag, Methodik mit Excel-Download, Glossar, Kontakt ohne Versand, Impressum, Datenschutz), vorbereitet für Suchmaschinen (noch nichts im Index, `index_ab` leer).
 
-**Als Nächstes:** Entschieden (Carsten 20.11.2026, wie umgesetzt): Level-3-Chip DE „Ebene 3 · Für Statistik-Fans“, englischer Spieltitel mit „vs“, Glossar-Link im Footer nach Methodik. Offen beim Design-Chat: Briefings nennen noch 7 statt 5 Tage Vorschau. Danach Version 0.22 – vorher Spezifikation E-Mail-Alarme und Entscheidungen zum Abfrageplan (`06`, 10.2: Läufe bei Anpfiff + 2¼ h); Freigaben aus `RELEASE.md` 0.21 (Glossar, Archivtexte, Namen der 12 Aufsteiger, „Auffällige Spiele je Spieltag“).
+**Als Nächstes:** Version 0.22 einspielen (Daten nach jedem Spiel, ohne Freigabe). Danach 0.23 E-Mail und Überwachung (Postfächer `info@` und `alert@` bei Hostinger, Carsten richtet sie während 0.22 ein; Alarme sofort, Server-Überwachung Festplatte/Arbeitsspeicher/CPU/Container, wöchentliche Statusmail, Kontaktformular-Versand), 0.24 Cookie-Hinweis und Google Analytics. Offen beim Design-Chat: Briefings nennen noch 7 statt 5 Tage Vorschau; „Athletic Bilbao“ im Glossar nachtragen.
 
 **Als Nächstes – Releaseplan bis zum Livegang (Freigabe Carsten 19.11.2026):**
 
@@ -18,13 +18,16 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 |---|---|---|---|
 | **0.20 Fundament** | Rechenlogik, Datenregeln, Dashboard | Umbenennung Signalqualität stark/mittel/gering; Schnappschuss je Spiel (stündlich, versioniert, nachträglich für laufende Saison und Vorsaison); Statusmodell (Zu wenig Daten, AWD-Absicherung, Gespielt nach Anpfiff + 2 h, kein Nachrücken in den Top Anomalien, „Werte ab …“ auf allen Seiten, Sonderspiel-Nummer und Zählform); 48-Stunden-Grenze; Dashboard angepasst | keine |
 | **0.21 Neue Website** | Templates, Sprachen, Adressen, SEO | Templates T1–T7, T9–T11 nach den Entwürfen; DE/EN mit Anzeigenamen je Sprache; Adressen `/de/`, `/en/`, 301, Canonical, hreflang, 404, 503; Indexierungsregeln, robots.txt, Sitemap; Titles/Descriptions/Social/JSON-LD; Tabs ohne JS, Fokus, Kontraste, axe-core; Caching; Excel-Download Methodik | Texte Archiv/Glossar, offene Glossar-Vorschläge |
-| **0.22 Betrieb & Einwilligung** | E-Mail, Kontakt, Cookies, Analytics | **Spezifikation E-Mail-Alarme (offen, vor Beginn von 0.22)**; E-Mail über Hostinger-Postfach; Kontaktformular-Versand; Alarme (API, Import, Freigabe, Schnappschuss); Cookie-Hinweis und Cookie-Einstellungen; Tag Manager und GA4 nach Zustimmung; Search Console | Postfach, GA4-/GTM-IDs |
+| **0.22 Daten nach jedem Spiel** | Import ohne Freigabe | Lauf nach jedem Spiel (Anpfiff + 2¼ h) mit Wiederholung, Kontrolllauf 04:00, Backups gestaffelt, Ereignisprotokoll (`06`, 10.2; Zuschnitt Carsten 20.11.2026) | – |
+| **0.23 E-Mail & Überwachung** | Alarme, Statusmail, Kontakt | Postfächer `info@`/`alert@` (Hostinger), Alarme sofort (Import, Kontingent, Schnappschuss, Datei-Prüfung), Server-Überwachung (Festplatte, Arbeitsspeicher, CPU, eigene Container; Warnung/Kritisch), wöchentliche Statusmail, Kontaktformular-Versand | Postfächer und Zugangsdaten in `.env` |
+| **0.24 Einwilligung** | Cookies, Analytics | Cookie-Hinweis und Cookie-Einstellungen; Tag Manager und GA4 nach Zustimmung; Search Console | GA4-/GTM-IDs |
 | **1.0 Qualität & Livegang** | Prüfung, Korrekturen, Umschalten | Qualitätschecks (Compound Engineering, Web Quality Skills, Lighthouse, axe mit echten Daten); Befunde beheben; Domain umschalten, `/` → `/de/`, Vorschau-Passwort weg, `index_ab` setzen, Sitemap einreichen | Impressum mit Projektadresse, juristische Prüfung DE/EN, Nutzungsrechte API-Football, Hosting-Angabe |
 
 Danach: **Prognose gegen Ergebnis** auf der Spielseite (je Kennzahl Wert vor dem Spiel aus dem Schnappschuss und tatsächlicher Wert, „bestätigt / nicht bestätigt“; Wunsch Carsten 20.11.2026, nach Abschluss der Releases bis 1.0) · Rückblick für Fans (Version 2/3) · E-Mail-Benachrichtigung über den Alarm hinaus · Phase 2: Wettquoten, Verletzungen, Tabellenstände · Phase 3: primäre Auffälligkeit je Spiel, neue KPIs · Rundum-Prüfung des Codes.
 
 | Version | Etappe | Inhalt | Eingespielt | Git | Tests |
 |---|---|---|---|---|---|
+| 0.22 | Daten nach jedem Spiel | Lauf nach jedem Spiel (Anpfiff + 2¼ h) mit Wiederholung, Übernahme ohne Freigabe (kritische Spiele einzeln zurückgehalten), Kontrolllauf 04:00, Backups gestaffelt, Ereignisprotokoll; Reiter Datenimport/API mit „Läufe heute“; Aufsteiger-Namen, Athletic Bilbao, Glossar freigegeben, Startseite ohne Datenstand-Zeile | – | – | – |
 | 0.21.2 | Entwürfe 20.11., zweite Lieferung | Spielseite: grüne Schaltfläche „Alle Spiele des Spieltags“, Textlink zur Methodik, ohne Zeitzonen-Hinweis; Spieltag-Kopf ohne „Aktueller Datenstand“ und niedriger; Startseite: SEO-Box eigener Block, Chip neben der Kennzahl; Methodik-Schaltfläche mit Umbruch nur mobil | 20.11.2026 | `9efe682` | 664 |
 | 0.21.1 | Entwürfe 20.11. | Kräftigere Grüntöne, Spielseite ohne „Weitere Spiele“, Methodik-Einstieg als Karten, mobil einzeilige Navigation und Tabellen ohne Scrollbalken; Vorschau weiterer Spieltage heute + 5 statt + 6; Entwurf Abfrageplan (`06`, 10.2) | 20.11.2026 | `273b969` | 697 |
 | 0.21 | Neue Website | Website-Vorschau nach den Entwürfen P1, Deutsch/Englisch, Adressen `/de/` `/en/` mit 301/302/404, Archiv je Spieltag, Methodik mit Excel-Download, Glossar, Kontakt, Impressum, Datenschutz, 404; Index-Regeln, Sitemap, robots.txt, JSON-LD; Caching, 503; axe-core ohne Befund; Anzeigenamen je Sprache | 20.11.2026 | `006a150` | 696 |
@@ -239,6 +242,7 @@ Erwartet: genau die drei Versionen oben. Weicht etwas ab → Ursache klären, be
 8. Keine Passwörter, Tokens oder Schlüssel in Code oder Dokumentation. Die Zugangsdaten für den Dashboard-Passwortschutz liegen nur als Hash in einer Konfigurationsdatei auf dem Server (z. B. `.env`, nicht in Git); ebenso der API-Schlüssel von API-Football (`API_FOOTBALL_KEY` in `.env`).
 9. Fehlende Statistikwerte nie durch 0 oder Schätzungen ersetzen.
 10. Änderungen erst nach Freigabe durch Carsten.
+11. **Seit 0.22 (Beschluss Carsten 20.11.2026):** Der Import-Dienst `soccer-import` schreibt nach bestandenen Prüfungen **ohne Freigabe** nach `data/` (nach jedem Spiel und beim Kontrolllauf um 04:00), immer mit Backup vorher und Tausch in einem Schritt (`06`, 10.2). Sonst schreibt niemand in die Excel-Dateien; Fassungen mit Fehlern oder neuen Warnungen warten auf die Freigabe.
 
 ---
 
@@ -403,9 +407,10 @@ Regeln und Ablauf: `06_Datenlieferung.md`; Bereich im Dashboard: Dashboard-Brief
 ```
 Erwartet: `1` (der Schlüssel erscheint nicht auf dem Bildschirm; vorher kommt eine Kopie von `.env` nach `backup/`). Ein vorhandener Eintrag wird ersetzt, eine leere Eingabe ändert nichts. Neuer Schlüssel: denselben Befehl ausführen, danach `cd /docker/football-dashboard && docker compose up -d soccer-import`.
 
-**Täglich:** Jeden Tag um 04:00 (seit 0.15 auch am Wochenende) holt `soccer-import` die Daten und legt eine neue
-Fassung bereit. Im Reiter „Datenimport/API“ prüfen und **Übernehmen** oder **Verwerfen**; eine Freigabe am Wochenende
-ist nicht nötig (der nächste Lauf ersetzt die wartende Fassung). Der Tausch geschieht innerhalb einer Minute; die
+**Seit 0.22 ohne Freigabe** (`06`, 10.2): Nach jedem Spiel (Anpfiff + 2¼ Stunden, Wiederholung nach 1 Stunde) und
+täglich um 04:00 (Kontrolllauf) holt `soccer-import` die Daten; eine fehlerfreie Fassung wird sofort übernommen. Nur
+eine Fassung mit Fehlern oder neuen Warnungen wartet im Reiter „Datenimport/API“ auf **Übernehmen** oder **Verwerfen**.
+Der Reiter zeigt die Läufe des Tages und das Protokoll. Bis 0.21.2: jeder Lauf mit Freigabe. Der Tausch geschieht innerhalb einer Minute; die
 bisherigen Dateien kommen nach `backup/` (`…_vor_import.xlsx`, dazu `entscheidungen_…json`). Erscheint „Ihre
 Entscheidung“, im Reiter einen der beiden Buttons wählen; der Entscheid wirkt ab dem nächsten Lauf (`06`, Abschnitt
 10.1). Ab dem Datum `automatisch_ab` in `app/config/import.toml` wird eine **unkritische** Fassung sofort übernommen.
@@ -422,6 +427,14 @@ cd /docker/football-dashboard && docker compose stop soccer-import
 ```bash
 cd /docker/football-dashboard && docker compose up -d soccer-import
 ```
+
+**Backups** (seit 0.22 gestaffelt): alle der letzten 14 Tage, je Woche das letzte (8 Wochen), je Monat das letzte
+(12 Monate), je Saison das letzte vor dem 1. Juli (dauerhaft). **Einmal im Monat eine Kopie auf den Laptop** (falls der
+Server ausfällt). Auf dem Laptop im Terminal (PowerShell oder Mac-Terminal), `<server>` durch die Adresse des VPS ersetzen:
+```bash
+scp "root@<server>:/docker/football-dashboard/backup/Database-Soccer-Intelligence_$(date +%Y-%m)-*_vor_import.xlsx" .
+```
+Lädt alle Datenbank-Backups des laufenden Monats in den aktuellen Ordner; die neueste Datei genügt zur Aufbewahrung.
 
 **Rückweg nach einer übernommenen Fassung:** wie Abschnitt 6.2, Schritt 5, mit den Dateien `backup/*_vor_import.xlsx`
 (Datenbank und Spielplan gemeinsam zurückkopieren).

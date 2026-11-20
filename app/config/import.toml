@@ -1,7 +1,8 @@
 # Soccer Intelligence – Datenimport über API-Football (docs/06_Datenlieferung.md, Abschnitt 10)
 #
-# automatisch_ab: Ab diesem Datum wird eine fehlerfreie neue Fassung sofort übernommen (E3: zuerst 2 Wochen von Hand).
+# automatisch_ab: Ab diesem Datum wird eine fehlerfreie neue Fassung sofort übernommen (E3).
 # Ohne Eintrag gilt immer: Freigabe von Hand im Bereich „Datenimport/API“.
-# Das Datum wird nach der Testphase von Carsten festgelegt (Änderung wie eine Code-Änderung: Git, Neubau, CHANGELOG).
-#
-# automatisch_ab = 2026-12-01
+# Seit 0.22 (Beschluss Carsten 20.11.2026, Spezifikation 06, 10.2): keine Freigabe mehr, jede fehlerfreie Fassung wird
+# sofort übernommen – auch die Läufe nach jedem Spiel. Fassungen mit Fehlern oder neuen Warnungen warten weiter im Reiter.
+
+automatisch_ab = 2026-11-20

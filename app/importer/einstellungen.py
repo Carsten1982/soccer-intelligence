@@ -25,7 +25,6 @@ OPEN_DAYS = 7                 # Statistik so lange nachholen, danach Warnung
 CORRECTION_DAYS = 7           # Korrekturfenster (R1): bis 7 Tage nach dem Spiel übernimmt der Import API-Korrekturen
                               # selbst; danach ist ein Spiel „eingefroren“ und eine Änderung braucht einen Entscheid
 PLACEHOLDER_DAYS = 14         # Termin „vorläufig“ nur, wenn mehr als 14 Tage entfernt (Spielplan v2.1, S2)
-BACKUPS_KEPT = 30             # Fassungen je Datei im Backup
 HISTORY_DAYS = 14             # Protokoll im Reiter
 RAW_KEEP_DAYS = 365           # Rohdaten 12 Monate aufbewahren (R9)
 DECISIONS_FILE = "entscheidungen.json"   # Entscheide aus dem Reiter (R1), im Import-Ordner, mit Backup

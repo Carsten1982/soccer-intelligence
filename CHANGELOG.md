@@ -5,10 +5,14 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
-## 20.11.2026 – Für Version 0.22 (in Arbeit)
+## 20.11.2026 – Version 0.22: Daten nach jedem Spiel
 
-- **Carsten** · Wünsche: „Athletic Club“ heisst „Athletic Bilbao“; Startseite ohne „Aktueller Datenstand“ unter den Top-Spielen.
-- **Claude** · Anzeigename Athletic Bilbao (DE und EN, `app/config/teamnamen_anzeige.csv`; Adresse bleibt `athletic-club`). Startseite ohne Datenstand-Zeile (steht in der Fusszeile), Text `start.datenstand` entfernt. Test W29.
+- **Carsten** · Beschlüsse B1–B5 und F1–F3 (`06`, 10.2): Lauf nach jedem Spiel (Anpfiff + 2¼ h) mit Ergebnis und allen Statistiken, keine Freigabe mehr, Kontrolllauf 04:00, Wiederholung nach 1 Stunde (höchstens zwei), Backups gestaffelt; kritische Spiele einzeln zurückhalten. Freigaben aus 0.21: Glossar, Archivtexte, Namen der 12 Aufsteiger; „Auffällige Spiele je Spieltag“ weglassen. Wünsche: „Athletic Bilbao“, Startseite ohne Datenstand-Zeile. Zuschnitt: 0.23 E-Mail und Überwachung, 0.24 Cookie-Hinweis und Google Analytics.
+- **Claude** · **Laufplan** (`importer/laufplan.py`): Läufe aus dem Spielplan (Anpfiff + 2¼ h, zusammengelegt unter 30 Minuten, keiner in der Stunde 04:00, verpasste bis 6 h nachgeholt), Wiederholung, Backup-Staffel (14 Tage, 8 Wochen, 12 Monate, je Saison dauerhaft; bisher die letzten 30).
+- **Claude** · **Dienst**: Anlass je Lauf (Kontrolllauf, nach dem Spiel, Wiederholung); Läufe nach dem Spiel holen nur neue Spiele und fehlende Werte (kein Neuprüfen der letzten 2 Spieltage, keine ganze Saison); Ereignisprotokoll `import/ereignisse.jsonl`. **Automatik aktiv** (`automatisch_ab = 2026-11-20`); kritische Punkte sperren die Fassung nicht mehr, Fehler und neue Warnungen schon.
+- **Claude** · **Reiter Datenimport/API**: „Läufe heute“, Anlass im Protokoll, nächster Lauf mit Anlass, Entscheide auch nach automatischer Übernahme; Kasten mit „Übernehmen“ nur noch bei Fehlern oder Warnungen.
+- **Claude** · **Website**: Anzeigenamen der 12 Aufsteiger und „Athletic Bilbao“ (`teamnamen_anzeige.csv`); Startseite ohne „Aktueller Datenstand“; Glossar freigegeben.
+- **Claude** · Tests L1–L5 (`test_import_022.py`), W29, Datenimport-Reiter; Import-Tests laufen standardmässig „von Hand“ (`conftest.py`). Doku: `01` (0, 5, 6.5), `05` v5.11, `06` v0.9 (10.2 freigegeben), `08`, RELEASE.md.
 
 ## 20.11.2026 – Version 0.21.2 eingespielt
 

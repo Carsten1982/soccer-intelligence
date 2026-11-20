@@ -162,3 +162,12 @@ def matchdays_2018() -> pd.DataFrame:
     db = load_database(REFERENCE_DATABASE_2018)
     return pd.concat([closed_matchdays(prepare_league(db.leagues[name]), League(name, "x", teams, True))
                       for name, teams in LEAGUE_TEAMS.items()], ignore_index=True)
+
+
+@pytest.fixture(autouse=True)
+def _import_von_hand(monkeypatch):
+    """Seit 0.22 ist in app/config/import.toml die Automatik aktiv (Beschluss Carsten 20.11.2026). Die Import-Tests
+    prüfen den Ablauf Schritt für Schritt; sie laufen darum standardmässig „von Hand“. Ein Test, der die Automatik
+    braucht, setzt sie selbst (monkeypatch.setattr(E, "automatic_from", …)); test_import_022 prüft die Konfiguration."""
+    from importer import einstellungen as E
+    monkeypatch.setattr(E, "automatic_from", lambda: None)
