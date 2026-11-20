@@ -12,7 +12,8 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 - **Claude** · **Dienst**: Anlass je Lauf (Kontrolllauf, nach dem Spiel, Wiederholung); Läufe nach dem Spiel holen nur neue Spiele und fehlende Werte (kein Neuprüfen der letzten 2 Spieltage, keine ganze Saison); Ereignisprotokoll `import/ereignisse.jsonl`. **Automatik aktiv** (`automatisch_ab = 2026-11-20`); kritische Punkte sperren die Fassung nicht mehr, Fehler und neue Warnungen schon.
 - **Claude** · **Reiter Datenimport/API**: „Läufe heute“, Anlass im Protokoll, nächster Lauf mit Anlass, Entscheide auch nach automatischer Übernahme; Kasten mit „Übernehmen“ nur noch bei Fehlern oder Warnungen.
 - **Claude** · **Website**: Anzeigenamen der 12 Aufsteiger und „Athletic Bilbao“ (`teamnamen_anzeige.csv`); Startseite ohne „Aktueller Datenstand“; Glossar freigegeben.
-- **Claude** · Tests L1–L5 (`test_import_022.py`), W29, Datenimport-Reiter; Import-Tests laufen standardmässig „von Hand“ (`conftest.py`). Doku: `01` (0, 5, 6.5), `05` v5.11, `06` v0.9 (10.2 freigegeben), `08`, RELEASE.md.
+- **Carsten / Claude** · **Nachprüfung vor dem Zusammenführen** (auf Wunsch von Carsten), drei Befunde behoben: (1) „Statistik fehlt“ und „Spieltag unvollständig“ sperrten die automatische Übernahme, also fast jeden Lauf nach dem Spiel – sperren jetzt nicht mehr (Regel 5); (2) ein noch laufendes oder verspätetes Spiel löste keine Wiederholung aus – jetzt schon (Bericht „nicht_beendet“); (3) späte Korrekturen verschwanden nach einem Lauf nach dem Spiel aus „Ihre Entscheidung“ – kommen jetzt aus dem letzten Kontrolllauf. Test `test_score_against_goal_events…` an F1 angepasst (Rest wird übernommen).
+- **Claude** · Tests L1–L6 (`test_import_022.py`), W29, Datenimport-Reiter; Import-Tests laufen standardmässig „von Hand“ (`conftest.py`). Doku: `01` (0, 5, 6.5), `05` v5.11, `06` v0.9 (10.2 freigegeben), `08`, RELEASE.md.
 
 ## 20.11.2026 – Version 0.21.2 eingespielt
 

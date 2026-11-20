@@ -277,7 +277,7 @@ und Prüfregeln aus `app/core/`. Kein Eingriff in Traefik oder andere Container;
 | B1 | Lauf nach jedem Spiel | Je Anstosszeit ein Lauf bei **Anpfiff + 2¼ Stunden**. Er holt **Endstand, Status und alle Statistiken** der beendeten Spiele und schreibt sie in die Datenbank und den Spielplan. |
 | B2 | Keine Freigabe mehr | Jede fehlerfreie Fassung wird **sofort übernommen**, auch die des Laufs um 04:00. Der Knopf „Übernehmen“ im Reiter Datenimport/API entfällt. |
 | B3 | Kontrolllauf | Der tägliche Lauf um **04:00** bleibt (Abschnitt 10, montags die ganze Saison) und gleicht alles nochmals ab. Kein zusätzlicher Lauf um 01:00. |
-| B4 | Wiederholung | Scheitert ein Lauf oder fehlen nach ihm noch Werte eines Spiels, folgt **1 Stunde später** eine Wiederholung, höchstens zwei. Danach übernimmt der Kontrolllauf; ab 0.23 kommt eine Alarm-Mail. |
+| B4 | Wiederholung | Scheitert ein Lauf, läuft ein Spiel noch (Verlängerung, Unterbrechung) bzw. hat es trotz Anstosszeit vor über 2 Stunden nicht begonnen, oder fehlen nach ihm noch Werte eines Spiels, folgt **1 Stunde später** eine Wiederholung, höchstens zwei. Danach übernimmt der Kontrolllauf; ab 0.23 kommt eine Alarm-Mail. |
 | B5 | Backups | Vor jedem Tausch ein Backup, gestaffelt aufbewahrt (Regel 7). |
 
 **Regeln:**
@@ -299,7 +299,9 @@ und Prüfregeln aus `app/core/`. Kein Eingriff in Traefik oder andere Container;
    andere wird übernommen. So blockiert ein einzelnes Spiel nicht den ganzen Spieltag. *(Frage F1)*
 5. **Fehlende Statistik:** Liefert die API kurz nach dem Spiel nur Endstand und Status, wird das Spiel mit leeren
    Werten geschrieben (wie heute, Abschnitt 10) und von der Wiederholung bzw. dem Kontrolllauf nachgefüllt. Fehlende
-   Werte zählen nie als 0. Korrekturen der API bis 7 Tage nach dem Spiel übernimmt jeder Lauf selbst (R1).
+   Werte zählen nie als 0. Korrekturen der API bis 7 Tage nach dem Spiel übernimmt jeder Lauf selbst (R1). Die
+   Warnungen „Statistik fehlt“ und „Spieltag unvollständig“ sind direkt nach dem Spiel normal und **sperren die
+   Übernahme nicht** (Nachprüfung 20.11.2026); sie bleiben im Bericht und im Bereich Datenqualität.
 6. **Schreiben:** Vor dem Tausch ein Backup; der Tausch geschieht in einem Schritt (neue Datei fertig geschrieben und
    geprüft, dann ersetzt), Dashboard und Website sehen nie eine halbe Datei (umgesetzt seit 0.15.1). Übernommen wird
    nur, wenn die gültigen Dateien seit Beginn des Laufs unverändert sind; sonst baut der nächste Lauf neu auf.

@@ -101,7 +101,8 @@ def run(base: Path, data_dir: Path, now: datetime, full_season: bool | None = No
     try:
         report.update(build(client, load_team_names(E.TEAM_NAMES_FILE), load_leagues(),
                             data_dir / settings.DATABASE_FILENAME, data_dir / settings.FIXTURES_FILENAME, out,
-                            now.date(), full, decisions=entscheide.load(base), recheck=kontrolle))
+                            now.date(), full, decisions=entscheide.load(base), recheck=kontrolle,
+                            jetzt=now if now.tzinfo else None))
         report["status"] = "wartet" if report["fehler"] == 0 else "Fehler – nicht übernehmbar"
     except Exception as exc:                                  # Lauf fehlgeschlagen: gültige Dateien bleiben
         report["status"] = "fehlgeschlagen"

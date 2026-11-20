@@ -92,8 +92,9 @@ def erledigt(state: dict, bis: datetime, fx_path: Path) -> None:
 
 
 def wiederholung_noetig(report: dict, now: datetime) -> bool:
-    """Lauf gescheitert oder ein Spiel der letzten 2 Tage noch ohne vollständige Statistik."""
-    if report.get("status") == "fehlgeschlagen":
+    """Lauf gescheitert, ein Spiel noch nicht beendet (läuft, verspätet) oder ein Spiel der letzten 2 Tage noch ohne
+    vollständige Statistik."""
+    if report.get("status") == "fehlgeschlagen" or report.get("nicht_beendet"):
         return True
     grenze = now.date() - timedelta(days=1)
     for o in report.get("offen") or []:

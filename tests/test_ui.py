@@ -636,3 +636,28 @@ def test_datenimport_held_back_games_after_automatic_apply(tmp_path, monkeypatch
     assert "Ergebnis auf dem Platz (Tor-Ereignisse)" in labels and "✓ Übernehmen (Ergebnisse und Spielplan)" not in labels
     text = _texts(at)
     assert "Alles übernommen" in "\n".join(str(i.value) for i in at.success) and "nach dem Spiel" in text
+
+
+@pytest.mark.skipif(AppTest is None, reason="Streamlit nicht vorhanden")
+def test_datenimport_late_corrections_survive_game_runs(tmp_path, monkeypatch):
+    """Befund 3 (Nachprüfung 0.22): Späte Korrekturen erkennt nur der Kontrolllauf; nach einem Lauf nach dem Spiel
+    bleiben sie im Kasten „Ihre Entscheidung“."""
+    from importer import einstellungen
+    monkeypatch.setattr(einstellungen, "IMPORT_DIR", tmp_path)
+    import views.datenimport as di
+    import json
+    monkeypatch.setattr(di, "reports", lambda base, days: sorted(
+        [json.loads(p.read_text(encoding="utf-8")) for p in (base / "laeufe").glob("*/bericht.json")],
+        key=lambda r: r["lauf"], reverse=True))
+    run = _write_import_dir(tmp_path)
+    p = tmp_path / "laeufe" / run / "bericht.json"
+    rep = json.loads(p.read_text(encoding="utf-8"))
+    rep.update(status="übernommen (automatisch)", anlass="kontrolle")
+    p.write_text(json.dumps(rep), encoding="utf-8")
+    abend = dict(rep, lauf="9999-12-31_224500", anlass="spiel", spaete_korrekturen=[], kritisch=[])
+    (tmp_path / "laeufe" / abend["lauf"]).mkdir(parents=True)
+    (tmp_path / "laeufe" / abend["lauf"] / "bericht.json").write_text(json.dumps(abend), encoding="utf-8")
+    (tmp_path / "zustand.json").write_text(json.dumps({"wartend": None}), encoding="utf-8")
+    at = AppTest.from_function(_datenimport, default_timeout=TIMEOUT).run()
+    assert not at.exception, at.exception
+    assert "API-Wert übernehmen" in [b.label for b in at.button]

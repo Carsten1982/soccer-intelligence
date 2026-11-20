@@ -185,3 +185,33 @@ def test_l5_game_runs_skip_recheck_and_full_season(tmp_path, monkeypatch, anlass
     assert gesehen == {"full": erwartet, "recheck": erwartet}
     state = dienst.load_state(tmp_path / "import")
     assert (state.get("letzter_lauf_tag") == "2026-11-23") is erwartet                # nur der Kontrolllauf zählt
+
+
+# --- L6 Nachprüfung 20.11.2026 ----------------------------------------------------------------------------------------
+
+def test_l6_fresh_game_warnings_do_not_block():
+    """Befund 1: „Statistik fehlt“ und „Spieltag unvollständig“ sind direkt nach dem Spiel normal und sperren nicht
+    (Regel 5); andere neue Warnungen weiterhin."""
+    from importer.erzeugen import NICHT_SPERREND
+    assert NICHT_SPERREND == {"Statistik fehlt", "Spieltag unvollständig"}
+    import inspect
+    from importer import erzeugen
+    assert "w[\"pruefung\"] not in NICHT_SPERREND" in inspect.getsource(erzeugen.build)
+
+
+def test_l6_not_finished_games_trigger_retry():
+    """Befund 2: Ein Spiel, das beim Lauf noch läuft oder verspätet ist, löst die Wiederholung aus."""
+    from importer.erzeugen import _not_finished
+    tz = dienst.ZoneInfo(E.TIMEZONE)
+    jetzt = datetime(2026, 11, 21, 17, 45, tzinfo=tz)
+
+    def fx(fid, short, hh):
+        return {"fixture": {"id": fid, "status": {"short": short}, "date": f"2026-11-21T{hh}:00+01:00"},
+                "teams": {"home": {"name": "A"}, "away": {"name": "B"}}}
+    lst = [fx(1, "FT", "15:30"), fx(2, "ET", "15:30"), fx(3, "NS", "15:30"), fx(4, "NS", "18:30"), fx(5, "TBD", "00:00")]
+    assert [x["id"] for x in _not_finished(lst, "Bundesliga", jetzt)] == [2, 3]
+    assert _not_finished(lst, "Bundesliga", None) == []
+    state = {}
+    laufplan.wiederholung_planen(state, {"status": "übernommen (automatisch)", "nicht_beendet": [{"id": 2}]},
+                                 jetzt.replace(tzinfo=None), "spiel")
+    assert state["wiederholung"]["nr"] == 1

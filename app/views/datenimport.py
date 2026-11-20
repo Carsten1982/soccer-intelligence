@@ -559,6 +559,12 @@ def render() -> None:
         st.success("Alles übernommen. Die gültigen Dateien sind auf dem Stand des letzten übernommenen Laufs.")
         last = next((r for r in reps if str(r.get("status", "")).startswith("übernommen")), None)
         if last:                                       # zurückgehaltene Spiele warten auf den Entscheid (F1, 0.22)
+            # Späte Korrekturen erkennt nur der Kontrolllauf: sie kommen aus dem letzten übernommenen Kontrolllauf,
+            # alles andere aus dem letzten übernommenen Lauf.
+            ctrl = next((r for r in reps if str(r.get("status", "")).startswith("übernommen")
+                         and r.get("anlass", "kontrolle") == "kontrolle"), None)
+            if ctrl is not None and ctrl is not last:
+                last = {**last, "spaete_korrekturen": ctrl.get("spaete_korrekturen") or []}
             decisions(last, base)
             for k in [k for k in last.get("kritisch") or [] if k["art"] != "endstand"]:
                 st.warning(f"**{escape(k['liga'])}**, {escape(k['spiel'])}: {escape(k['text'])}")
