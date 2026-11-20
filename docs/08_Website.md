@@ -365,9 +365,9 @@ Computer einzeilig, bis 520 px höchstens 300 px breit mit festem Umbruch nach d
 | A11 | Methodik: Ebenen als Sprungmarken, alle Ebenen immer sichtbar (der Entwurf blendet tiefere Ebenen erst nach Wahl ein) | alles im HTML (Beschluss Thema 4), ohne JavaScript nutzbar |
 | A12 | Vorschaubild `og-image.png` sprachneutral: Logo, „Soccer Intelligence“ und die vier Ligen | ein Bild für beide Sprachen |
 | A13 | Glossar und Archivseite: Texte von Claude vorgeschlagen (Freigabe offen) | Beschluss 19.11.2026: ohne Entwurf |
+| A14 | Ranking der Startseite: gespieltes Spiel zeigt „Gespielt · 2:1“ wie die Kachel | Glossar Abschnitt 19 |
 | A15 | Methodik Ebene 3: Chip DE „Ebene 3 · Für Statistik-Fans“ (EN „Level 3 · Full details“); Auswahlkarte „Alles im Detail“ | Beschluss Carsten 20.11.2026 |
 | A16 | Glossar-Link im Footer als fünfter Link nach „Methodik“ | Beschluss Carsten 20.11.2026 |
-| A14 | Ranking der Startseite: gespieltes Spiel zeigt „Gespielt · 2:1“ wie die Kachel | Glossar Abschnitt 19 |
 
 ## 10. Offene Punkte
 
