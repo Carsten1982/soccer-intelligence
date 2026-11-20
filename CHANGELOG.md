@@ -5,6 +5,11 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 20.11.2026 – Version 0.21.1 eingespielt
+
+- **Carsten** · Version 0.21.1 eingespielt (`273b969`, Pull Request #22; Tests grün, Browser-Prüfung mit „j“ bestätigt).
+- **Claude** · Stand nachgetragen (`01`, Abschnitt 0 und Versionstabelle).
+
 ## 20.11.2026 – Version 0.21.1: Entwürfe vom 20.11. und Vorschau 5 Tage
 
 - **Carsten** · Prüfung der Website, überarbeitete Entwürfe und Briefings vom 20.11.2026; Entscheidungen: Vorschau 5 statt 7 Tage (mehr Ruhe am Spieltag), zusätzliche API-Abfragen an die Spielzeit gekoppelt (Anpfiff + 2¼ h, Umsetzung mit 0.22), später Prognose gegen Ergebnis auf der Spielseite.
