@@ -1,6 +1,6 @@
 # Soccer Intelligence – Datenlieferung über API-Football (Spezifikation)
 
-**Version 0.8** · Stand 20.11.2026 (v0.8: Entwurf Abfrageplan ab 0.22, 10.2; v0.7: stündlicher Schnappschuss-Lauf, Version 0.20) · **Status: freigegeben von Carsten am 15.11.2026; v0.4: Ergebnis des Vollvergleichs; v0.5: Tagesbetrieb umgesetzt (Version 0.14); v0.6: Ergebnis-Import v1.1 nach Review (R1–R9, Abschnitt 10.1) und Spielplan nach `07_Spielplan_Anzeige.md` (Version 0.15)** · Grundlage: Entwurf v0.1 (ChatGPT,
+**Version 0.9** · Stand 20.11.2026 (v0.9: Spezifikation Lauf nach jedem Spiel und Übernahme ohne Freigabe, 10.2, zur Freigabe; v0.8: Entwurf Abfrageplan ab 0.22, 10.2; v0.7: stündlicher Schnappschuss-Lauf, Version 0.20) · **Status: freigegeben von Carsten am 15.11.2026; v0.4: Ergebnis des Vollvergleichs; v0.5: Tagesbetrieb umgesetzt (Version 0.14); v0.6: Ergebnis-Import v1.1 nach Review (R1–R9, Abschnitt 10.1) und Spielplan nach `07_Spielplan_Anzeige.md` (Version 0.15)** · Grundlage: Entwurf v0.1 (ChatGPT,
 15.11.2026), kritisch geprüft und ergänzt von Claude (v0.2); Entscheidungen E1–E12 von Carsten am 15.11.2026 (v0.3).
 
 Diese Datei ist die einzige Stelle für die Datenlieferung: Datenquelle, Feldzuordnung, Abläufe, Abfragebudget und
@@ -268,34 +268,76 @@ und Prüfregeln aus `app/core/`. Kein Eingriff in Traefik oder andere Container;
 | R8 | IDs | Keine neue Spalte. Jede id nur einmal **über alle Ligen** (Fehler), feste Zuordnung eigene ID ↔ API-ID in `app/config/zuordnung_api.csv` (11'978 Spiele, geprüft über Datum und Endstand). |
 | R9 | Rohdaten | 12 Monate aufbewahren, ältere Tagesordner löscht der Dienst. |
 
-### 10.2 Abfrageplan ab Version 0.22 (Entwurf 20.11.2026, Umsetzung mit den E-Mail-Alarmen)
+### 10.2 Lauf nach jedem Spiel und Übernahme ohne Freigabe (ab Version 0.22) – Spezifikation zur Freigabe
 
-**Entscheidung Carsten 20.11.2026:** Zusätzliche Abfragen werden **an die Spielzeit gekoppelt**: je Anstosszeit ein
-Lauf bei **Anpfiff + 2¼ Stunden** (statt fester Uhrzeiten). Ziel: Endstände am selben Abend, Grundlage für die
-E-Mail-Alarme (0.22) und später für „Prognose gegen Ergebnis“ auf der Spielseite (nach 1.0).
+**Beschlüsse Carsten 20.11.2026:**
 
-Regeln (Entwurf):
-- Die Laufzeiten entstehen aus dem gültigen Spielplan (Europe/Zurich) und werden nach jedem Lauf neu geplant;
-  Verschiebungen und neue Termine werden so automatisch berücksichtigt. Gilt für alle Wochentage, auch englische Wochen.
-- Gleiche Anstosszeiten ergeben einen Lauf; Läufe, die weniger als 30 Minuten auseinanderliegen, werden zum späteren
-  zusammengelegt. Spiele ohne Anstosszeit lösen keinen Abendlauf aus (sie kommen mit dem Lauf um 04:00).
-- Der tägliche volle Lauf um 04:00 bleibt unverändert (Abschnitt 10).
-- Beispiel Samstag 21.11.2026 (Anstösse 13:30, 14:00, 15:00, 15:30, 16:00, 16:15, 18:00, 18:30, 20:45, 21:00 in vier
-  Ligen): Läufe um 15:45, 16:15, 17:15, 17:45, 18:30 (18:15 und 18:30 zusammengelegt), 20:15, 20:45 und 23:15 (23:00 und
-  23:15 zusammengelegt), zusammen 8 Läufe.
-- Kontingent: Ein Abendlauf braucht 4 Abfragen (Spielliste je Liga) plus höchstens wenige Mehrfachabfragen für die
-  beendeten Spiele; ein voller Spieltag am Wochenende rund 50–100 Abfragen zusätzlich. Eigene Obergrenze 500 pro Tag
-  und Tarif Pro (7'500 pro Tag) reichen. Der Pro-Tarif läuft vom 15.11.2026 drei Monate (bis etwa Mitte Februar 2027).
+| Nr. | Thema | Beschluss |
+|---|---|---|
+| B1 | Lauf nach jedem Spiel | Je Anstosszeit ein Lauf bei **Anpfiff + 2¼ Stunden**. Er holt **Endstand, Status und alle Statistiken** der beendeten Spiele und schreibt sie in die Datenbank und den Spielplan. |
+| B2 | Keine Freigabe mehr | Jede fehlerfreie Fassung wird **sofort übernommen**, auch die des Laufs um 04:00. Der Knopf „Übernehmen“ im Reiter Datenimport/API entfällt. |
+| B3 | Kontrolllauf | Der tägliche Lauf um **04:00** bleibt (Abschnitt 10, montags die ganze Saison) und gleicht alles nochmals ab. Kein zusätzlicher Lauf um 01:00. |
+| B4 | Wiederholung | Scheitert ein Lauf oder fehlen nach ihm noch Werte eines Spiels, folgt **1 Stunde später** eine Wiederholung, höchstens zwei. Danach übernimmt der Kontrolllauf; ab 0.23 kommt eine Alarm-Mail. |
+| B5 | Backups | Vor jedem Tausch ein Backup, gestaffelt aufbewahrt (Regel 7). |
 
-**Offen (Entscheidung Carsten, vor der Umsetzung):**
-1. **Übernahme der Abendläufe:** Vorschlag: Abendläufe übernehmen **Status und Endstand** automatisch, wenn alle
-   Prüfungen bestanden sind (keine Freigabe nötig); die **Statistiken** (Ecken, Karten, Schüsse) bleiben beim Lauf um
-   04:00 mit Freigabe, weil die API sie oft erst Stunden nach dem Spiel liefert und noch korrigiert und die KPIs davon
-   abhängen. Alternative: jeder Lauf wartet wie heute auf die Freigabe.
-2. **Sicherheitslauf:** Vorschlag: eine Stunde nach dem Abendlauf ein zweiter, wenn ein Spiel noch nicht beendet ist
-   (Verlängerung, Unterbrechung, Gewitter).
-3. **E-Mail-Alarme** (eigene Spezifikation vor 0.22): welche Ereignisse (Lauf fehlgeschlagen, Fassung wartet auf
-   Freigabe, Schnappschuss fehlt, Kontingent knapp, Endstand weicht ab), an wen, wie oft höchstens.
+**Regeln:**
+
+1. **Laufplan:** Die Laufzeiten entstehen aus dem gültigen Spielplan (Europe/Zurich) und werden nach jedem Lauf neu
+   berechnet; Verschiebungen und neue Termine wirken so automatisch. Gleiche Anstosszeiten ergeben einen Lauf; Läufe,
+   die weniger als 30 Minuten auseinanderliegen, werden zum späteren zusammengelegt. Spiele ohne Anstosszeit lösen
+   keinen Lauf aus (sie kommen mit dem Kontrolllauf). Beispiel Samstag 21.11.2026 (Anstösse 13:30 bis 21:00 in vier
+   Ligen): Läufe um 15:45, 16:15, 17:15, 17:45, 18:30, 20:15, 20:45 und 23:15, zusammen 8.
+2. **Ablauf:** Jeder Lauf ist ein normaler Lauf nach Abschnitt 10 (Spielliste je Liga, neue Fassung, alle Prüfungen
+   10.1), nur die Auswahl der Spiele ist kleiner: die Spiele seiner Anstosszeit(en) und alle Spiele der letzten
+   7 Tage mit fehlenden Werten. Liegt ein Lauf in der Stunde des Kontrolllaufs, entfällt er.
+3. **Übernahme:** Übernommen wird wie im Automatikbetrieb (R5), jetzt für jeden Lauf und ohne Testphase
+   (`automatisch_ab` = Datum des Einspielens). Die Prüfschranke bleibt: Fehler → nichts wird geschrieben, die gültigen
+   Dateien bleiben, Meldung im Reiter (ab 0.23 per Mail).
+4. **Kritische Spiele** (R5: Endstand passt nicht zu den Tor-Ereignissen, späte Korrektur nach 7 Tagen, Widerspruch
+   in der Zuordnung, Spiel verschwindet aus der API-Liste): Heute sperren sie die ganze Fassung. **Vorschlag:** Nur das
+   betroffene Spiel bzw. der betroffene Wert wird zurückgehalten und wartet im Reiter auf deinen Entscheid; alles
+   andere wird übernommen. So blockiert ein einzelnes Spiel nicht den ganzen Spieltag. *(Frage F1)*
+5. **Fehlende Statistik:** Liefert die API kurz nach dem Spiel nur Endstand und Status, wird das Spiel mit leeren
+   Werten geschrieben (wie heute, Abschnitt 10) und von der Wiederholung bzw. dem Kontrolllauf nachgefüllt. Fehlende
+   Werte zählen nie als 0. Korrekturen der API bis 7 Tage nach dem Spiel übernimmt jeder Lauf selbst (R1).
+6. **Schreiben:** Vor dem Tausch ein Backup; der Tausch geschieht in einem Schritt (neue Datei fertig geschrieben und
+   geprüft, dann ersetzt), Dashboard und Website sehen nie eine halbe Datei (umgesetzt seit 0.15.1). Übernommen wird
+   nur, wenn die gültigen Dateien seit Beginn des Laufs unverändert sind; sonst baut der nächste Lauf neu auf.
+   Werte vor dem Anpfiff ändern sich dadurch nicht: Sie sind im Schnappschuss eingefroren (`07`, 4.9).
+7. **Backups** in `backup/` (ersetzt „die letzten 30“):
+
+   | Stufe | Was bleibt | Wie lange |
+   |---|---|---|
+   | Täglich | jedes Backup vor einem Tausch | 14 Tage |
+   | Wöchentlich | das letzte Backup jedes Sonntags | 8 Wochen |
+   | Monatlich | das letzte Backup jedes Monats | 12 Monate |
+   | Saisonende | das Backup nach dem letzten Spieltag jeder Saison (ab 1. Juli: Saison der Vorsaison) | dauerhaft |
+
+   Das Aufräumen macht der Dienst nach jedem Tausch. Die Entscheide (`import/entscheidungen.json`) werden gleich
+   gesichert. Zusätzlich einmal im Monat eine Kopie ausserhalb des Servers (Anleitung `01`, Abschnitt 6; Erinnerung in
+   der Statusmail ab 0.23).
+8. **Reiter Datenimport/API:** statt Freigabe ein Protokoll: heutige und geplante Läufe (Zeit, Anlass, Status:
+   geplant / übernommen / ohne Änderung / wiederholt / fehlgeschlagen), je Lauf geschriebene Spiele und gefüllte
+   Werte, zurückgehaltene Spiele mit Entscheid-Knöpfen (R1, R2), nächster Lauf, Backups (Anzahl, Grösse).
+9. **Ereignisprotokoll** `import/ereignisse.jsonl` (eine Zeile je Lauf und Ereignis): Grundlage für Alarme und die
+   wöchentliche Statusmail in 0.23.
+10. **Kontingent:** Ein Lauf braucht 4 Abfragen für die Spielliste plus wenige Mehrfachabfragen; ein voller
+    Wochenend-Spieltag rund 50–100 zusätzlich. Eigene Obergrenze 500 pro Tag, Tarif Pro 7'500 pro Tag. Ist die eigene
+    Obergrenze erreicht, entfallen weitere Läufe des Tages bis auf den Kontrolllauf.
+11. **Schutzregel:** `01`, Abschnitt 5 wird angepasst: Der Import-Dienst schreibt nach bestandenen Prüfungen ohne
+    Freigabe nach `data/`; alle anderen Regeln (nur eigener Ordner, Backup vor Änderungen, Excel nur durch den Dienst)
+    bleiben.
+
+**Tests (0.22):** Laufplan aus Spielplan (Zusammenlegen, ohne Anstosszeit, Verschiebung, Kollision mit 04:00),
+Wiederholung (höchstens zwei, nur bei Fehler oder fehlenden Werten), Übernahme ohne Freigabe, kritisches Spiel
+zurückgehalten (nach F1), leere Werte nie 0, Backup-Staffel (Stichtage über Jahreswechsel und Saisonende), Tausch nur
+bei unveränderter Datei, Kontingent-Grenze; Probelauf mit Aufzeichnungen echter API-Antworten eines Samstags.
+
+**Fragen an Carsten vor der Umsetzung:**
+- **F1** Kritische Spiele einzeln zurückhalten statt die ganze Fassung zu sperren (Regel 4)? Vorschlag: ja.
+- **F2** Gibt es Fälle, in denen du trotzdem vor dem Schreiben gefragt werden willst (z. B. ein Spiel, das aus der
+  API-Liste verschwindet, also abgesagt oder gelöscht)? Vorschlag: nur die kritischen Fälle aus Regel 4.
+- **F3** Alles in 0.22, ohne E-Mail: Meldungen stehen bis 0.23 nur im Reiter Datenimport/API. Einverstanden?
 
 ## 11. Rohdatenspeicher
 
