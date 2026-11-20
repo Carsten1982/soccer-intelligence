@@ -5,6 +5,11 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 20.11.2026 – Version 0.20 eingespielt
+
+- **Carsten** · Version 0.20 eingespielt (`10fa028`, Pull Request #20; Tests grün, Browser-Prüfung nach `RELEASE.md` mit „j“ bestätigt).
+- **Claude** · Stand nachgetragen (`01`, Abschnitt 0 und Versionstabelle).
+
 ## 19.11.2026 – Version 0.19.1 eingespielt, Version 0.20 „Fundament“
 
 - **Carsten** · Version 0.19.1 eingespielt (`537b4a4`). Fragerunde mit dem Design-Chat (Entscheidungsprotokoll 19.11.2026), Releaseplan 0.20/0.21/0.22/1.0 freigegeben; Auftrag: Frontend-Qualität bewerten und mit 0.20 beginnen.
