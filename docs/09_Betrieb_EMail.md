@@ -1,6 +1,6 @@
 # Soccer Intelligence – E-Mail, Alarme und Überwachung (Spezifikation)
 
-**Version 0.1** · Stand 20.11.2026 · **Status: Entwurf zur Freigabe durch Carsten** · Umsetzung mit Version 0.23
+**Version 0.2** · Stand 20.11.2026 (v0.2: Entscheide F1–F7 von Carsten) · **Status: freigegeben von Carsten am 20.11.2026** (F5 und F6 mit Rückfrage, Abschnitt 9) · Umsetzung mit Version 0.23
 
 Diese Datei ist die einzige Stelle für den Mailversand, die Alarme, die wöchentliche Statusmail, die
 Server-Überwachung, die Laufzeiten (Abos, Domain, Postfach) und den Versand des Kontaktformulars. Grundlage: Entscheide
@@ -19,13 +19,14 @@ Carsten vom 20.11.2026 (Zuschnitt 0.22/0.23/0.24, Postfächer, Alarmliste, Statu
 | M5 | Häufigkeit | Je Alarmart höchstens eine Mail pro Stunde; ist das Problem behoben, eine Mail „Behoben“. |
 | M6 | Kontaktformular | Versand per Mail, keine Speicherung (Beschluss 8, 19.11.2026). Spamschutz: Rechenaufgabe, verstecktes Feld, höchstens 3 Nachrichten pro Stunde je Absender – reicht für den Anfang. |
 | M7 | Laufzeiten | Im Dashboard verfolgen: API-Football-Abo (aus der API), Domain (bis 23.10.2027, automatische Verlängerung an), Postfach (bis 20.11.2028). |
+| M8 | Weiterleitung | Beide Postfächer (`info@` und `alert@`) leiten an die private Adresse von Carsten weiter (eingerichtet bei Hostinger; die Adresse steht nur dort, nie im Programm oder in `.env`). |
 
 ## 2. Mailversand (Technik)
 
 - **Ein Absender je Zweck:** Alarme und Statusmail von `alert@`, Kontaktformular von `info@`. Versand über SMTP von
   Hostinger mit SSL (`smtp.hostinger.com`, Port 465 – beim Einrichten zu bestätigen).
 - **Empfänger:** Alarme und Statusmail an `alert@` selbst; das Postfach leitet an die private Adresse weiter (M1).
-  So steht die private Adresse nirgends im Programm, auch nicht in `.env`. Kontaktformular an `info@` (Frage F3).
+  So steht die private Adresse nirgends im Programm, auch nicht in `.env`. Kontaktformular an `info@` (F3: leitet ebenfalls weiter).
 - **Zugangsdaten nur in `.env`** auf dem Server (nie in Git, Code, Logs oder Chat):
   `SI_SMTP_HOST`, `SI_SMTP_PORT`, `SI_ALERT_USER`, `SI_ALERT_PASSWORT`, `SI_INFO_USER`, `SI_INFO_PASSWORT`. Eintragen
   mit einem Befehl wie beim API-Schlüssel (Passwort wird nicht angezeigt, vorher Kopie von `.env` nach `backup/`).
@@ -79,14 +80,16 @@ Carsten vom 20.11.2026 (Zuschnitt 0.22/0.23/0.24, Postfächer, Alarmliste, Statu
 
 - Je Alarmart (z. B. „Festplatte“, „Container soccer-vorschau“) **höchstens eine Mail pro Stunde**.
 - Steigt die Stufe (Warnung → Kritisch), geht sofort eine Mail, auch innerhalb der Stunde.
-- **Erinnerung** alle 24 Stunden, solange ein Alarm besteht *(Frage F5)*.
+- **Erinnerung** alle 24 Stunden, solange ein Alarm besteht, **höchstens 3 Mails je Alarm** (erste Meldung und bis zu
+  zwei Erinnerungen; F5, Carsten 20.11.2026 – Lesart zu bestätigen). Danach steht der Alarm nur noch im Dashboard und
+  in der Statusmail. Steigt die Stufe oder ist er behoben, kommt trotzdem eine Mail.
 - Ist das Problem behoben, eine Mail **„BEHOBEN: …“** mit Dauer.
 - Alle Alarme und Mails stehen im Ereignisprotokoll (`import/ereignisse.jsonl`) und im Reiter Datenimport/API
   (Block „Alarme“: offene Alarme, letzte 14 Tage).
 
 ## 4. Wöchentliche Statusmail (M2)
 
-**Jeden Montag um 08:00** von `soccer-import` an `alert@`, Betreff `[Soccer Intelligence] Wochenstatus KW 48`.
+**Jeden Montag um 06:00** (F7) von `soccer-import` an `alert@`, Betreff `[Soccer Intelligence] Wochenstatus KW 48`.
 
 1. **Gesamturteil** in der ersten Zeile: „Alles in Ordnung“ oder „n offene Alarme“.
 2. **Läufe der Woche:** Anzahl je Anlass (Kontrolllauf, nach dem Spiel, Wiederholung), davon übernommen, wartend,
@@ -102,7 +105,8 @@ Carsten vom 20.11.2026 (Zuschnitt 0.22/0.23/0.24, Postfächer, Alarmliste, Statu
 
 - Datei `app/config/laufzeiten.toml` (keine Geheimnisse, Änderung über Git): je Eintrag Name, Ablaufdatum,
   automatische Verlängerung ja/nein. Erste Einträge: Domain `soccer-intelligence.com` 23.10.2027 (automatisch),
-  E-Mail-Postfach 20.11.2028 (*Verlängerung: Frage F6*), VPS (*Frage F6*). Das API-Abo kommt wie heute aus der API.
+  E-Mail-Postfach 20.11.2028 (*automatische Verlängerung: noch offen*), VPS (*Ablaufdatum noch offen, F6*). Das API-Abo
+  kommt wie heute aus der API.
 - Dashboard, Reiter Datenimport/API: Block **„Laufzeiten“** neben der Statusleiste: Datum, Resttage, Farbe (grün,
   ab 30 Tagen gelb, ab 7 Tagen oder abgelaufen rot).
 - Alarme nach 3.1, Zeile in der Statusmail.
@@ -162,20 +166,14 @@ Prüfsumme, Anfragebremse, ohne Konfiguration gesperrt, keine Speicherung), Mail
 SMTP-Server (keine echte Mail), Prüfskript mit Beispielwerten aus `/proc` und `docker inspect` (ohne echten Server),
 keine Zugangsdaten in Logs oder Protokoll.
 
-## 9. Fragen an Carsten vor der Umsetzung
+## 9. Entscheide Carsten 20.11.2026 (Fragen F1–F7)
 
-- **F1 Zeitplan des Servers:** Das Prüfskript braucht einen einmaligen Eintrag im Zeitplan (`cron`) des Servers –
-  das ist eine Änderung ausserhalb unseres Ordners (Schutzregel 1). Den Befehl gebe ich dir; er fügt nur diese eine
-  Zeile hinzu und lässt alle anderen Einträge unverändert. Einverstanden? *Vorschlag: ja.* (Alternative ohne Eintrag
-  ausserhalb des Ordners gibt es nicht ohne Zugriff des Containers auf Docker selbst – das wäre praktisch Vollzugriff
-  auf den Server, das will ich nicht.)
-- **F2 Welche Container überwachen?** *Vorschlag:* nur unsere vier; andere (Traefik, n8n, article-generator) nicht,
-  ein Ausfall von Traefik fällt über „Website erreichbar“ auf.
-- **F3 Kontaktformular an `info@`:** Leitet `info@` ebenfalls an deine private Adresse weiter (in deiner Tabelle steht
-  die Weiterleitung nur bei `alert@`)? *Vorschlag:* Weiterleitung auch für `info@` einrichten, sonst liest du
-  Kontaktnachrichten nur im Webmail von Hostinger.
-- **F4** Sollen „Fassung wartet auf Freigabe“ und „Entscheid offen“ ebenfalls als Alarm (Warnung) kommen? Beide brauchen
-  dich. *Vorschlag: ja.*
-- **F5 Erinnerung** alle 24 Stunden, solange ein Alarm besteht? *Vorschlag: ja.*
-- **F6 Laufzeiten:** Verlängert sich das Postfach automatisch? Soll der VPS aufgenommen werden (Ablaufdatum)?
-- **F7 Statusmail** Montag 08:00 – passt die Zeit?
+| Nr. | Frage | Entscheid |
+|---|---|---|
+| F1 | Eintrag im Zeitplan (`cron`) des Servers für das Prüfskript | **Ja** (einmaliger Eintrag, nur diese Zeile; Befehl in `01`, Abschnitt 6, nach der Umsetzung) |
+| F2 | Welche Container | **Nur unsere vier**; Traefik über „Website erreichbar“ |
+| F3 | Kontaktformular | An `info@`; **beide Postfächer leiten an die private Adresse weiter** (M8) |
+| F4 | „Fassung wartet auf Freigabe“ und „Entscheid offen“ als Alarm | **Ja** (Warnung) |
+| F5 | Erinnerung | **Höchstens 3 Alarm-Mails** – Lesart: erste Meldung plus bis zu zwei Erinnerungen (alle 24 h) je Alarm; zu bestätigen |
+| F6 | Laufzeiten | Bei Hostinger gebucht: Domain und Postfach. **Offen:** Ablaufdatum des VPS (der Server, auf dem alles läuft) und ob sich das Postfach automatisch verlängert |
+| F7 | Statusmail | **Montag 06:00** |
