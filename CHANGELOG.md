@@ -5,6 +5,11 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 20.11.2026 – Version 0.22 eingespielt
+
+- **Carsten** · Version 0.22 eingespielt (`1701bc6`, Pull Request #24; Tests grün). Die Verbindung zum Server brach während Schritt 4 ab, der Lauf ging in `tmux` weiter. E-Mail-Postfächer `info@` und `alert@` eingerichtet (Weiterleitung an die private Adresse); Laufzeiten: Postfach bis 20.11.2028, Domain bis 23.10.2027 (für 0.23).
+- **Claude** · Stand nachgetragen (`01`, Abschnitt 0 und Versionstabelle).
+
 ## 20.11.2026 – Version 0.22: Daten nach jedem Spiel
 
 - **Carsten** · Beschlüsse B1–B5 und F1–F3 (`06`, 10.2): Lauf nach jedem Spiel (Anpfiff + 2¼ h) mit Ergebnis und allen Statistiken, keine Freigabe mehr, Kontrolllauf 04:00, Wiederholung nach 1 Stunde (höchstens zwei), Backups gestaffelt; kritische Spiele einzeln zurückhalten. Freigaben aus 0.21: Glossar, Archivtexte, Namen der 12 Aufsteiger; „Auffällige Spiele je Spieltag“ weglassen. Wünsche: „Athletic Bilbao“, Startseite ohne Datenstand-Zeile. Zuschnitt: 0.23 E-Mail und Überwachung, 0.24 Cookie-Hinweis und Google Analytics.
