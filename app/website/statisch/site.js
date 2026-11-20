@@ -38,3 +38,30 @@ document.querySelectorAll('[data-sprachmenue]').forEach(function (menue) {
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') zu(true); });
   document.addEventListener('click', function (e) { if (!menue.contains(e.target)) zu(false); });
 });
+/* 4. Methodik (seit 0.21.1, Entwurfsrunde 20.11.2026): Einstieg „Wie tief möchtest du einsteigen?“. Die gewählte Karte ist
+      dunkel, tiefere Ebenen (und der Download bei Ebene 3) werden ausgeblendet. Ohne Skript ist alles sichtbar.
+      Start: Ebene aus der Adresse (#ebene2), sonst 1. Die Weiter-Schaltflächen springen zur nächsten Ebene. */
+document.querySelectorAll('[data-tiefe]').forEach(function (nav) {
+  var karten = nav.querySelectorAll('.tiefe-karte');
+  var teile = document.querySelectorAll('[data-ebene]');
+  function zeige(n) {
+    karten.forEach(function (k) { k.setAttribute('aria-current', k.getAttribute('data-tiefe-wahl') === String(n) ? 'true' : 'false'); });
+    teile.forEach(function (t) { t.hidden = Number(t.getAttribute('data-ebene')) > n; });
+  }
+  var start = /^#ebene([123])$/.exec(location.hash);
+  zeige(start ? Number(start[1]) : 1);
+  document.querySelectorAll('[data-tiefe-wahl]').forEach(function (el) {
+    el.addEventListener('click', function (e) {
+      var n = Number(el.getAttribute('data-tiefe-wahl'));
+      var bisher = Math.max.apply(null, Array.prototype.map.call(teile, function (t) { return t.hidden ? 0 : Number(t.getAttribute('data-ebene')); }));
+      if (el.hasAttribute('data-springen')) {
+        zeige(Math.max(n, bisher));
+        if (el.hasAttribute('data-aufklappen')) document.querySelectorAll('#ebene' + n + ' details').forEach(function (d) { d.open = true; });
+        return;                                     /* der Link springt selbst zur Ebene */
+      }
+      e.preventDefault();
+      zeige(n);
+      if (history.replaceState) history.replaceState(null, '', '#ebene' + n);
+    });
+  });
+});

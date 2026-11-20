@@ -30,7 +30,8 @@ from .fixtures import (
     TERMIN_TIME_OPEN,
 )
 
-WINDOW_DAYS = 6       # weitere Spieltage und Sonderspiele: erstes Spiel heute bis heute + 6 (O2)
+WINDOW_DAYS = 5       # weitere Spieltage und Sonderspiele: erstes Spiel heute bis heute + 5 (O2; seit 0.21.1,
+                      # Entscheidung Carsten 20.11.2026; bis 0.21: heute + 6). Freitag-Spieltag ab Sonntag davor
 PAUSE_DAYS = 14       # Pause: mehr als 14 Tage (O1); der nächste Spieltag erscheint ab 14 Tagen vorher
 STALE_HOURS = 48      # Pausenhinweise nur, wenn der letzte erfolgreiche Importlauf höchstens 48 Stunden alt ist
                       # (S9; seit 0.20, bis 0.19.1: 3 Tage)
@@ -245,13 +246,13 @@ def upcoming(fixtures: pd.DataFrame, now: datetime, last_import: datetime | None
     sections: list[Section] = []
     if nxt is not None and (nxt.first - today).days <= PAUSE_DAYS:
         sections.append(round_section(fx, nxt.saison, nxt.spieltag))
-        for r in all_rounds:                       # weitere Spieltage, die heute bis heute + 6 beginnen (O2)
+        for r in all_rounds:                       # weitere Spieltage, die heute bis heute + 5 beginnen (O2)
             if r != nxt and r.last >= today and r.first <= window_end:
                 sections.append(round_section(fx, r.saison, r.spieltag))
     specials = fx[fx["sonderspiel"] & (fx["datum_von"] >= today)]
     no_more_rounds = nxt is None
     if not no_more_rounds:
-        specials = specials[specials["datum_von"] <= window_end]    # Sonderspiele ab 7 Tagen vorher (4.2.4)
+        specials = specials[specials["datum_von"] <= window_end]    # Sonderspiele ab heute + 5 (4.2.4)
     sections += _special_sections(fx, specials, all_rounds)
 
     notice, show_previous = None, False

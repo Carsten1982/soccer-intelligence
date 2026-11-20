@@ -196,7 +196,7 @@ Regeln:
 7. Partien als Kacheln im Raster (Computer zwei Spalten, Handy eine), Fusszeile.
 
 ### 5.2 Welche Spiele (gleiche Regeln wie Dashboard, `07`, Abschnitt 4)
-- Tabs = die Spieltage, die das Dashboard ohne Auswahl als Abschnitte zeigt (anstehender Spieltag, weitere Spieltage, die heute bis heute + 6 beginnen).
+- Tabs = die Spieltage, die das Dashboard ohne Auswahl als Abschnitte zeigt (anstehender Spieltag, weitere Spieltage, die heute bis heute + 5 beginnen; bis 0.21 heute + 6).
 - Je Tab: alle Spiele des Spieltags (auch gespielte und solche mit Status, F5), dazu Nachhol- und vorgezogene Spiele der nächsten 7 Tage, die in den Zeitraum des Tabs fallen (sonst im ersten Tab, F4).
 - Pausen (F7): Ist kein Spieltag in höchstens 14 Tagen, ersetzt eine Pausen-Karte die Liste (Spielpause, Winterpause, Sommerpause, Saisonstart). Datenstand über 48 Stunden (seit 0.20; bis 0.19.1: 3 Tage): gelbe Warnbox, Liste bleibt.
 
@@ -272,6 +272,17 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
 **Foto (Q6):** Datei `portrait.jpg` im Ordner `/docker/football-dashboard/website-bilder/` auf dem Server (quadratisch, mindestens 230 × 230 Pixel, JPEG). Der Ordner ist nur lesend im Container `soccer-vorschau` eingebunden (`/bilder`), steht in `.gitignore` und kommt nie ins Programm-Abbild (Dockerfile kopiert nur `app/`). Ein neues Foto wirkt sofort (kein Neustart nötig; Browser-Zwischenspeicher bis 1 Stunde).
 
 ### 7.3 Inhaltsseiten, Archiv und Fehlerseite (seit 0.21)
+
+**Seit 0.21.1 (Entwurfsrunde 20.11.2026, Entwürfe vom 20.11.):** Signalqualität in kräftigeren Grüntönen (Chip stark
+#C8DECE/#2F4A3C/#8FB59D, Balken #3E6B53/#A3BFAD; mittel #DAEADF/#3E5247/#A9C8B3, #5F8C72/#B5CFBE; gering
+#EAF2EC/#5B6B61/#BFD5C6, #7BA38A/#C8DACE; Kacheln stark #D6E8DB mit Streifen #4F8268, mittel #E5F0E7/#7BA38A,
+gering #F3F8F4/#A3BFAD). Spielseite ohne „Weitere Spiele dieses Spieltags“; „Alle Spiele des Spieltags“ ist Textlink,
+„Wie entstehen diese Werte?“ die Schaltfläche. Spieltag: SEO-Satz „Wir bieten transparente …“ entfällt. Methodik:
+Einstieg als drei Karten (Ebene, Titel, eine Zeile); mit Skript blendet die Wahl tiefere Ebenen aus (Start: Ebene aus
+der Adresse, sonst 1), ohne Skript ist alles sichtbar; Weiter-Schaltflächen je Ebene (höchstens 300 px, Rundung 28 px);
+Ligen-Tabellen bis 520 px ohne Mindestbreite (kein Scrollbalken von 320 bis 412 px, bis 340 px ohne Balkensymbol).
+Mobil bis 520 px: Navigation und Sprachmenü einzeilig, bis 440 px Sprachknopf „DE“/„EN“; Footer bis 640 px mit 14 px
+Abstand; SEO-Box der Startseite höchstens 816 px breit.
 
 - **Startseite, Spieltag, Spielseite** nach den Entwürfen P1 vom 19.11.2026 (Main_P1, Spieltag_P1, Spiel_P1): Ranking als
   Karten mit Signalqualität (drei Balken), Kacheln je Stufe (stark/mittel/gering mit farbigem Streifen), Legende mit
@@ -424,7 +435,7 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
   - **Navigation:** verlinkt direkt auf `/de/spieltag/bundesliga/` bzw. `/en/matchday/bundesliga/`; die Weiterleitung
     `/de/spieltag/` (302) bleibt für eingetippte Adressen, ohne `hreflang` und Canonical.
   - **Index-Fenster kommender Spiele:** indexierbar, sobald das Spiel in einem Tab der Spieltag-Seite erscheint
-    (anstehender Spieltag und Spieltage mit erstem Spiel bis heute + 6; Sonderspiele ab 7 Tagen vorher).
+    (anstehender Spieltag und Spieltage mit erstem Spiel bis heute + 6; Sonderspiele ab 7 Tagen vorher). *Seit 0.21.1 (Carsten 20.11.2026): heute + 5, Sonderspiele ab 5 Tagen vorher.*
   - **Strukturierte Daten:** `SportsEvent` (mit `startDate` inkl. Zeitzone) nur auf indexierbaren Spielseiten; auf
     `noindex`-Seiten nur `BreadcrumbList`.
 - **Für 0.21 beschlossen (Carsten 19.11.2026): Spielseiten ohne Werte.** Eine Spielseite ist indexierbar und in der

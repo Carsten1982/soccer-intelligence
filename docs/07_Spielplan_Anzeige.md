@@ -1,6 +1,6 @@
 # Soccer Intelligence – Spielplan, Import und Anzeige kommender Spieltage (Spezifikation)
 
-**Version:** 2.2 · **Stand:** 19.11.2026 (2.2: Statusmodell und Schnappschuss, umgesetzt in 0.20)
+**Version:** 2.3 · **Stand:** 20.11.2026 (2.3: Vorschau heute + 5 statt + 6, Version 0.21.1; 2.2: Statusmodell und Schnappschuss, umgesetzt in 0.20)
 **Grundlage:**
 - v2.0 und die Rückmeldung von ChatGPT („Prüfpunkte v2.0“)
 - Entscheidungen Carsten vom 15.11.2026: S1–S10, O1, O2
@@ -21,7 +21,7 @@
 - Datenstand höchstens 3 Tage alt (S9; seit 0.20: 48 Stunden)
 - Saisonwechsel (S10)
 - „Spielpause“ statt „Länderspielpause“ und einheitlich 14 Tage (O1)
-- Abschnitte innerhalb von heute bis heute + 6 (O2)
+- Abschnitte innerhalb von heute bis heute + 5 (O2; seit 0.21.1, bis 0.21: heute + 6)
 - Zeitzone ausdrücklich geregelt
 - zwei Container
 - Testfälle ergänzt (Z1–Z12)
@@ -167,8 +167,8 @@ Die ganze Logik steht als reine Funktionen in `app/core/anzeige.py` (anstehender
    - LaLiga Freitag bis Montag oder Dienstag: bis Montag- bzw. Dienstagabend.
    - Englische Woche: bis Mittwochabend.
 2. **Gespielte Spiele** bleiben bis dahin im Abschnitt, mit Ergebnis.
-3. **Weitere Spieltage**, deren erstes reguläres Spiel **heute bis heute + 6** stattfindet, erscheinen als eigene Abschnitte (O2). Bei drei Spieltagen sind es drei Abschnitte.
-4. **Sonderspiele** erscheinen ab 7 Tagen vor ihrem Termin als eigener Abschnitt unter ihrer **ursprünglichen Spieltagsnummer**, mit Vermerk. Sie verschwinden nach ihrem Tagesende.
+3. **Weitere Spieltage**, deren erstes reguläres Spiel **heute bis heute + 5** stattfindet, erscheinen als eigene Abschnitte (O2; *Änderung 20.11.2026, Version 0.21.1, Carsten:* bis 0.21 heute + 6. Damit erscheint ein Spieltag ab Freitag erst am Sonntag davor, einer ab Samstag am Montag; ein Dienstag-Spieltag der englischen Woche am Donnerstag davor). Bei drei Spieltagen sind es drei Abschnitte.
+4. **Sonderspiele** erscheinen ab 5 Tagen vor ihrem Termin (heute + 5; bis 0.21: 7 Tage, heute + 6) als eigener Abschnitt unter ihrer **ursprünglichen Spieltagsnummer**, mit Vermerk. Sie verschwinden nach ihrem Tagesende.
 5. **Verschoben (ohne Termin), abgesagt, abgebrochen, gewertet:** Diese Spiele erscheinen nicht als kommend. Beim Blättern stehen sie in ihrem Spieltag mit Vermerk.
 6. **Reihenfolge der Abschnitte: zeitlich** nach dem frühesten Spiel. Bei gleichem Termin entscheidet die Spieltagsnummer, die immer die offizielle bleibt (S3).
    - Beispiel LaLiga am 01.12.: zuerst „Spieltag 23 · vorgezogen · Mi 02.12.“, dann „Spieltag 15 · So 06.12.“.
@@ -240,7 +240,7 @@ Wo die Abschnitte 4.1–4.7 offen liessen, wie etwas genau gilt, ist es so umges
 | Punkt | Umsetzung |
 |---|---|
 | Pause | Abstand zwischen dem Ende des letzten beendeten Spieltags und dem ersten Tag des nächsten **mehr als 14 Tage**. Die Box steht während der ganzen Pause, ab 14 Tagen vor dem Spieltag zusammen mit ihm (Entwurf C) |
-| Sonderspiele | erscheinen im selben Fenster wie weitere Spieltage: Termin heute bis heute + 6. Ohne weiteren regulären Spieltag der Saison (4.3, „ein Spiel noch offen“) erscheinen sie unabhängig vom Abstand |
+| Sonderspiele | erscheinen im selben Fenster wie weitere Spieltage: Termin heute bis heute + 5 (bis 0.21: + 6). Ohne weiteren regulären Spieltag der Saison (4.3, „ein Spiel noch offen“) erscheinen sie unabhängig vom Abstand |
 | „Gespielt“ | seit 0.20 ab Anpfiff + 2 Stunden, ohne bekannte Uhrzeit (Zeit offen, alter Spielplan) ab Mitternacht nach dem Spieltag (bis 0.19.1: ab dem Anstoss bzw. Tagesende, „Ergebnis folgt“). Mit Ergebnis in der Datenbank immer „gespielt“. „Status offen“ (3.1) erscheint nur im Bericht des Imports |
 | „Werte ab“ | genannt werden nur Teams, deren Vorspiel heute oder später ist; beide im selben Spieltag: „beide Teams spielen vorher noch (Spieltag N)“. Lag das fehlende Vorspiel an einem früheren Tag: „Werte folgen, sobald das Ergebnis vom … übernommen ist“. Verschobene, abgesagte, abgebrochene, ausgesetzte und gewertete Spiele zählen nicht als Vorspiel. Ergebnis gesucht über Saison + Heim + Gast |
 | Letzter erfolgreicher Importlauf (S9) | neuester Lauf in `/import/laeufe/`, dessen Status nicht „fehlgeschlagen“ oder „Fehler – nicht übernehmbar“ ist; massgebend ist seit 0.20 sein **Beginn mit Uhrzeit** (`core/importstand.py`, für Dashboard und Website), veraltet nach mehr als 48 Stunden. Ohne Lauf: Box „Spielplan zuletzt aktualisiert am unbekannt“ |
@@ -337,8 +337,8 @@ Wo die Abschnitte 4.1–4.7 offen liessen, wie etwas genau gilt, ist es so umges
 | A2 | Sonntag, Freitagsspiel gespielt | bleibt mit Ergebnis im Abschnitt |
 | A3 | LaLiga Fr–Mo; heute Mo bzw. Di | Mo sichtbar; Di der nächste |
 | A4 | Englische Woche Sa Sp. 12 / Di Sp. 13 | Sa zwei Abschnitte (13 mit „Werte ab …“); Mo nur 13 mit Werten; bis Mi abends |
-| A5 | Drei Spieltage beginnen heute bis heute + 6 (echt: Bundesliga 08.–17.01.2027; Z12) | drei Abschnitte |
-| A6 | Spiel an Tag heute + 6 bzw. heute + 7 | Abschnitt bzw. noch nicht |
+| A5 | Drei Spieltage beginnen heute bis heute + 5 (echt: Bundesliga 08.–15.01.2027 am 10.01.; Z12) | drei Abschnitte (am 09.01. zwei) |
+| A6 | Spiel an Tag heute + 5 bzw. heute + 6 (seit 0.21.1) | Abschnitt bzw. noch nicht |
 | A7 | Nachholspiel in 5 bzw. 10 Tagen | Abschnitt unter dem ursprünglichen Spieltag bzw. noch nicht |
 | A8 | Vorgezogen (echt: LaLiga 02.12.), heute 01.12. | Reihenfolge: zuerst Sp. 23, dann Sp. 15 |
 | A9 | Zwei Spieltage am selben Tag | zwei Abschnitte, nach Spieltagsnummer |
@@ -397,7 +397,7 @@ Wo die Abschnitte 4.1–4.7 offen liessen, wie etwas genau gilt, ist es so umges
 | S9 | Pausen- und Sommerpausenhinweise nur bei Lauf höchstens 3 Tage alt (ab 0.20: höchstens 48 Stunden) |
 | S10 | neue Saison wird Standard ab dem ersten angesetzten Spiel; in der Sommerpause Hinweis und letzter Spieltag |
 | O1 | einheitlich mehr als 14 Tage; „Winterpause“ (inkl. 25.12.) oder „Spielpause“ |
-| O2 | weitere Spieltage heute bis heute + 6 automatisch als Abschnitt |
+| O2 | weitere Spieltage heute bis heute + 5 automatisch als Abschnitt (seit 0.21.1; vorher + 6) |
 | früher | eine Freigabe; täglicher Lauf; Navigation vorwärts 2; Datumsspalte mit Ergebnis; Sichtbarkeit bis Tagesende des letzten regulären Spieltags |
 
 **Gewertete Spiele** (entschieden 15.11.2026, R2): nicht in die Datenbank, nicht in die Formkurve; Spielplan-Status `gewertet` (`06`, Abschnitt 10.1).

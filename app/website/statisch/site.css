@@ -171,6 +171,7 @@ details.lesen[open] > summary svg { transform: rotate(180deg); }
 .fan p { margin: 8px 0 0; font-size: 17px; line-height: 1.55; color: var(--text2); }
 .fan .name { margin-top: 10px; font-family: var(--titel); font-size: 18px; font-weight: 600; line-height: 1.3; color: var(--pos); }
 .seo { margin-top: 32px; padding-top: 28px; border-top: 1px solid var(--rand); }
+.abschnitt-fan .seo { max-width: 816px; }
 .seo h2 { margin: 0; font-family: var(--titel); font-weight: 700; font-size: 20px; line-height: 1.2; color: var(--text2); }
 .seo p { margin: 10px 0 0; font-size: 15px; line-height: 1.65; color: var(--text3); }
 
@@ -193,9 +194,9 @@ details.lesen[open] .hinweisbox { align-self: stretch; text-align: left; }
 .partien { list-style: none; margin: 16px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 12px; }
 .kachel { display: flex; align-items: center; gap: 16px; min-height: 88px; padding: 16px 16px 16px 20px; border-radius: 20px; background: #fff; color: var(--text); border: 1px solid var(--rand); height: 100%; }
 a.kachel:hover { text-decoration: none; border-color: var(--gruen); }
-.kachel--stark { min-height: 104px; background: #EAF3EC; border: 1px solid #CBDCCF; box-shadow: inset 4px 0 0 #6E9A84; }
-.kachel--mittel { min-height: 104px; background: #F4F8F4; border: 1px solid #DCE6DE; box-shadow: inset 4px 0 0 #9DBBA6; }
-.kachel--gering { min-height: 104px; background: #FFFFFF; border: 1px solid #E1EAE2; box-shadow: inset 4px 0 0 #C3D6C9; }
+.kachel--stark { min-height: 104px; background: #D6E8DB; border: 1px solid #B3CDBB; box-shadow: inset 4px 0 0 #4F8268; }
+.kachel--mittel { min-height: 104px; background: #E5F0E7; border: 1px solid #C4D8CA; box-shadow: inset 4px 0 0 #7BA38A; }
+.kachel--gering { min-height: 104px; background: #F3F8F4; border: 1px solid #CFDFD3; box-shadow: inset 4px 0 0 #A3BFAD; }
 .kachel--status { background: var(--grau); color: #5B6B61; border: 1px dashed #B3C2B8; }
 .kachel--gespielt { background: var(--grau); color: #4F5F55; border: 1px solid var(--rand); }
 .kachel .teams { flex: 1 1 auto; min-width: 0; display: block; }
@@ -246,9 +247,9 @@ a.kachel:hover { text-decoration: none; border-color: var(--gruen); }
 .abschnitt-notiz { padding-top: clamp(16px, 3vw, 24px); }
 .karten { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
 .karte { min-width: 0; border-radius: 20px; overflow: hidden; background: #F6FBE4; border: 1px solid var(--rand); box-shadow: inset 4px 0 0 var(--gruen); }
-.karte--stark { box-shadow: inset 4px 0 0 #6E9A84; }
-.karte--mittel { box-shadow: inset 4px 0 0 #9DBBA6; }
-.karte--gering { box-shadow: inset 4px 0 0 #C3D6C9; }
+.karte--stark { box-shadow: inset 4px 0 0 #4F8268; }
+.karte--mittel { box-shadow: inset 4px 0 0 #7BA38A; }
+.karte--gering { box-shadow: inset 4px 0 0 #A3BFAD; }
 .karte .oben { padding: 18px 18px 12px; }
 .karte .kopf-k { display: flex; align-items: center; gap: 12px; }
 .ikon { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: var(--gruen); color: var(--akzent); }
@@ -327,24 +328,24 @@ details.detail[open] > summary .chev { background: #fff; color: var(--gruen); tr
 
 /* Signalqualität: eine Farbfamilie (dezentes Grün), unabhängig von der Richtung; drei Balken 6/10/14 px */
 .q-chip { display: inline-flex; align-items: center; min-height: 28px; padding: 0 12px; border-radius: 8px; border: 1.5px solid; font-size: 14px; font-weight: 600; line-height: 1.2; flex: 0 0 auto; white-space: nowrap; }
-.q-chip.q-stark { background: #E1EDE4; color: #2F4A3C; border-color: #B5CDBC; }
-.q-chip.q-mittel { background: #EDF4EE; color: #3E5247; border-color: #CBDCCF; }
-.q-chip.q-gering { background: #F7F9F6; color: #5B6B61; border-color: #DCE6DE; }
+.q-chip.q-stark { background: #C8DECE; color: #2F4A3C; border-color: #8FB59D; }
+.q-chip.q-mittel { background: #DAEADF; color: #3E5247; border-color: #A9C8B3; }
+.q-chip.q-gering { background: #EAF2EC; color: #5B6B61; border-color: #BFD5C6; }
 .q-balken { display: inline-flex; align-items: flex-end; gap: 2px; margin-right: 8px; }
 .q-balken span { display: block; width: 4px; border-radius: 1px; }
 .q-balken .h0 { height: 6px; }
 .q-balken .h1 { height: 10px; }
 .q-balken .h2 { height: 14px; }
-.q-stark .an { background: #4F7A63; }
-.q-stark .aus { background: #C3D6C9; }
-.q-mittel .an { background: #7FA28D; }
-.q-mittel .aus { background: #D3E2D8; }
-.q-gering .an { background: #9DBBA6; }
-.q-gering .aus { background: #E1EAE2; }
+.q-stark .an { background: #3E6B53; }
+.q-stark .aus { background: #A3BFAD; }
+.q-mittel .an { background: #5F8C72; }
+.q-mittel .aus { background: #B5CFBE; }
+.q-gering .an { background: #7BA38A; }
+.q-gering .aus { background: #C8DACE; }
 /* Balkenfarben: über dem Schnitt nach Signalqualität, darunter rot; Normalbereich hell */
-.f-stark { background: #6E9A84; }
-.f-mittel { background: #9DBBA6; }
-.f-gering { background: #C3D6C9; }
+.f-stark { background: #4F8268; }
+.f-mittel { background: #7BA38A; }
+.f-gering { background: #A3BFAD; }
 .f-tief { background: #B03A2E; }
 .f-normal-hoch { background: #A9CDB5; }
 .f-normal-tief { background: #E8B0A8; }
@@ -422,11 +423,6 @@ a.mc-card:hover { text-decoration: none; border-color: var(--gruen); }
 .archiv-pfeile { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; margin-top: 20px; }
 .archiv-pfeile a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1.5px solid rgba(244, 247, 242, 0.3); color: #F4F7F2; font-size: 16px; font-weight: 600; }
 .archiv-pfeile a:hover { text-decoration: none; border-color: var(--akzent); }
-/* Spielseite: weitere Spiele des Spieltags (interne Verlinkung) */
-.weitere-liste { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 8px; }
-.weitere-liste a { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 8px 16px; background: #fff; border: 1px solid var(--rand); border-radius: 14px; font-size: 16px; font-weight: 500; line-height: 1.3; color: var(--text); }
-.weitere-liste a:hover { text-decoration: none; border-color: var(--gruen); }
-.weitere-liste svg { flex: 0 0 auto; }
 @media (max-width: 1100px) { .sb-team { flex: 1 1 100%; } .sb-gegen { flex: 0 0 100%; text-align: center; } }
 
 /* Inhaltsseiten (Impressum, Datenschutz, Kontakt, Methodik, Glossar) und Fehlerseite */
@@ -479,11 +475,22 @@ a.knopf-voll:hover, a.knopf-rand:hover { text-decoration: none; }
 /* Methodik (Entwurf Methodik_10): Ebenen, Schritte, Rechenbeispiel, Tabellen je Liga, Download */
 .hero-inhalt .unterzeile { margin: 12px 0 0; font-family: var(--titel); font-weight: 600; font-size: clamp(20px, 3.6vw, 26px); line-height: 1.25; color: var(--akzent); }
 .inhalt-methodik { padding-top: clamp(20px, 4vw, 32px); }
-.tiefe { background: var(--hinweis); border: 1px solid var(--hinweis-rand); border-radius: 20px; padding: 16px; }
-.tiefe-titel { margin: 0; font-family: var(--titel); font-weight: 700; font-size: 20px; color: var(--text); }
-.tiefe ul { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.tiefe li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
-.tiefe li > span { flex: 1 1 240px; font-size: 15px; line-height: 1.45; color: var(--text2); }
+.tiefe-titel { margin: 0; font-size: 15px; font-weight: 600; color: var(--text2); }
+.tiefe-karten { list-style: none; margin: 10px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 10px; }
+.tiefe-karte { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; height: 100%; min-width: 0; padding: 14px 16px; border-radius: 16px; border: 1.5px solid #9DBBA6; background: #fff; color: var(--text); }
+.tiefe-karte:hover { text-decoration: none; border-color: var(--gruen); }
+.tiefe-karte[aria-current="true"] { background: var(--gruen); border-color: var(--gruen); }
+.tiefe-karte .ebene-marke { min-height: 26px; }
+.tiefe-karte[aria-current="true"] .ebene-marke { background: var(--akzent); color: var(--gruen); }
+.tk-titel { font-family: var(--titel); font-weight: 700; font-size: 19px; line-height: 1.2; color: var(--text); }
+.tk-text { font-size: 15px; line-height: 1.4; color: var(--text2); }
+.tiefe-karte[aria-current="true"] .tk-titel { color: #fff; }
+.tiefe-karte[aria-current="true"] .tk-text { color: var(--hell); }
+.ebene[hidden], .download[hidden] { display: none; }
+/* Glossar: Sprungmarken als Pillen */
+.sprung-box { background: var(--hinweis); border: 1px solid var(--hinweis-rand); border-radius: 20px; padding: 16px; }
+.sprung-box .tiefe-titel { font-family: var(--titel); font-weight: 700; font-size: 20px; color: var(--text); }
+.pillen { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
 .pille { flex: 0 0 auto; display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1.5px solid #9DBBA6; background: #fff; color: var(--text); font-size: 15px; font-weight: 600; }
 .pille:hover { text-decoration: none; border-color: var(--gruen); }
 .ebene { padding-top: clamp(28px, 5vw, 48px); scroll-margin-top: 16px; }
@@ -575,17 +582,51 @@ a.knopf-voll:hover, a.knopf-rand:hover { text-decoration: none; }
 .download p { line-height: 1.55; margin-top: 10px; }
 .download .knopfreihe { margin-top: 18px; }
 .knopf-voll.gross { min-height: 52px; padding: 8px 24px; font-size: 17px; }
+.knopf-weiter { justify-content: space-between; gap: 12px; max-width: min(100%, 300px); padding: 10px 16px 10px 20px; border-radius: 28px; line-height: 1.3; text-align: left; }
 .knopfreihe .knopf-voll svg { flex: 0 0 auto; }
 
 /* Glossar (ohne eigenen Entwurf, im Stil der Methodik) */
 .inhalt-glossar { padding-top: clamp(20px, 4vw, 32px); }
-.tiefe ul.pillen { flex-direction: row; flex-wrap: wrap; }
 .begriffe { margin: 16px 0 0; background: #fff; border: 1px solid var(--rand); border-radius: 20px; padding: 4px clamp(16px, 3vw, 24px); }
 .begriff { padding: 14px 0; border-bottom: 1px solid var(--rand2); scroll-margin-top: 16px; }
 .begriff:last-child { border-bottom: 0; }
 .begriff dt { font-family: var(--titel); font-weight: 700; font-size: 18px; line-height: 1.25; color: var(--text); }
 .begriff dd { margin: 6px 0 0; font-size: 16px; line-height: 1.55; color: var(--text2); }
 .liste-notiz a { color: var(--pos); text-decoration: underline; text-underline-offset: 3px; font-weight: 500; }
+
+/* Mobil (Entwurfsrunde 20.11.2026): Navigation und Sprachmenü einzeilig, Footer-Abstand, Methodik-Tabellen ohne Scrollbalken */
+.sprache-kurz { display: none; }
+@media (max-width: 640px) { .fuss nav { margin-top: 14px; } }
+@media (max-width: 520px) {
+  .kopf-rechts { flex-wrap: nowrap; gap: 0 4px; }
+  .kopf nav { flex-wrap: nowrap; gap: 0; }
+  .kopf nav a { padding: 0 7px; font-size: 15px; }
+  .sprachmenue > summary { padding: 0 10px; gap: 6px; font-size: 14px; }
+  .sprachmenue > summary svg:first-child { width: 18px; height: 18px; }
+  .tabelle--breit { min-width: 0; table-layout: auto; }
+  .tabelle--breit thead th, .tabelle--breit tbody th, .tabelle--breit td { padding: 9px 5px; }
+  .tabelle--breit thead tr > :first-child, .tabelle--breit tbody tr > :first-child { padding-left: 10px; }
+  .tabelle--breit thead tr > :last-child, .tabelle--breit tbody tr > :last-child { padding-right: 8px; }
+  .tabelle--breit thead th { font-size: 12px; line-height: 1.25; vertical-align: bottom; }
+  .tabelle--breit tbody th, .tabelle--breit tbody td { font-size: 14px; line-height: 1.25; }
+  .tabelle--breit tbody th { width: 34%; hyphens: auto; overflow-wrap: break-word; }
+  .tabelle--breit .q-chip { padding: 0 6px; font-size: 13px; }
+  .tabelle--breit .q-balken { margin-right: 5px; }
+}
+@media (max-width: 440px) {
+  .sprache-lang { display: none; }
+  .sprache-kurz { display: inline; }
+}
+@media (max-width: 360px) {
+  .kopf nav a { padding: 0 5px; font-size: 14px; }
+  .sprachmenue > summary { padding: 0 8px; }
+}
+@media (max-width: 340px) {
+  .sprachmenue > summary svg:first-child { display: none; }
+  .tabelle--breit .q-balken { display: none; }
+  .tabelle--breit thead th { font-size: 11px; }
+  .tabelle--breit thead th, .tabelle--breit tbody th, .tabelle--breit td { padding: 9px 3px; }
+}
 
 /* Breiten in Prozent für Balken und Aufteilung (statt eingebetteter Stilangaben) */
 .w0 { width: 0%; }

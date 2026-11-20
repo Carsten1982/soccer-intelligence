@@ -10,7 +10,9 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 
 **In Betrieb:** Version 0.21 „Neue Website“ (seit 20.11.2026) – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit Auffälligkeit und Signalqualität stark / mittel / gering (23 Schwellen), Top Anomalien, Datenqualität, Sensitivitätsanalyse, Datenimport über API-Football mit Schnappschuss je Spiel; Website-Vorschau unter `/vorschau` nach den Entwürfen P1 in Deutsch und Englisch (`/de/`, `/en/`, Archiv je Spieltag, Methodik mit Excel-Download, Glossar, Kontakt ohne Versand, Impressum, Datenschutz), vorbereitet für Suchmaschinen (noch nichts im Index, `index_ab` leer).
 
-**Als Nächstes:** Version 0.22 (Releaseplan unten); vorher Freigaben aus `RELEASE.md` 0.21 (Glossar, Archivtexte, Namen der 12 Aufsteiger, Frage „Auffällige Spiele je Spieltag“) und Spezifikation der E-Mail-Alarme.
+**Bereit zum Einspielen:** Version 0.21.1 – Website nach den Entwürfen vom 20.11.2026 (kräftigere Grüntöne der Signalqualität, Spielseite ohne „Weitere Spiele“, Methodik-Einstieg als drei Karten, mobil einzeilige Navigation und Tabellen ohne Scrollbalken) und **Vorschau 5 statt 7 Tage** (weitere Spieltage und Sonderspiele erst ab heute + 5, Dashboard und Website). Einzelheiten `RELEASE.md`.
+
+**Als Nächstes:** Version 0.22 – vorher Spezifikation E-Mail-Alarme und Entscheidungen zum Abfrageplan (`06`, 10.2: Läufe bei Anpfiff + 2¼ h); Freigaben aus `RELEASE.md` 0.21 (Glossar, Archivtexte, Namen der 12 Aufsteiger, „Auffällige Spiele je Spieltag“).
 
 **Als Nächstes – Releaseplan bis zum Livegang (Freigabe Carsten 19.11.2026):**
 
@@ -21,7 +23,7 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 | **0.22 Betrieb & Einwilligung** | E-Mail, Kontakt, Cookies, Analytics | **Spezifikation E-Mail-Alarme (offen, vor Beginn von 0.22)**; E-Mail über Hostinger-Postfach; Kontaktformular-Versand; Alarme (API, Import, Freigabe, Schnappschuss); Cookie-Hinweis und Cookie-Einstellungen; Tag Manager und GA4 nach Zustimmung; Search Console | Postfach, GA4-/GTM-IDs |
 | **1.0 Qualität & Livegang** | Prüfung, Korrekturen, Umschalten | Qualitätschecks (Compound Engineering, Web Quality Skills, Lighthouse, axe mit echten Daten); Befunde beheben; Domain umschalten, `/` → `/de/`, Vorschau-Passwort weg, `index_ab` setzen, Sitemap einreichen | Impressum mit Projektadresse, juristische Prüfung DE/EN, Nutzungsrechte API-Football, Hosting-Angabe |
 
-Danach: Rückblick für Fans (Version 2/3) · E-Mail-Benachrichtigung über den Alarm hinaus · Phase 2: Wettquoten, Verletzungen, Tabellenstände · Phase 3: primäre Auffälligkeit je Spiel, neue KPIs · Rundum-Prüfung des Codes.
+Danach: **Prognose gegen Ergebnis** auf der Spielseite (je Kennzahl Wert vor dem Spiel aus dem Schnappschuss und tatsächlicher Wert, „bestätigt / nicht bestätigt“; Wunsch Carsten 20.11.2026, nach Abschluss der Releases bis 1.0) · Rückblick für Fans (Version 2/3) · E-Mail-Benachrichtigung über den Alarm hinaus · Phase 2: Wettquoten, Verletzungen, Tabellenstände · Phase 3: primäre Auffälligkeit je Spiel, neue KPIs · Rundum-Prüfung des Codes.
 
 | Version | Etappe | Inhalt | Eingespielt | Git | Tests |
 |---|---|---|---|---|---|

@@ -116,17 +116,13 @@ def spiel_daten(daten: Daten, spiel_id: int, zp: Zeitpunkt) -> dict | None:
     gewertet = [k for k in kennzahlen if k["stufe"] != "zu_wenig_daten"]
     groesste = max(gewertet, key=lambda k: k["betrag"]) if gewertet else None
 
-    plan = daten.spielplan(liga)
     sicht = A.upcoming(b.fx.leagues[liga], zp.jetzt, zp.stand)
     im_fenster = any(int(row.reihenfolge) in set(sec.games["reihenfolge"].astype(int)) for sec in sicht.sections)
-    weitere = [{"id": int(g.api_id), "slug": AD.spiel_slug(g.heim, g.gast, int(g.api_id)), "heim": g.heim, "gast": g.gast}
-               for g in plan[(plan["saison"] == row.saison) & (plan["spieltag"] == row.spieltag)].itertuples()
-               if int(g.reihenfolge) != int(row.reihenfolge) and g.api_id is not None and g.api_id == g.api_id]
     return {
         "seite": "spiel", "id": int(spiel_id), "liga": web.slug, "liga_key": web.key,
         "slug": AD.spiel_slug(row.heim, row.gast, int(spiel_id)),
         "anstoss_zeit": row.anstoss_zeit.isoformat(timespec="minutes"),
-        "im_fenster": im_fenster, "weitere": weitere,
+        "im_fenster": im_fenster,
         "saison": row.saison, "spieltag": int(row.spieltag),
         "heim": row.heim, "gast": row.gast,
         "heim_id": b.team_ids.get((liga, row.heim)), "gast_id": b.team_ids.get((liga, row.gast)),

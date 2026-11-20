@@ -7,7 +7,7 @@
 {% macro rumpf() %}
 {{ tiefe() }}
 
-<section class="ebene" id="ebene1" aria-labelledby="ebene1-titel">
+<section class="ebene" id="ebene1" aria-labelledby="ebene1-titel" data-ebene="1">
   <span class="ebene-marke">Level 1 · In brief</span>
   <h2 class="ebene-titel" id="ebene1-titel">The principle at a glance</h2>
   <p>For upcoming football matches, we look for <b>statistical anomalies</b> in areas such as goals, corners and yellow cards.</p>
@@ -26,10 +26,10 @@
     <li><span class="gk-titel">The combinations</span><span class="gk-zahl">{{ m.kombinationen }} of {{ m.moeglich }} possible combinations</span><p>We analyse {{ m.kennzahlen }} metrics across {{ m.ligen_zahl }} leagues, looking at both higher and lower values. Only {{ m.kombinationen }} of these {{ m.moeglich }} combinations showed a measurable advantage in the past.</p></li>
     <li><span class="gk-titel">Signal quality</span><span class="gk-zahl">{{ m.stark }} High · {{ m.mittel }} Medium · {{ m.gering }} Low</span><p>The {{ m.kombinationen }} combinations are divided into three levels according to their historical uplift.</p></li>
   </ul>
-  <div class="knopfreihe"><a class="knopf-voll" href="#ebene2">Continue with the numbers: a worked example{{ pfeil_weiter() }}</a></div>
+  <div class="knopfreihe"><a class="knopf-voll knopf-weiter" href="#ebene2" data-tiefe-wahl="2" data-springen>Continue with the numbers: a worked example{{ pfeil_weiter() }}</a></div>
 </section>
 
-<section class="ebene" id="ebene2" aria-labelledby="ebene2-titel">
+<section class="ebene" id="ebene2" aria-labelledby="ebene2-titel" data-ebene="2">
   <span class="ebene-marke">Level 2 · With numbers</span>
   <h2 class="ebene-titel" id="ebene2-titel">A match, calculated step by step</h2>
   <p>Here is how a match value becomes a signal.</p>
@@ -65,11 +65,11 @@
   <div class="praxis">
     <h3>How do our signals perform in practice?</h3>
     <p>Signal quality is based on historical data. In the detailed analysis, we show how the results hold up in each league.</p>
-    <div class="knopfreihe"><a class="knopf-rand" href="#ebene3">Go to the detailed analysis</a></div>
+    <div class="knopfreihe"><a class="knopf-rand" href="#ebene3" data-tiefe-wahl="3" data-springen data-aufklappen>Go to the detailed analysis</a></div>
   </div>
 </section>
 
-<section class="ebene" id="ebene3" aria-labelledby="ebene3-titel">
+<section class="ebene" id="ebene3" aria-labelledby="ebene3-titel" data-ebene="3">
   <span class="ebene-marke">Level 3 · Full details</span>
   <h2 class="ebene-titel" id="ebene3-titel">The details behind the method</h2>
   <p>The main points are explained above. Here you can find out exactly how we calculate the values and how robust the results are.</p>

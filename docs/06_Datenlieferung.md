@@ -1,6 +1,6 @@
 # Soccer Intelligence – Datenlieferung über API-Football (Spezifikation)
 
-**Version 0.7** · Stand 19.11.2026 (v0.7: stündlicher Schnappschuss-Lauf, Version 0.20) · **Status: freigegeben von Carsten am 15.11.2026; v0.4: Ergebnis des Vollvergleichs; v0.5: Tagesbetrieb umgesetzt (Version 0.14); v0.6: Ergebnis-Import v1.1 nach Review (R1–R9, Abschnitt 10.1) und Spielplan nach `07_Spielplan_Anzeige.md` (Version 0.15)** · Grundlage: Entwurf v0.1 (ChatGPT,
+**Version 0.8** · Stand 20.11.2026 (v0.8: Entwurf Abfrageplan ab 0.22, 10.2; v0.7: stündlicher Schnappschuss-Lauf, Version 0.20) · **Status: freigegeben von Carsten am 15.11.2026; v0.4: Ergebnis des Vollvergleichs; v0.5: Tagesbetrieb umgesetzt (Version 0.14); v0.6: Ergebnis-Import v1.1 nach Review (R1–R9, Abschnitt 10.1) und Spielplan nach `07_Spielplan_Anzeige.md` (Version 0.15)** · Grundlage: Entwurf v0.1 (ChatGPT,
 15.11.2026), kritisch geprüft und ergänzt von Claude (v0.2); Entscheidungen E1–E12 von Carsten am 15.11.2026 (v0.3).
 
 Diese Datei ist die einzige Stelle für die Datenlieferung: Datenquelle, Feldzuordnung, Abläufe, Abfragebudget und
@@ -267,6 +267,35 @@ und Prüfregeln aus `app/core/`. Kein Eingriff in Traefik oder andere Container;
 | R7 | Zwei Quellen | Nachweis 2025/26 im Prüfprotokoll (`docs/tests/pruefprotokoll_api.md`, Abschnitt 7). Keine rückwirkende Bereinigung mehr. |
 | R8 | IDs | Keine neue Spalte. Jede id nur einmal **über alle Ligen** (Fehler), feste Zuordnung eigene ID ↔ API-ID in `app/config/zuordnung_api.csv` (11'978 Spiele, geprüft über Datum und Endstand). |
 | R9 | Rohdaten | 12 Monate aufbewahren, ältere Tagesordner löscht der Dienst. |
+
+### 10.2 Abfrageplan ab Version 0.22 (Entwurf 20.11.2026, Umsetzung mit den E-Mail-Alarmen)
+
+**Entscheidung Carsten 20.11.2026:** Zusätzliche Abfragen werden **an die Spielzeit gekoppelt**: je Anstosszeit ein
+Lauf bei **Anpfiff + 2¼ Stunden** (statt fester Uhrzeiten). Ziel: Endstände am selben Abend, Grundlage für die
+E-Mail-Alarme (0.22) und später für „Prognose gegen Ergebnis“ auf der Spielseite (nach 1.0).
+
+Regeln (Entwurf):
+- Die Laufzeiten entstehen aus dem gültigen Spielplan (Europe/Zurich) und werden nach jedem Lauf neu geplant;
+  Verschiebungen und neue Termine werden so automatisch berücksichtigt. Gilt für alle Wochentage, auch englische Wochen.
+- Gleiche Anstosszeiten ergeben einen Lauf; Läufe, die weniger als 30 Minuten auseinanderliegen, werden zum späteren
+  zusammengelegt. Spiele ohne Anstosszeit lösen keinen Abendlauf aus (sie kommen mit dem Lauf um 04:00).
+- Der tägliche volle Lauf um 04:00 bleibt unverändert (Abschnitt 10).
+- Beispiel Samstag 21.11.2026 (Anstösse 13:30, 14:00, 15:00, 15:30, 16:00, 16:15, 18:00, 18:30, 20:45, 21:00 in vier
+  Ligen): Läufe um 15:45, 16:15, 17:15, 17:45, 18:30 (18:15 und 18:30 zusammengelegt), 20:15, 20:45 und 23:15 (23:00 und
+  23:15 zusammengelegt), zusammen 8 Läufe.
+- Kontingent: Ein Abendlauf braucht 4 Abfragen (Spielliste je Liga) plus höchstens wenige Mehrfachabfragen für die
+  beendeten Spiele; ein voller Spieltag am Wochenende rund 50–100 Abfragen zusätzlich. Eigene Obergrenze 500 pro Tag
+  und Tarif Pro (7'500 pro Tag) reichen. Der Pro-Tarif läuft vom 15.11.2026 drei Monate (bis etwa Mitte Februar 2027).
+
+**Offen (Entscheidung Carsten, vor der Umsetzung):**
+1. **Übernahme der Abendläufe:** Vorschlag: Abendläufe übernehmen **Status und Endstand** automatisch, wenn alle
+   Prüfungen bestanden sind (keine Freigabe nötig); die **Statistiken** (Ecken, Karten, Schüsse) bleiben beim Lauf um
+   04:00 mit Freigabe, weil die API sie oft erst Stunden nach dem Spiel liefert und noch korrigiert und die KPIs davon
+   abhängen. Alternative: jeder Lauf wartet wie heute auf die Freigabe.
+2. **Sicherheitslauf:** Vorschlag: eine Stunde nach dem Abendlauf ein zweiter, wenn ein Spiel noch nicht beendet ist
+   (Verlängerung, Unterbrechung, Gewitter).
+3. **E-Mail-Alarme** (eigene Spezifikation vor 0.22): welche Ereignisse (Lauf fehlgeschlagen, Fassung wartet auf
+   Freigabe, Schnappschuss fehlt, Kontingent knapp, Endstand weicht ab), an wen, wie oft höchstens.
 
 ## 11. Rohdatenspeicher
 

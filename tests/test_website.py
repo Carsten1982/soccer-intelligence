@@ -198,7 +198,7 @@ def test_w4_no_anomalies_sentence_and_plural():
 
 def test_w5_catchup_goes_to_tab_of_its_dates():
     fx = plan(rnd(12, date(2026, 12, 5)), rnd(13, date(2026, 12, 8), date(2026, 12, 9)),
-              game(1, date(2026, 12, 9), "18:30", "E", "F", hint="Nachholspiel"),
+              game(1, date(2026, 12, 8), "18:30", "E", "F", hint="Nachholspiel"),   # heute + 5 (seit 0.21.1)
               game(23, date(2026, 12, 3), "21:00", "G", "H", hint="vorgezogen"))
     s = spieltag.spieltag_daten(FakeDaten({"Bundesliga": fx}), BL, zp("2026-12-03T10:00"))
     assert [t_["spieltag"] for t_ in s["tabs"]] == [12, 13]
