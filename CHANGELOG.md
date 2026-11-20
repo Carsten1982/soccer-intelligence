@@ -8,6 +8,7 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 ## 20.11.2026 – Für das nächste Release (in Arbeit)
 
 - **Carsten** · Prüfung 0.22 (Punkte 1–6 in Ordnung); Wunsch: In „Läufe heute“ hinter „nach dem Spiel“ die Partie nennen.
+- **Claude** · Spezifikation 0.23 `docs/09_Betrieb_EMail.md` v0.1 (E-Mail, Alarme, Statusmail, Server-Überwachung, Laufzeiten, Kontaktformular), zur Freigabe; in CLAUDE.md als Quelle eingetragen.
 - **Claude** · „Läufe heute“ nennt je geplantem Lauf die Partien, deren Ergebnis er holt (`laufplan.plan_mit_partien`, zusammengelegte Läufe mit allen Partien). Test L7.
 
 ## 20.11.2026 – Version 0.22 eingespielt
