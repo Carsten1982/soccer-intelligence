@@ -5,6 +5,11 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 20.11.2026 – Version 0.21.2 eingespielt
+
+- **Carsten** · Version 0.21.2 eingespielt (`9efe682`, Pull Request #23; Server und GitHub gleich). Der Pull Request wurde zusammengeführt, bevor der Testlauf fertig war; die Tests liefen beim Einspielen auf dem Server.
+- **Claude** · Stand nachgetragen (`01`, Abschnitt 0 und Versionstabelle).
+
 ## 20.11.2026 – Version 0.21.2: Entwürfe vom 20.11., zweite Lieferung
 
 - **Carsten** · Überarbeitete Briefings (README, Glossar EN, SEO, Template, Kontrast-Check, Entscheidungsprotokoll Beschluss 13) und Entwürfe Main_P1, Spieltag_P1, Spiel_P1, Methodik_10 vom 20.11.2026; Auftrag zur Umsetzung.
