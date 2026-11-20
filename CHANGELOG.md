@@ -5,6 +5,21 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 20.11.2026 – Version 0.21.2: Entwürfe vom 20.11., zweite Lieferung
+
+- **Carsten** · Überarbeitete Briefings (README, Glossar EN, SEO, Template, Kontrast-Check, Entscheidungsprotokoll Beschluss 13) und Entwürfe Main_P1, Spieltag_P1, Spiel_P1, Methodik_10 vom 20.11.2026; Auftrag zur Umsetzung.
+- **Carsten** · Entscheide zu den offenen README-Punkten (wie umgesetzt): Level-3-Chip DE „Ebene 3 · Für Statistik-Fans“; englischer Spieltitel mit „vs“; Glossar-Link im Footer nach Methodik.
+- **Claude** · **Spielseite:** grüne Schaltfläche „Alle Spiele des Spieltags“, darunter der Textlink „Wie entstehen diese Werte?“ (gegenüber 0.21.1 wieder getauscht); Zeitzonen-Hinweis entfällt auf der Spielseite.
+- **Claude** · **Spieltag:** Kopfbereich ohne „Aktueller Datenstand“ (steht in der Fusszeile) und niedriger; Text `spieltag.datenstand` entfernt.
+- **Claude** · **Startseite:** SEO-Box als eigener Block nach „Von einem Fußballfan gebaut“; in der Ranking-Karte bleibt der Signalqualität-Chip neben der Kennzahl, ein langer Name bricht um.
+- **Claude** · **Methodik:** „Weiter mit Zahlen: Ein Spiel durchgerechnet“ (EN „Continue with numbers: a worked example“) auf dem Computer einzeilig, bis 520 px höchstens 300 px breit mit festem Umbruch nach dem Doppelpunkt.
+- **Claude** · Tests W8 und W27 angepasst, W28 neu; axe-core ohne Befund; 320–412 px ohne Querscrollen (DE/EN). Doku: `01` (0), `08` (5.1, 7.1, 7.3, 8, 11), RELEASE.md.
+
+## 20.11.2026 – Version 0.21.1 eingespielt
+
+- **Carsten** · Version 0.21.1 eingespielt (`273b969`, Pull Request #22; Tests grün, Browser-Prüfung mit „j“ bestätigt).
+- **Claude** · Stand nachgetragen (`01`, Abschnitt 0 und Versionstabelle).
+
 ## 20.11.2026 – Version 0.21.1: Entwürfe vom 20.11. und Vorschau 5 Tage
 
 - **Carsten** · Prüfung der Website, überarbeitete Entwürfe und Briefings vom 20.11.2026; Entscheidungen: Vorschau 5 statt 7 Tage (mehr Ruhe am Spieltag), zusätzliche API-Abfragen an die Spielzeit gekoppelt (Anpfiff + 2¼ h, Umsetzung mit 0.22), später Prognose gegen Ergebnis auf der Spielseite.

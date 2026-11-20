@@ -8,11 +8,9 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 
 ## 0. Stand und Versionen
 
-**In Betrieb:** Version 0.21 „Neue Website“ (seit 20.11.2026) – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit Auffälligkeit und Signalqualität stark / mittel / gering (23 Schwellen), Top Anomalien, Datenqualität, Sensitivitätsanalyse, Datenimport über API-Football mit Schnappschuss je Spiel; Website-Vorschau unter `/vorschau` nach den Entwürfen P1 in Deutsch und Englisch (`/de/`, `/en/`, Archiv je Spieltag, Methodik mit Excel-Download, Glossar, Kontakt ohne Versand, Impressum, Datenschutz), vorbereitet für Suchmaschinen (noch nichts im Index, `index_ab` leer).
+**In Betrieb:** Version 0.21.1 (seit 20.11.2026) – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit Auffälligkeit und Signalqualität stark / mittel / gering (23 Schwellen), Top Anomalien, Datenqualität, Sensitivitätsanalyse, Datenimport über API-Football mit Schnappschuss je Spiel; Vorschau weiterer Spieltage ab heute + 5; Website-Vorschau unter `/vorschau` nach den Entwürfen vom 20.11. in Deutsch und Englisch (Archiv je Spieltag, Methodik mit Excel-Download, Glossar, Kontakt ohne Versand, Impressum, Datenschutz), vorbereitet für Suchmaschinen (noch nichts im Index, `index_ab` leer).
 
-**Bereit zum Einspielen:** Version 0.21.1 – Website nach den Entwürfen vom 20.11.2026 (kräftigere Grüntöne der Signalqualität, Spielseite ohne „Weitere Spiele“, Methodik-Einstieg als drei Karten, mobil einzeilige Navigation und Tabellen ohne Scrollbalken) und **Vorschau 5 statt 7 Tage** (weitere Spieltage und Sonderspiele erst ab heute + 5, Dashboard und Website). Einzelheiten `RELEASE.md`.
-
-**Als Nächstes:** Version 0.22 – vorher Spezifikation E-Mail-Alarme und Entscheidungen zum Abfrageplan (`06`, 10.2: Läufe bei Anpfiff + 2¼ h); Freigaben aus `RELEASE.md` 0.21 (Glossar, Archivtexte, Namen der 12 Aufsteiger, „Auffällige Spiele je Spieltag“).
+**Als Nächstes:** Version 0.21.2 einspielen (zweite Lieferung der Entwürfe vom 20.11.). Entschieden (Carsten 20.11.2026, wie umgesetzt): Level-3-Chip DE „Ebene 3 · Für Statistik-Fans“, englischer Spieltitel mit „vs“, Glossar-Link im Footer nach Methodik. Offen beim Design-Chat: Briefings nennen noch 7 statt 5 Tage Vorschau. Danach Version 0.22 – vorher Spezifikation E-Mail-Alarme und Entscheidungen zum Abfrageplan (`06`, 10.2: Läufe bei Anpfiff + 2¼ h); Freigaben aus `RELEASE.md` 0.21 (Glossar, Archivtexte, Namen der 12 Aufsteiger, „Auffällige Spiele je Spieltag“).
 
 **Als Nächstes – Releaseplan bis zum Livegang (Freigabe Carsten 19.11.2026):**
 
@@ -27,6 +25,8 @@ Danach: **Prognose gegen Ergebnis** auf der Spielseite (je Kennzahl Wert vor dem
 
 | Version | Etappe | Inhalt | Eingespielt | Git | Tests |
 |---|---|---|---|---|---|
+| 0.21.2 | Entwürfe 20.11., zweite Lieferung | Spielseite: grüne Schaltfläche „Alle Spiele des Spieltags“, Textlink zur Methodik, ohne Zeitzonen-Hinweis; Spieltag-Kopf ohne „Aktueller Datenstand“ und niedriger; Startseite: SEO-Box eigener Block, Chip neben der Kennzahl; Methodik-Schaltfläche mit Umbruch nur mobil | – | – | – |
+| 0.21.1 | Entwürfe 20.11. | Kräftigere Grüntöne, Spielseite ohne „Weitere Spiele“, Methodik-Einstieg als Karten, mobil einzeilige Navigation und Tabellen ohne Scrollbalken; Vorschau weiterer Spieltage heute + 5 statt + 6; Entwurf Abfrageplan (`06`, 10.2) | 20.11.2026 | `273b969` | 697 |
 | 0.21 | Neue Website | Website-Vorschau nach den Entwürfen P1, Deutsch/Englisch, Adressen `/de/` `/en/` mit 301/302/404, Archiv je Spieltag, Methodik mit Excel-Download, Glossar, Kontakt, Impressum, Datenschutz, 404; Index-Regeln, Sitemap, robots.txt, JSON-LD; Caching, 503; axe-core ohne Befund; Anzeigenamen je Sprache | 20.11.2026 | `006a150` | 696 |
 | 0.20 | Fundament | Signalqualität stark/mittel/gering; Schnappschuss je Spiel; Statusmodell (gespielt ab Anpfiff + 2 h, kein Nachrücken, „Werte ab“ auf allen Seiten, Zu wenig Daten, AWD-Absicherung, Sonderspiel-Nummer, Zählform); 48-Stunden-Grenze; ein Importstand für Dashboard und Website | 20.11.2026 | `10fa028` | 645 |
 | 0.19.1 | Nach Abnahme 0.19 | Texte Top Anomalien und Sensitivitätsanalyse, Reiter getauscht, Schwellen je Liga sichtbar, KPI 03 bei 0,00 %, Schusssumme als Hinweis, Cache-Versionsnummer der Website, Bereinigungen B1, B3–B6, Gegenrechnung Prognosewert | 19.11.2026 | `537b4a4` | 627 |

@@ -406,13 +406,10 @@ def test_w26_compact_score_on_tiles_and_long_on_match_page():
 # --- W27 Entwurfsrunde 20.11.2026 (0.21.1) ------------------------------------------------------------------------------
 
 def test_w27_drafts_of_20_november(dienst):
-    """Spielseite ohne „Weitere Spiele“, Textlink und Schaltfläche getauscht; Spieltag ohne SEO-Satz „Wir bieten …“;
+    """Spielseite ohne „Weitere Spiele“; Spieltag ohne SEO-Satz „Wir bieten …“;
     Methodik mit drei Einstiegskarten und Ebenen zum Ein- und Ausblenden; kräftigere Grüntöne; Sprachknopf mobil kurz."""
     spiel_html = vorschau.beantworten("/vorschau/de/spiel/bundesliga/e-f-1388512/", "", dienst).inhalt.decode()
-    assert "weitere-liste" not in spiel_html and "Weitere Spiele" not in spiel_html
-    link = re.search(r'<div class="eng methodik-link"><a href="([^"]+)">([^<]+)</a>', spiel_html)
-    assert link.group(2) == t("spiel.alle_spiele") and link.group(1) == "/vorschau/de/spieltag/bundesliga/"
-    assert re.search(r'<div class="eng abschluss"><a href="/vorschau/de/methodik/">' + re.escape(t("spiel.methodik")), spiel_html)
+    assert "weitere-liste" not in spiel_html and "Weitere Spiele" not in spiel_html   # Rollen seit 0.21.2: W28
     spieltag_html = vorschau.beantworten("/vorschau/de/spieltag/bundesliga/", "", dienst).inhalt.decode()
     assert "Wettberatung oder Gewinnprognosen" not in spieltag_html.split('id="seo-titel"')[1]
     m = vorschau.beantworten("/vorschau/de/methodik/", "", dienst).inhalt.decode()
@@ -428,3 +425,47 @@ def test_w27_drafts_of_20_november(dienst):
                   ".tabelle--breit { min-width: 0;"):
         assert regel in css, regel
     assert '<span class="sprache-kurz" aria-hidden="true">DE</span>' in m
+
+
+# --- W28 Entwurfsrunde 20.11.2026, zweite Lieferung (0.21.2) --------------------------------------------------------------
+
+def test_w28_second_round_of_drafts(dienst):
+    """Spielseite: grüne Schaltfläche „Alle Spiele des Spieltags“, darunter Textlink zur Methodik, kein Zeitzonen-Hinweis.
+    Spieltag: Hero ohne „Aktueller Datenstand“, niedriger. Startseite: SEO-Box eigener Block; Kennzahl bricht um, Chip
+    bleibt daneben. Methodik: Weiter-Schaltfläche mit festem Umbruch nur mobil, Desktop einzeilig."""
+    spiel_html = vorschau.beantworten("/vorschau/de/spiel/bundesliga/e-f-1388512/", "", dienst).inhalt.decode()
+    knopf = re.search(r'<div class="eng abschluss"><a href="([^"]+)">([^<]+)<svg', spiel_html)
+    assert knopf.group(1) == "/vorschau/de/spieltag/bundesliga/" and knopf.group(2) == t("spiel.alle_spiele")
+    link = re.search(r'<div class="eng methodik-link"><a href="([^"]+)">([^<]+)</a></div>', spiel_html)
+    assert link.group(1) == "/vorschau/de/methodik/" and link.group(2) == t("spiel.methodik")
+    assert spiel_html.index('class="eng abschluss"') < spiel_html.index('class="eng methodik-link"')
+    assert "zeitzone-hinweis" not in spiel_html and t("allgemein.zeitzone") not in spiel_html
+
+    for lang in ("de", "en"):
+        spieltag_html = vorschau.beantworten(f"/vorschau/{lang}/{'spieltag' if lang == 'de' else 'matchday'}/bundesliga/",
+                                             "", dienst)
+        text = spieltag_html.inhalt.decode()
+        hero = text.split('class="hero hero-spieltag"')[1].split("</nav>")[1].split('<div class="eng')[0]
+        assert 'class="datenstand"' not in hero and "Datenstand" not in hero and "data as of" not in hero
+        assert t("allgemein.zeitzone", lang=lang) in text                        # bleibt auf der Spieltag-Seite
+
+    start = vorschau.beantworten("/vorschau/de/", "", dienst).inhalt.decode()
+    fan, rest = start.split('<div class="wrap abschnitt-fan">')[1].split('<div class="wrap abschnitt-seo">')
+    assert 'class="seo"' not in fan and rest.lstrip().startswith('<section class="seo" aria-labelledby="seo-titel">')
+
+    m_de = vorschau.beantworten("/vorschau/de/methodik/", "", dienst).inhalt.decode()
+    m_en = vorschau.beantworten("/vorschau/en/methodology/", "", dienst).inhalt.decode()
+    assert '<span>Weiter mit Zahlen:<span class="umbruch-mobil"> </span>Ein Spiel durchgerechnet</span>' in m_de
+    assert '<span>Continue with numbers:<span class="umbruch-mobil"> </span>a worked example</span>' in m_en
+
+    css = (W.STATISCH / "site.css").read_text(encoding="utf-8")
+    for regel in (".hero-spieltag { padding: clamp(12px, 2.5vw, 24px) clamp(18px, 4vw, 40px) clamp(18px, 3vw, 28px); }",
+                  ".abschnitt-fan { padding: clamp(48px, 7vw, 88px) 0 0; }",
+                  ".abschnitt-seo { padding-bottom: clamp(48px, 7vw, 88px); }",
+                  ".mc-kpirow { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: nowrap;",
+                  ".mc-kpi { flex: 1 1 0; min-width: 0; overflow-wrap: break-word;",
+                  ".q-chip.mc-chip { flex: 0 0 auto;",
+                  ".knopf-weiter { justify-content: space-between; gap: 12px; max-width: 100%;",
+                  "@media (max-width: 520px) {\n  .knopf-weiter { max-width: min(100%, 300px); }\n  .umbruch-mobil { display: block; }"):
+        assert regel in css, regel
+    assert ".hero .datenstand" not in css

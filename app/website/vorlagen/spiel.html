@@ -146,7 +146,8 @@
 {% endif %}
 
 
-<div class="eng methodik-link"><a href="{{ zurueck_url }}">{{ t('spiel.alle_spiele') }}</a></div>
-<div class="eng abschluss"><a href="{{ link('methodik') }}">{{ t('spiel.methodik') }}{{ pfeil_weiter() }}</a></div>
-<div class="eng"><p class="zeitzone-hinweis">{{ t('allgemein.zeitzone') }}</p></div>
+{#- Seit 0.21.2 (Entwurf 20.11., Beschluss 13): grosse Schaltfläche zurück zum Spieltag, darunter der Textlink zur
+    Methodik; kein Zeitzonen-Hinweis auf der Spielseite (er steht auf Start- und Spieltag-Seite). -#}
+<div class="eng abschluss"><a href="{{ zurueck_url }}">{{ t('spiel.alle_spiele') }}{{ pfeil_weiter() }}</a></div>
+<div class="eng methodik-link"><a href="{{ link('methodik') }}">{{ t('spiel.methodik') }}</a></div>
 {% endblock %}

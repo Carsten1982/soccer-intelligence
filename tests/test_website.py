@@ -256,7 +256,7 @@ def test_w8_stale_warning_keeps_list_and_shows_import_date():
         html = seiten.spieltag_html(s, seiten.Kontext())
         assert s["veraltet"] is veraltet and ('role="alert"' in html) is veraltet and 'class="partien"' in html
     assert "Spielplan zuletzt aktualisiert am Sa 14.11." in html
-    assert "Aktueller Datenstand: Sa 14.11.2026" in html and "Datenstand: Sa 14.11.2026, 04:05 Uhr" in html
+    assert "Aktueller Datenstand" not in html and "Datenstand: Sa 14.11.2026, 04:05 Uhr" in html   # seit 0.21.2 nur im Footer
 
 
 def test_w8_last_import_reads_only_successful_runs(tmp_path):

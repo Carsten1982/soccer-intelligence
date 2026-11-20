@@ -40,7 +40,6 @@
     "intro": "Select your league to see which matches stand out statistically.",
     "ligen": "Select league",
     "nummer": "Matchday {n}",
-    "datenstand": "Current data as of: {datum}",
     "partien": {
       "eins": "1 match",
       "mehr": "{n} matches"
