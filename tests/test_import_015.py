@@ -304,6 +304,7 @@ def test_score_against_goal_events_waits_for_decision(base_db, season_list, deta
     Spiele bleiben zurückgehalten (bis 0.21.2 sperrte der kritische Punkt die ganze Fassung)."""
     monkeypatch.setattr(E, "automatic_from", lambda: date(2026, 1, 1))     # Automatikbetrieb
     e = env(tmp_path, base_db)
+    monkeypatch.setattr(E, "BACKUP_DIR", e["backup"])                       # automatische Übernahme sichert hierhin
     f0, f1 = sorted(details)[:2]
     d = copy.deepcopy(details)
     for fid in (f0, f1):
@@ -315,6 +316,7 @@ def test_score_against_goal_events_waits_for_decision(base_db, season_list, deta
     assert set(crit) == {f0, f1} and crit[f0]["api"] == "3:0"
     assert {g["id"] for g in r1["neue_spiele"]["Bundesliga"]} == set(sorted(details)[2:])
     assert r1["status"] == "übernommen (automatisch)" and r1["automatik"]["ok"] is True   # F1: Rest übernommen
+    assert list(e["backup"].glob("Database-Soccer-Intelligence_*_vor_import.xlsx"))         # Backup vor dem Tausch
     md9 = [m for m in r1["vollstaendigkeit"]["Bundesliga"] if m["spieltag"] == 9]
     assert md9 and any("wartet auf Entscheid" in x for x in md9[0]["fehlende"])
     events = crit[f0]["ereignisse"]

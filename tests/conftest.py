@@ -165,9 +165,11 @@ def matchdays_2018() -> pd.DataFrame:
 
 
 @pytest.fixture(autouse=True)
-def _import_von_hand(monkeypatch):
+def _import_von_hand(monkeypatch, tmp_path_factory):
     """Seit 0.22 ist in app/config/import.toml die Automatik aktiv (Beschluss Carsten 20.11.2026). Die Import-Tests
     prüfen den Ablauf Schritt für Schritt; sie laufen darum standardmässig „von Hand“. Ein Test, der die Automatik
     braucht, setzt sie selbst (monkeypatch.setattr(E, "automatic_from", …)); test_import_022 prüft die Konfiguration."""
     from importer import einstellungen as E
     monkeypatch.setattr(E, "automatic_from", lambda: None)
+    # Nie in den echten Backup-Ordner schreiben (Befund GitHub-Testlauf 20.11.2026: /backup ohne Schreibrecht)
+    monkeypatch.setattr(E, "BACKUP_DIR", tmp_path_factory.mktemp("backup"))
