@@ -5,6 +5,11 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 20.11.2026 – Für das nächste Release (in Arbeit)
+
+- **Carsten** · Prüfung 0.22 (Punkte 1–6 in Ordnung); Wunsch: In „Läufe heute“ hinter „nach dem Spiel“ die Partie nennen.
+- **Claude** · „Läufe heute“ nennt je geplantem Lauf die Partien, deren Ergebnis er holt (`laufplan.plan_mit_partien`, zusammengelegte Läufe mit allen Partien). Test L7.
+
 ## 20.11.2026 – Version 0.22 eingespielt
 
 - **Carsten** · Version 0.22 eingespielt (`1701bc6`, Pull Request #24; Tests grün). Die Verbindung zum Server brach während Schritt 4 ab, der Lauf ging in `tmux` weiter. E-Mail-Postfächer `info@` und `alert@` eingerichtet (Weiterleitung an die private Adresse); Laufzeiten: Postfach bis 20.11.2028, Domain bis 23.10.2027 (für 0.23).

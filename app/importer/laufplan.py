@@ -28,10 +28,15 @@ VERFALL = timedelta(hours=6)          # verpasste Läufe (z. B. Neustart) nur bi
 
 def anstosszeiten(fx_path: Path, tage: set[date]) -> list[datetime]:
     """Anstosszeiten geplanter Spiele an diesen Tagen (ohne Status, mit bestätigter oder vorläufiger Uhrzeit)."""
+    return sorted(spiele(fx_path, tage))
+
+
+def spiele(fx_path: Path, tage: set[date]) -> dict[datetime, list[str]]:
+    """Anstosszeit -> Partien („Heim – Gast“) geplanter Spiele an diesen Tagen (seit 0.22.1 für „Läufe heute“)."""
     if not fx_path.exists():
-        return []
+        return {}
     wb = openpyxl.load_workbook(fx_path, read_only=True)
-    out = set()
+    out: dict[datetime, list[str]] = {}
     try:
         for ws in wb.worksheets:
             rows = ws.iter_rows(values_only=True)
@@ -50,10 +55,11 @@ def anstosszeiten(fx_path: Path, tage: set[date]) -> list[datetime]:
                     hh, mm = (int(x) for x in str(anstoss).split(":")[:2])
                 except ValueError:
                     continue
-                out.add(datetime.combine(tag, time(hh, mm)))
+                partie = f"{r[col['Heimmannschaft']]} – {r[col['Gastmannschaft']]}" if "Heimmannschaft" in col else ""
+                out.setdefault(datetime.combine(tag, time(hh, mm)), []).append(partie)
     finally:
         wb.close()
-    return sorted(out)
+    return out
 
 
 def laufzeiten(anstoesse: list[datetime]) -> list[datetime]:
@@ -66,6 +72,21 @@ def laufzeiten(anstoesse: list[datetime]) -> list[datetime]:
         else:
             out.append(z)
     return [z for z in out if z.hour != E.RUN_HOUR]
+
+
+def plan_mit_partien(fx_path: Path, tag: date) -> list[tuple[datetime, list[str]]]:
+    """Läufe an diesem Tag mit den Partien, deren Ergebnis sie holen (Zuordnung wie beim Zusammenlegen)."""
+    je_anstoss = spiele(fx_path, {tag - timedelta(days=1), tag})
+    laeufe = laufzeiten(list(je_anstoss))
+    out = []
+    for z in laeufe:
+        if z.date() != tag:
+            continue
+        frueher = max((x for x in laeufe if x < z), default=None)
+        partien = [p for a, ps in sorted(je_anstoss.items())
+                   if (frueher is None or a + NACH_ANPFIFF > frueher) and a + NACH_ANPFIFF <= z for p in ps]
+        out.append((z, partien))
+    return out
 
 
 def plan(fx_path: Path, tag: date) -> list[datetime]:

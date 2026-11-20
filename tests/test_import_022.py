@@ -215,3 +215,13 @@ def test_l6_not_finished_games_trigger_retry():
     laufplan.wiederholung_planen(state, {"status": "übernommen (automatisch)", "nicht_beendet": [{"id": 2}]},
                                  jetzt.replace(tzinfo=None), "spiel")
     assert state["wiederholung"]["nr"] == 1
+
+
+def test_l7_planned_runs_name_their_matches(tmp_path):
+    """Wunsch Carsten 20.11.2026 (0.22.1): „Läufe heute“ nennt hinter „nach dem Spiel“ die Partien."""
+    fx = _spielplan(tmp_path / "Spielplan.xlsx", [(SA, "15:30", None, "bestätigt"), (SA, "15:30", None, "bestätigt"),
+                                                  (SA, "18:15", None, "bestätigt"), (SA, "18:30", None, "bestätigt")])
+    plan = laufplan.plan_mit_partien(fx, SA)
+    assert [(z.strftime("%H:%M"), p) for z, p in plan] == [("17:45", ["H0 – G0", "H1 – G1"]),
+                                                          ("20:45", ["H2 – G2", "H3 – G3"])]   # 20:30 + 20:45 zusammen
+    assert [z for z, _ in plan] == laufplan.plan(fx, SA)

@@ -112,8 +112,10 @@ def plan_box(now: datetime, state: dict, reps: list[dict]) -> str:
              f'<span class="di-tag {TAG.get(r.get("status", ""), "t-g")}">{escape(r.get("status", "–"))}</span>']
             for r in reversed(reps) if (r.get("start") or "")[:10] == heute]
     done = set(state.get("spiel_laeufe") or [])
-    rows += [[_when(z.isoformat()), "nach dem Spiel", '<span class="di-tag t-g">geplant</span>']
-             for z in laufplan.plan(fx, local.date()) if z > local and z.isoformat(timespec="minutes") not in done]
+    rows += [[_when(z.isoformat()), "nach dem Spiel" + (": " + escape(", ".join(partien)) if partien else ""),
+              '<span class="di-tag t-g">geplant</span>']
+             for z, partien in laufplan.plan_mit_partien(fx, local.date())
+             if z > local and z.isoformat(timespec="minutes") not in done]
     w = state.get("wiederholung")
     if w:
         rows.append([_when(w["um"]), f"Wiederholung {w['nr']}", '<span class="di-tag t-g">geplant</span>'])
