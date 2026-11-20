@@ -5,6 +5,11 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 20.11.2026 – Version 0.21 eingespielt
+
+- **Carsten** · Version 0.21 eingespielt (`006a150`, Pull Request #21; Tests grün). Ein erster Lauf um 06:04 brach ab, der zweite holte die Schritte 4–6 nach. Die Schlussfrage wurde wegen gepufferter Pfeiltasten als „nicht bestätigt“ gelesen; der neue Stand läuft (Server und GitHub auf `006a150`). Browser-Prüfung nach `RELEASE.md` und Live-Test (Freitagsspiel) folgen.
+- **Claude** · Stand nachgetragen (`01`, Abschnitt 0 und Versionstabelle).
+
 ## 20.11.2026 – Version 0.21 „Neue Website“
 
 - **Carsten** · Auftrag: Release 0.21 nach dem freigegebenen Releaseplan (Templates nach den Entwürfen P1, Deutsch und Englisch, Adressen, SEO, Inhaltsseiten; Cookie-Wahl, Formular-Versand und GA4 erst 0.22). Archiv- und Glossartexte schlägt Claude vor.
