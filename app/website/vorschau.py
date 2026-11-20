@@ -21,6 +21,7 @@ from urllib.parse import parse_qs, quote, urlsplit
 
 from . import adressen as AD
 from . import einstellungen as W
+from . import kontakt as KT
 from . import methodik as MT
 from . import seo
 from . import sitemap as SM
@@ -29,6 +30,8 @@ from .seiten import Kontext, archiv_html, fehlt_html, hinweis_html, inhalt_html,
 from .spiel import spiel_daten
 from .spieltag import archiv_daten, spieltag_daten
 from .start import start_daten
+
+KT_MAX_BYTES = 20_000             # Kontaktformular: grösste Anfrage (5'000 Zeichen Nachricht plus Felder)
 
 DATEN = Daten()
 SICHERHEIT = {
@@ -149,7 +152,31 @@ def beantworten(pfad: str, query: str, daten: Daten = DATEN) -> Antwort:
         return _spiel(z, rest, daten, zp, k, stand, prefix, q)
     if z.art == "cookie":                                    # Cookie-Einstellungen folgen mit 0.22
         return _html(200, hinweis_html("folgt", k, stand, aktiv=z.art))
+    if z.art == "kontakt":                                   # seit 0.23: Formular mit Sicherheitsfrage, nie zwischenspeichern
+        f = KT.leer(gesendet="gesendet" in werte)
+        return Antwort(200, inhalt_html(z.art, k, stand, f=f).encode("utf-8"), **{"Cache-Control": "no-store"})
     return _html(200, inhalt_html(z.art, k, stand))
+
+
+def beantworten_post(pfad: str, inhalt: bytes, ip: str, daten: Daten = DATEN, senden=None) -> Antwort:
+    """POST: nur das Kontaktformular (seit 0.23). Erfolg -> 303 auf die Seite mit ?gesendet=1 (kein doppeltes Senden
+    beim Neuladen); Fehler -> Seite mit Eingaben und Fehlern je Feld."""
+    prefix = W.PREFIX.rstrip("/")
+    rest = pfad[len(prefix):] if pfad.startswith(prefix + "/") else None
+    erk = AD.erkennen(rest) if rest else None
+    if erk is None or erk.ziel is None or erk.ziel.art != "kontakt" or erk.weiter:
+        return Antwort(405, b"nicht erlaubt", "text/plain; charset=utf-8", **{"Allow": "GET, HEAD"})
+    if len(inhalt) > KT_MAX_BYTES:
+        return Antwort(413, b"zu gross", "text/plain; charset=utf-8")
+    form = parse_qs(inhalt.decode("utf-8", errors="replace"), keep_blank_values=True)
+    k = Kontext(vorschau=W.VORSCHAU).mit(lang=erk.ziel.lang)
+    f = KT.bearbeiten(form, ip, erk.ziel.lang, senden=senden)
+    if f is None:
+        return _weiter(pfad, 303, "gesendet=1")
+    zp = daten.zeitpunkt()
+    k = k.mit(jetzt=zp.jetzt)
+    stand = zp.stand.isoformat(timespec="minutes") if zp.stand else None
+    return Antwort(200, inhalt_html("kontakt", k, stand, f=f).encode("utf-8"), **{"Cache-Control": "no-store"})
 
 
 def _spiel(z: AD.Ziel, rest: str, daten: Daten, zp, k: Kontext, stand, prefix: str, q: str) -> Antwort:
@@ -217,6 +244,26 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_HEAD(self) -> None:  # noqa: N802
         self._senden(kopf_nur=True)
+
+    def do_POST(self) -> None:  # noqa: N802 - nur das Kontaktformular (seit 0.23)
+        try:
+            laenge = min(int(self.headers.get("Content-Length") or 0), KT_MAX_BYTES + 1)
+        except ValueError:
+            laenge = 0
+        inhalt = self.rfile.read(laenge) if laenge else b""
+        # Absender-Adresse für die Anfragebremse: der letzte Eintrag stammt von Traefik (nicht vom Besucher fälschbar)
+        weiter = [x.strip() for x in (self.headers.get("X-Forwarded-For") or "").split(",") if x.strip()]
+        ip = weiter[-1] if weiter else self.client_address[0]
+        try:
+            a = beantworten_post(urlsplit(self.path).path, inhalt, ip)
+        except Exception:  # noqa: BLE001
+            traceback.print_exc()
+            a = Antwort(503, b"Bitte spaeter noch einmal versuchen.", "text/plain; charset=utf-8")
+        self.send_response(a.status)
+        for name, wert in {**SICHERHEIT, **a.kopf, "Content-Length": str(len(a.inhalt))}.items():
+            self.send_header(name, wert)
+        self.end_headers()
+        self.wfile.write(a.inhalt)
 
     def log_message(self, fmt, *args) -> None:  # kurzes Protokoll ohne Adresse des Besuchers
         sys.stdout.write("%s %s\n" % (self.log_date_time_string(), fmt % args))

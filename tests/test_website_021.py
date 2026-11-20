@@ -382,12 +382,13 @@ def test_w25_operator_details_only_from_server_settings(dienst, monkeypatch):
 
 def test_w25_no_personal_data_in_code_or_texts():
     """Betreiberangaben stehen nur in .env auf dem Server (Schutzregel). Im Code nur Platzhalter-Adressen."""
-    erlaubt = {"name@beispiel.ch", "name@example.com", "noreply@anthropic.com"}
+    erlaubt = {"name@beispiel.ch", "name@example.com", "noreply@anthropic.com",
+               "info@soccer-intelligence.com"}                      # öffentliche Projektadresse (seit 0.23)
     for datei in [*W.VORLAGEN.rglob("*.html"), *W.TEXTE.glob("*.json"), *(APP / "website").glob("*.py"),
                   APP / "config" / "teamnamen_anzeige.csv", APP / "config" / "website.toml"]:
         text = datei.read_text(encoding="utf-8")
         for mail in re.findall(r"[\w.+-]+@[\w-]+\.[\w.-]+", text):
-            assert mail in erlaubt, (datei.name, mail)
+            assert mail.rstrip(".") in erlaubt, (datei.name, mail)
         assert not re.search(r"\b\d{4} [A-ZÄÖÜ][a-zäöü]+(see|dorf|berg|ingen)\b", text), datei.name   # PLZ Ort
 
 

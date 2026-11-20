@@ -483,6 +483,60 @@ def history(reps: list[dict]) -> None:
                 'warten oben auf Ihren Entscheid.</p>', unsafe_allow_html=True)
 
 
+def betrieb_box(base: Path, now: datetime, abo: dict | None) -> str:
+    """Alarme, Server und Laufzeiten (seit 0.23, docs/09_Betrieb_EMail.md, Abschnitt 7)."""
+    from betrieb import alarme, laufzeiten
+    c, s = alarme.laden(base / "alarme.json"), alarme.laden(base / "ueberwachung.json")
+    aktiv = {**(c.get("aktiv") or {}), **(s.get("aktiv") or {})}
+    grenze = (now.replace(tzinfo=None) - timedelta(days=14)).isoformat()
+    verlauf = sorted([v for v in (c.get("verlauf") or []) + (s.get("verlauf") or []) if v.get("bis", "") >= grenze],
+                     key=lambda v: v["bis"], reverse=True)
+    versand = c.get("versand") or s.get("versand")
+    if versand is None:
+        mail_txt = '<span class="di-tag t-g">noch keine Mail</span>'
+    elif versand.get("ok"):
+        mail_txt = f'<span class="di-tag t-ok">funktioniert</span> letzte Mail {_when(versand["zeit"])}'
+    elif versand.get("meldung") == "nicht eingerichtet":
+        mail_txt = '<span class="di-tag t-w">nicht eingerichtet</span> (Zugangsdaten in .env, 01, Abschnitt 6.6)'
+    else:
+        mail_txt = f'<span class="di-tag t-r">gestört</span> {escape(str(versand.get("meldung", "")))}'
+    teile = [f"<h4>Alarme</h4><p class=\"di-note\">Mailversand: {mail_txt}</p>"]
+    if aktiv:
+        teile.append(_table(["Seit", "Stufe", "Alarm", "Mails"],
+                            [[_when(a["seit"]), f'<span class="di-tag {"t-r" if a["stufe"] == "kritisch" else "t-w"}">'
+                              f'{alarme.STUFE_TEXT[a["stufe"]]}</span>', escape(a["titel"]),
+                              f'{a["mails"]} von {alarme.MAX_MAILS}'] for a in aktiv.values()], left=(0, 2)))
+    else:
+        teile.append('<p class="di-note">Keine offenen Alarme.</p>')
+    if verlauf:
+        teile.append("<details><summary>Behobene Alarme der letzten 14 Tage</summary>" + _table(
+            ["Von", "Bis", "Alarm", "Stufe"], [[_when(v["seit"]), _when(v["bis"]), escape(v["titel"]),
+                                                 alarme.STUFE_TEXT.get(v["stufe"], v["stufe"])] for v in verlauf[:30]],
+            left=(0, 1, 2)) + "</details>")
+    srv = _read(base / "server.json")
+    if srv:
+        alt = (now.replace(tzinfo=None) - datetime.fromisoformat(srv["zeit"])).total_seconds() / 60
+        cont = " · ".join(f'{escape(n)} {"✓" if i.get("status") == "running" and i.get("health") != "unhealthy" else "✕ " + escape(str(i.get("status")))}'
+                          for n, i in (srv.get("container") or {}).items())
+        web = " · ".join(f"{escape(a)} {s or '–'}" for a, s in (srv.get("website") or {}).items())
+        teile.append(f'<h4>Server</h4><p class="di-note">Messung {_when(srv["zeit"])}'
+                     + (" <b class=\"di-bad\">(älter als 5 Minuten – Prüfskript läuft?)</b>" if alt > 5 else "")
+                     + f'<br>Festplatte {srv.get("festplatte")} % · Arbeitsspeicher {srv.get("speicher")} % · '
+                     f'CPU {srv.get("cpu") if srv.get("cpu") is not None else "–"} %<br>Container: {cont}<br>'
+                     f'Website: {web}</p>')
+    else:
+        teile.append('<h4>Server</h4><p class="di-note">Noch keine Messung. Das Prüfskript wird einmalig in den '
+                     'Zeitplan des Servers eingetragen (01, Abschnitt 6.6).</p>')
+    rows = []
+    for lz in laufzeiten.laden(abo=abo):
+        css = {"ok": "di-ok", "wn": "di-wn", "bad": "di-bad"}[lz.farbe(now.date())]
+        rows.append([escape(lz.name), f"{lz.bis:%d.%m.%Y}", f'<b class="{css}">{lz.rest(now.date())}</b>',
+                     "ja" if lz.automatisch else "nein"])
+    teile.append("<h4>Laufzeiten</h4>" + _table(["Dienst", "läuft bis", "Tage", "verlängert sich selbst"], rows,
+                                               left=(0,)))
+    return "".join(teile)
+
+
 def snapshot_box(stand: dict | None, now: datetime) -> str:
     """Stand des stündlichen Schnappschuss-Laufs (seit 0.20, core/schnappschuss.py): Werte je Spiel vor dem Anpfiff."""
     if not stand:
@@ -571,6 +625,8 @@ def render() -> None:
             for k in [k for k in last.get("kritisch") or [] if k["art"] != "endstand"]:
                 st.warning(f"**{escape(k['liga'])}**, {escape(k['spiel'])}: {escape(k['text'])}")
     st.markdown(plan_box(now, state, reps), unsafe_allow_html=True)
+    st.markdown(betrieb_box(base, now, next((r.get("abo") for r in reps if (r.get("abo") or {}).get("bis")), None)),
+                unsafe_allow_html=True)
     history(reps)
     from importer.schnappschuss import load_status
     st.markdown(snapshot_box(load_status(base), now), unsafe_allow_html=True)

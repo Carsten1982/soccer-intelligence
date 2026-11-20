@@ -463,6 +463,12 @@ a.mc-card:hover { text-decoration: none; border-color: var(--gruen); }
 .feld.haken label a { font-weight: 600; color: var(--text); }
 .versteckt { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
 .formular { position: relative; }
+.formular .feld-fehler { margin: 8px 0 0; font-size: 15px; font-weight: 600; line-height: 1.4; color: #A3352A; }
+.feld input[aria-invalid="true"], .feld textarea[aria-invalid="true"] { border-color: #A3352A; border-width: 2px; }
+.feld.haken input[aria-invalid="true"] { outline: 2px solid #A3352A; outline-offset: 2px; }
+.formular-meldung { margin: 14px 0 0; padding: 12px 16px; border-radius: 14px; font-size: 16px; font-weight: 600; line-height: 1.45; }
+.formular-meldung.ok { background: #DAEADF; color: #1F4A33; border: 1px solid #8FB59D; }
+.formular-meldung.fehler { background: #FBEAE7; color: #8A2A20; border: 1px solid #E8B0A8; }
 .formular .knopf-voll { margin-top: 24px; min-height: 56px; padding: 10px 32px; font-size: 18px; }
 /* Schaltflächen der Inhalts- und Fehlerseiten */
 .knopfreihe { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }

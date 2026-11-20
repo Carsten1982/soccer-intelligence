@@ -1,0 +1,19 @@
+# Laufzeiten der gebuchten Dienste (docs/09_Betrieb_EMail.md, Abschnitt 5; Angaben Carsten 20.11.2026).
+# Keine Geheimnisse. Nach einer Verlängerung das neue Datum hier eintragen (Änderung über GitHub wie Code).
+# Das Abo von API-Football steht nicht hier: es kommt bei jedem Lauf aus der API.
+# automatisch = true: Hostinger verlängert selbst; 14 Tage vorher kommt trotzdem eine Warnung zum Nachprüfen.
+
+[[dienst]]
+name = "VPS KVM 1 (Server)"
+bis = 2027-06-22
+automatisch = true
+
+[[dienst]]
+name = "Domain soccer-intelligence.com"
+bis = 2027-10-23
+automatisch = true
+
+[[dienst]]
+name = "E-Mail-Postfach soccer-intelligence.com"
+bis = 2028-11-20
+automatisch = true

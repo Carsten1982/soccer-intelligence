@@ -304,8 +304,7 @@ Computer einzeilig, bis 520 px höchstens 300 px breit mit festem Umbruch nach d
   Mehrwert, Spanne, Saisons mit Vorteil) und einem Blatt „Grundlage“, beim Aufruf aus der Schwellendatei erzeugt.
 - **Glossar** (ohne Entwurf, im Stil der Methodik): Grundbegriffe, Kennzahlen, Spielstatus, Datenstand und Zeiten;
   Begriffe nach dem Glossar (Release-Fassung 19.11.2026). Text freigegeben von Carsten am 20.11.2026.
-- **Kontakt** (Entwurf Kontakt): Formular mit Pflichtfeldern, Sicherheitsfrage und verstecktem Feld; Versand ab 0.22,
-  bis dahin ist die Schaltfläche gesperrt mit Hinweis.
+- **Kontakt** (Entwurf Kontakt): Formular mit Pflichtfeldern, Sicherheitsfrage und verstecktem Feld. **Seit 0.23 aktiv** (Versand über `info@`, Prüfung auf dem Server mit Fehlern je Feld, wechselnde Rechenaufgabe mit Prüfsumme, höchstens 3 Nachrichten pro Stunde, keine Speicherung; Spezifikation `09_Betrieb_EMail.md`, Abschnitt 6). Ohne eingerichteten Versand bleibt die Schaltfläche gesperrt.
 - **Impressum, Datenschutz** (Entwürfe): Betreiberangaben nur aus `.env` auf dem Server (`SI_IMPRESSUM_NAME`,
   `SI_IMPRESSUM_ADRESSE` mit „|“ getrennt, `SI_KONTAKT_EMAIL`); fehlen sie, steht ein Platzhalter. Juristische Prüfung
   vor dem Livegang offen.

@@ -376,6 +376,9 @@ def inhalt_html(art: str, k: Kontext, stand_iso: str | None = None, **werte) -> 
     if art == "methodik" and "m" not in werte:              # Zahlen aus der Schwellendatei (website/methodik.py)
         from . import methodik as MT
         werte["m"] = MT.daten(k.lang)
+    if art == "kontakt" and "f" not in werte:              # Formular (seit 0.23, website/kontakt.py)
+        from . import kontakt as KT
+        werte["f"] = KT.leer()
     return _rendern("inhalt.html", k, kopf, stand_iso, art=art, teil=teil, aktiv=art,
                     betreiber={"name": W.BETREIBER_NAME, "adresse": W.BETREIBER_ADRESSE, "email": W.KONTAKT_EMAIL},
                     **werte)

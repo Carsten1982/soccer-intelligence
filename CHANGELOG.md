@@ -5,11 +5,19 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
-## 20.11.2026 – Für das nächste Release (in Arbeit)
+## 20.11.2026 – Version 0.23: E-Mail, Alarme und Überwachung
 
-- **Carsten** · Prüfung 0.22 (Punkte 1–6 in Ordnung); Wunsch: In „Läufe heute“ hinter „nach dem Spiel“ die Partie nennen.
-- **Claude** · Spezifikation 0.23 `docs/09_Betrieb_EMail.md` v0.1 (E-Mail, Alarme, Statusmail, Server-Überwachung, Laufzeiten, Kontaktformular), zur Freigabe; in CLAUDE.md als Quelle eingetragen.
-- **Claude** · „Läufe heute“ nennt je geplantem Lauf die Partien, deren Ergebnis er holt (`laufplan.plan_mit_partien`, zusammengelegte Läufe mit allen Partien). Test L7.
+- **Carsten** · Prüfung 0.22 (Punkte 1–6 in Ordnung); Wunsch: In „Läufe heute“ die Partie nennen. Postfächer `info@` und `alert@` eingerichtet (Weiterleitung an die private Adresse). Entscheide F1–F7 zu `docs/09` (cron-Eintrag ja, vier Container, höchstens 3 Mails je Alarm, Statusmail Montag 06:00, Laufzeiten VPS 22.06.2027, Domain 23.10.2027, Postfach 20.11.2028, alle automatisch). Wunsch: nach jedem Release Testmails über alle Wege.
+- **Claude** · Spezifikation `docs/09_Betrieb_EMail.md` v0.4 (neu, in CLAUDE.md als Quelle eingetragen).
+- **Claude** · **Mailversand** (`betrieb/mail.py`): SMTP SSL über Hostinger, Zugangsdaten nur aus `.env`, an das eigene Postfach (Weiterleitung), Passwort nie in Meldungen.
+- **Claude** · **Alarme** (`betrieb/alarme.py`, `betrieb/pruefungen.py`): Import fehlgeschlagen, API-Kontingent, Schnappschuss, Datei-Prüfung, Fassung wartet, Entscheid offen, Statistik fehlt dauerhaft, Laufzeiten, Kontaktformular gescheitert; je Alarmart höchstens eine Mail pro Stunde, Stufe steigt sofort, Erinnerung nach 24 h, „Behoben“, höchstens 3 Mails je Alarm. Jede Minute im Dienst `soccer-import`, dazu Lebenszeichen.
+- **Claude** · **Statusmail** Montag 06:00 (`betrieb/status.py`): Läufe, Alarme, Server, Backups (Erinnerung Monatssicherung), Laufzeiten, Hinweise.
+- **Claude** · **Server-Prüfskript** `tools/ueberwachen.py` (cron, jede Minute, nur lesen): Festplatte, Arbeitsspeicher, CPU, unsere vier Container, Website erreichbar, Lebenszeichen des Imports; versendet selbst.
+- **Claude** · **Laufzeiten** `app/config/laufzeiten.toml` und Block im Reiter Datenimport/API; dazu Blöcke **Alarme** und **Server**.
+- **Claude** · **Kontaktformular aktiv** (`website/kontakt.py`): Prüfung mit Fehlern je Feld (DE/EN), wechselnde Rechenaufgabe mit Prüfsumme, höchstens 3 Nachrichten pro Stunde, verstecktes Feld, Versand über `info@`, keine Speicherung, Danke-Seite.
+- **Claude** · **Testmails nach jedem Release** über alle drei Wege (`tools/einspielen.sh`, Schritt 5). Einrichten auf dem Server: `tools/mail_einrichten.sh` (`01`, 6.6). Schutzregel 1: cron-Zeile als einzige Ausnahme.
+- **Claude** · „Läufe heute“ nennt je geplantem Lauf die Partien (`laufplan.plan_mit_partien`, Test L7).
+- **Claude** · Tests B1–B8 (`test_betrieb_023.py`); W25 erlaubt die öffentliche Projektadresse. Doku: `01` (0, 5, 6.6), `08`, `09`, RELEASE.md.
 
 ## 20.11.2026 – Version 0.22 eingespielt
 

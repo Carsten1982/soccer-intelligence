@@ -475,8 +475,7 @@
   "inhalt": {
     "email": "Email",
     "adresse_folgt": "[address to be added on the server]",
-    "email_folgt": "[project address to be added on the server]",
-    "kontakt_folgt": "Sending will be set up with the next release. Until then the form is not yet active."
+    "email_folgt": "[project address to be added on the server]"
   },
   "methodik": {
     "tiefe_titel": "How much detail would you like?",
@@ -563,6 +562,24 @@
       "mehrwert": "Success rate minus baseline.",
       "spanne_links": "Range of the uplift (95% confidence interval using the Wilson method), lower and upper limit. The fewer matches, the wider the range.",
       "saisons_positiv": "In how many of the analysed seasons the uplift was positive."
+    }
+  },
+  "formular": {
+    "frage": "Security question: What is {aufgabe}?",
+    "gesperrt": "Sending is not set up at the moment. Until then the form is not yet active.",
+    "gesendet": "Thank you, your message has arrived.",
+    "versand_fehler": "Your message could not be sent just now. Please try again later or write to info@soccer-intelligence.com.",
+    "zu_viele": "You have just sent several messages. Please try again in an hour.",
+    "fehler_hinweis": "Please check the highlighted fields.",
+    "fehler": {
+      "email_fehlt": "Please enter your email address.",
+      "email_ungueltig": "This email address doesn't look complete.",
+      "nachricht_fehlt": "Please write a message.",
+      "nachricht_kurz": "Your message is a little short – please use at least 10 characters.",
+      "nachricht_lang": "Your message is too long – please use no more than 5,000 characters.",
+      "name_lang": "Please use no more than 100 characters.",
+      "einwilligung": "Please confirm that you have read the privacy policy.",
+      "antwort": "That answer isn't right. Please try again."
     }
   }
 }

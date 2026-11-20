@@ -1,6 +1,6 @@
 # Soccer Intelligence – E-Mail, Alarme und Überwachung (Spezifikation)
 
-**Version 0.2** · Stand 20.11.2026 (v0.2: Entscheide F1–F7 von Carsten) · **Status: freigegeben von Carsten am 20.11.2026** (F5 und F6 mit Rückfrage, Abschnitt 9) · Umsetzung mit Version 0.23
+**Version 0.4** · Stand 20.11.2026 (v0.4: umgesetzt mit 0.23, Abschnitt 10; v0.3: F5 und F6 bestätigt, Testmails nach jedem Release M9; v0.2: Entscheide F1–F7) · **Status: freigegeben von Carsten am 20.11.2026** · Umsetzung mit Version 0.23
 
 Diese Datei ist die einzige Stelle für den Mailversand, die Alarme, die wöchentliche Statusmail, die
 Server-Überwachung, die Laufzeiten (Abos, Domain, Postfach) und den Versand des Kontaktformulars. Grundlage: Entscheide
@@ -19,6 +19,7 @@ Carsten vom 20.11.2026 (Zuschnitt 0.22/0.23/0.24, Postfächer, Alarmliste, Statu
 | M5 | Häufigkeit | Je Alarmart höchstens eine Mail pro Stunde; ist das Problem behoben, eine Mail „Behoben“. |
 | M6 | Kontaktformular | Versand per Mail, keine Speicherung (Beschluss 8, 19.11.2026). Spamschutz: Rechenaufgabe, verstecktes Feld, höchstens 3 Nachrichten pro Stunde je Absender – reicht für den Anfang. |
 | M7 | Laufzeiten | Im Dashboard verfolgen: API-Football-Abo (aus der API), Domain (bis 23.10.2027, automatische Verlängerung an), Postfach (bis 20.11.2028). |
+| M9 | Testmails nach jedem Release | Wunsch Carsten 20.11.2026: Nach jedem Einspielen geht über **jeden** Versandweg eine Testmail (Abschnitt 2.1). |
 | M8 | Weiterleitung | Beide Postfächer (`info@` und `alert@`) leiten an die private Adresse von Carsten weiter (eingerichtet bei Hostinger; die Adresse steht nur dort, nie im Programm oder in `.env`). |
 
 ## 2. Mailversand (Technik)
@@ -29,15 +30,30 @@ Carsten vom 20.11.2026 (Zuschnitt 0.22/0.23/0.24, Postfächer, Alarmliste, Statu
   So steht die private Adresse nirgends im Programm, auch nicht in `.env`. Kontaktformular an `info@` (F3: leitet ebenfalls weiter).
 - **Zugangsdaten nur in `.env`** auf dem Server (nie in Git, Code, Logs oder Chat):
   `SI_SMTP_HOST`, `SI_SMTP_PORT`, `SI_ALERT_USER`, `SI_ALERT_PASSWORT`, `SI_INFO_USER`, `SI_INFO_PASSWORT`. Eintragen
-  mit einem Befehl wie beim API-Schlüssel (Passwort wird nicht angezeigt, vorher Kopie von `.env` nach `backup/`).
-  Die Befehle stehen nach der Umsetzung in `01`, Abschnitt 6.
+  mit dem Skript `tools/mail_einrichten.sh` (Passwort wird nicht angezeigt, vorher Kopie von `.env` nach `backup/`;
+  Ablauf in `01`, Abschnitt 6.6).
 - **Fehlt die Konfiguration**, wird nichts versendet; das Dashboard zeigt „Mailversand nicht eingerichtet“, die Website
   zeigt beim Kontaktformular den heutigen Hinweis (Versand gesperrt).
 - **Scheitert der Versand** (Server nicht erreichbar, Passwort falsch): Eintrag im Ereignisprotokoll, Hinweis im
   Dashboard, neuer Versuch beim nächsten Anlass. Eine fehlende Statusmail am Montag ist das Zeichen, dass der Versand
   selbst gestört ist.
-- **Testmail:** `docker exec soccer-import python -m betrieb.mail --test` schickt eine Testmail an `alert@`. Das
-  Einspiel-Skript bietet sie nach dem Einspielen von 0.23 an.
+- **Testmail von Hand:** `docker exec soccer-import python -m betrieb.mail --test alert` (bzw. `info` im Container
+  `soccer-vorschau`, `python3 tools/ueberwachen.py --test` auf dem Server).
+
+### 2.1 Integrierter Test nach jedem Release (M9)
+
+Das Einspiel-Skript schickt nach dem Neustart (Schritt 5) über **alle drei Versandwege** je eine Testmail und meldet
+das Ergebnis; in Schritt 6 fragt es, ob alle drei angekommen sind:
+
+| Weg | Absender | Prüft |
+|---|---|---|
+| Container `soccer-import` | `alert@` | Alarme und Statusmail (Zugangsdaten `alert@` im Container) |
+| Container `soccer-vorschau` | `info@` | Kontaktformular (Zugangsdaten `info@` im Container) |
+| Prüfskript auf dem Server | `alert@` | Server-Alarme (Zugangsdaten aus `.env`, ohne Container) |
+
+Betreff: `[Soccer Intelligence] Test nach Release <Version> (<Git>) – <Weg>`. Eine gescheiterte Testmail stoppt das
+Einspielen nicht (die Website läuft trotzdem), wird aber deutlich gemeldet und ins Ereignisprotokoll geschrieben. Ist
+der Mailversand noch nicht eingerichtet, sagt das Skript das und schickt nichts.
 - Mails sind einfacher Text, Deutsch (Schweizer Schreibweise wie das Dashboard), Betreff mit Stufe:
   `[Soccer Intelligence] KRITISCH: …`, `WARNUNG: …`, `BEHOBEN: …`, `Wochenstatus KW 48`.
   Jede Alarm-Mail nennt: was, seit wann, betroffene Werte, was zu tun ist (Reiter im Dashboard oder Befehl).
@@ -55,7 +71,7 @@ Carsten vom 20.11.2026 (Zuschnitt 0.22/0.23/0.24, Postfächer, Alarmliste, Statu
 | Fassung wartet auf Freigabe *(Frage F4)* | Eine Fassung mit Fehlern oder neuen Warnungen wartet im Reiter (`06`, 10.2, Regel 3) | Warnung |
 | Entscheid offen *(Frage F4)* | Ein Spiel wird zurückgehalten und wartet auf den Entscheid (`06`, 10.2, Regel 4) | Warnung |
 | Statistik fehlt dauerhaft | Ein Spiel hat 7 Tage nach dem Spiel noch fehlende Werte (`06`, Abschnitt 10) | Warnung |
-| Laufzeit endet | API-Abo, Domain oder Postfach: 30 Tage vorher Warnung, 7 Tage vorher Kritisch; bei automatischer Verlängerung nur ein Hinweis in der Statusmail | Warnung / Kritisch |
+| Laufzeit endet | Ohne automatische Verlängerung (API-Abo): 30 Tage vorher Warnung, 7 Tage vorher Kritisch. Mit automatischer Verlängerung (VPS, Domain, Postfach): 14 Tage vorher Warnung „Bitte prüfen, ob verlängert wurde, und das neue Datum in `laufzeiten.toml` nachtragen“ (die Datei kennt eine Verlängerung nicht von selbst) | Warnung / Kritisch |
 
 ### 3.2 Server-Alarme (Prüfskript auf dem Server)
 
@@ -66,7 +82,7 @@ Carsten vom 20.11.2026 (Zuschnitt 0.22/0.23/0.24, Postfächer, Alarmliste, Statu
 | CPU | über 90 % während 30 Minuten | – | Auslastung aller Kerne |
 | Container | mehr als 3 Neustarts in 10 Minuten | länger als 5 Minuten nicht verfügbar (gestoppt oder „unhealthy“) | `football-dashboard`, `soccer-import`, `soccer-vorschau`, `soccer-placeholder` |
 | Website erreichbar | – | länger als 5 Minuten nicht erreichbar: `/` nicht 200, `/dashboard/` nicht 200, `/vorschau/` nicht 401 | Abruf von aussen über Traefik (deckt auch einen Ausfall von Traefik ab, ohne ihn anzufassen) |
-| Import-Dienst lebt | – | `soccer-import` meldet sich seit über 15 Minuten nicht (Lebenszeichen-Datei) | Datei `import/lebenszeichen` |
+| Import-Dienst lebt | – | `soccer-import` meldet sich seit über 30 Minuten nicht (Lebenszeichen-Datei; 30 statt 15, weil ein langer Kontrolllauf es nicht erneuert) | Datei `import/lebenszeichen` |
 
 - **Technik:** Skript `tools/ueberwachen.sh` im Projektordner, läuft **jede Minute** über den Zeitplan des Servers
   (`cron`, einmaliger Eintrag – Frage F1). Es liest nur: `/proc`, `df`, `docker inspect` unserer vier Container, einen
@@ -80,10 +96,11 @@ Carsten vom 20.11.2026 (Zuschnitt 0.22/0.23/0.24, Postfächer, Alarmliste, Statu
 
 - Je Alarmart (z. B. „Festplatte“, „Container soccer-vorschau“) **höchstens eine Mail pro Stunde**.
 - Steigt die Stufe (Warnung → Kritisch), geht sofort eine Mail, auch innerhalb der Stunde.
-- **Erinnerung** alle 24 Stunden, solange ein Alarm besteht, **höchstens 3 Mails je Alarm** (erste Meldung und bis zu
-  zwei Erinnerungen; F5, Carsten 20.11.2026 – Lesart zu bestätigen). Danach steht der Alarm nur noch im Dashboard und
-  in der Statusmail. Steigt die Stufe oder ist er behoben, kommt trotzdem eine Mail.
-- Ist das Problem behoben, eine Mail **„BEHOBEN: …“** mit Dauer.
+- **Erinnerung** alle 24 Stunden, solange ein Alarm besteht.
+- **Höchstens 3 Mails je Alarm, egal was sonst passiert** (F5, Carsten 20.11.2026): Meldung, höhere Stufe,
+  Erinnerung und „Behoben“ zählen zusammen. Danach steht der Alarm nur noch im Dashboard und in der Statusmail.
+  Endet ein Alarm und tritt später neu auf, ist das ein neuer Alarm.
+- Ist das Problem behoben, eine Mail **„BEHOBEN: …“** mit Dauer (sofern die 3 Mails nicht aufgebraucht sind).
 - Alle Alarme und Mails stehen im Ereignisprotokoll (`import/ereignisse.jsonl`) und im Reiter Datenimport/API
   (Block „Alarme“: offene Alarme, letzte 14 Tage).
 
@@ -104,9 +121,9 @@ Carsten vom 20.11.2026 (Zuschnitt 0.22/0.23/0.24, Postfächer, Alarmliste, Statu
 ## 5. Laufzeiten (M7)
 
 - Datei `app/config/laufzeiten.toml` (keine Geheimnisse, Änderung über Git): je Eintrag Name, Ablaufdatum,
-  automatische Verlängerung ja/nein. Erste Einträge: Domain `soccer-intelligence.com` 23.10.2027 (automatisch),
-  E-Mail-Postfach 20.11.2028 (*automatische Verlängerung: noch offen*), VPS (*Ablaufdatum noch offen, F6*). Das API-Abo
-  kommt wie heute aus der API.
+  automatische Verlängerung ja/nein. Einträge (Carsten 20.11.2026, alle mit automatischer Verlängerung): **VPS KVM 1
+  bis 22.06.2027** (frühester Ablauf, auf ihm läuft alles), Domain `soccer-intelligence.com` bis 23.10.2027,
+  E-Mail-Postfach bis 20.11.2028. Das API-Abo kommt wie heute aus der API.
 - Dashboard, Reiter Datenimport/API: Block **„Laufzeiten“** neben der Statusleiste: Datum, Resttage, Farbe (grün,
   ab 30 Tagen gelb, ab 7 Tagen oder abgelaufen rot).
 - Alarme nach 3.1, Zeile in der Statusmail.
@@ -120,8 +137,8 @@ Carsten vom 20.11.2026 (Zuschnitt 0.22/0.23/0.24, Postfächer, Alarmliste, Statu
   Zeichen, Name höchstens 100 Zeichen, Einwilligung gesetzt, Sicherheitsfrage richtig, verstecktes Feld leer. Bei
   Fehlern bleibt die Eingabe stehen, die Fehler stehen je Feld (Texte Abschnitt 6.1).
 - **Sicherheitsfrage:** zufällig aus 10 einfachen Rechenaufgaben (z. B. „Was ergibt 4 + 3?“); welche gestellt wurde,
-  steht in einem versteckten Feld mit Prüfsumme (Geheimnis `SI_FORMULAR_GEHEIMNIS` in `.env`), damit niemand die
-  Antwort mitschicken kann.
+  steht in einem versteckten Feld mit Prüfsumme (das Geheimnis entsteht beim Start des Dienstes, die Aufgabe gilt
+  2 Stunden – keine Konfiguration nötig), damit niemand die Antwort mitschicken kann.
 - **Anfragebremse:** höchstens 3 gesendete Nachrichten pro Stunde je Absender-Adresse (IP), danach Hinweis
   „Bitte später noch einmal versuchen“. Die Zählung liegt nur im Arbeitsspeicher, nichts wird gespeichert.
 - **Versand:** von `info@` an `info@`, „Antwort an“ = Adresse des Absenders; Betreff
@@ -174,6 +191,22 @@ keine Zugangsdaten in Logs oder Protokoll.
 | F2 | Welche Container | **Nur unsere vier**; Traefik über „Website erreichbar“ |
 | F3 | Kontaktformular | An `info@`; **beide Postfächer leiten an die private Adresse weiter** (M8) |
 | F4 | „Fassung wartet auf Freigabe“ und „Entscheid offen“ als Alarm | **Ja** (Warnung) |
-| F5 | Erinnerung | **Höchstens 3 Alarm-Mails** – Lesart: erste Meldung plus bis zu zwei Erinnerungen (alle 24 h) je Alarm; zu bestätigen |
-| F6 | Laufzeiten | Bei Hostinger gebucht: Domain und Postfach. **Offen:** Ablaufdatum des VPS (der Server, auf dem alles läuft) und ob sich das Postfach automatisch verlängert |
+| F5 | Erinnerung | **Höchstens 3 Mails je Alarm, egal was sonst passiert** (bestätigt) |
+| F6 | Laufzeiten | VPS KVM 1 bis 22.06.2027, Domain bis 23.10.2027, Postfach bis 20.11.2028; alle mit automatischer Verlängerung |
 | F7 | Statusmail | **Montag 06:00** |
+
+## 10. Umsetzung (Version 0.23)
+
+| Teil | Datei |
+|---|---|
+| Mailversand, Testmail | `app/betrieb/mail.py` (nur Standardbibliothek) |
+| Alarm-Zustand, Drosselung, höchstens 3 Mails | `app/betrieb/alarme.py` (nur Standardbibliothek) |
+| Daten-Alarme | `app/betrieb/pruefungen.py`, aufgerufen jede Minute vom Dienst `soccer-import` (`importer/dienst.py`) |
+| Statusmail | `app/betrieb/status.py` (Montag 06:00) |
+| Laufzeiten | `app/config/laufzeiten.toml`, `app/betrieb/laufzeiten.py` |
+| Server-Prüfskript | `tools/ueberwachen.py` (cron jede Minute; schreibt `import/server.json`, `import/ueberwachung.json`) |
+| Einrichten auf dem Server | `tools/mail_einrichten.sh` (`01`, Abschnitt 6.6) |
+| Testmails nach jedem Release | `tools/einspielen.sh`, Schritt 5 |
+| Kontaktformular | `app/website/kontakt.py`, `vorschau.py` (POST), `vorlagen/inhalt/kontakt.*.html`, Texte `formular.*` |
+| Dashboard | Reiter Datenimport/API: Blöcke Alarme, Server, Laufzeiten |
+| Tests | `tests/test_betrieb_023.py` (B1–B8) |

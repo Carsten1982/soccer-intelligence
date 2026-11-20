@@ -475,8 +475,7 @@
   "inhalt": {
     "email": "E-Mail",
     "adresse_folgt": "[Adresse wird auf dem Server eingetragen]",
-    "email_folgt": "[Projektadresse wird auf dem Server eingetragen]",
-    "kontakt_folgt": "Der Versand wird mit dem nächsten Release eingerichtet. Bis dahin ist das Formular noch nicht aktiv."
+    "email_folgt": "[Projektadresse wird auf dem Server eingetragen]"
   },
   "methodik": {
     "tiefe_titel": "Wie tief möchtest du einsteigen?",
@@ -563,6 +562,24 @@
       "mehrwert": "Trefferquote minus Vergleichswert.",
       "spanne_links": "Spanne des Mehrwerts (95-%-Intervall nach Wilson), linker und rechter Rand. Je weniger Spiele, desto breiter die Spanne.",
       "saisons_positiv": "In wie vielen der ausgewerteten Saisons der Mehrwert positiv war."
+    }
+  },
+  "formular": {
+    "frage": "Sicherheitsfrage: Was ergibt {aufgabe}?",
+    "gesperrt": "Der Versand ist gerade nicht eingerichtet. Bis dahin ist das Formular noch nicht aktiv.",
+    "gesendet": "Danke, deine Nachricht ist angekommen.",
+    "versand_fehler": "Die Nachricht konnte gerade nicht gesendet werden. Bitte versuch es später noch einmal oder schreib an info@soccer-intelligence.com.",
+    "zu_viele": "Du hast gerade mehrere Nachrichten gesendet. Bitte versuch es in einer Stunde noch einmal.",
+    "fehler_hinweis": "Bitte prüfe die markierten Felder.",
+    "fehler": {
+      "email_fehlt": "Bitte gib deine E-Mail-Adresse ein.",
+      "email_ungueltig": "Diese E-Mail-Adresse sieht nicht vollständig aus.",
+      "nachricht_fehlt": "Bitte schreib eine Nachricht.",
+      "nachricht_kurz": "Deine Nachricht ist etwas kurz – bitte mindestens 10 Zeichen.",
+      "nachricht_lang": "Deine Nachricht ist zu lang – bitte höchstens 5.000 Zeichen.",
+      "name_lang": "Bitte höchstens 100 Zeichen.",
+      "einwilligung": "Bitte bestätige, dass du die Datenschutzerklärung gelesen hast.",
+      "antwort": "Das Ergebnis stimmt leider nicht. Bitte versuch es noch einmal."
     }
   }
 }
