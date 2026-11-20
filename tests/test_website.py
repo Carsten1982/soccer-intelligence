@@ -152,7 +152,7 @@ def test_w2_kickoff_passed_without_result_and_strongest():
     # seit 0.20: bis Anpfiff + 2 Stunden normal (kein Live-Status), danach „Gespielt“ ohne „Ergebnis folgt“
     assert spieltag.einstufen(row, match(), datetime(2026, 11, 21, 15, 30), {})["art"] == "ohne"
     assert spieltag.einstufen(row, match(), datetime(2026, 11, 21, 17, 30), {}) == \
-        {"art": "gespielt", "status": None, "ergebnis": None, "staerkste": None, "werte_ab": None}
+        {"art": "gespielt", "status": None, "ergebnis": None, "staerkste": None, "werte_ab": None, "qualitaet": "ohne"}
     r = spieltag.einstufen(row, match(kpi03=kpi(HIGH, 44), kpi06=kpi(HIGH, -52)), datetime(2026, 11, 20), {})
     assert r["staerkste"] == {"kpi": "kpi06", "abweichung": -52.0}
 
@@ -256,7 +256,7 @@ def test_w8_stale_warning_keeps_list_and_shows_import_date():
         html = seiten.spieltag_html(s, seiten.Kontext())
         assert s["veraltet"] is veraltet and ('role="alert"' in html) is veraltet and 'class="partien"' in html
     assert "Spielplan zuletzt aktualisiert am Sa 14.11." in html
-    assert "Aktueller Datenstand: Sa 14.11.2026" in html and "Stand: Sa 14.11.2026, 04:05 Uhr" in html
+    assert "Aktueller Datenstand: Sa 14.11.2026" in html and "Datenstand: Sa 14.11.2026, 04:05 Uhr" in html
 
 
 def test_w8_last_import_reads_only_successful_runs(tmp_path):
@@ -334,25 +334,41 @@ def dienst():
 
 
 def test_w11_routes(dienst):
-    a = vorschau.beantworten("/vorschau/", "", dienst)                              # seit 0.18: Startseite
-    assert a.status == 200 and t("start.ranking_titel").encode() in a.inhalt
+    """Seit 0.21 Adressen /de/ und /en/ (adressen.py): Weiterleitungen in einem Schritt, Zeitreise bleibt erhalten."""
+    a = vorschau.beantworten("/vorschau/", "", dienst)                              # / → /de/ (301)
+    assert a.status == 301 and a.kopf["Location"] == "/vorschau/de/"
     a = vorschau.beantworten("/vorschau", "datum=2026-10-03", dienst)
+    assert a.status == 301 and a.kopf["Location"] == "/vorschau/de/?datum=2026-10-03"
+    a = vorschau.beantworten("/vorschau/de/", "", dienst)
+    assert a.status == 200 and t("start.ranking_titel").encode() in a.inhalt
+    a = vorschau.beantworten("/vorschau/de/", "datum=2026-10-03", dienst)
     assert a.status == 200 and b"Zeitreise: Sa 03.10.2026, 08:00 Uhr" in a.inhalt
-    a = vorschau.beantworten("/vorschau/spieltag/", "datum=2026-10-03", dienst)
-    assert a.status == 302 and a.kopf["Location"] == "/vorschau/spieltag/bundesliga?datum=2026-10-03"
-    a = vorschau.beantworten("/vorschau/spieltag/bundesliga", "", dienst)
+    a = vorschau.beantworten("/vorschau/de/spieltag/", "datum=2026-10-03", dienst)
+    assert a.status == 302 and a.kopf["Location"] == "/vorschau/de/spieltag/bundesliga/?datum=2026-10-03"
+    a = vorschau.beantworten("/vorschau/de/spieltag/bundesliga/", "", dienst)
     assert a.status == 200 and a.kopf["Content-Type"].startswith("text/html") and b"Alle Spiele im" in a.inhalt
-    assert b'href="/vorschau/spiel/1388512"' in a.inhalt and a.kopf["Cache-Control"] == "no-store"
-    a = vorschau.beantworten("/vorschau/spieltag/la-liga", "", dienst)              # Liga ohne Spielplan
+    assert b'href="/vorschau/de/spiel/bundesliga/e-f-1388512/"' in a.inhalt and a.kopf["Cache-Control"] == "no-store"
+    a = vorschau.beantworten("/vorschau/en/matchday/bundesliga/", "", dienst)
+    assert a.status == 200 and b'lang="en"' in a.inhalt and b'href="/vorschau/en/match/bundesliga/e-f-1388512/"' in a.inhalt
+    a = vorschau.beantworten("/vorschau/de/spieltag/la-liga/", "", dienst)          # Liga ohne Spielplan
     assert a.status == 200 and t("pause.keine.titel").encode() in a.inhalt
-    assert vorschau.beantworten("/vorschau/spieltag/zweite-liga", "", dienst).status == 404
+    assert vorschau.beantworten("/vorschau/de/spieltag/zweite-liga/", "", dienst).status == 404
     assert vorschau.beantworten("/anders", "", dienst).status == 404
-    a = vorschau.beantworten("/vorschau/spiel/1388512", "", dienst)                 # Matchdetail (seit 0.18)
+    a = vorschau.beantworten("/vorschau/de/spiel/bundesliga/e-f-1388512/", "", dienst)    # Spielseite
     assert a.status == 200 and b'<div class="sb-name">E</div>' in a.inhalt and b'<div class="sb-name">F</div>' in a.inhalt
-    assert t("kopf.zurueck_spieltag").encode() in a.inhalt and b'href="/vorschau/spieltag/bundesliga"' in a.inhalt
-    for falsch in ("/vorschau/spiel/999", "/vorschau/spiel/abc", "/vorschau/spiel/1388512/x"):
+    assert t("kopf.zurueck_spieltag").encode() in a.inhalt and b'href="/vorschau/de/spieltag/bundesliga/"' in a.inhalt
+    for alt in ("/vorschau/spiel/1388512", "/vorschau/de/spiel/bundesliga/alter-name-1388512/",
+                "/vorschau/de/spiel/bundesliga/e-f-1388512", "/vorschau/de/spiel/la-liga/e-f-1388512/"):
+        a = vorschau.beantworten(alt, "", dienst)                                      # 301 auf die richtige Adresse
+        assert a.status == 301 and a.kopf["Location"] == "/vorschau/de/spiel/bundesliga/e-f-1388512/", alt
+    for falsch in ("/vorschau/de/spiel/bundesliga/x-999/", "/vorschau/de/spiel/bundesliga/abc/", "/vorschau/spiel/999"):
         assert vorschau.beantworten(falsch, "", dienst).status == 404, falsch
-    assert vorschau.beantworten("/vorschau/impressum", "", dienst).status == 200
+    a = vorschau.beantworten("/vorschau/impressum", "", dienst)
+    assert a.status == 301 and a.kopf["Location"] == "/vorschau/de/impressum/"
+    assert vorschau.beantworten("/vorschau/de/impressum/", "", dienst).status == 200
+    assert vorschau.beantworten("/vorschau/en/legal-notice/", "", dienst).status == 200
+    a = vorschau.beantworten("/vorschau/en/gibt-es-nicht/", "", dienst)                 # 404 in der Sprache des Verzeichnisses
+    assert a.status == 404 and b'lang="en"' in a.inhalt and a.kopf["Cache-Control"] == "no-store"
     assert vorschau.beantworten("/vorschau/_gesund", "", dienst).inhalt == b"ok"
     daten = json.loads(vorschau.beantworten("/vorschau/daten/spieltag/bundesliga.json", "", dienst).inhalt)
     assert daten["seite"] == "spieltag" and daten["tabs"][0]["spieltag"] == 10
@@ -366,11 +382,11 @@ def test_w11_routes(dienst):
 def test_w11_photo_only_from_server_folder(dienst, tmp_path, monkeypatch):
     """Q6: Das Foto liegt nur auf dem Server (website-bilder/); fehlt es, zeigt die Startseite den Platzhalter."""
     monkeypatch.setattr(W, "BILDER", tmp_path)
-    html = vorschau.beantworten("/vorschau/", "", dienst).inhalt.decode()
+    html = vorschau.beantworten("/vorschau/de/", "", dienst).inhalt.decode()
     assert 'class="foto-platz"' in html and "<img" not in html
     assert vorschau.beantworten("/vorschau/bilder/portrait.jpg", "", dienst).status == 404
     (tmp_path / "portrait.jpg").write_bytes(b"\xff\xd8\xff\xe0jpeg")
-    html = vorschau.beantworten("/vorschau/", "", dienst).inhalt.decode()
+    html = vorschau.beantworten("/vorschau/de/", "", dienst).inhalt.decode()
     assert '<img src="/vorschau/bilder/portrait.jpg"' in html and 'class="foto-platz"' not in html
     a = vorschau.beantworten("/vorschau/bilder/portrait.jpg", "", dienst)
     assert a.status == 200 and a.kopf["Content-Type"] == "image/jpeg" and a.inhalt.startswith(b"\xff\xd8")
@@ -398,18 +414,24 @@ def test_w11_static_files_only_from_own_folder(dienst):
 
 
 def test_w11_invalid_date_and_time_travel_bar(dienst):
-    a = vorschau.beantworten("/vorschau/spieltag/bundesliga", "datum=morgen", dienst)
+    a = vorschau.beantworten("/vorschau/de/spieltag/bundesliga/", "datum=morgen", dienst)
     assert a.status == 200 and t("vorschau.ungueltig").encode() in a.inhalt
-    a = vorschau.beantworten("/vorschau/spieltag/bundesliga", "datum=2026-11-21T16:00", dienst)
+    a = vorschau.beantworten("/vorschau/de/spieltag/bundesliga/", "datum=2026-11-21T16:00", dienst)
     html = a.inhalt.decode()
     assert "Zeitreise: Sa 21.11.2026, 16:00 Uhr" in html and 'value="2026-11-21T16:00"' in html
     assert "?datum=2026-11-21T16%3A00" in html and 'name="robots" content="noindex, nofollow"' in html
 
 
 def test_w11_data_errors_show_notice():
+    """Seit 0.21: Dateifehler → 503 mit Retry-After, nie zwischengespeichert; Inhaltsseiten bleiben erreichbar."""
     fx = plan(rnd(10, date(2026, 11, 20)))
-    a = vorschau.beantworten("/vorschau/spieltag/bundesliga", "", FakeDaten({"Bundesliga": fx}, gesperrt=True))
-    assert a.status == 200 and t("fehler.daten_titel").encode() in a.inhalt and b'class="partien"' not in a.inhalt
+    d = FakeDaten({"Bundesliga": fx}, gesperrt=True)
+    for pfad in ("/vorschau/de/spieltag/bundesliga/", "/vorschau/de/", "/vorschau/en/"):
+        a = vorschau.beantworten(pfad, "", d)
+        assert a.status == 503 and a.kopf["Retry-After"] == "600" and a.kopf["Cache-Control"] == "no-store", pfad
+        assert b'class="partien"' not in a.inhalt and b'class="ranking"' not in a.inhalt
+    assert t("fehler.daten_titel").encode() in vorschau.beantworten("/vorschau/de/", "", d).inhalt
+    assert vorschau.beantworten("/vorschau/de/methodik/", "", d).status == 200
 
 
 # --- W14 Matchdetail (seit 0.18, Entwurf 2i, Entscheidungen Q1–Q5) -----------------------------------------------
@@ -449,7 +471,7 @@ def test_w14_values_q1_q2_q4(partien):
     html = seiten.spiel_html(s, seiten.Kontext())
     for text in ("Auffälligstes Merkmal", "+44,00 %", "Über 2,5 Tore", "Mehr als 2,5 Tore erwartet",
                  "Vergleichswert (Marke)", "<b>2,50</b>", "Je Mannschaft · Mittelwert beider Teams", "+ 2,20",
-                 'class="w39"', 'class="gast w61"', "Im Normalbereich", '<span class="vermerk">· ', "50,00 %",
+                 'class="w39"', 'class="gast w61"', t("spiel.normalbereich"), '<span class="vermerk">· ', "50,00 %",
                  "54,35 %", "Sa 21.11. · 15:30", "Bundesliga · 10. Spieltag"):
         assert text in html, text
     assert html.count("Je Mannschaft") == 7                                          # alle ausser Gelbe Karten
@@ -466,14 +488,16 @@ def test_w14_not_rated_status_catchup_form(partien):
     s = spiel.spiel_daten(partien, 103, z)                                            # verschoben: keine Werte
     assert (s["zustand"], s["bewertung"], s["status"], s["sonderspiel"]) == ("status", "status", "verschoben", None)
     html = seiten.spiel_html(s, seiten.Kontext())
-    assert t("spiel.status_text") in html and 'class="h2-klein"' not in html            # keine Kennzahlen-Listen
+    assert t("spiel.status_text") in html                                                 # keine Kennzahlen-Listen
+    for titel in ("spiel.kennzahlen", "spiel.normalbereich", "spiel.auffaelligkeiten"):
+        assert f'<h2 class="h2-klein">{t(titel)}</h2>' not in html, titel
     assert t("termin.termin_offen") in html and "+99,00 %" not in html
     s = spiel.spiel_daten(partien, 104, z)
     assert s["bewertung"] == "normal" and s["sonderspiel"] == "nachholspiel" and s["spieltag"] == 1
     assert s["form_heim"] == ["S", "U", "N", "-", "S"] and s["form_gast"] == ["N", "N", "-", "-", "-"]
     html = seiten.spiel_html(s, seiten.Kontext())
     assert "Dieses Spiel gehört zu einem früheren Spieltag und wird am So 22.11. um 17:30 Uhr nachgeholt." in html
-    assert "Keine der 8 Kennzahlen überschreitet ihre Schwelle. Größte Abweichung: Erwartete Tore +5,00 %." in html
+    assert "Keine der 8 Kennzahlen überschreitet ihre Schwelle. Die größte Abweichung: Erwartete Tore +5,00 %." in html
     assert html.count('class="form-S"') == 2 and html.count('class="form--"') == 4
     assert spiel.spiel_daten(partien, 999, z) is None
 
@@ -495,7 +519,7 @@ def test_w14_played_q5(partien, tmp_path, monkeypatch):
     assert "korrigiert" not in html
     SN.write_once(SN.result_path(tmp_path, "bundesliga", S, 105), {"ergebnis": [1, 1]})   # zuerst 1:1 übernommen
     s = spiel.spiel_daten(partien, 105, zp("2026-11-21T10:00"))
-    assert s["korrigiert"] and "Endstand:</b> Ergebnis nachträglich korrigiert" in seiten.spiel_html(s, seiten.Kontext())
+    assert s["korrigiert"] and "berechnet. Ergebnis nachträglich korrigiert." in seiten.spiel_html(s, seiten.Kontext())
 
     s = spiel.spiel_daten(partien, 101, zp("2026-11-21T16:00"))       # läuft: bis Anpfiff + 2 h normal, mit Werten
     assert s["zustand"] == "offen" and s["bewertung"] == "auffaellig"
@@ -515,7 +539,7 @@ def test_w14_values_from_on_match_page_and_tile():
     s = spiel.spiel_daten(d, 3, zp("2026-12-03T10:00"))
     assert s["bewertung"] == "werte_ab" and s["werte_ab"] == "2026-12-06" and s["auffaellig"] == []
     html = seiten.spiel_html(s, seiten.Kontext())
-    assert "Werte ab So 06.12. – sobald beide Teams ihr vorheriges Ligaspiel gespielt haben." in html
+    assert "Werte ab So 06.12." in html and t("spiel.werte_ab_sub") in html and "Werte ab 6.12." in html  # 0.21: Chip
     assert "+60,00 %" not in html
     s = spiel.spiel_daten(d, 3, zp("2026-12-07T10:00"))                 # Vorspiel gespielt, Ergebnis fehlt
     assert s["bewertung"] == "werte_ab" and s["ergebnis_vom"] == "2026-12-05"
@@ -541,7 +565,7 @@ def test_w14_every_pairing_has_its_own_page():
             m = spiel.spiel_daten(d, x["id"], z)
             assert (m["heim"], m["gast"], m["spieltag"], m["datum"]) == (x["heim"], x["gast"], x["spieltag"],
                                                                          x["datum"])
-            assert (f'href="/vorschau/spiel/{x["id"]}"' in html) is x["link"]
+            assert (f'href="/vorschau/de/spiel/{slug}/{x["slug"]}/"' in html) is x["link"]
             assert "</html>" in seiten.spiel_html(m, seiten.Kontext())
         for row in fx.itertuples():                                               # die ganze Saison
             assert spiel.spiel_daten(d, int(row.api_id), z)["heim"] == row.heim
@@ -557,10 +581,12 @@ def test_w14_escaped_and_labels():
 
 def test_w14_bar_and_number_helpers():
     assert seiten.balken_daten({"abweichung": 44.0, "stufe": "stark"}) == \
-        {"breite": 22, "richtung": "hoch", "klasse": "f-stark-hoch", "kappe": False}
+        {"breite": 22, "richtung": "hoch", "klasse": "f-stark", "kappe": False}
     assert seiten.balken_daten({"abweichung": -130.0, "stufe": "mittel"}) == \
-        {"breite": 50, "richtung": "tief", "klasse": "f-leicht-tief", "kappe": True}           # gekappt
-    assert seiten.balken_daten({"abweichung": 5.0, "stufe": "normal"})["klasse"] == "f-normal"
+        {"breite": 50, "richtung": "tief", "klasse": "f-tief", "kappe": True}                  # gekappt, rot
+    assert seiten.balken_daten({"abweichung": 5.0, "stufe": "normal"})["klasse"] == "f-normal-hoch"
+    assert seiten.balken_daten({"abweichung": 12.0, "stufe": "gering"})["klasse"] == "f-gering"
+    assert seiten.balken_daten({"abweichung": -5.0, "stufe": "normal"})["klasse"] == "f-normal-tief"
     assert seiten.balken_daten({"abweichung": None, "stufe": "zu_wenig_daten"})["breite"] == 0
     assert seiten.balken_daten({"abweichung": 70.0, "stufe": "zu_wenig_daten"})["klasse"] == "f-schraffiert"
     assert F.zahl(3.4) == "3,40" and F.zahl(64.0, einheit="%") == "64,00 %" and F.zahl(None) == "–"
@@ -594,7 +620,7 @@ def test_w15_ranking_like_dashboard():
     # Liga-Mix (seit 0.19): höchstens zwei je Liga – G (Bundesliga, dritter) weicht O (La Liga) trotz grösserer Abweichung
     assert [r["id"] for r in s["ranking"]] == [301, 201, 202, 303] and s["ranking"][0]["liga"] == "la-liga"
     html = seiten.start_html(s, seiten.Kontext())
-    assert html.count('class="rang-zeile"') == 4 and 'href="/vorschau/spiel/301"' in html
+    assert html.count('class="mc-card"') == 4 and 'href="/vorschau/de/spiel/la-liga/k-l-301/"' in html
     assert "La Liga · Spieltag 13" in html and "Bundesliga · Spieltag 10" in html and "+50,00 %" in html
     assert "−30,00 %" in html and "Sa 21.11. · 21:00" in html and t("start.ranking_text") in html
     # seit 0.20 kein Nachrücken: A (Fr 20:30) ist gespielt und bleibt ausgegraut, C (15:30) läuft noch (bis + 2 h normal)
@@ -602,9 +628,9 @@ def test_w15_ranking_like_dashboard():
     assert [(r["heim"], r["gespielt"], r["ergebnis"]) for r in s["ranking"]] == [
         ("K", False, None), ("A", True, None), ("C", False, None), ("O", False, None)]
     html = seiten.start_html(s, seiten.Kontext())
-    assert html.count("rang-zeile--gespielt") == 1 and '<span class="wann">Gespielt</span>' in html
+    assert html.count("mc-card--gespielt") == 1 and '<span class="mc-status">Gespielt</span>' in html
     s = start.start_daten(_start_daten(ergebnisse={(S, "A", "B"): (2, 1)}), zp("2026-11-21T16:00"))
-    assert s["ranking"][1]["ergebnis"] == [2, 1] and "Endstand 2 : 1" in seiten.start_html(s, seiten.Kontext())
+    assert s["ranking"][1]["ergebnis"] == [2, 1] and "Gespielt · 2:1" in seiten.start_html(s, seiten.Kontext())
 
 
 @pytest.mark.parametrize("plaene, now, alter, art, tage, liga, texte", [
@@ -612,7 +638,7 @@ def test_w15_ranking_like_dashboard():
      "spielpause", 17, "bundesliga", ("Nächster Spieltag am Fr 25.09.", "<b>17</b><span>Tage bis zum Spieltag")),
     ({"Bundesliga": [rnd(14, date(2026, 12, 18), date(2026, 12, 20)), rnd(15, date(2027, 1, 8))],
       "LaLiga": [rnd(16, date(2026, 12, 19)), rnd(17, date(2027, 1, 7))]}, "2026-12-23", 0,
-     "winterpause", 15, "la-liga", ("Winterpause", "Nächster Spieltag am Do 07.01.", 'href="/vorschau/spieltag/la-liga"')),
+     "winterpause", 15, "la-liga", ("Winterpause", "Nächster Spieltag am Do 07.01.", 'href="/vorschau/de/spieltag/la-liga/"')),
     ({"Bundesliga": [rnd(34, date(2027, 5, 22))]}, "2027-06-10", 0, "sommerpause", None, "bundesliga",
      ("Die Saison ist beendet",)),
     ({"Bundesliga": [rnd(34, date(2027, 5, 22)), rnd(1, date(2027, 8, 20), saison="2027/2028")]}, "2027-07-01", 0,
@@ -653,7 +679,8 @@ def test_w16_no_inline_styles_or_scripts(partien):
     seiten_html += [seiten.spiel_html(spiel.spiel_daten(partien, i, z), seiten.Kontext()) for i in range(101, 106)]
     for html in seiten_html:
         assert "style=" not in html and "<style" not in html
-        assert re.findall(r"<script[^>]*>", html) == [f'<script src="{seiten.Kontext().statisch("site.js")}" defer>']
+        skripte = [x for x in re.findall(r"<script[^>]*>", html) if x != '<script type="application/ld+json">']
+        assert skripte == [f'<script src="{seiten.Kontext().statisch("site.js")}" defer>']   # JSON-LD ist Daten
         assert "/vorschau/statisch/site.js?v=" in html                   # mit Versionsnummer (0.19.1)
         assert not re.search(r"\son[a-z]+=", html)
     breiten = set(re.findall(r'class="(?:gast )?w(\d+)"', "".join(seiten_html)))

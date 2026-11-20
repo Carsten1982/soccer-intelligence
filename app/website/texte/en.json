@@ -1,0 +1,572 @@
+{
+  "_hinweis": "Language file English (website, since 0.21). British English per the glossary (Glossar EN, 19 Nov 2026). Same keys as de.json; a missing key falls back to German and is reported by the tests.",
+  "allgemein": {
+    "marke": "Soccer Intelligence",
+    "sprache": "en",
+    "og_bild": "Soccer Intelligence logo with the leagues Bundesliga, Premier League, Serie A and La Liga",
+    "zeitzone": "All kick-off times in Central European Time (CET/CEST).",
+    "zum_inhalt": "Skip to content"
+  },
+  "kopf": {
+    "startseite": "Home",
+    "navigation": "Main navigation",
+    "spieltag": "Matchday",
+    "methodik": "Methodology",
+    "impressum": "Legal notice",
+    "zurueck_spieltag": "Back to matchday",
+    "kontakt": "Contact",
+    "sprache_waehlen": "Select language"
+  },
+  "fuss": {
+    "pflicht": "Statistical analyses, not betting advice. No affiliation with leagues or clubs.",
+    "stand": "Data as of: {stand}",
+    "navigation": "More pages",
+    "impressum": "Legal notice",
+    "datenschutz": "Privacy policy",
+    "methodik": "Methodology",
+    "glossar": "Glossary",
+    "kontakt": "Contact"
+  },
+  "liga": {
+    "bundesliga": "Bundesliga",
+    "la_liga": "La Liga",
+    "premier_league": "Premier League",
+    "serie_a": "Serie A"
+  },
+  "spieltag": {
+    "seitentitel": "{liga} – All matches at a glance – Soccer Intelligence",
+    "beschreibung": "All {liga} matches at a glance: statistical anomalies in goals, corners, cards and other metrics.",
+    "h1": "All matches at a glance",
+    "intro": "Select your league to see which matches stand out statistically.",
+    "ligen": "Select league",
+    "nummer": "Matchday {n}",
+    "datenstand": "Current data as of: {datum}",
+    "partien": {
+      "eins": "1 match",
+      "mehr": "{n} matches"
+    },
+    "auffaellig": {
+      "null": "no standout matches",
+      "eins": "1 standout match",
+      "mehr": "{n} standout matches"
+    },
+    "nachholspiel": {
+      "eins": "1 rescheduled match",
+      "mehr": "{n} rescheduled matches"
+    },
+    "vorgezogen": {
+      "eins": "1 match brought forward",
+      "mehr": "{n} matches brought forward"
+    },
+    "tabs": "Select matchday",
+    "tab": "Matchday {n} · from {datum}",
+    "keine_abweichungen": "There are no standout matches on this matchday.",
+    "gegen": "vs",
+    "zum_spiel": "To the match {heim} vs {gast}",
+    "legende": "Legend",
+    "wie_lesen": "How to read this",
+    "erklaerung_gruen_titel": "Highlighted tiles:",
+    "erklaerung_gruen": "At least one metric in these matches deviates from the league average by more than the threshold for its league. These matches are flagged as statistical anomalies.",
+    "erklaerung_stufe_titel": "High, medium or low signal quality:",
+    "erklaerung_stufe": "Shows how often similar statistical anomalies were confirmed by actual match results in previous seasons.",
+    "erklaerung_weiss_titel": "White tiles:",
+    "erklaerung_weiss": "No anomalies.",
+    "h1_vorne": "All matches",
+    "h1_akzent": "at a glance",
+    "nur_sonderspiele": {
+      "nachholspiel": {
+        "eins": "1 rescheduled match",
+        "mehr": "{n} rescheduled matches"
+      },
+      "vorgezogen": {
+        "eins": "1 match brought forward",
+        "mehr": "{n} matches brought forward"
+      }
+    },
+    "legende_titel": "Signal quality:",
+    "nicht_auffaellig": "No anomalies",
+    "zu": "Go to matchday {n}",
+    "seo_titel": "All matches on this matchday",
+    "seo_1": "Here you will find all matches of the current matchday in the Bundesliga, Premier League, La Liga and Serie A. Matches with statistical anomalies are highlighted in the list. The signal quality (high, medium or low) shows how often similar statistical anomalies were confirmed by actual match results in previous seasons. Select a match to view the details.",
+    "seo_2_fett": "We provide transparent football statistics, but no betting advice or forecasts of potential winnings.",
+    "seo_2": "How we identify standout matches is explained on the",
+    "seo_2_link": "methodology page"
+  },
+  "stufe": {
+    "stark": "High signal quality",
+    "mittel": "Medium signal quality",
+    "gering": "Low signal quality",
+    "mittel_gering": "Medium or low signal quality",
+    "ohne": "No anomalies",
+    "normal": "Normal",
+    "zu_wenig_daten": "not enough data"
+  },
+  "chip": {
+    "stark": "High signal quality",
+    "mittel": "Medium signal quality",
+    "gering": "Low signal quality",
+    "zu_wenig_daten": "Not enough data",
+    "verschoben": "Postponed",
+    "abgesagt": "Cancelled",
+    "abgebrochen": "Abandoned",
+    "ausgesetzt": "Suspended",
+    "gewertet": "Result awarded",
+    "nachholspiel": "Rescheduled match",
+    "vorgezogen": "Brought forward",
+    "gespielt": "Played",
+    "nachholspiel_nr": "Rescheduled · Matchday {n}",
+    "vorgezogen_nr": "Brought forward · Matchday {n}",
+    "werte_ab": "Values from {datum}",
+    "werte_folgen": "Values to follow",
+    "gespielt_ergebnis": "Played · {ergebnis}"
+  },
+  "termin": {
+    "zeit_offen": "Kick-off time TBC",
+    "termin_offen": "Date TBC",
+    "wochenende": "Weekend {tage}"
+  },
+  "pause": {
+    "spielpause": {
+      "zeile": "Break",
+      "titel": "Next matchday on {datum}",
+      "text": "No matches are being played in {liga} right now. As soon as play resumes, you will see all matches here again."
+    },
+    "winterpause": {
+      "zeile": "Winter break",
+      "titel": "Next matchday on {datum}",
+      "text": "No matches are being played in {liga} right now. As soon as play resumes, you will see all matches here again."
+    },
+    "sommerpause": {
+      "zeile": "Summer break",
+      "titel": "The season is over",
+      "text": "All matches have been played. Once the fixture list for the new season is available, you will see all matches here again."
+    },
+    "saisonstart": {
+      "zeile": "Summer break",
+      "titel": "Season starts on {datum}",
+      "text": "From the start of the season, you will see all matches of {liga} here again."
+    },
+    "unbekannt": {
+      "zeile": "Next matchday",
+      "titel": "Next matchday on {datum}",
+      "text": "Once the fixture list is up to date again, you will see all matches here."
+    },
+    "keine": {
+      "zeile": "Fixture list",
+      "titel": "No upcoming matches",
+      "text": "No matches are currently scheduled for {liga}."
+    }
+  },
+  "veraltet": {
+    "titel": "Fixture list last updated on {datum}.",
+    "text": "New matches or changes to match dates may not yet be reflected."
+  },
+  "folgt": {
+    "seitentitel": "Coming soon – Soccer Intelligence",
+    "titel": "This page is coming soon.",
+    "text": "It is still being prepared.",
+    "zurueck": "Go to matchday"
+  },
+  "fehler": {
+    "seitentitel": "Data is being checked – Soccer Intelligence",
+    "titel": "Page not found",
+    "text": "This page does not exist (any more). The address may have been typed incorrectly, or the match is no longer available.",
+    "daten_titel": "Data is currently being checked.",
+    "daten_text": "Please try again in a few minutes.",
+    "zurueck": "Go to matchday",
+    "hinweis": "Note",
+    "knopf_start": "Go to the homepage",
+    "knopf_spieltag": "All matches on this matchday",
+    "knopf_methodik": "Methodology"
+  },
+  "vorschau": {
+    "leiste": "Preview – not public",
+    "zeitpunkt": "Point in time",
+    "anzeigen": "Show",
+    "jetzt": "Now",
+    "zeitreise": "Time travel: {zeit} (import assumed on that day)",
+    "aktuell": "current data",
+    "ungueltig": "Invalid date – showing the current data.",
+    "index_ja": "Index: yes (after launch)",
+    "index_nein": "Index: no (noindex)"
+  },
+  "kennzahl": {
+    "kpi02": {
+      "name": "Expected total goals",
+      "hoch": "Above-average number of goals expected",
+      "tief": "Below-average number of goals expected"
+    },
+    "kpi03": {
+      "name": "Over 2.5 goals",
+      "hoch": "More than 2.5 goals expected",
+      "tief": "Fewer than 2.5 goals expected"
+    },
+    "kpi04": {
+      "name": "Yellow cards",
+      "hoch": "Above-average number of yellow cards",
+      "tief": "Below-average number of yellow cards"
+    },
+    "kpi05": {
+      "name": "Corners",
+      "hoch": "Increased number of corners",
+      "tief": "Few corners expected"
+    },
+    "kpi06": {
+      "name": "Expected total goals in the first half",
+      "hoch": "Many goals in the first half",
+      "tief": "Few goals in the first half"
+    },
+    "kpi07": {
+      "name": "Expected total goals in the second half",
+      "hoch": "Many goals in the second half",
+      "tief": "Few goals in the second half"
+    },
+    "kpi08": {
+      "name": "Both teams to score",
+      "hoch": "Higher likelihood of both teams scoring",
+      "tief": "Lower likelihood of both teams scoring"
+    },
+    "kpi09": {
+      "name": "Expected shots on target",
+      "hoch": "Many shots on target",
+      "tief": "Few shots on target"
+    }
+  },
+  "lesen": {
+    "abweichung_titel": "Deviation:",
+    "abweichung": "The percentage shows how far the expected match value differs from the league average.",
+    "ligaschnitt_titel": "League average:",
+    "ligaschnitt": "The line in the bar marks the league's average value over the last 20 matchdays.",
+    "richtung_titel": "Direction:",
+    "richtung": "The bar extends to the right when the value is above average and to the left when it is below average.",
+    "signal_titel": "Signal quality:",
+    "signal": "This shows how often similar statistical anomalies were confirmed by actual match results in previous seasons. The rating has three levels: high, medium and low.",
+    "ligaschnitt_kurz": "League average"
+  },
+  "spiel": {
+    "kopfzeile": "{liga} · {spieltag}",
+    "gegen": "vs",
+    "form_titel": "Last 5 matches",
+    "form_legende_s": "W = Win",
+    "form_legende_u": "D = Draw",
+    "form_legende_n": "L = Loss",
+    "form": {
+      "S": "Win",
+      "U": "Draw",
+      "N": "Loss",
+      "-": "No match yet"
+    },
+    "endstand": "Final score {ergebnis}",
+    "auffaelligstes": "Most notable metric",
+    "gesamtbild": "Overall picture",
+    "keine_titel": "No statistical anomalies",
+    "keine_text": "None of the {n} metrics crosses its threshold. Largest deviation: {name} {wert}.",
+    "bewertung": "Rating",
+    "zu_wenig_daten": "Not enough data",
+    "zu_wenig_daten_text": "There is not enough data to rate this match.",
+    "zu_wenig_daten_leer_text": "There is not enough data to rate this match.",
+    "hinweis_zu_wenig_daten_titel": "Not enough data:",
+    "hinweis_zu_wenig_daten": "There is not enough data to rate this match.",
+    "hinweis_zu_wenig_daten_leer": "There is not enough data to rate this match.",
+    "hinweis_nachholspiel_titel": "Rescheduled match:",
+    "hinweis_nachholspiel": "This match belongs to an earlier matchday and is being played on {datum}.",
+    "hinweis_vorgezogen_titel": "Brought forward:",
+    "hinweis_vorgezogen": "This match belongs to {spieltag} and is being brought forward to {datum}.",
+    "hinweis_gespielt_titel": "Played:",
+    "hinweis_gespielt": "The values were calculated using the data available before the match.",
+    "zeitpunkt_uhr": "{tag} at {uhr}",
+    "status_titel": "Status",
+    "status_text": "There are no values for this match.",
+    "auffaelligkeiten": "Statistical anomalies",
+    "normalbereich": "No anomalies",
+    "kennzahlen": "Metrics",
+    "zahlen_detail": "Detailed breakdown",
+    "zahlen_detail_zu": "Collapse detailed breakdown: {name}",
+    "zuklappen": "Collapse",
+    "erwartungswert": "Expected value",
+    "je_mannschaft": "Per team",
+    "mittelwert": "average of both teams",
+    "ligaschnitt": "League average",
+    "vergleichswert_marke": "Reference value (marker)",
+    "abweichung": "Deviation",
+    "aufteilung": "{name}: {heim} {wert_heim}, {gast} {wert_gast}",
+    "methodik": "How are these values calculated?",
+    "alle_spiele": "All matches on this matchday",
+    "nicht_gefunden": "This match does not exist.",
+    "gespielt": "Played",
+    "keine_text_eins": "The only rated metric does not cross its threshold. Deviation: {name} {wert}.",
+    "hinweis_nachtraeglich": "Values calculated afterwards using the data available before the match.",
+    "hinweis_korrigiert": "Result corrected after the match",
+    "werte_ab_titel": "Values to follow",
+    "werte_ab": "Values from {datum} – once both teams have played their previous league match.",
+    "werte_folgen": "Values will follow once the result from {datum} has been processed.",
+    "werte_wartet": "The values will be calculated afterwards using the data available before the match, once the result of the previous league match has been processed.",
+    "h1": "{heim} vs {gast}: Statistics and Analysis",
+    "schwelle": "Threshold",
+    "schwelle_keine": "none",
+    "schwelle_ueber": "above {wert}",
+    "schwelle_unter": "below {wert}",
+    "trenner": "vs",
+    "weitere": "More matches on this matchday",
+    "werte_label": "Values",
+    "werte_ab_kurz": "Values from {datum}",
+    "werte_ab_sub": "Once both teams have played their previous league match.",
+    "form_kurz": {
+      "S": "W",
+      "U": "D",
+      "N": "L"
+    },
+    "keine_text_gewertet": "None of the {n} rated metrics crosses its threshold. Largest deviation: {name} {wert}."
+  },
+  "start": {
+    "h1_vorne": "Football,",
+    "h1_akzent": "analysed.",
+    "unterzeile": "We calculate expected match values and compare them with historical results. This helps us identify statistical anomalies and assess how meaningful they have been in the past.",
+    "knopf_auffaellig": "The standout matches",
+    "knopf_so": "How it works",
+    "ranking_titel": "The standout matches",
+    "ranking_text": "The most interesting deviations of the upcoming matchday.",
+    "ranking_zeile": "{liga} · Matchday {n}",
+    "mehr": "more than usual",
+    "weniger": "less than usual",
+    "datenstand": "Current data as of: {datum}",
+    "ligen_titel": "Your league. Your matchday.",
+    "ligen_text": "Select your league and view all matches of the matchday.",
+    "so_titel": "How it works",
+    "vergleichen_titel": "We compare",
+    "vergleichen": "How many goals, cards or corners can be expected? We compare the values of every upcoming match with the average of its league.",
+    "markieren_titel": "We highlight",
+    "markieren": "Clear deviations are highlighted. Using historical matches, we check how often similar statistical anomalies were confirmed. We explain the methodology",
+    "markieren_link": "on the methodology page",
+    "entscheiden_titel": "You decide",
+    "entscheiden": "Whether for a chat with friends or for your own tip: you can see at a glance which matches stand out statistically and where a closer look is worthwhile.",
+    "bereit_titel": "Ready for the matchday?",
+    "bereit_text": "In under a minute you know which matches stand out.",
+    "bereit_knopf": "View matchday",
+    "fan_titel": "Built by a football fan",
+    "fan_text": "I am a passionate football fan with a particular interest in the numbers and statistics behind the game. Soccer Intelligence combines my enthusiasm for football with my interest in data and new technologies. The project is also an exciting opportunity for personal development.",
+    "fan_name": "Carsten Thiele",
+    "fan_bild": "Portrait of the founder of Soccer Intelligence",
+    "seo_titel": "What is Soccer Intelligence?",
+    "pause": {
+      "spielpause": {
+        "zeile": "Break",
+        "titel": "Next matchday on {datum}",
+        "text": "No league is playing right now. As soon as play resumes, you will see the standout matches here again.",
+        "knopf": "Go to next matchday"
+      },
+      "winterpause": {
+        "zeile": "Winter break",
+        "titel": "Next matchday on {datum}",
+        "text": "No league is playing right now. As soon as play resumes, you will see the standout matches here again.",
+        "knopf": "Go to next matchday"
+      },
+      "sommerpause": {
+        "zeile": "Summer break",
+        "titel": "The season is over",
+        "text": "All matches have been played. Once the fixture list for the new season is available, you will find the standout matches here again.",
+        "knopf": ""
+      },
+      "saisonstart": {
+        "zeile": "Summer break",
+        "titel": "Season starts on {datum}",
+        "text": "You will find the standout matches here again once the new season gets underway.",
+        "knopf": "Go to next matchday"
+      },
+      "unbekannt": {
+        "zeile": "Next matchday (outdated)",
+        "titel": "Next matchday on {datum}",
+        "text": "Once the fixture list is up to date again, you will find the standout matches here.",
+        "knopf": "Go to next matchday"
+      },
+      "keine": {
+        "zeile": "Current matchday",
+        "titel": "No anomalies",
+        "text": "No anomalies have been identified in the upcoming matches. You can find all matches on the matchday page.",
+        "knopf": "Go to matchday"
+      }
+    },
+    "tage_spieltag": {
+      "eins": "Day until matchday",
+      "mehr": "Days until matchday"
+    },
+    "tage_start": {
+      "eins": "Day until the start",
+      "mehr": "Days until the start"
+    },
+    "nur": {
+      "null": "Currently no standout matches.",
+      "eins": "Currently only 1 standout match.",
+      "mehr": "Currently only {n} standout matches."
+    },
+    "ergaenzt": "Supplemented with matches of low signal quality.",
+    "seo_1": "Soccer Intelligence is a platform for the statistical analysis of football matches in the Bundesliga, Premier League, La Liga and Serie A. We examine metrics such as goals, corners, yellow cards and shots on target in comparison with the league average.",
+    "seo_2": "If match values deviate clearly from the usual level, we flag them as statistical anomalies. Using historical matches, we also check how often such anomalies were confirmed and derive the signal quality from this.",
+    "seo_3": "This gives football fans and tipsters a data-based overview of interesting matches before kick-off.",
+    "seo_3_fett": "We provide transparent statistics, but no betting advice or forecasts of potential winnings.",
+    "seo_4": "You can find more about the calculation and rating on the",
+    "seo_4_link": "methodology page"
+  },
+  "liga_im": {
+    "bundesliga": "the Bundesliga",
+    "la_liga": "La Liga",
+    "premier_league": "the Premier League",
+    "serie_a": "Serie A"
+  },
+  "seite": {
+    "methodik": "Methodology",
+    "glossar": "Glossary",
+    "kontakt": "Contact",
+    "impressum": "Legal notice",
+    "datenschutz": "Privacy policy"
+  },
+  "stufe_kurz": {
+    "stark": "High",
+    "mittel": "Medium",
+    "gering": "Low",
+    "titel": "Signal quality",
+    "zusatz": " signal quality"
+  },
+  "stufe_detail": {
+    "stark": "statistical anomaly · high signal quality",
+    "mittel": "statistical anomaly · medium signal quality",
+    "gering": "statistical anomaly · low signal quality",
+    "normal": "no anomaly",
+    "zu_wenig_daten": "not enough data",
+    "ohne": "no anomaly"
+  },
+  "archiv": {
+    "kopf": "{liga} · Matchday {n} · Season {saison}",
+    "intro": "All matches of this matchday with the final score and the values calculated before kick-off.",
+    "blaettern": "Select matchday",
+    "spieltag": "Matchday {n}",
+    "zum_aktuellen": "Current matchday",
+    "hinweis_werte": "The values were calculated using the data available before each match."
+  },
+  "seo": {
+    "start_titel": "Football statistics & analysis | Soccer Intelligence",
+    "start_beschreibung": "Football statistics for the Bundesliga, Premier League, La Liga and Serie A: discover standout matches for goals, corners and cards.",
+    "spieltag_titel": "{liga} Matchday: All Matches & Analysis | Soccer Intelligence",
+    "spieltag_beschreibung": "All matches of the matchday in {liga} – with the matches highlighted where the statistics stand out.",
+    "archiv_titel": "{liga} Matchday {n}, Season {saison}: Matches & Analysis | Soccer Intelligence",
+    "archiv_beschreibung": "All matches of {liga} Matchday {n} in {saison} with final scores and the values before kick-off.",
+    "methodik_titel": "How Our Methodology Works | Soccer Intelligence",
+    "methodik_beschreibung": "Learn how Soccer Intelligence identifies statistical anomalies in football matches, how signal quality is measured and what seven seasons of historical data reveal.",
+    "glossar_titel": "Glossary: Key Terms Explained | Soccer Intelligence",
+    "glossar_beschreibung": "The key terms of Soccer Intelligence explained simply: deviation, league average, threshold, signal quality and match status.",
+    "kontakt_titel": "Contact | Soccer Intelligence",
+    "kontakt_beschreibung": "Questions, requests or suggestions about Soccer Intelligence? Send me a message.",
+    "impressum_titel": "Legal notice | Soccer Intelligence",
+    "impressum_beschreibung": "Legal notice of Soccer Intelligence: operator details, contact options and legal information.",
+    "datenschutz_titel": "Privacy policy | Soccer Intelligence",
+    "datenschutz_beschreibung": "Privacy information for Soccer Intelligence: data collected, Google Analytics, Google Search Console and your rights.",
+    "fehlt_titel": "Page not found | Soccer Intelligence",
+    "spiel_titel": "{heim} vs {gast} · {liga}, Matchday {n} {saison} | Soccer Intelligence",
+    "spiel_kopf": "{heim} vs {gast} ({liga}, {spieltag}, {datum}):",
+    "spiel_kopf_sonder": "{heim} vs {gast} ({liga}): {zustand} on {datum}.",
+    "zustand_nachholspiel": "Rescheduled match",
+    "zustand_vorgezogen": "Brought forward",
+    "spiel_auffaellig": "Statistical anomalies in {kennzahlen}.",
+    "spiel_signal": "Signal quality: {stufe}.",
+    "stufe_stark": "High",
+    "stufe_mittel": "Medium",
+    "stufe_gering": "Low",
+    "und": "{a} and {b}",
+    "spiel_keine": "No statistical anomalies. All values compared with the league average.",
+    "spiel_keine_sonder": "No statistical anomalies.",
+    "spiel_zu_wenig_daten": "{heim} vs {gast} ({liga}, {spieltag}, {datum}): Match statistics. There is not enough data to rate this match.",
+    "spiel_werte_ab": "{heim} vs {gast} ({liga}, Matchday {n}, {datum}): Values will follow once both teams have played their previous league match.",
+    "spiel_verschoben": "{heim} vs {gast} ({liga}, {spieltag}): Match postponed. Statistics will follow once the date is confirmed.",
+    "spiel_status": "{heim} vs {gast} ({liga}, {spieltag}): {status}."
+  },
+  "inhalt": {
+    "email": "Email",
+    "adresse_folgt": "[address to be added on the server]",
+    "email_folgt": "[project address to be added on the server]",
+    "kontakt_folgt": "Sending will be set up with the next release. Until then the form is not yet active."
+  },
+  "methodik": {
+    "tiefe_titel": "How much detail would you like?",
+    "tiefe": {
+      "1": {
+        "name": "In brief",
+        "text": "Just the principle: how do we find standout matches, and what does signal quality tell you?"
+      },
+      "2": {
+        "name": "With numbers",
+        "text": "Plus a worked example and a practical check of the leagues."
+      },
+      "3": {
+        "name": "Full details",
+        "text": "Plus the exact calculation, uncertainty and checks, for statistics fans."
+      }
+    },
+    "tabelle_titel": "Thresholds and signal quality – {liga}",
+    "spalte": {
+      "kennzahl": "Metric",
+      "richtung": "Direction",
+      "schwelle": "Threshold",
+      "signal": "Signal quality",
+      "liga": "League",
+      "schwellen": "Thresholds"
+    },
+    "richtung": {
+      "mehr": "Above average",
+      "weniger": "Below average"
+    },
+    "ligen_aria": "Select league",
+    "schwellen": {
+      "eins": "{n} threshold",
+      "mehr": "{n} thresholds"
+    },
+    "teil": "{n} {stufe}",
+    "zusammenfassung": "{liga}: {schwellen} ({teile}).",
+    "uebersicht_titel": "Thresholds by league",
+    "download_knopf": "Download the Excel file"
+  },
+  "methodik_excel": {
+    "blatt_schwellen": "Thresholds",
+    "blatt_grundlage": "Basis",
+    "titel": "Soccer Intelligence – thresholds and signal quality",
+    "saisons": "Seasons analysed",
+    "berechnet": "Calculated on",
+    "freigabe": "Approved on",
+    "regeln": "Rules",
+    "spalten": "Columns explained",
+    "hinweis": "Statistical analysis of past matches. Not betting advice and no guarantee for upcoming matches.",
+    "spalte": {
+      "liga": "League",
+      "kennzahl": "Metric",
+      "richtung": "Direction",
+      "schwelle": "Threshold (%)",
+      "signalqualitaet": "Signal quality",
+      "spiele": "Matches",
+      "trefferquote": "Success rate (%)",
+      "vergleichswert": "Baseline, all matches (%)",
+      "mehrwert": "Uplift (percentage points)",
+      "spanne_links": "Range, lower limit (percentage points)",
+      "spanne_rechts": "Range, upper limit (percentage points)",
+      "saisons_positiv": "Seasons with an advantage"
+    },
+    "richtung": {
+      "mehr": "Above average",
+      "weniger": "Below average"
+    },
+    "regel": {
+      "stark": "Success rate of at least 60% and uplift of at least +8 percentage points",
+      "mittel": "Success rate of at least 55% and uplift of at least +5 percentage points",
+      "gering": "Success rate of at least 50% and uplift of at least +5 percentage points",
+      "mindest_titel": "Minimum requirements",
+      "mindest": "At least 50 matches, an uplift of at least +5 percentage points, a lower confidence limit above +2 percentage points and an advantage in at least two thirds of the seasons.",
+      "schwelle_titel": "Threshold selection",
+      "schwelle": "We test thresholds of 10%, 15%, 20%, 25%, 30% and 35%. We use the threshold with the highest signal quality. If two thresholds have the same rating, we select the one with more matches. We recalculate the thresholds once per season."
+    },
+    "erklaerung": {
+      "trefferquote": "Share of past matches above the threshold in which the expected result occurred.",
+      "vergleichswert": "The same share across all matches in the league, regardless of the threshold.",
+      "mehrwert": "Success rate minus baseline.",
+      "spanne_links": "Range of the uplift (95% confidence interval using the Wilson method), lower and upper limit. The fewer matches, the wider the range.",
+      "saisons_positiv": "In how many of the analysed seasons the uplift was positive."
+    }
+  }
+}

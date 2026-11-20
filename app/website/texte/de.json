@@ -1,8 +1,11 @@
 {
-  "_hinweis": "Sprachdatei Deutsch (Website, seit 0.17). Schreibweise mit ß (Entscheidung T5). Platzhalter in {geschweiften Klammern}; Mehrzahl als eigene Varianten (null/eins/mehr). Texte wörtlich aus der Übergabe der Frontend-Entwürfe.",
+  "_hinweis": "Sprachdatei Deutsch (Website, seit 0.17; seit 0.21 mit Englisch in en.json, gleiche Schlüssel). Schreibweise mit ß (Entscheidung T5). Platzhalter in {geschweiften Klammern}; Mehrzahl als eigene Varianten (null/eins/mehr). Texte wörtlich aus den Entwürfen P1 vom 19.11.2026 und dem Glossar.",
   "allgemein": {
     "marke": "Soccer Intelligence",
-    "sprache": "de"
+    "sprache": "de",
+    "og_bild": "Logo von Soccer Intelligence mit den Ligen Bundesliga, Premier League, Serie A und La Liga",
+    "zeitzone": "Alle Anstoßzeiten in mitteleuropäischer Zeit (MEZ/MESZ).",
+    "zum_inhalt": "Zum Inhalt springen"
   },
   "kopf": {
     "startseite": "Startseite",
@@ -10,15 +13,19 @@
     "spieltag": "Spieltag",
     "methodik": "Methodik",
     "impressum": "Impressum",
-    "zurueck_spieltag": "Zurück zum Spieltag"
+    "zurueck_spieltag": "Zurück zum Spieltag",
+    "kontakt": "Kontakt",
+    "sprache_waehlen": "Sprache wählen"
   },
   "fuss": {
     "pflicht": "Statistische Auswertungen, keine Wettberatung. Keine Verbindung zu Ligen oder Vereinen.",
-    "stand": "Stand: {stand}",
+    "stand": "Datenstand: {stand}",
     "navigation": "Weitere Seiten",
     "impressum": "Impressum",
     "datenschutz": "Datenschutz",
-    "methodik": "Methodik"
+    "methodik": "Methodik",
+    "glossar": "Glossar",
+    "kontakt": "Kontakt"
   },
   "liga": {
     "bundesliga": "Bundesliga",
@@ -53,17 +60,17 @@
     },
     "tabs": "Spieltag wählen",
     "tab": "{n}. Spieltag · ab {datum}",
-    "keine_abweichungen": "Bei diesem Spieltag weicht kein Wert deutlich vom Ligaschnitt ab.",
+    "keine_abweichungen": "Bei diesem Spieltag ist keine Partie auffällig.",
     "gegen": "gegen",
     "zum_spiel": "Zum Spiel {heim} gegen {gast}",
     "legende": "Legende",
     "wie_lesen": "Wie lese ich das?",
-    "erklaerung_gruen_titel": "Grüne Kacheln:",
-    "erklaerung_gruen": "Bei diesen Partien liegt mindestens eine Kennzahl über der Schwelle ihrer Liga – sie ist auffällig.",
-    "erklaerung_stufe_titel": "Signalqualität:",
-    "erklaerung_stufe": "Zeigt, wie oft sich solche Auffälligkeiten früher bestätigt haben: stark, mittel oder gering. Dunkelgrün = stark.",
+    "erklaerung_gruen_titel": "Markierte Kacheln:",
+    "erklaerung_gruen": "Bei diesen Partien liegt mindestens eine Kennzahl über der Schwelle ihrer Liga. Sie ist auffällig.",
+    "erklaerung_stufe_titel": "Signalqualität stark, mittel oder gering:",
+    "erklaerung_stufe": "Zeigt, wie oft sich solche Auffälligkeiten in früheren Saisons bestätigt haben.",
     "erklaerung_weiss_titel": "Weiße Kacheln:",
-    "erklaerung_weiss": "Keine Auffälligkeit bei dieser Partie.",
+    "erklaerung_weiss": "Nicht auffällig.",
     "h1_vorne": "Alle Spiele im",
     "h1_akzent": "Überblick",
     "nur_sonderspiele": {
@@ -75,7 +82,15 @@
         "eins": "1 Spiel vorgezogen",
         "mehr": "{n} Spiele vorgezogen"
       }
-    }
+    },
+    "legende_titel": "Signalqualität:",
+    "nicht_auffaellig": "Nicht auffällig",
+    "zu": "Zu Spieltag {n}",
+    "seo_titel": "Alle Spiele des Spieltags auf einen Blick",
+    "seo_1": "Hier findest du alle Spiele des aktuellen Spieltags in Bundesliga, Premier League, La Liga und Serie A. Partien mit statistischen Auffälligkeiten sind in der Liste markiert. Die Signalqualität (stark, mittel oder gering) zeigt, wie oft sich ähnliche Auffälligkeiten in früheren Saisons durch tatsächliche Spielergebnisse bestätigt haben. Tippe auf ein Spiel, um die Details zu sehen.",
+    "seo_2_fett": "Wir bieten transparente Fußball-Statistiken, jedoch keine Wettberatung oder Gewinnprognosen.",
+    "seo_2": "Wie wir auffällige Spiele finden, erklärt die",
+    "seo_2_link": "Methodik-Seite"
   },
   "stufe": {
     "stark": "Signalqualität stark",
@@ -102,7 +117,8 @@
     "nachholspiel_nr": "Nachholspiel · Spieltag {n}",
     "vorgezogen_nr": "Vorgezogen · Spieltag {n}",
     "werte_ab": "Werte ab {datum}",
-    "werte_folgen": "Werte folgen"
+    "werte_folgen": "Werte folgen",
+    "gespielt_ergebnis": "Gespielt · {ergebnis}"
   },
   "termin": {
     "zeit_offen": "Zeit offen",
@@ -153,11 +169,15 @@
   },
   "fehler": {
     "seitentitel": "Nicht gefunden – Soccer Intelligence",
-    "titel": "Diese Seite gibt es nicht.",
-    "text": "Vielleicht hat sich die Adresse geändert.",
+    "titel": "Seite nicht gefunden",
+    "text": "Diese Seite gibt es nicht (mehr). Vielleicht wurde die Adresse falsch eingegeben, oder das Spiel ist nicht mehr verfügbar.",
     "daten_titel": "Die Daten werden gerade geprüft.",
     "daten_text": "Bitte versuche es in ein paar Minuten noch einmal.",
-    "zurueck": "Zum Spieltag"
+    "zurueck": "Zum Spieltag",
+    "hinweis": "Hinweis",
+    "knopf_start": "Zur Startseite",
+    "knopf_spieltag": "Alle Spiele des Spieltags",
+    "knopf_methodik": "Methodik"
   },
   "vorschau": {
     "leiste": "Vorschau – nicht öffentlich",
@@ -166,7 +186,9 @@
     "jetzt": "Jetzt",
     "zeitreise": "Zeitreise: {zeit} (Import an diesem Tag angenommen)",
     "aktuell": "aktueller Stand",
-    "ungueltig": "Ungültiges Datum – angezeigt wird der aktuelle Stand."
+    "ungueltig": "Ungültiges Datum – angezeigt wird der aktuelle Stand.",
+    "index_ja": "Index: ja (nach dem Livegang)",
+    "index_nein": "Index: nein (noindex)"
   },
   "kennzahl": {
     "kpi02": {
@@ -211,16 +233,17 @@
     }
   },
   "lesen": {
-    "ligaschnitt_titel": "Ligaschnitt:",
-    "ligaschnitt": "Der Strich in der Mitte des Balkens markiert den Ligadurchschnitt der letzten 20 Spieltage.",
-    "prozent_titel": "Prozentzahl:",
-    "prozent": "Abweichung des Spielwerts vom Ligaschnitt.",
-    "farben_titel": "Farben:",
-    "farben": "Grün steht für überdurchschnittliche, Rot für unterdurchschnittliche Werte. Dunkel bedeutet Signalqualität stark, hell mittel oder gering."
+    "abweichung_titel": "Abweichung:",
+    "abweichung": "Die Prozentzahl zeigt, wie stark der Spielwert vom Ligadurchschnitt abweicht.",
+    "ligaschnitt_titel": "Ligadurchschnitt:",
+    "ligaschnitt": "Der Strich im Balken markiert den Durchschnittswert der Liga aus den letzten 20 Spieltagen.",
+    "richtung_titel": "Richtung:",
+    "richtung": "Der Balken zeigt nach rechts, wenn der Wert über dem Durchschnitt liegt, und nach links, wenn er darunter liegt.",
+    "signal_titel": "Signalqualität:",
+    "signal": "Sie zeigt, wie häufig sich vergleichbare Auffälligkeiten in früheren Saisons bestätigt haben. Die Einstufung erfolgt in drei Stufen: stark, mittel oder gering.",
+    "ligaschnitt_kurz": "Ligadurchschnitt"
   },
   "spiel": {
-    "seitentitel": "{heim} gegen {gast} – {liga} – Soccer Intelligence",
-    "beschreibung": "Statistische Auffälligkeiten der Partie {heim} gegen {gast} ({liga}, {spieltag}).",
     "kopfzeile": "{liga} · {spieltag}",
     "gegen": "gegen",
     "form_titel": "Letzte 5 Spiele",
@@ -237,7 +260,7 @@
     "auffaelligstes": "Auffälligstes Merkmal",
     "gesamtbild": "Gesamtbild",
     "keine_titel": "Keine statistischen Auffälligkeiten",
-    "keine_text": "Keine der {n} Kennzahlen überschreitet ihre Schwelle. Größte Abweichung: {name} {wert}.",
+    "keine_text": "Keine der {n} Kennzahlen überschreitet ihre Schwelle. Die größte Abweichung: {name} {wert}.",
     "bewertung": "Bewertung",
     "zu_wenig_daten": "Zu wenig Daten",
     "zu_wenig_daten_text": "Für dieses Spiel liegen nicht genug Daten für eine Bewertung vor.",
@@ -255,7 +278,7 @@
     "status_titel": "Status",
     "status_text": "Für dieses Spiel gibt es keine Werte.",
     "auffaelligkeiten": "Auffälligkeiten",
-    "normalbereich": "Im Normalbereich",
+    "normalbereich": "Nicht auffällig",
     "kennzahlen": "Kennzahlen",
     "zahlen_detail": "Zahlen im Detail",
     "zahlen_detail_zu": "Zahlen im Detail zuklappen: {name}",
@@ -273,23 +296,36 @@
     "gespielt": "Gespielt",
     "keine_text_eins": "Die einzige gewertete Kennzahl überschreitet ihre Schwelle nicht. Abweichung: {name} {wert}.",
     "hinweis_nachtraeglich": "Werte nachträglich mit den Daten vor dem Spiel berechnet.",
-    "hinweis_korrigiert_titel": "Endstand:",
     "hinweis_korrigiert": "Ergebnis nachträglich korrigiert",
     "werte_ab_titel": "Werte folgen",
     "werte_ab": "Werte ab {datum} – sobald beide Teams ihr vorheriges Ligaspiel gespielt haben.",
     "werte_folgen": "Werte folgen, sobald das Ergebnis vom {datum} übernommen ist.",
-    "werte_wartet": "Die Werte werden nachträglich mit den Daten vor dem Spiel berechnet, sobald das Ergebnis des vorherigen Ligaspiels übernommen ist."
+    "werte_wartet": "Die Werte werden nachträglich mit den Daten vor dem Spiel berechnet, sobald das Ergebnis des vorherigen Ligaspiels übernommen ist.",
+    "h1": "{heim} – {gast}: Statistiken und Analyse",
+    "schwelle": "Schwelle",
+    "schwelle_keine": "keine",
+    "schwelle_ueber": "über {wert}",
+    "schwelle_unter": "unter {wert}",
+    "trenner": "–",
+    "weitere": "Weitere Spiele dieses Spieltags",
+    "werte_label": "Werte",
+    "werte_ab_kurz": "Werte ab {datum}",
+    "werte_ab_sub": "Sobald beide Teams ihr vorheriges Ligaspiel gespielt haben.",
+    "form_kurz": {
+      "S": "S",
+      "U": "U",
+      "N": "N"
+    },
+    "keine_text_gewertet": "Keine der {n} gewerteten Kennzahlen überschreitet ihre Schwelle. Die größte Abweichung: {name} {wert}."
   },
   "start": {
-    "seitentitel": "Soccer Intelligence – Fußballspiele durchleuchtet",
-    "beschreibung": "Statistische Auffälligkeiten bei Toren, Ecken, Karten und weiteren Kennzahlen der Bundesliga, Premier League, La Liga und Serie A – vor dem Anpfiff.",
     "h1_vorne": "Fußballspiele",
     "h1_akzent": "durchleuchtet.",
-    "unterzeile": "Entdecke statistische Auffälligkeiten bei Toren, Ecken, Karten und weiteren Fußball-Kennzahlen – vor dem Anpfiff.",
+    "unterzeile": "Wir berechnen erwartete Spielwerte und vergleichen sie mit historischen Ergebnissen. So erkennen wir Auffälligkeiten und bewerten ihre bisherige Aussagekraft.",
     "knopf_auffaellig": "Auffällige Spiele",
     "knopf_so": "So funktioniert’s",
     "ranking_titel": "Die auffälligsten Spiele",
-    "ranking_text": "Die interessantesten Zahlen und Abweichungen des kommenden Spieltags.",
+    "ranking_text": "Die interessantesten Abweichungen und Prognosen des kommenden Spieltags.",
     "ranking_zeile": "{liga} · Spieltag {n}",
     "mehr": "mehr als üblich",
     "weniger": "weniger als üblich",
@@ -298,12 +334,12 @@
     "ligen_text": "Tippe auf deine Liga und betrachte alle Spiele des Spieltags.",
     "so_titel": "So funktioniert’s",
     "vergleichen_titel": "Wir vergleichen",
-    "vergleichen": "Jedes Spiel wird mit dem Schnitt der Liga abgeglichen: Tore, Karten, Ecken und mehr.",
+    "vergleichen": "Wie viele Tore, Karten oder Ecken können erwartet werden? Wir vergleichen die Werte jedes anstehenden Spiels mit dem Durchschnitt der jeweiligen Liga.",
     "markieren_titel": "Wir markieren",
-    "markieren": "Weicht ein Wert deutlich ab, bekommt das Spiel eine Markierung: hell für leicht, dunkel für stark.",
-    "markieren_link": "Mehr dazu hier…",
+    "markieren": "Deutliche Abweichungen werden markiert. Anhand historischer Spiele prüfen wir, wie häufig sich vergleichbare Auffälligkeiten bestätigt haben. Die Methodik dahinter erklären wir",
+    "markieren_link": "auf der Methodik-Seite",
     "entscheiden_titel": "Du entscheidest",
-    "entscheiden": "Ob fürs Fachsimpeln oder für deinen Wetttipp: Du siehst auf einen Blick, wo es sich lohnt, genauer hinzuschauen.",
+    "entscheiden": "Ob fürs Fachsimpeln oder für deinen Wetttipp: Du erkennst auf einen Blick, welche Spiele statistisch aus der Reihe fallen und wo sich ein genauerer Blick lohnt.",
     "bereit_titel": "Bereit für den Spieltag?",
     "bereit_text": "In unter einer Minute weißt du, welche Spiele auffallen.",
     "bereit_knopf": "Spieltag ansehen",
@@ -312,7 +348,6 @@
     "fan_name": "Carsten Thiele",
     "fan_bild": "Porträt des Gründers von Soccer Intelligence",
     "seo_titel": "Was ist Soccer Intelligence?",
-    "seo_text": "Soccer Intelligence analysiert Fußballspiele aus der Bundesliga, Premier League, La Liga und Serie A anhand verschiedener statistischer Kennzahlen. Dazu vergleichen wir Werte wie Tore, Ecken, Karten und Torschüsse mit dem jeweiligen Ligadurchschnitt. Deutliche Abweichungen kennzeichnen wir als statistische Auffälligkeiten – so erkennst du bereits vor dem Anpfiff, welche Spiele besonders interessant sind. Unsere Analysen richten sich an Fußballfans und Tipper, die genauer hinschauen möchten. Soccer Intelligence bietet verständliche Statistiken und Auswertungen, keine Wettberatung.",
     "pause": {
       "spielpause": {
         "zeile": "Spielpause",
@@ -339,15 +374,15 @@
         "knopf": "Zum nächsten Spieltag"
       },
       "unbekannt": {
-        "zeile": "Nächster Spieltag",
+        "zeile": "Nächster Spieltag (veraltet)",
         "titel": "Nächster Spieltag am {datum}",
         "text": "Sobald der Spielplan wieder aktuell ist, siehst du hier die auffälligsten Spiele.",
         "knopf": "Zum nächsten Spieltag"
       },
       "keine": {
         "zeile": "Aktueller Spieltag",
-        "titel": "Keine Abweichungen",
-        "text": "Bei den anstehenden Spielen weicht kein Wert deutlich vom Ligaschnitt ab. Alle Spiele findest du auf der Spieltagsseite.",
+        "titel": "Keine Auffälligkeiten",
+        "text": "Für die anstehenden Spiele liegen keine Auffälligkeiten vor. Alle Spiele findest du auf der Spieltagsseite.",
         "knopf": "Zum Spieltag"
       }
     },
@@ -358,6 +393,180 @@
     "tage_start": {
       "eins": "Tag bis zum Start",
       "mehr": "Tage bis zum Start"
+    },
+    "nur": {
+      "null": "Aktuell keine auffälligen Spiele.",
+      "eins": "Aktuell nur 1 auffälliges Spiel.",
+      "mehr": "Aktuell nur {n} auffällige Spiele."
+    },
+    "ergaenzt": "Ergänzt mit Spielen geringer Signalqualität.",
+    "seo_1": "Soccer Intelligence ist eine Plattform für die statistische Analyse von Fußballspielen aus Bundesliga, Premier League, La Liga und Serie A. Wir untersuchen Kennzahlen wie Tore, Ecken, Gelbe Karten und Schüsse aufs Tor im Vergleich zum Ligadurchschnitt.",
+    "seo_2": "Weichen Spielwerte deutlich vom üblichen Niveau ab, kennzeichnen wir sie als statistische Auffälligkeiten. Anhand historischer Spiele prüfen wir zudem, wie häufig sich solche Auffälligkeiten bestätigt haben, und leiten daraus die Signalqualität ab.",
+    "seo_3": "So erhalten Fußballfans und Tipper bereits vor dem Anpfiff einen datenbasierten Überblick über interessante Spiele.",
+    "seo_3_fett": "Wir bieten transparente Statistiken, jedoch keine Wettberatung oder Gewinnprognosen.",
+    "seo_4": "Mehr zu Berechnung und Bewertung findest du auf der",
+    "seo_4_link": "Methodik-Seite"
+  },
+  "liga_im": {
+    "bundesliga": "Bundesliga",
+    "la_liga": "La Liga",
+    "premier_league": "Premier League",
+    "serie_a": "Serie A"
+  },
+  "seite": {
+    "methodik": "Methodik",
+    "glossar": "Glossar",
+    "kontakt": "Kontakt",
+    "impressum": "Impressum",
+    "datenschutz": "Datenschutzerklärung"
+  },
+  "stufe_kurz": {
+    "stark": "stark",
+    "mittel": "mittel",
+    "gering": "gering",
+    "titel": "Signalqualität",
+    "zusatz": " (Signalqualität)"
+  },
+  "stufe_detail": {
+    "stark": "auffällig · Signalqualität stark",
+    "mittel": "auffällig · Signalqualität mittel",
+    "gering": "auffällig · Signalqualität gering",
+    "normal": "nicht auffällig",
+    "zu_wenig_daten": "zu wenig Daten",
+    "ohne": "nicht auffällig"
+  },
+  "archiv": {
+    "kopf": "{liga} · Spieltag {n} · Saison {saison}",
+    "intro": "Alle Spiele dieses Spieltags mit Endstand und den Werten, die vor dem Anpfiff berechnet wurden.",
+    "blaettern": "Spieltag wählen",
+    "spieltag": "Spieltag {n}",
+    "zum_aktuellen": "Aktueller Spieltag",
+    "hinweis_werte": "Die Werte wurden mit den Daten vor dem jeweiligen Spiel berechnet."
+  },
+  "seo": {
+    "start_titel": "Fußballstatistiken & Analysen | Soccer Intelligence",
+    "start_beschreibung": "Fußballstatistiken für Bundesliga, Premier League, La Liga und Serie A: Entdecke Spiele mit auffälligen Werten bei Toren, Ecken und Karten.",
+    "spieltag_titel": "{liga} Spieltag: Alle Spiele & Analysen | Soccer Intelligence",
+    "spieltag_beschreibung": "Alle Spiele des Spieltags in der {liga} – mit Markierung der Partien, bei denen die Statistik auffällt.",
+    "archiv_titel": "{liga} Spieltag {n}, Saison {saison}: Spiele & Analysen | Soccer Intelligence",
+    "archiv_beschreibung": "Alle Spiele des {n}. Spieltags der {liga} {saison} mit Endständen und den Werten vor dem Anpfiff.",
+    "methodik_titel": "So funktioniert unsere Methodik | Soccer Intelligence",
+    "methodik_beschreibung": "So findet Soccer Intelligence auffällige Spiele und prüft, wie verlässlich solche Auffälligkeiten früher waren. Methodik, Rechenbeispiel und Auswertungen aus 7 Saisons.",
+    "glossar_titel": "Glossar: Begriffe einfach erklärt | Soccer Intelligence",
+    "glossar_beschreibung": "Die wichtigsten Begriffe von Soccer Intelligence verständlich erklärt: Abweichung, Ligadurchschnitt, Schwelle, Signalqualität und Spielstatus.",
+    "kontakt_titel": "Kontakt | Soccer Intelligence",
+    "kontakt_beschreibung": "Fragen, Wünsche oder Verbesserungsvorschläge zu Soccer Intelligence? Schreib mir eine Nachricht.",
+    "impressum_titel": "Impressum | Soccer Intelligence",
+    "impressum_beschreibung": "Impressum von Soccer Intelligence: Angaben zum Betreiber, Kontaktmöglichkeiten und rechtliche Hinweise.",
+    "datenschutz_titel": "Datenschutzerklärung | Soccer Intelligence",
+    "datenschutz_beschreibung": "Informationen zum Datenschutz bei Soccer Intelligence: erfasste Daten, Google Analytics, Google Search Console und deine Rechte.",
+    "fehlt_titel": "Seite nicht gefunden | Soccer Intelligence",
+    "spiel_titel": "{heim} – {gast} · {liga}, {n}. Spieltag {saison} | Soccer Intelligence",
+    "spiel_kopf": "{heim} – {gast} ({liga}, {spieltag}, {datum}):",
+    "spiel_kopf_sonder": "{heim} – {gast} ({liga}): {zustand} am {datum}.",
+    "zustand_nachholspiel": "Nachholspiel",
+    "zustand_vorgezogen": "Vorgezogen",
+    "spiel_auffaellig": "Statistisch auffällig bei {kennzahlen}.",
+    "spiel_signal": "Signalqualität: {stufe}.",
+    "stufe_stark": "stark",
+    "stufe_mittel": "mittel",
+    "stufe_gering": "gering",
+    "und": "{a} und {b}",
+    "spiel_keine": "Keine statistischen Auffälligkeiten. Alle Werte im Vergleich zum Ligadurchschnitt.",
+    "spiel_keine_sonder": "Keine statistischen Auffälligkeiten.",
+    "spiel_zu_wenig_daten": "{heim} – {gast} ({liga}, {spieltag}, {datum}): Statistiken zur Partie. Für dieses Spiel liegen nicht genug Daten für eine Bewertung vor.",
+    "spiel_werte_ab": "{heim} – {gast} ({liga}, {n}. Spieltag, {datum}): Die Werte folgen, sobald beide Teams ihr vorheriges Ligaspiel gespielt haben.",
+    "spiel_verschoben": "{heim} – {gast} ({liga}, {spieltag}): Spiel verschoben. Statistiken folgen, sobald der Termin feststeht.",
+    "spiel_status": "{heim} – {gast} ({liga}, {spieltag}): {status}."
+  },
+  "inhalt": {
+    "email": "E-Mail",
+    "adresse_folgt": "[Adresse wird auf dem Server eingetragen]",
+    "email_folgt": "[Projektadresse wird auf dem Server eingetragen]",
+    "kontakt_folgt": "Der Versand wird mit dem nächsten Release eingerichtet. Bis dahin ist das Formular noch nicht aktiv."
+  },
+  "methodik": {
+    "tiefe_titel": "Wie tief möchtest du einsteigen?",
+    "tiefe": {
+      "1": {
+        "name": "Kurz erklärt",
+        "text": "Nur das Prinzip: Wie finden wir auffällige Spiele und was sagt die Signalqualität?"
+      },
+      "2": {
+        "name": "Mit Zahlen",
+        "text": "Dazu ein durchgerechnetes Beispiel und der Praxischeck der Ligen."
+      },
+      "3": {
+        "name": "Alles im Detail",
+        "text": "Zusätzlich die genaue Berechnung, Unsicherheit und Prüfung für Statistik-Fans."
+      }
+    },
+    "tabelle_titel": "Schwellen und Signalqualität – {liga}",
+    "spalte": {
+      "kennzahl": "Kennzahl",
+      "richtung": "Richtung",
+      "schwelle": "Schwelle",
+      "signal": "Signalqualität",
+      "liga": "Liga",
+      "schwellen": "Schwellen"
+    },
+    "richtung": {
+      "mehr": "mehr",
+      "weniger": "weniger"
+    },
+    "ligen_aria": "Liga wählen",
+    "schwellen": {
+      "eins": "{n} Schwelle",
+      "mehr": "{n} Schwellen"
+    },
+    "teil": "{n} {stufe}",
+    "zusammenfassung": "{liga}: {schwellen} ({teile}).",
+    "uebersicht_titel": "Schwellen je Liga",
+    "download_knopf": "Excel-Datei herunterladen"
+  },
+  "methodik_excel": {
+    "blatt_schwellen": "Schwellen",
+    "blatt_grundlage": "Grundlage",
+    "titel": "Soccer Intelligence – Schwellen und Signalqualität",
+    "saisons": "Ausgewertete Saisons",
+    "berechnet": "Berechnet am",
+    "freigabe": "Freigegeben am",
+    "regeln": "Regeln",
+    "spalten": "Erklärung der Spalten",
+    "hinweis": "Statistische Auswertung früherer Spiele. Keine Wettberatung und keine Garantie für kommende Spiele.",
+    "spalte": {
+      "liga": "Liga",
+      "kennzahl": "Kennzahl",
+      "richtung": "Richtung",
+      "schwelle": "Schwelle (%)",
+      "signalqualitaet": "Signalqualität",
+      "spiele": "Spiele",
+      "trefferquote": "Trefferquote (%)",
+      "vergleichswert": "Vergleichswert alle Spiele (%)",
+      "mehrwert": "Mehrwert (Prozentpunkte)",
+      "spanne_links": "Spanne links (Prozentpunkte)",
+      "spanne_rechts": "Spanne rechts (Prozentpunkte)",
+      "saisons_positiv": "Saisons mit Vorteil"
+    },
+    "richtung": {
+      "mehr": "mehr",
+      "weniger": "weniger"
+    },
+    "regel": {
+      "stark": "Trefferquote ab 60 % und Mehrwert ab +8 Prozentpunkten",
+      "mittel": "Trefferquote ab 55 % und Mehrwert ab +5 Prozentpunkten",
+      "gering": "Trefferquote ab 50 % und Mehrwert ab +5 Prozentpunkten",
+      "mindest_titel": "Mindestanforderungen",
+      "mindest": "Mindestens 50 Spiele, Mehrwert mindestens +5 Prozentpunkte, unterer Rand der Spanne über +2 Prozentpunkten, Vorteil in mindestens zwei Dritteln der Saisons.",
+      "schwelle_titel": "Auswahl der Schwelle",
+      "schwelle": "Getestet werden 10, 15, 20, 25, 30 und 35 %. Es gilt die Schwelle mit der besten Signalqualität, bei Gleichstand die mit mehr Spielen. Neu gerechnet wird einmal pro Saison."
+    },
+    "erklaerung": {
+      "trefferquote": "Anteil der früheren Spiele über der Schwelle, in denen das erwartete Ergebnis eingetreten ist.",
+      "vergleichswert": "Derselbe Anteil über alle Spiele der Liga, unabhängig von der Schwelle.",
+      "mehrwert": "Trefferquote minus Vergleichswert.",
+      "spanne_links": "Spanne des Mehrwerts (95-%-Intervall nach Wilson), linker und rechter Rand. Je weniger Spiele, desto breiter die Spanne.",
+      "saisons_positiv": "In wie vielen der ausgewerteten Saisons der Mehrwert positiv war."
     }
   }
 }

@@ -1,0 +1,111 @@
+{#- Methodik (de, seit 0.21 nach Entwurf „Methodik_10“). Drei Ebenen mit Sprungmarken #ebene1–3; ohne JavaScript
+    ist alles sichtbar. Zahlen der Schwellen aus app/config/schwellen.toml (website/methodik.py, Wert „m“); das
+    Rechenbeispiel ist fester Text (Test prüft die Zahlen gegen die Schwellendatei). -#}
+{% from "methodik_teile.html" import tiefe, schritte, stufen_karten, werte, haken, regeln, aufklapp, ligen_tabellen, uebersicht, download with context %}
+{% from "teile.html" import q_balken, pfeil_weiter with context %}
+
+{% macro kopf() %}<h1>So funktioniert unsere Methodik</h1><p class="unterzeile">Fußball verstehen. Zahlen richtig einordnen.</p><p>Wir zeigen dir in wenigen Minuten, wie wir auffällige Spiele finden und wie verlässlich solche Auffälligkeiten in der Vergangenheit waren.</p>{% endmacro %}
+
+{% macro rumpf() %}
+{{ tiefe() }}
+
+<section class="ebene" id="ebene1" aria-labelledby="ebene1-titel">
+  <span class="ebene-marke">Ebene 1 · Kurz erklärt</span>
+  <h2 class="ebene-titel" id="ebene1-titel">Das Prinzip auf einen Blick</h2>
+  <p>Wir suchen bei anstehenden Fußballspielen nach <b>auffälligen Werten</b>, etwa bei Toren, Ecken oder gelben Karten.</p>
+  <p>Dafür vergleichen wir die erwarteten Werte mit dem Ligadurchschnitt und prüfen, ob sich solche Auffälligkeiten in der Vergangenheit bestätigt haben. Daraus entsteht die <b>Signalqualität</b>: stark, mittel oder gering.</p>
+  {{ schritte([
+    ("Abweichung finden", "Wir vergleichen die erwarteten Werte eines Spiels mit dem Ligadurchschnitt. Weicht ein Wert deutlich ab, ist das Spiel auffällig."),
+    ("Vergleich mit der Vergangenheit", "Wir schauen, wie oft sich solche Auffälligkeiten in früheren Spielen bestätigt haben."),
+    ("Signalqualität vergeben", "Je besser eine Auffälligkeit in der Vergangenheit abgeschnitten hat, desto höher die Signalqualität: stark, mittel oder gering."),
+  ]) }}
+  <h3>Was bedeutet die Signalqualität?</h3>
+  {{ stufen_karten({"stark": "Hat sich früher deutlich bestätigt.", "mittel": "Hat sich früher solide bestätigt.", "gering": "Hat sich früher etwas öfter bestätigt als normal."}) }}
+  <h4>Worauf basiert unsere Signalqualität?</h4>
+  <p>Sie basiert auf {{ m.saisons_wort }} ausgewerteten Saisons, {{ m.kombinationen }} historisch bewährten Kombinationen und deren gemessenem Mehrwert.</p>
+  <ul class="grundlage">
+    <li><span class="gk-titel">Historische Daten</span><span class="gk-zahl">{{ m.saisons }} Saisons untersucht</span><p>Wir haben die Saisons {{ m.saison_von }} bis {{ m.saison_bis }} ausgewertet, um bewährte Auffälligkeiten zu erkennen.</p></li>
+    <li><span class="gk-titel">Die Kombinationen</span><span class="gk-zahl">{{ m.kombinationen }} von {{ m.moeglich }} möglichen Kombinationen</span><p>Wir prüfen {{ m.kennzahlen }} Kennzahlen in {{ m.ligen_zahl }} Ligen, jeweils nach oben und unten. Nur bei {{ m.kombinationen }} Kombinationen hat sich die Auffälligkeit bewährt.</p></li>
+    <li><span class="gk-titel">Die Signalqualität</span><span class="gk-zahl">{{ m.stark }} stark · {{ m.mittel }} mittel · {{ m.gering }} gering</span><p>Die {{ m.kombinationen }} bewährten Kombinationen werden je nach historischem Mehrwert in drei Stufen eingeteilt.</p></li>
+  </ul>
+  <div class="knopfreihe"><a class="knopf-voll" href="#ebene2">Weiter mit Zahlen: ein Spiel durchgerechnet{{ pfeil_weiter() }}</a></div>
+</section>
+
+<section class="ebene" id="ebene2" aria-labelledby="ebene2-titel">
+  <span class="ebene-marke">Ebene 2 · Mit Zahlen</span>
+  <h2 class="ebene-titel" id="ebene2-titel">Ein Spiel durchgerechnet</h2>
+  <p>So wird aus einem Spielwert ein Signal.</p>
+  <div class="beispiel">
+    <div class="beispiel-kopf"><span class="ebene-marke">Rechenbeispiel</span><span>Bundesliga · Schüsse aufs Tor · mehr</span></div>
+    <p class="beispiel-spiel">FC Bayern München – VfB Stuttgart<br>30. Spieltag 2025/26 · 19.04.2026</p>
+    <ol class="schritte schritte--beispiel">
+      <li class="schritt"><span class="schritt-nr" aria-hidden="true"><span class="nr">1</span></span><div class="schritt-inhalt">
+        <p class="schritt-titel">Abweichung finden</p>
+        {{ werte([("Wir erwarten", "11,55 Schüsse", false), ("In der Liga üblich", "9,37 Schüsse", false), ("Abweichung", "+23,31 %", false), ("Schwelle Bundesliga („mehr“)", "15 % → auffällig", true)]) }}
+      </div></li>
+      <li class="schritt"><span class="schritt-nr" aria-hidden="true"><span class="nr">2</span></span><div class="schritt-inhalt">
+        <p class="schritt-titel">Vergleich mit der Vergangenheit</p>
+        {{ werte([("Frühere Spiele mit dieser Abweichung", "86", false), ("Spiele mit erwartetem Ergebnis", "56", false), ("Trefferquote", "65,12 %", false), ("Vergleichswert (alle Spiele)", "48,43 %", false), ("Mehrwert", "+16,69 Prozentpunkte", true)]) }}
+      </div></li>
+      <li class="schritt"><span class="schritt-nr" aria-hidden="true"><span class="nr">3</span></span><div class="schritt-inhalt">
+        <p class="schritt-titel">Signalqualität vergeben</p>
+        <p class="warum">Warum ist das Signal stark?</p>
+        <ul class="pruef-karten">
+          <li><span class="pk-titel">Trefferquote</span><span class="pk-zahl">65,12 %</span>{{ haken("mindestens 60 %") }}</li>
+          <li><span class="pk-titel">Mehrwert</span><span class="pk-zahl">+16,69 Prozentpunkte</span>{{ haken("mindestens +8 Prozentpunkte") }}</li>
+        </ul>
+        <div class="ergebnis-box q-stark"><div class="ergebnis-kopf">{{ q_balken("stark") }}<b>Ergebnis: Signalqualität stark</b></div><p>Beide Werte erfüllen die Anforderungen für ein starkes Signal.</p></div>
+        <p><b>Und im Spiel?</b> Es fielen 16 Schüsse aufs Tor, deutlich mehr als die üblichen 9,37. Das Signal hat sich bestätigt.</p>
+      </div></li>
+    </ol>
+  </div>
+  <h3>Wie wird die Signalqualität bestimmt?</h3>
+  <p>Die Trefferquote zeigt, wie oft das erwartete Ergebnis tatsächlich eingetreten ist. Der Mehrwert zeigt, wie viel häufiger das im Vergleich zu allen Spielen passiert ist.</p>
+  {{ regeln({"stark": "Trefferquote ab 60 % und Mehrwert ab +8 Prozentpunkten", "mittel": "Trefferquote ab 55 % und Mehrwert ab +5 Prozentpunkten", "gering": "Trefferquote ab 50 % und Mehrwert ab +5 Prozentpunkten"}) }}
+  <p>Damit ein Signal eine Einstufung erhält, müssen mehrere Bedingungen erfüllt sein: Mindestens 50 Spiele müssen vorliegen, der Mehrwert muss mindestens 5 Prozentpunkte betragen und der Vorteil muss sich in mindestens zwei Dritteln der Saisons zeigen. Im Beispiel war das in allen sieben Saisons der Fall.</p>
+  <p class="liste-notiz gross" role="note"><b>Wichtig:</b> Die Signalqualität ist die Bilanz der Vergangenheit. Sie ist keine Wahrscheinlichkeit und keine Garantie für das nächste Spiel.</p>
+  <div class="praxis">
+    <h3>Wie bewähren sich unsere Signale in der Praxis?</h3>
+    <p>Die Signalqualität basiert auf historischen Daten. In der ausführlichen Auswertung zeigen wir, wie sich die Ergebnisse in den einzelnen Ligen bewähren.</p>
+    <div class="knopfreihe"><a class="knopf-rand" href="#ebene3">Zur ausführlichen Auswertung</a></div>
+  </div>
+</section>
+
+<section class="ebene" id="ebene3" aria-labelledby="ebene3-titel">
+  <span class="ebene-marke">Ebene 3 · Für Statistik-Fans</span>
+  <h2 class="ebene-titel" id="ebene3-titel">Die Details hinter der Methode</h2>
+  <p>Das Wichtigste ist erklärt. Hier steht, wie wir genau rechnen und wie belastbar die Zahlen sind.</p>
+  {% call aufklapp("Wie berechnen wir die Spielwerte?") %}
+  <ul>
+    <li><b>Die acht Kennzahlen:</b> Erwartete Tore, Über 2,5 Tore, Gelbe Karten, Ecken, Tore 1. Halbzeit, Tore 2. Halbzeit, Beide Teams treffen, Schüsse aufs Tor.</li>
+    <li><b>Erwartung:</b> aus den letzten 10 Ligaspielen beider Teams, bis zwei Tage vor dem Anpfiff, aus laufender Saison und Vorsaison. Bei Gelben Karten zählt die Summe beider Teams, bei den übrigen Kennzahlen der Mittelwert.</li>
+    <li><b>Vergleichswert:</b> Ligadurchschnitt der 20 Spieltage vor dem Spiel. Bei „Über 2,5 Tore“ gilt die feste Marke 2,5.</li>
+    <li><b>Abweichung:</b> Erwartung im Verhältnis zum Vergleichswert, in Prozent, auf zwei Stellen gerundet.</li>
+    <li><b>Auffällig</b> ist eine Abweichung, die strikt größer als die Schwelle ist. Genau auf der Schwelle (15,00 %) zählt nicht, 15,01 % schon.</li>
+    <li><b>Vorläufig (V):</b> Hat ein Team weniger als 10 Spiele, etwa ein Aufsteiger, zeigen wir den Wert, markieren ihn aber nie als auffällig.</li>
+  </ul>
+  {% endcall %}
+  {% call aufklapp("Wie prüfen wir die Signalqualität?") %}
+  <ul>
+    <li><b>Unsicherheit:</b> Auch bei gutem Ergebnis spielt Zufall mit. Darum geben wir eine Spanne an (95-%-Intervall nach Wilson), in der der Mehrwert aus heutiger Sicht liegen dürfte. Je weniger Spiele, desto breiter die Spanne. Das misst die Unsicherheit der Daten und ist keine Zusage für kommende Spiele.</li>
+    <li><b>Mindestanforderungen:</b> Eine Schwelle bekommt nur dann eine Signalqualität, wenn sie mindestens 50 Spiele hat, der Mehrwert bei mindestens +5 Prozentpunkten liegt, der untere Rand der Spanne über +2 Prozentpunkten liegt und der Vorteil in mindestens zwei Dritteln der Saisons auftrat. Zusätzlich muss die Trefferquote mindestens 50 % betragen (gering ab 50 %, mittel ab 55 %, stark ab 60 % und +8 Prozentpunkten).</li>
+    <li><b>Schwellen-Auswahl:</b> Getestet werden 10, 15, 20, 25, 30 und 35 %. Es gilt die Schwelle mit der besten Signalqualität, bei Gleichstand die mit mehr Spielen. Neu gerechnet wird einmal pro Saison.</li>
+    <li><b>Test mit unbekannten Saisons:</b> Weil wir die beste Schwelle aus vielen auswählen, sehen die Zahlen im Rückblick etwas besser aus als später. Deshalb haben wir geprüft, wie die Schwellen in Saisons abschneiden, die bei der Auswahl nicht verwendet wurden. Dort traf „stark“ in rund 58 % statt 64 % der Fälle, immer noch rund 6 Prozentpunkte besser als der Normalfall. Auch das bleibt ein Blick zurück. Die laufende Saison 2026/27 wurde bei der Auswahl nicht verwendet. Mit den heutigen Schwellen trifft „stark“ dort bisher in 66 % der Fälle (Normalfall: 54 %). Das sind erst 163 Fälle und damit noch wenig aussagekräftig.</li>
+  </ul>
+  {% endcall %}
+  <h3>Wie bewähren sich die Signale in den einzelnen Ligen?</h3>
+  <p>Wähle eine Liga und sieh dir an, welche Kennzahlen auffällig sind und welche Signalqualität sie erreichen.</p>
+  {{ ligen_tabellen(m) }}
+  <p>Die Ligen unterscheiden sich: In der Serie A gibt es viele starke Signale, in der Bundesliga weniger. Darum hat jede Liga eigene Schwellen.</p>
+  {{ uebersicht(m) }}
+  <p class="liste-notiz gross" role="note"><b>Einordnung:</b> Soccer Intelligence hebt statistische Auffälligkeiten hervor. Die Signalqualität basiert auf früheren Spielen. Sie ist weder eine Garantie für den Spielausgang noch automatisch ein Wettvorteil. Zwischen den Ligen gibt es Unterschiede.</p>
+  <p>Begriffe wie Abweichung, Schwelle oder Mehrwert erklärt das <a href="{{ link('glossar') }}">Glossar</a>.</p>
+</section>
+
+{{ download(m, "Alle Auswertungen zum Mitnehmen", "Die Excel-Datei enthält alle Zahlen je Liga, Kennzahl und Richtung.") }}
+
+<section class="seo" aria-labelledby="seo-titel">
+  <h2 id="seo-titel">Worum geht es auf dieser Seite?</h2>
+  <p>Auf dieser Seite erklärt Soccer Intelligence die Methodik hinter unserer Fußball-Statistik: Wir zeigen, wie wir in Bundesliga, Premier League, La Liga und Serie A auffällige Werte bei Toren, Ecken, Gelben Karten und Schüssen aufs Tor finden. Anhand eines durchgerechneten Spiels und der Auswertung von sieben Saisons siehst du, wie verlässlich solche statistischen Auffälligkeiten in der Vergangenheit waren. <strong>Wir bieten transparente Statistiken, jedoch keine Wettberatung oder Gewinnprognosen.</strong></p>
+</section>
+{% endmacro %}

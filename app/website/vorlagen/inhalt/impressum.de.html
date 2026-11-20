@@ -1,0 +1,34 @@
+{#- Impressum (de, seit 0.21 nach Entwurf „Impressum“). Betreiberangaben aus der Server-Konfiguration (.env), nie im Code. -#}
+{% macro kopf() %}<h1>Impressum</h1>{% endmacro %}
+
+{% macro rumpf() %}
+<div class="inhaltskarte">
+
+      <section>
+        <h2>Betreiber der Website</h2>
+        <address>Soccer Intelligence<br>{{ betreiber.name or t('start.fan_name') }}{% for zeile in betreiber.adresse %}<br>{{ zeile }}{% else %}<br><span class="platzhalter">{{ t('inhalt.adresse_folgt') }}</span>{% endfor %}</address>
+      </section>
+
+      <section>
+        <h2>Kontakt</h2>
+        <p>{{ t('inhalt.email') }}: {% if betreiber.email %}<a href="mailto:{{ betreiber.email }}">{{ betreiber.email }}</a>{% else %}<span class="platzhalter">{{ t('inhalt.email_folgt') }}</span>{% endif %}</p>
+      </section>
+
+      <section>
+        <h2>Über Soccer Intelligence</h2>
+        <p>Soccer Intelligence ist ein privates, unabhängiges Projekt, das sich mit der statistischen Analyse von Fußballspielen beschäftigt. Das Projekt wird von einer Privatperson betrieben und dient zugleich der persönlichen Weiterbildung im Bereich Datenanalyse und Technologie.</p>
+      </section>
+
+      <section>
+        <h2>Haftung für Inhalte</h2>
+        <p>Die Inhalte und statistischen Auswertungen auf Soccer Intelligence werden mit größter Sorgfalt erstellt. Dennoch kann keine Gewähr für die Richtigkeit, Vollständigkeit und Aktualität der bereitgestellten Informationen übernommen werden.</p>
+        <p>Die dargestellten Statistiken dienen ausschließlich der Information und stellen weder eine Spielprognose noch eine Wett- oder Anlageberatung dar. Die Nutzung der Informationen erfolgt auf eigene Verantwortung.</p>
+      </section>
+
+      <section>
+        <h2>Haftung für externe Links</h2>
+        <p>Diese Website kann Links zu externen Websites Dritter enthalten. Auf deren Inhalte haben wir keinen Einfluss. Für die Inhalte der verlinkten Seiten sind ausschließlich deren jeweilige Betreiber verantwortlich.</p>
+      </section>
+
+    </div>
+{% endmacro %}

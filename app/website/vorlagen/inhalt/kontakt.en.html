@@ -1,0 +1,19 @@
+{#- Kontakt (en, seit 0.21 nach Entwurf „Kontakt“). Das Formular funktioniert ohne JavaScript; der Versand per
+    E-Mail (Hostinger-Postfach, keine Speicherung, Spamschutz) kommt mit Version 0.22 – bis dahin ist die Schaltfläche
+    gesperrt. Die Sicherheitsfrage wird dann zufällig aus fünf Aufgaben gewählt und auf dem Server geprüft. -#}
+{% macro kopf() %}<h1>Contact</h1><p>Questions, requests or suggestions? Drop me a message, I look forward to hearing from you.</p>{% endmacro %}
+
+{% macro rumpf() %}
+<form class="inhaltskarte formular" method="post" action="{{ link('kontakt') }}" novalidate>
+  <h2>Your message</h2>
+  <p class="klein">Fields marked with * are required.</p>
+  <div class="feld"><label for="kt-name">Name <span class="klein">(optional)</span></label><input id="kt-name" name="name" type="text" autocomplete="name"></div>
+  <div class="feld"><label for="kt-mail">Email *</label><input id="kt-mail" name="email" type="email" autocomplete="email" placeholder="name@example.com" aria-describedby="kt-mail-hilfe" required><p class="klein" id="kt-mail-hilfe">So I can reply to you.</p></div>
+  <div class="feld"><label for="kt-text">Message *</label><textarea id="kt-text" name="nachricht" rows="6" placeholder="Tell me what is on your mind …" required></textarea></div>
+  <div class="feld haken"><input id="kt-dsg" name="einverstanden" type="checkbox" required><label for="kt-dsg">I have read the <a href="{{ link('datenschutz') }}">privacy policy</a> and agree that the information I provide may be used to process my message. *</label></div>
+  <div class="feld"><label for="kt-cap">Security question: What is 4 + 3? *</label><input id="kt-cap" name="antwort" type="text" inputmode="numeric" autocomplete="off" aria-describedby="kt-cap-hilfe" required><p class="klein" id="kt-cap-hilfe">This helps us prevent spam. Please enter a number.</p></div>
+  <div class="feld versteckt" aria-hidden="true"><label for="kt-web">Website</label><input id="kt-web" name="website" type="text" tabindex="-1" autocomplete="off"></div>
+  <p class="liste-notiz" role="note">{{ t('inhalt.kontakt_folgt') }}</p>
+  <button type="submit" class="knopf-voll" disabled>Send message</button>
+</form>
+{% endmacro %}

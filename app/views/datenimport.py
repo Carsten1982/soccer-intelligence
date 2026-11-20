@@ -466,6 +466,31 @@ def snapshot_box(stand: dict | None, now: datetime) -> str:
     return text
 
 
+def names_box(paare: list[tuple[str, str]]) -> str:
+    """Anzeigenamen der Website (seit 0.21, app/config/teamnamen_anzeige.csv): Vereine der laufenden Saison ohne
+    Eintrag. Sie erscheinen auf der Website mit dem Namen der Datenquelle; die Veröffentlichung wird nicht blockiert."""
+    from website.namen import fehlende
+    fehlt = fehlende(paare)
+    kopf = '<div class="di-h">Anzeigenamen der Website (Deutsch/Englisch)</div>'
+    if not fehlt:
+        return kopf + '<p class="di-note"><b class="di-ok">✓</b> Alle Vereine der laufenden Saison haben einen Anzeigenamen.</p>'
+    return (kopf + f'<p class="di-note"><b class="di-wn">{num(len(fehlt))} Vereine ohne Anzeigenamen</b> – die Website '
+            'zeigt dort den Namen der Datenquelle. Nachtragen in <code>app/config/teamnamen_anzeige.csv</code> '
+            '(über GitHub).</p>' + _table(["Liga", "Name der Datenquelle"], [[escape(a), escape(b)] for a, b in fehlt], (0, 1)))
+
+
+def _paare_laufende_saison() -> list[tuple[str, str]]:
+    """(Liga, Verein) aller Spiele der jeweils neuesten Saison im Spielplan."""
+    from state import get_fixtures
+    paare = []
+    for liga, plan in (get_fixtures().leagues or {}).items():
+        if plan is None or plan.empty:
+            continue
+        neu = plan[plan["saison"] == max(plan["saison"])]
+        paare += [(liga, n) for n in set(neu["heim"]) | set(neu["gast"])]
+    return paare
+
+
 def render() -> None:
     st.markdown(CSS, unsafe_allow_html=True)
     ui.header(subtitle="Datenimport/API")
@@ -492,5 +517,9 @@ def render() -> None:
     history(reps)
     from importer.schnappschuss import load_status
     st.markdown(snapshot_box(load_status(base), now), unsafe_allow_html=True)
+    try:
+        st.markdown(names_box(_paare_laufende_saison()), unsafe_allow_html=True)
+    except Exception as exc:                               # Spielplan nicht lesbar: Hinweis statt Abbruch
+        st.caption(f"Anzeigenamen nicht geprüft: {exc}")
     st.caption(f"Gültige Datenbank: {settings.DATABASE_FILENAME} · Prüfregeln und Einzelheiten der Daten: Bereich Datenqualität")
     ui.footer()

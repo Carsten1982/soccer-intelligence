@@ -24,6 +24,7 @@ from core.fixtures import INACTIVE_STATUS
 from core.kpis import LEVELS, RANK, MatchKpis
 from core.top import TOP_KPIS
 
+from . import adressen as AD
 from . import einstellungen as W
 from .daten import Daten, Zeitpunkt
 from .spieltag import SONDERSPIEL, _termin
@@ -61,7 +62,17 @@ def kennzahl(key: str, r) -> dict:
         "vergleich_art": "marke" if key == "kpi03" else "liga",
         "summe": key == "kpi04",                       # Q1: nur Gelbe Karten sind eine Summe der Teamwerte
         "prozent": bool(getattr(r, "prozent", False)),
+        "schwelle": _schwelle(r, abw),                 # seit 0.21 (Entwurf Spiel_P1): Schwelle in Richtung der Abweichung
     }
+
+
+def _schwelle(r, abw) -> float | None:
+    """Schwelle der Liga in Richtung der Abweichung (positiv: über +x %, negativ: unter −x %); None ohne Schwelle."""
+    schwellen = getattr(r, "schwellen", None)
+    if schwellen is None or abw is None:
+        return None
+    signal = schwellen.positiv if abw >= 0 else schwellen.negativ
+    return float(signal.schwelle) if signal is not None else None
 
 
 def form(ft) -> list[str]:
@@ -105,8 +116,17 @@ def spiel_daten(daten: Daten, spiel_id: int, zp: Zeitpunkt) -> dict | None:
     gewertet = [k for k in kennzahlen if k["stufe"] != "zu_wenig_daten"]
     groesste = max(gewertet, key=lambda k: k["betrag"]) if gewertet else None
 
+    plan = daten.spielplan(liga)
+    sicht = A.upcoming(b.fx.leagues[liga], zp.jetzt, zp.stand)
+    im_fenster = any(int(row.reihenfolge) in set(sec.games["reihenfolge"].astype(int)) for sec in sicht.sections)
+    weitere = [{"id": int(g.api_id), "slug": AD.spiel_slug(g.heim, g.gast, int(g.api_id)), "heim": g.heim, "gast": g.gast}
+               for g in plan[(plan["saison"] == row.saison) & (plan["spieltag"] == row.spieltag)].itertuples()
+               if int(g.reihenfolge) != int(row.reihenfolge) and g.api_id is not None and g.api_id == g.api_id]
     return {
         "seite": "spiel", "id": int(spiel_id), "liga": web.slug, "liga_key": web.key,
+        "slug": AD.spiel_slug(row.heim, row.gast, int(spiel_id)),
+        "anstoss_zeit": row.anstoss_zeit.isoformat(timespec="minutes"),
+        "im_fenster": im_fenster, "weitere": weitere,
         "saison": row.saison, "spieltag": int(row.spieltag),
         "heim": row.heim, "gast": row.gast,
         "heim_id": b.team_ids.get((liga, row.heim)), "gast_id": b.team_ids.get((liga, row.gast)),

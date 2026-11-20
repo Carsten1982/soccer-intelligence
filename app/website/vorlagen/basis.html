@@ -1,21 +1,46 @@
 <!doctype html>
-<html lang="{{ t('allgemein.sprache') }}">
+<html lang="{{ lang }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{ seitentitel }}</title>
-{% if beschreibung %}<meta name="description" content="{{ beschreibung }}">{% endif %}
-{% if vorschau %}<meta name="robots" content="noindex, nofollow">{% endif %}
+{% if beschreibung %}<meta name="description" content="{{ beschreibung }}">
+{% endif %}
+{% if robots %}<meta name="robots" content="{{ robots }}">
+{% endif %}
+{% if canonical %}<link rel="canonical" href="{{ canonical }}">
+{% for hl, href in alternates %}<link rel="alternate" hreflang="{{ hl }}" href="{{ href }}">
+{% endfor %}
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Soccer Intelligence">
+<meta property="og:title" content="{{ og_titel }}">
+{% if beschreibung %}<meta property="og:description" content="{{ beschreibung }}">
+{% endif %}
+<meta property="og:url" content="{{ canonical }}">
+<meta property="og:locale" content="{{ og_locale }}">
+{% for alt in og_locale_alt %}<meta property="og:locale:alternate" content="{{ alt }}">
+{% endfor %}
+<meta property="og:image" content="{{ domain }}/og-image.png">
+<meta property="og:image:alt" content="{{ t('allgemein.og_bild') }}">
+<meta name="twitter:card" content="summary_large_image">
+{% endif %}
+<link rel="icon" href="{{ url('/favicon.ico') }}" sizes="32x32">
+<link rel="icon" href="{{ url('/favicon.svg') }}" type="image/svg+xml">
+<link rel="apple-touch-icon" href="{{ url('/apple-touch-icon.png') }}">
 <link rel="preload" href="{{ statisch('schriften/inter-latin-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="{{ statisch('schriften/outfit-latin-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{{ statisch('site.css') }}">
+{% if jsonld %}<script type="application/ld+json">{{ jsonld }}</script>
+{% endif %}
 </head>
 <body>
+<a class="sprung" href="#inhalt">{{ t('allgemein.zum_inhalt') }}</a>
 {% if vorschau %}
-<div class="vorschau">
+<aside class="vorschau" aria-label="{{ t('vorschau.leiste') }}">
   <div class="wrap">
     <strong>{{ t('vorschau.leiste') }}</strong>
     <span>{% if zeitreise %}{{ t('vorschau.zeitreise', zeit=zeitreise) }}{% else %}{{ t('vorschau.aktuell') }}{% endif %}</span>
+    <span>{{ t('vorschau.index_ja') if index else t('vorschau.index_nein') }}</span>
     <form method="get" action="">
       <label for="vorschau-datum">{{ t('vorschau.zeitpunkt') }}</label>
       <input id="vorschau-datum" type="datetime-local" name="datum" value="{{ datum_wert }}">
@@ -24,24 +49,36 @@
     </form>
     {% if ungueltig %}<span class="fehler">{{ t('vorschau.ungueltig') }}</span>{% endif %}
   </div>
-</div>
+</aside>
 {% endif %}
 <header class="wrap">
   <div class="kopf">
-    <a class="logo" href="{{ url('/') }}">
+    <a class="logo" href="{{ link('start') }}">
       <svg width="30" height="30" viewBox="0 0 28 28" fill="none" aria-hidden="true"><rect width="28" height="28" rx="8" fill="#0B3D2E"/><rect x="6" y="15" width="3.6" height="7" rx="1.2" fill="#C6F26B"/><rect x="12.2" y="10" width="3.6" height="12" rx="1.2" fill="#F4F7F2"/><rect x="18.4" y="6" width="3.6" height="16" rx="1.2" fill="#F4F7F2"/></svg>
       <span>{{ t('allgemein.marke') }}</span>
     </a>
-    {% block kopf_rechts %}
-    <nav aria-label="{{ t('kopf.navigation') }}">
-      <a href="{{ url('/spieltag/' ~ standard_liga) }}"{% if aktiv == 'spieltag' %} aria-current="page"{% endif %}>{{ t('kopf.spieltag') }}</a>
-      <a href="{{ url('/methodik') }}"{% if aktiv == 'methodik' %} aria-current="page"{% endif %}>{{ t('kopf.methodik') }}</a>
-      <a href="{{ url('/impressum') }}"{% if aktiv == 'impressum' %} aria-current="page"{% endif %}>{{ t('kopf.impressum') }}</a>
-    </nav>
-    {% endblock %}
+    <div class="kopf-rechts">
+      {% block kopf_rechts %}
+      <nav aria-label="{{ t('kopf.navigation') }}">
+        <a href="{{ link('spieltag', liga=standard_liga) }}"{% if aktiv == 'spieltag' %} aria-current="page"{% endif %}>{{ t('kopf.spieltag') }}</a>
+        <a href="{{ link('methodik') }}"{% if aktiv == 'methodik' %} aria-current="page"{% endif %}>{{ t('kopf.methodik') }}</a>
+        <a href="{{ link('kontakt') }}"{% if aktiv == 'kontakt' %} aria-current="page"{% endif %}>{{ t('kopf.kontakt') }}</a>
+      </nav>
+      {% endblock %}
+      <details class="sprachmenue" data-sprachmenue>
+        <summary aria-haspopup="true" aria-label="{{ t('kopf.sprache_waehlen') }}: {{ sprachname[lang] }}">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/></svg>
+          <span>{{ sprachname[lang] }}</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </summary>
+        <div class="sprachen" role="group" aria-label="{{ t('kopf.sprache_waehlen') }}">
+          {% for sp in sprachen %}<a href="{{ sprach_url(sp) }}" lang="{{ sp }}" hreflang="{{ sp }}" aria-current="{{ 'true' if sp == lang else 'false' }}">{{ sprachname[sp] }}</a>{% endfor %}
+        </div>
+      </details>
+    </div>
   </div>
 </header>
-<main>
+<main id="inhalt">
 {% block inhalt %}{% endblock %}
 </main>
 <footer class="fuss">
@@ -53,9 +90,11 @@
     <div class="spalte">
       <div>{{ t('fuss.stand', stand=stand_text) }}</div>
       <nav aria-label="{{ t('fuss.navigation') }}">
-        <a href="{{ url('/impressum') }}">{{ t('fuss.impressum') }}</a>
-        <a href="{{ url('/datenschutz') }}">{{ t('fuss.datenschutz') }}</a>
-        <a href="{{ url('/methodik') }}">{{ t('fuss.methodik') }}</a>
+        <a href="{{ link('impressum') }}">{{ t('fuss.impressum') }}</a>
+        <a href="{{ link('datenschutz') }}">{{ t('fuss.datenschutz') }}</a>
+        <a href="{{ link('methodik') }}">{{ t('fuss.methodik') }}</a>
+        <a href="{{ link('glossar') }}">{{ t('fuss.glossar') }}</a>
+        <a href="{{ link('kontakt') }}">{{ t('fuss.kontakt') }}</a>
       </nav>
     </div>
   </div>

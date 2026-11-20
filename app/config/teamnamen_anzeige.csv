@@ -1,0 +1,83 @@
+# Anzeigenamen der Vereine je Sprache (Glossar Abschnitt 11, Stand 19.11.2026; seit Version 0.21).
+# name = Name von API-Football wie in Datenbank und Spielplan (app/config/teamnamen.toml); de/en = Anzeigename.
+# Fehlt ein Verein (z. B. Aufsteiger), zeigt die Website den Namen der Datenquelle und meldet das im Reiter
+# Datenimport/API. Die Adresse (Slug) entsteht immer aus dem Namen der Datenquelle und ändert sich hier nie.
+liga;name;de;en
+Bundesliga;1. FC Heidenheim;1. FC Heidenheim;Heidenheim
+Bundesliga;1. FC Köln;1. FC Köln;FC Cologne
+Bundesliga;1899 Hoffenheim;TSG Hoffenheim;Hoffenheim
+Bundesliga;Bayer Leverkusen;Bayer Leverkusen;Bayer Leverkusen
+Bundesliga;Bayern München;FC Bayern München;Bayern Munich
+Bundesliga;Borussia Dortmund;Borussia Dortmund;Borussia Dortmund
+Bundesliga;Borussia Mönchengladbach;Borussia Mönchengladbach;Borussia Mönchengladbach
+Bundesliga;Eintracht Frankfurt;Eintracht Frankfurt;Eintracht Frankfurt
+Bundesliga;FC Augsburg;FC Augsburg;FC Augsburg
+Bundesliga;FC St. Pauli;FC St. Pauli;FC St. Pauli
+Bundesliga;FSV Mainz 05;1. FSV Mainz 05;Mainz 05
+Bundesliga;Hamburger SV;Hamburger SV;Hamburger SV
+Bundesliga;RB Leipzig;RB Leipzig;RB Leipzig
+Bundesliga;SC Freiburg;SC Freiburg;SC Freiburg
+Bundesliga;Union Berlin;1. FC Union Berlin;Union Berlin
+Bundesliga;VfB Stuttgart;VfB Stuttgart;VfB Stuttgart
+Bundesliga;VfL Wolfsburg;VfL Wolfsburg;VfL Wolfsburg
+Bundesliga;Werder Bremen;Werder Bremen;Werder Bremen
+Premier League;Arsenal;FC Arsenal;Arsenal
+Premier League;Aston Villa;Aston Villa;Aston Villa
+Premier League;Bournemouth;AFC Bournemouth;AFC Bournemouth
+Premier League;Brentford;FC Brentford;Brentford
+Premier League;Brighton;Brighton & Hove Albion;Brighton & Hove Albion
+Premier League;Burnley;FC Burnley;Burnley
+Premier League;Chelsea;FC Chelsea;Chelsea
+Premier League;Crystal Palace;Crystal Palace;Crystal Palace
+Premier League;Everton;FC Everton;Everton
+Premier League;Fulham;FC Fulham;Fulham
+Premier League;Leeds;Leeds United;Leeds United
+Premier League;Liverpool;FC Liverpool;Liverpool
+Premier League;Manchester City;Manchester City;Manchester City
+Premier League;Manchester United;Manchester United;Manchester United
+Premier League;Newcastle;Newcastle United;Newcastle United
+Premier League;Nottingham Forest;Nottingham Forest;Nottingham Forest
+Premier League;Sunderland;AFC Sunderland;Sunderland
+Premier League;Tottenham;Tottenham Hotspur;Tottenham Hotspur
+Premier League;West Ham;West Ham United;West Ham United
+Premier League;Wolves;Wolverhampton Wanderers;Wolverhampton Wanderers
+Serie A;AC Milan;AC Mailand;AC Milan
+Serie A;AS Roma;AS Rom;AS Roma
+Serie A;Atalanta;Atalanta Bergamo;Atalanta
+Serie A;Bologna;FC Bologna;Bologna
+Serie A;Cagliari;Cagliari Calcio;Cagliari
+Serie A;Como;Como;Como
+Serie A;Cremonese;US Cremonese;Cremonese
+Serie A;Fiorentina;AC Florenz;Fiorentina
+Serie A;Genoa;CFC Genua;Genoa
+Serie A;Hellas Verona;Hellas Verona;Hellas Verona
+Serie A;Inter;Inter Mailand;Inter Milan
+Serie A;Juventus;Juventus Turin;Juventus
+Serie A;Lazio;Lazio Rom;Lazio
+Serie A;Lecce;US Lecce;Lecce
+Serie A;Napoli;SSC Neapel;Napoli
+Serie A;Parma;Parma Calcio;Parma
+Serie A;Pisa;AC Pisa;Pisa
+Serie A;Sassuolo;US Sassuolo;Sassuolo
+Serie A;Torino;FC Turin;Torino
+Serie A;Udinese;Udinese Calcio;Udinese
+LaLiga;Alavés;Deportivo Alavés;Deportivo Alavés
+LaLiga;Athletic Club;Athletic Club;Athletic Club
+LaLiga;Atlético Madrid;Atlético Madrid;Atlético Madrid
+LaLiga;Barcelona;FC Barcelona;FC Barcelona
+LaLiga;Celta Vigo;Celta Vigo;Celta Vigo
+LaLiga;Elche;FC Elche;Elche CF
+LaLiga;Espanyol;Espanyol Barcelona;RCD Espanyol
+LaLiga;Getafe;FC Getafe;Getafe CF
+LaLiga;Girona;FC Girona;Girona FC
+LaLiga;Levante;UD Levante;Levante UD
+LaLiga;Mallorca;RCD Mallorca;RCD Mallorca
+LaLiga;Osasuna;CA Osasuna;CA Osasuna
+LaLiga;Oviedo;Real Oviedo;Real Oviedo
+LaLiga;Rayo Vallecano;Rayo Vallecano;Rayo Vallecano
+LaLiga;Real Betis;Real Betis;Real Betis
+LaLiga;Real Madrid;Real Madrid;Real Madrid
+LaLiga;Real Sociedad;Real Sociedad;Real Sociedad
+LaLiga;Sevilla;FC Sevilla;Sevilla FC
+LaLiga;Valencia;FC Valencia;Valencia CF
+LaLiga;Villarreal;FC Villarreal;Villarreal CF

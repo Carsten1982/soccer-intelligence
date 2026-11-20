@@ -10,7 +10,7 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 
 **In Betrieb:** Version 0.20 „Fundament“ (seit 20.11.2026) – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit **Auffälligkeit und Signalqualität stark / mittel / gering** (23 Schwellen je Liga, KPI und Richtung, KPI-Regelwerk 2.2), Top Anomalien mit Liga-Mix und ohne Nachrücken (gespielte Spiele ausgegraut), Datenqualität und Sensitivitätsanalyse; Datenbank 2018/19–2026/27 mit Referenzsaison 2018/19 (KPI-Regelwerk 1.2). **Schnappschuss je Spiel** (stündlich im Container `soccer-import`, unveränderlich, Überwachung im Reiter Datenimport/API; `07`, 4.9); gespielt ab Anpfiff + 2 Stunden; Datenstand veraltet nach 48 Stunden. Seit 15.11.2026 **Datenimport über API-Football**: Container `soccer-import` (täglich 04:00), Reiter „Datenimport/API“ mit Freigabe (halbautomatisch) und Entscheiden, Spielplan der laufenden Saison und der Vorsaison aus der API, Ergebnis-Import nach `06`, Abschnitt 10.1, Teamnamen von API-Football (Abschnitt 6.5). Anmeldemaske unter `/dashboard` (Benutzername und Passwort-Hash in `.env`, 12 Stunden angemeldet), Platzhalterseite unter `/`. Ligaseiten mit kommenden Spieltagen in Abschnitten (`07`, Abschnitt 4). Vorschau der öffentlichen Website unter `/vorschau` mit Passwortabfrage (Container `soccer-vorschau`): Startseite, Spieltag und Matchdetail je Paarung, „Werte ab …“ auf allen Seiten, Zeitreise `?datum=…` (`08_Website.md`).
 
-**In Arbeit:** Version 0.21 „Neue Website“ (Releaseplan unten).
+**Bereit zum Einspielen:** Version 0.21 „Neue Website“ – Website der Vorschau nach den Entwürfen P1 in **Deutsch und Englisch** (`/de/`, `/en/`, 301/302/404, Archiv je Spieltag, Anzeigenamen je Sprache), Inhaltsseiten **Methodik** (Zahlen aus `schwellen.toml`, Excel-Download), **Glossar**, Kontakt (Versand ab 0.22), Impressum, Datenschutz, Seite nicht gefunden; Index-Regeln, robots.txt, Sitemap, Title/Description/Open Graph/JSON-LD, Caching und 503; Tabs ohne JavaScript, Fokus, Kontraste, axe-core ohne Befund; Dashboard meldet Vereine ohne Anzeigenamen (Reiter Datenimport/API). Einzelheiten `RELEASE.md`, `08_Website.md`.
 
 **Als Nächstes – Releaseplan bis zum Livegang (Freigabe Carsten 19.11.2026):**
 
@@ -173,7 +173,7 @@ Besucher → https://soccer-intelligence.com/vorschau…   → Traefik (Passwort
 ├── .github/workflows/tests.yml automatische Tests auf GitHub (bei Push und Pull Request)
 ├── Dockerfile                  Bauplan des Containers (Python 3.12, Streamlit)
 ├── docker-compose.yml          Container-Konfiguration inkl. Traefik-Labels (Dashboard + Platzhalter + Import)
-├── .env                        Zugang zum Dashboard (Benutzername + Passwort-Hash), zur Vorschau (SOCCER_VORSCHAU_AUTH) und API-Schlüssel (API_FOOTBALL_KEY), nicht in Git
+├── .env                        Zugang zum Dashboard (Benutzername + Passwort-Hash), zur Vorschau (SOCCER_VORSCHAU_AUTH), API-Schlüssel (API_FOOTBALL_KEY) und seit 0.21 Betreiberangaben für Impressum/Kontakt (SI_IMPRESSUM_NAME, SI_IMPRESSUM_ADRESSE, SI_KONTAKT_EMAIL), nicht in Git
 ├── requirements.txt            Python-Pakete (Versionen fest); requirements-dev.txt zusätzlich pytest
 ├── app/                        Anwendung (Aufbau Abschnitt 7)
 ├── tests/                      automatische Tests; tests/referenz/ = feste Datenbank-Stände für die Testfälle
@@ -199,7 +199,7 @@ Besucher → https://soccer-intelligence.com/vorschau…   → Traefik (Passwort
   - `./import:/import:ro` und `./import/anfragen` (schreibbar, nur für Freigabe-Anfragen) seit Version 0.14.
 - **`soccer-placeholder`:** nginx 1.27, nur lesend.
 - **`soccer-import`** (seit 0.14): gleiches Image, Befehl `python -m importer.dienst`; schreibt `./data` (nur beim Tausch nach Freigabe), `./import`, `./backup`; keine Labels, kein Port; Schlüssel aus `.env` (`API_FOOTBALL_KEY`, fehlt er, meldet der Reiter „API-Schlüssel fehlt“).
-- **`soccer-vorschau`** (seit 0.17): gleiches Image, Befehl `python -m website.vorschau`; liest `./data`, `./import` und `./website-bilder` (Foto, seit 0.18) nur; kein Port nach aussen (Traefik intern auf 8080); Traefik-Labels: Pfad `/vorschau`, Passwortabfrage (`SOCCER_VORSCHAU_AUTH` aus `.env`), Anfragebremse, `noindex`.
+- **`soccer-vorschau`** (seit 0.17): gleiches Image, Befehl `python -m website.vorschau`; liest `./data`, `./import` und `./website-bilder` (Foto, seit 0.18) nur; kein Port nach aussen (Traefik intern auf 8080); Traefik-Labels: Pfad `/vorschau`, Passwortabfrage (`SOCCER_VORSCHAU_AUTH` aus `.env`), Anfragebremse, `noindex`; seit 0.21 Betreiberangaben aus `.env` (`SI_IMPRESSUM_NAME`, `SI_IMPRESSUM_ADRESSE` mit „|“ zwischen Strasse, PLZ Ort und Land, `SI_KONTAKT_EMAIL`; fehlen sie, zeigen Impressum und Datenschutz einen Platzhalter).
 
 Die Tests in `tests/test_deploy.py` prüfen diese Punkte automatisch.
 
@@ -440,6 +440,8 @@ app/
 │   ├── zuordnung_api.csv feste Zuordnung eigene Spiel-ID ↔ API-ID, 11'978 Spiele (0.15)
 │   ├── import.toml       Datenimport: Datum für den automatischen Tausch (0.14)
 │   ├── schwellen.toml    Schwellen und Signalqualität je Liga, KPI und Richtung (seit 0.19, Feld `signalqualitaet` seit 0.20)
+│   ├── teamnamen_anzeige.csv  Anzeigenamen der Vereine Deutsch/Englisch für die Website (0.21; Slug bleibt API-Name)
+│   ├── website.toml      Website: `index_ab` (Livegang, leer = nichts indexierbar), `seiten_ab_saison` (0.21)
 │   └── archiv/           frühere Fassungen, z. B. schwellen_2026-11-14.toml (leicht/stark bis 0.18)
 ├── core/                 Kernlogik ohne Oberfläche (testbar)
 │   ├── settings.py       Pfade, Pflichtblätter, Version
@@ -463,8 +465,11 @@ app/
 │   ├── simulation.py     Ergebniskontrolle und Simulation der Schwellen (Etappe I.1)
 │   └── frequency.py      Häufigkeit der Anomalien (Etappe C)
 ├── website/              öffentliche Website (0.17, 08_Website.md): daten (Laden, Zeitreise), start, spieltag, spiel
-│                         (Datensätze mit Codes, 0.18), seiten + vorlagen/ (HTML, teile.html = Bausteine), texte/de.json
-│                         (Sprachdatei), format, statisch/ (CSS, Schriften, site.js), vorschau (Webserver unter /vorschau)
+│                         (Datensätze mit Codes, 0.18), seiten + vorlagen/ (HTML, teile.html = Bausteine, inhalt/ = lange
+│                         Texte je Sprache), texte/de.json + en.json (Sprachdateien), format (DE/EN), statisch/ (CSS,
+│                         Schriften, site.js, wurzel/ = Icons), vorschau (Webserver unter /vorschau); seit 0.21 adressen
+│                         (Pfade, 301/302/404), seo (Index-Regeln, Title, JSON-LD), sitemap (robots.txt, Sitemap), namen
+│                         (Anzeigenamen je Sprache), methodik (Zahlen aus schwellen.toml, Excel-Download)
 ├── importer/             Datenimport über API-Football (0.14): client (Abfragen, Obergrenze, Rohdaten), convert (58
 │                         Spalten, Tor-Ereignisse), spielplan, teams, erzeugen (neue Fassung + Bericht), dienst (Zeitplan,
 │                         Freigabe), entscheide (Entscheide aus dem Reiter, 0.15), schnappschuss (stündlicher Lauf, 0.20);
@@ -486,7 +491,7 @@ CHANGELOG.md              Änderungsprotokoll
 - [ ] Ablauf: Knopf „Run workflow“ auf GitHub zum Einspielen (GitHub als einzige Quelle und automatische Tests erledigt 09.11.2026)
 - [ ] Spielplan Premier League, Spieltag 1 (16.–20.08. statt gespielt 21.–24.08.): prüft Carsten
 - [ ] Name des bisherigen Datenanbieters dokumentieren (`02_Datenbasis.md`, Regelwerk Abschnitt 8, Punkt 7)
-- [ ] Öffentliche Website: Impressum und Datenschutzhinweis klären
+- [ ] Öffentliche Website: Impressum und Datenschutz – Texte seit 0.21 auf der Vorschau (Betreiberangaben aus `.env`); juristische Prüfung DE/EN vor dem Livegang offen
 - [ ] Server: Meldung „1 updates could not be installed automatically“ (unattended-upgrades) prüfen. Kein Upgrade auf Ubuntu 26.04 vorerst.
 - [ ] Wo läuft der Chatbot? (nur zur Dokumentation)
 - [ ] Aufräumen in `backup/` nach einigen Wochen stabilen Betriebs

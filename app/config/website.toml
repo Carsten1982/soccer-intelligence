@@ -1,0 +1,9 @@
+# Soccer Intelligence – Website: Indexierung (SEO-Briefing 3.3, Entscheidung Carsten 19.11.2026; seit Version 0.21)
+#
+# index_ab          Livegang: Spiele mit Anstoss ab diesem Zeitpunkt (und Spieltage, die ab diesem Tag beginnen)
+#                   dürfen indexiert werden. Leer = noch nichts indexierbar (Vorschau vor dem Livegang).
+#                   Format "JJJJ-MM-TTTHH:MM" (Europe/Zurich).
+# seiten_ab_saison  Ältere Saisons haben (noch) keine Seiten (404). Der spätere Rückblick ändert nur diesen Wert.
+
+index_ab = ""
+seiten_ab_saison = "2025/2026"

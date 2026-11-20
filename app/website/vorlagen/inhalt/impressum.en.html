@@ -1,0 +1,34 @@
+{#- Impressum (en, seit 0.21 nach Entwurf „Impressum“). Betreiberangaben aus der Server-Konfiguration (.env), nie im Code. -#}
+{% macro kopf() %}<h1>Legal notice</h1>{% endmacro %}
+
+{% macro rumpf() %}
+<div class="inhaltskarte">
+
+      <section>
+        <h2>Website operator</h2>
+        <address>Soccer Intelligence<br>{{ betreiber.name or t('start.fan_name') }}{% for zeile in betreiber.adresse %}<br>{{ zeile }}{% else %}<br><span class="platzhalter">{{ t('inhalt.adresse_folgt') }}</span>{% endfor %}</address>
+      </section>
+
+      <section>
+        <h2>Contact</h2>
+        <p>{{ t('inhalt.email') }}: {% if betreiber.email %}<a href="mailto:{{ betreiber.email }}">{{ betreiber.email }}</a>{% else %}<span class="platzhalter">{{ t('inhalt.email_folgt') }}</span>{% endif %}</p>
+      </section>
+
+      <section>
+        <h2>About Soccer Intelligence</h2>
+        <p>Soccer Intelligence is a private, independent project focused on the statistical analysis of football matches. It is operated by an individual and also serves as a personal learning project in the fields of data analysis and technology.</p>
+      </section>
+
+      <section>
+        <h2>Liability for content</h2>
+        <p>The content and statistical analyses published on Soccer Intelligence are prepared with the utmost care. However, no guarantee is given as to the accuracy, completeness or currency of the information provided.</p>
+        <p>The statistics shown are for information purposes only and constitute neither a match forecast nor betting or investment advice. Use of the information is at your own risk.</p>
+      </section>
+
+      <section>
+        <h2>Liability for external links</h2>
+        <p>This website may contain links to external third-party websites. We have no influence over their content. The respective operators are solely responsible for the content of the linked pages.</p>
+      </section>
+
+    </div>
+{% endmacro %}

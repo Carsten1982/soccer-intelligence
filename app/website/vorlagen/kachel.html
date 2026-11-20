@@ -1,0 +1,58 @@
+{#- Spielkachel der Seiten Spieltag und Archiv (seit 0.21 nach Entwurf „Spieltag_P1“): Paarung, Termin, Chips
+    (Signalqualität mit Balken, Status, „Werte ab“, Gespielt/Endstand, Sonderspiel mit Spieltagsnummer), Pfeil.
+    Ganze Kachel ist ein Link, ausser bei ausschliessendem Status (F8). Einbinden „with context“. -#}
+{% from "teile.html" import pfeil_rechts, q_chip with context %}
+
+{% macro kachel(s, archiv=false) -%}
+{% set q = s.qualitaet if (archiv and s.art == 'gespielt') else s.art %}
+{% set auffaellig = q in ('stark', 'mittel', 'gering') %}
+{% set klasse = 'kachel--gespielt' if (s.art == 'gespielt' and not archiv) else ('kachel--' ~ q if auffaellig else ('kachel--status' if s.art in ('status', 'zu_wenig_daten') else '')) %}
+{% set innen %}
+  <span class="teams">
+    <span class="team">{{ team(seite.liga, s.heim) }}</span>
+    <span class="gegen">{{ t('spieltag.gegen') }}</span>
+    <span class="team">{{ team(seite.liga, s.gast) }}</span>
+    <span class="wann">{{ termin(s) }}</span>
+  </span>
+  <span class="rechts">
+    <span class="chips">
+      {%- if auffaellig and (s.art != 'gespielt' or archiv) %}{{ q_chip(q, kurz=true) }}{% endif %}
+      {%- if s.art == 'zu_wenig_daten' %}<span class="kchip kchip--status">{{ t('chip.zu_wenig_daten') }}</span>{% endif %}
+      {%- if s.art == 'werte_ab' %}<span class="kchip kchip--status">{{ t('chip.werte_ab', datum=tag_monat(s.werte_ab)) if s.werte_ab else t('chip.werte_folgen') }}</span>{% endif %}
+      {%- if s.art == 'status' %}<span class="kchip kchip--status">{{ t('chip.' ~ s.status) }}</span>{% endif %}
+      {%- if s.art == 'gespielt' %}<span class="kchip kchip--ergebnis">{% if s.ergebnis %}{{ t('chip.gespielt_ergebnis', ergebnis=ergebnis_kurz(s.ergebnis)) }}{% else %}{{ t('chip.gespielt') }}{% endif %}</span>{% endif %}
+      {%- if s.sonderspiel %}<span class="kchip kchip--status">{{ t('chip.' ~ s.sonderspiel ~ '_nr', n=s.spieltag) }}</span>{% endif %}
+    </span>
+    {% if s.link %}<span class="kpfeil{% if auffaellig and s.art != 'gespielt' %} kpfeil--dunkel{% endif %}" aria-hidden="true">{{ pfeil_rechts() }}</span>{% endif %}
+  </span>
+{% endset %}
+{% if s.link %}
+<a class="kachel {{ klasse }}" href="{{ link('spiel', liga=seite.liga, slug=s.slug) }}" aria-label="{{ t('spieltag.zum_spiel', heim=team(seite.liga, s.heim), gast=team(seite.liga, s.gast)) }}">{{ innen }}</a>
+{% else %}
+<div class="kachel {{ klasse }}">{{ innen }}</div>
+{% endif %}
+{%- endmacro %}
+
+{% macro legende() -%}
+<div class="legende">
+  <span class="leg-sig">
+    <span class="leg-titel">{{ t('spieltag.legende_titel') }}</span>
+    {% for st in stufen %}{{ q_chip(st, kurz=true, extra='leg-chip') }}{% endfor %}
+  </span>
+  <span class="leg-na"><span class="muster" aria-hidden="true"></span>{{ t('spieltag.nicht_auffaellig') }}</span>
+  <details class="lesen leg-info">
+    <summary><span>{{ t('spieltag.wie_lesen') }}</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+    <div class="hinweisbox"><ul>
+      <li><b>{{ t('spieltag.erklaerung_gruen_titel') }}</b> {{ t('spieltag.erklaerung_gruen') }}</li>
+      <li><b>{{ t('spieltag.erklaerung_stufe_titel') }}</b> {{ t('spieltag.erklaerung_stufe') }}</li>
+      <li><b>{{ t('spieltag.erklaerung_weiss_titel') }}</b> {{ t('spieltag.erklaerung_weiss') }}</li>
+    </ul></div>
+  </details>
+</div>
+{%- endmacro %}
+
+{% macro zusammenfassung(tab) -%}
+{{ t('spieltag.nummer', n=tab.spieltag) }}
+{%- if tab.von %} · {{ zeitraum(tab.von, tab.bis) }}{% endif %}
+ · {{ zaehlform(tab) }} · {{ tn('spieltag.auffaellig', tab.auffaellig) }}
+{%- endmacro %}

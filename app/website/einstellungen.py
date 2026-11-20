@@ -1,4 +1,4 @@
-"""Einstellungen der Website (Konzept docs/08_Website.md, Abschnitte 3 und 4)."""
+"""Einstellungen der Website (Konzept docs/08_Website.md, Abschnitte 3 und 4; seit 0.21 Sprachen und Adressen)."""
 
 from __future__ import annotations
 
@@ -11,13 +11,40 @@ VORLAGEN = ORDNER / "vorlagen"
 STATISCH = ORDNER / "statisch"
 TEXTE = ORDNER / "texte"
 
-SPRACHE = "de"                     # erste Fassung nur Deutsch (Übergabe 9); Struktur für en, it, es angelegt
+SPRACHE = "de"                     # Standardsprache und Rückfall der Sprachdatei
+SPRACHEN = ("de", "en")            # seit 0.21 Deutsch und Englisch, je Sprache ein Verzeichnis /de/, /en/
+DOMAIN = "https://soccer-intelligence.com"   # absolute Adressen für canonical, hreflang, Sitemap (SEO-Briefing 4)
+OG_LOCALE = {"de": "de_CH", "en": "en_GB"}
+IN_LANGUAGE = {"de": "de-CH", "en": "en-GB"}
+SPRACHNAME = {"de": "Deutsch", "en": "English"}
+
+# Pfadwörter je Seite und Sprache (Konzept 08, Abschnitt 4.1; SEO-Briefing 2). Der Liga-Teil und der Slug einer
+# Spielseite sind in beiden Sprachen gleich; nur diese Wörter werden übersetzt.
+PFADE = {
+    "spieltag": {"de": "spieltag", "en": "matchday"},
+    "spiel": {"de": "spiel", "en": "match"},
+    "methodik": {"de": "methodik", "en": "methodology"},
+    "glossar": {"de": "glossar", "en": "glossary"},
+    "kontakt": {"de": "kontakt", "en": "contact"},
+    "impressum": {"de": "impressum", "en": "legal-notice"},
+    "datenschutz": {"de": "datenschutz", "en": "privacy-policy"},
+    "cookie": {"de": "cookie-einstellungen", "en": "cookie-settings"},
+}
 PREFIX = os.environ.get("SI_VORSCHAU_PREFIX", "/vorschau")    # Adresse der Vorschau (Traefik-Regel PathPrefix)
 PORT = int(os.environ.get("SI_VORSCHAU_PORT", "8080"))
 # Foto für die Startseite (seit 0.18, Entscheidung Q6): nur auf dem Server, nicht in Git. Fehlt es, zeigt die Seite
 # einen neutralen Platzhalter. Ablage: /docker/football-dashboard/website-bilder/portrait.jpg
 BILDER = Path(os.environ.get("SI_BILDER_DIR", "/bilder"))
 FOTO = "portrait.jpg"
+
+WEBSITE_KONFIG = Path(__file__).resolve().parents[1] / "config" / "website.toml"     # index_ab, seiten_ab_saison
+TEAMNAMEN = Path(__file__).resolve().parents[1] / "config" / "teamnamen_anzeige.csv"  # Anzeigenamen DE/EN (0.21)
+
+# Betreiberangaben (Impressum, Kontakt) nur aus der Umgebung (.env auf dem Server), nie im Code (CLAUDE.md, Regeln)
+BETREIBER_NAME = os.environ.get("SI_IMPRESSUM_NAME", "").strip()
+BETREIBER_ADRESSE = [z.strip() for z in os.environ.get("SI_IMPRESSUM_ADRESSE", "").split("|") if z.strip()]
+KONTAKT_EMAIL = os.environ.get("SI_KONTAKT_EMAIL", "").strip()
+VORSCHAU = bool(PREFIX.strip("/"))          # Vorschau unter /vorschau: noindex, kein Browser-Cache, Zeitreise
 
 VORMITTAG = (8, 0)                 # Zeitreise ohne Uhrzeit: 08:00, also nach dem Import um 04:00
 IMPORT_STUNDE = 4                  # täglicher Importlauf (importer/einstellungen.py, RUN_HOUR)

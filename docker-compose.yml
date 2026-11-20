@@ -76,6 +76,11 @@ services:
     environment:
       - TZ=Europe/Zurich
       - SI_VORSCHAU_PORT=8080
+      # Betreiberangaben für Impressum und Kontakt (seit 0.21): NUR in .env auf dem Server, nie in Git.
+      # Adresse mit „|“ getrennt (Strasse|PLZ Ort|Land). Fehlen sie, zeigt die Seite einen Platzhalter.
+      - SI_IMPRESSUM_NAME=${SI_IMPRESSUM_NAME:-}
+      - SI_IMPRESSUM_ADRESSE=${SI_IMPRESSUM_ADRESSE:-}
+      - SI_KONTAKT_EMAIL=${SI_KONTAKT_EMAIL:-}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.soccervorschau.rule=Host(`soccer-intelligence.com`) && PathPrefix(`/vorschau`)"

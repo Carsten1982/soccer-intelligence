@@ -1,10 +1,19 @@
 {% extends "basis.html" %}
-{% from "teile.html" import pfeil_weiter %}
-{#- Hinweis-Seiten: „folgt später“ (Annahme A8), „nicht gefunden“, Daten werden geprüft. -#}
+{% from "teile.html" import deko_feld, pfeil_zurueck with context %}
+{#- Hinweisseite: „Die Daten werden gerade geprüft.“ (Dateifehler, Status 503) bzw. „folgt“ (Seite eines späteren
+    Releases, z. B. Cookie-Einstellungen bis 0.22). -#}
 {% block inhalt %}
-<div class="eng leer">
-  <h1>{{ titel }}</h1>
-  <p>{{ text }}</p>
-  <a class="knopf-dunkel" href="{{ url('/spieltag/' ~ standard_liga) }}">{{ zurueck }}{{ pfeil_weiter() }}</a>
+<div class="eng">
+  <div class="hero hero-spieltag">
+    {{ deko_feld() }}
+    <div class="innen">
+      <a class="zurueck-hell" href="{{ link('start') }}">{{ pfeil_zurueck() }}{{ t('kopf.startseite') }}</a>
+      <h1>{{ titel }}</h1>
+    </div>
+  </div>
 </div>
+<div class="eng abschnitt-inhalt">
+  <p class="text-gross">{{ text }}</p>
+</div>
+<div class="abstand-unten"></div>
 {% endblock %}

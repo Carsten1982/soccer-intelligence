@@ -1,0 +1,21 @@
+{% extends "basis.html" %}
+{% from "teile.html" import deko_feld, pfeil_zurueck with context %}
+{#- Rahmen der Inhaltsseiten (seit 0.21 nach den Entwürfen Impressum, Datenschutz, Kontakt, Methodik_10, Glossar ohne
+    eigenen Entwurf): Kopfbereich mit „Startseite“ und H1, darunter der Text. Der Text steht je Sprache in
+    vorlagen/inhalt/<seite>.<sprache>.html mit zwei Bausteinen: kopf() (H1, Einleitung) und rumpf() (Inhalt). -#}
+{% import teil as text with context %}
+{% block inhalt %}
+<div class="eng">
+  <div class="hero hero-spieltag hero-inhalt">
+    {{ deko_feld() }}
+    <div class="innen">
+      <a class="zurueck-hell" href="{{ link('start') }}">{{ pfeil_zurueck() }}{{ t('kopf.startseite') }}</a>
+      {{ text.kopf() }}
+    </div>
+  </div>
+</div>
+<div class="eng abschnitt-inhalt inhalt-{{ art }}">
+  {{ text.rumpf() }}
+</div>
+<div class="abstand-unten"></div>
+{% endblock %}

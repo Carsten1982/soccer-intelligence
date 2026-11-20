@@ -1,0 +1,34 @@
+{% extends "basis.html" %}
+{% from "teile.html" import deko_feld, pfeil_zurueck, pfeil_weiter, warnbox with context %}
+{% from "kachel.html" import kachel, legende with context %}
+{#- Archivseite je Spieltag (seit 0.21; Template-Briefing 6, ohne eigenen Entwurf: aus der Spieltag-Seite abgeleitet).
+    Kopf „<Liga> · Spieltag <nr> · Saison <saison>“, Pfeile zum vorherigen und nächsten Spieltag, keine Tabs, Kacheln
+    mit Endstand und den Werten vor dem Spiel. Nicht in der Navigation, verlinkt von den Spielseiten. -#}
+
+{% block inhalt %}
+<div class="eng">
+  <div class="hero hero-spieltag">
+    {{ deko_feld() }}
+    <div class="innen">
+      <a class="zurueck-hell" href="{{ link('spieltag', liga=seite.liga) }}">{{ pfeil_zurueck() }}{{ t('archiv.zum_aktuellen') }}</a>
+      <h1>{{ t('archiv.kopf', liga=t('liga.' ~ seite.liga_key), n=seite.spieltag, saison=saison_text) }}</h1>
+      <p>{{ t('archiv.intro') }}</p>
+      <nav class="archiv-pfeile" aria-label="{{ t('archiv.blaettern') }}">
+        {% if seite.vorher %}<a href="{{ link('archiv', liga=seite.liga, saison=seite.saison, nr=seite.vorher) }}">{{ pfeil_zurueck() }}{{ t('archiv.spieltag', n=seite.vorher) }}</a>{% else %}<span></span>{% endif %}
+        {% if seite.nachher %}<a href="{{ link('spieltag', liga=seite.liga) if seite.nachher_aktuell else link('archiv', liga=seite.liga, saison=seite.saison, nr=seite.nachher) }}">{{ t('archiv.spieltag', n=seite.nachher) }}{{ pfeil_weiter() }}</a>{% endif %}
+      </nav>
+    </div>
+  </div>
+</div>
+
+<div class="eng abschnitt-liga">
+  {% if seite.veraltet %}{{ warnbox(t('veraltet.titel', datum=veraltet_text), t('veraltet.text')) }}{% endif %}
+  <p class="zusammenfassung">{{ t('spieltag.nummer', n=seite.spieltag) }}{% if seite.beginn %} · {{ datum_voll(seite.beginn) }}{% endif %} · {{ zaehlform(seite) }} · {{ tn('spieltag.auffaellig', seite.auffaellig) }}</p>
+  {{ legende() }}
+  <ul class="partien">
+    {% for s in seite.spiele %}<li>{{ kachel(s, archiv=true) }}</li>{% endfor %}
+  </ul>
+  <p class="zeitzone-hinweis">{{ t('archiv.hinweis_werte') }} {{ t('allgemein.zeitzone') }}</p>
+</div>
+<div class="abstand-unten"></div>
+{% endblock %}
