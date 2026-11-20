@@ -1,4 +1,4 @@
-"""Version 0.19: Schwellen je Liga, KPI und Richtung mit Prognosewert (Spezifikation und Freigabe Carsten 18.11.2026).
+"""Version 0.19: Schwellen je Liga, KPI und Richtung mit Signalqualität (seit 0.20; bis dahin Prognosewert) (Spezifikation und Freigabe Carsten 18.11.2026).
 
 1. Die ausgelieferte schwellen.toml enthält genau die freigegebenen 23 Schwellen (unabhängig mit tomllib gelesen).
 2. Einstufung an den Grenzen (P1–P3): genau auf der Schwelle nicht auffällig, ohne Schwelle nie, vorläufig nie.
@@ -25,7 +25,7 @@ from core.thresholds import load_thresholds
 
 D = Decimal
 
-# Freigegeben am 18.11.2026 (Spezifikation, Abschnitt 3.1): (Liga, KPI, Richtung) -> (Schwelle, Prognosewert)
+# Freigegeben am 18.11.2026 (Spezifikation, Abschnitt 3.1): (Liga, KPI, Richtung) -> (Schwelle, Signalqualität)
 APPROVED = {
     ("Bundesliga", "kpi04", "mehr"): (10, LOW), ("Bundesliga", "kpi06", "weniger"): (10, MEDIUM),
     ("Bundesliga", "kpi08", "weniger"): (35, HIGH), ("Bundesliga", "kpi09", "mehr"): (15, HIGH),
@@ -47,10 +47,10 @@ APPROVED = {
 def test_shipped_file_contains_the_approved_thresholds():
     raw = tomllib.loads(CONFIG.read_text(encoding="utf-8"))
     assert raw["grundlage"]["saisons"] == "2019/2020-2025/2026" and raw["grundlage"]["freigabe"] == "2026-11-18"
-    found = {(e["liga"], e["kpi"], e["richtung"]): (e["schwelle"], e["prognosewert"]) for e in raw["schwelle"]}
+    found = {(e["liga"], e["kpi"], e["richtung"]): (e["schwelle"], e["signalqualitaet"]) for e in raw["schwelle"]}
     assert found == APPROVED and len(found) == 23
     cfg = load_thresholds(CONFIG, LEAGUES)
-    assert {(lg, k, d): (int(s.schwelle), s.prognosewert) for lg, k, d, s in cfg.entries()} == APPROVED
+    assert {(lg, k, d): (int(s.schwelle), s.signalqualitaet) for lg, k, d, s in cfg.entries()} == APPROVED
     bl = cfg.get("Bundesliga", "kpi09").negativ                 # P21: Herleitung in der Datei
     assert (bl.spiele, bl.trefferquote, bl.vergleichsgruppe, bl.mehrwert, bl.spanne_links, bl.spanne_rechts,
             bl.saisons_positiv) == (227, D("63.44"), D("51.57"), D("11.87"), D("5.06"), D("18.25"), "7/7")
@@ -86,8 +86,8 @@ def test_p3_provisional_values_never_flagged():
 
 def _counter(cfg, league: str, kpi: str):
     t = cfg.get(league, kpi)
-    pos = (t.positiv.schwelle, t.positiv.prognosewert) if t.positiv else None
-    neg = (t.negativ.schwelle, t.negativ.prognosewert) if t.negativ else None
+    pos = (t.positiv.schwelle, t.positiv.signalqualitaet) if t.positiv else None
+    neg = (t.negativ.schwelle, t.negativ.signalqualitaet) if t.negativ else None
     return pos, neg
 
 
@@ -122,7 +122,7 @@ def test_dashboard_levels_match_counter_calculation(league):
 @pytest.mark.langsam
 def test_p21_p22_proposal_reproduces_shipped_file():
     """Mit der echten Datenbank (nur auf dem Server bzw. mit SI_DATA_DIR): Schwellenvorschlag mit den Saisons
-    2019/20–2025/26 = ausgelieferte schwellen.toml (Schwelle und Prognosewert aller 23 Kombinationen)."""
+    2019/20–2025/26 = ausgelieferte schwellen.toml (Schwelle und Signalqualität aller 23 Kombinationen)."""
     if not REAL_DATABASE.exists():
         pytest.skip("echte Datenbank nicht vorhanden")
     from core.sensitivity import proposal
@@ -138,7 +138,7 @@ def test_p21_p22_proposal_reproduces_shipped_file():
         days.append(closed_matchdays(p, lg))
     c, d = pd.concat(cases), pd.concat(days)
     df = proposal(c[c["season"].isin(seasons)], d[d["season"].isin(seasons)], LEAGUES, list(KPI_KEYS))
-    got = {(r.liga, r.kpi, r.richtung): (int(r.schwelle), r.prognosewert) for r in df.itertuples()}
+    got = {(r.liga, r.kpi, r.richtung): (int(r.schwelle), r.signalqualitaet) for r in df.itertuples()}
     assert got == APPROVED
     bl = df[(df.liga == "Bundesliga") & (df.kpi == "kpi09") & (df.richtung == "weniger")].iloc[0]
     assert (bl.spiele, bl.eingetroffen, bl.saisons_positiv, bl.saisons) == (227, 144, 7, 7)

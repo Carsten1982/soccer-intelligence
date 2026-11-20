@@ -45,6 +45,11 @@ def datum_kurz(d: date) -> str:
     return f"{d:%d.%m.}"
 
 
+def tag_monat(d: date) -> str:
+    """„5.12.“ (Kachel „Werte ab 5.12.“, ohne führende Null; seit 0.20)"""
+    return f"{d.day}.{d.month}."
+
+
 def zeitraum(von: date, bis: date) -> str:
     """„20.11. – 22.11.2026“; ein Tag: „20.11.2026“; über den Jahreswechsel: „28.12.2026 – 03.01.2027“."""
     if von == bis:

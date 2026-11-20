@@ -1,6 +1,6 @@
-"""Schwellen und Prognosewerte (KPI-Regelwerk 2.2, seit Version 0.19), eingelesen aus app/config/schwellen.toml.
+"""Schwellen und Signalqualität (KPI-Regelwerk 2.2, seit Version 0.19; Begriff seit 0.20), eingelesen aus app/config/schwellen.toml.
 
-Je Liga, KPI und Richtung (mehr / weniger) gibt es höchstens eine Schwelle mit ihrem Prognosewert. Kombinationen ohne
+Je Liga, KPI und Richtung (mehr / weniger) gibt es höchstens eine Schwelle mit ihrer Signalqualität. Kombinationen ohne
 Eintrag haben keine Schwelle: Die Kennzahl ist dort nie auffällig. Aufbau der Datei:
 
     [grundlage]
@@ -13,7 +13,7 @@ Eintrag haben keine Schwelle: Die Kennzahl ist dort nie auffällig. Aufbau der D
     kpi = "kpi09"
     richtung = "weniger"              # mehr | weniger
     schwelle = 10                     # auffällig, wenn die Abweichung unter −10,00 % liegt
-    prognosewert = "hoch"             # hoch | mittel | gering
+    signalqualitaet = "stark"         # stark | mittel | gering (bis 0.19: prognosewert = "hoch")
     spiele = 227                      # Herleitung (Anzeige im Dashboard), optional
     trefferquote = 63.44
     vergleichsgruppe = 51.57
@@ -78,15 +78,18 @@ def _number(value, where: str) -> Decimal:
 
 
 def _signal(entry: dict, where: str) -> Signal:
-    for key in ("schwelle", "prognosewert"):
+    if "prognosewert" in entry:
+        raise ConfigError(f"schwellen.toml, {where}: Feld 'prognosewert' heisst seit Version 0.20 'signalqualitaet' "
+                          "(Werte stark, mittel, gering)")
+    for key in ("schwelle", "signalqualitaet"):
         if key not in entry:
             raise ConfigError(f"schwellen.toml, {where}: Feld '{key}' fehlt")
     threshold = _number(entry["schwelle"], where)
     if threshold <= 0:
         raise ConfigError(f"schwellen.toml, {where}: die Schwelle muss grösser als 0 sein (Betrag in %)")
-    level = str(entry["prognosewert"]).strip().lower()
+    level = str(entry["signalqualitaet"]).strip().lower()
     if level not in LEVELS:
-        raise ConfigError(f"schwellen.toml, {where}: Prognosewert '{level}' unbekannt (erlaubt: {', '.join(LEVELS)})")
+        raise ConfigError(f"schwellen.toml, {where}: Signalqualität '{level}' unbekannt (erlaubt: {', '.join(LEVELS)})")
     stats = {k: (int(_number(entry[k], where)) if k == "spiele" else _number(entry[k], where))
              for k in STATS if k in entry}
     seasons = str(entry["saisons_positiv"]) if "saisons_positiv" in entry else None
@@ -133,7 +136,7 @@ def _pct(value: Decimal | None, signed: bool = False) -> str:
 
 
 def describe(config: ThresholdConfig, league_order: list[str] | None = None) -> list[dict]:
-    """Zeilen für die Anzeige im Bereich Datenqualität: je Liga, KPI und Richtung die gültige Schwelle mit Prognosewert
+    """Zeilen für die Anzeige im Bereich Datenqualität: je Liga, KPI und Richtung die gültige Schwelle mit Signalqualität
     und Herleitung (Trefferquote, Vergleichsgruppe, Mehrwert)."""
     from .top import TOP_KPIS
     order = {name: i for i, name in enumerate(league_order or [])}
@@ -143,7 +146,7 @@ def describe(config: ThresholdConfig, league_order: list[str] | None = None) -> 
                                                                                 kpi_order.get(e[1], 99), e[2])):
         rows.append({"Liga": league, "KPI": TOP_KPIS.get(kpi, kpi), "Richtung": direction,
                      "Schwelle": f"{'+' if direction == 'mehr' else '−'}{_pct(s.schwelle)} %",
-                     "Prognosewert": s.prognosewert,
+                     "Signalqualität": s.signalqualitaet,
                      "Spiele": s.spiele if s.spiele is not None else "–",
                      "Trefferquote": f"{_pct(s.trefferquote)} %" if s.trefferquote is not None else "–",
                      "Vergleichsgruppe": f"{_pct(s.vergleichsgruppe)} %" if s.vergleichsgruppe is not None else "–",

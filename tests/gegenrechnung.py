@@ -126,8 +126,8 @@ def grade_split(dev: Decimal | None, lp: Decimal, sp: Decimal, ln: Decimal, sn: 
 
 
 def grade_signal(dev: Decimal | None, pos: tuple[Decimal, str] | None, neg: tuple[Decimal, str] | None) -> str | None:
-    """Einstufung seit Version 0.19: je Richtung höchstens eine Schwelle (Betrag) mit Prognosewert. Auffällig, wenn der
-    Betrag der gerundeten Abweichung grösser als die Schwelle ist; dann der Prognosewert, sonst „keine“."""
+    """Einstufung seit Version 0.19: je Richtung höchstens eine Schwelle (Betrag) mit Signalqualität (bis 0.19 Prognosewert). Auffällig, wenn der
+    Betrag der gerundeten Abweichung grösser als die Schwelle ist; dann die Signalqualität, sonst „keine“."""
     if dev is None:
         return None
     side = pos if dev > 0 else neg if dev < 0 else None
@@ -372,7 +372,7 @@ def sens_summary(events: list[tuple[str, tuple, dict]], closed: set[tuple[str, t
     return out
 
 
-# --- Empfehlung, Stabilität und Prognosewert (seit 0.19.1, Regelwerk 11.3) ------------------------------------------------
+# --- Empfehlung, Stabilität und Signalqualität (seit 0.19.1, Regelwerk 11.3) ------------------------------------------------
 
 def _two(x: float) -> Decimal:
     """Wie angezeigt: zwei Nachkommastellen, kaufmännisch."""
@@ -396,13 +396,13 @@ def rate_rule(n: int, gain: float | None, low: float | None, high: float | None)
 
 
 def level_rule(recommendation: str, rate: float | None, gain: float | None, positive: int, seasons: int) -> str | None:
-    """Prognosewert nach Regelwerk 2.2/11.3: nur bei mehreren Saisons, „Funktioniert“ und Mehrwert in mindestens zwei
-    Dritteln der Saisons positiv (aufgerundet); hoch ab 60 % und +8 Pp., mittel ab 55 %, gering ab 50 %."""
+    """Signalqualität nach Regelwerk 2.2/11.3: nur bei mehreren Saisons, „Funktioniert“ und Mehrwert in mindestens zwei
+    Dritteln der Saisons positiv (aufgerundet); stark ab 60 % und +8 Pp., mittel ab 55 %, gering ab 50 %."""
     if seasons < 2 or recommendation != "Funktioniert" or 3 * positive < 2 * seasons:
         return None
     q, g = _two(rate), _two(gain)
     if q >= 60 and g >= 8:
-        return "hoch"
+        return "stark"
     if q >= 55:
         return "mittel"
     if q >= 50:
@@ -411,7 +411,7 @@ def level_rule(recommendation: str, rate: float | None, gain: float | None, posi
 
 
 def sens_rating(events: list[tuple[str, tuple, dict]], closed: set[tuple[str, tuple]], lim: dict) -> dict:
-    """Je KPI und Richtung (pos/neg): (Empfehlung, Saisons mit positivem Mehrwert, Saisons, Prognosewert).
+    """Je KPI und Richtung (pos/neg): (Empfehlung, Saisons mit positivem Mehrwert, Saisons, Signalqualität).
     Gleiche Eingaben wie sens_summary (Schwelle der Richtung = „leicht“)."""
     out = {}
     for key in ("kpi02", "kpi03", "kpi04", "kpi05", "kpi06", "kpi07", "kpi08", "kpi09"):

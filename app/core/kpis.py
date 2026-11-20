@@ -11,7 +11,7 @@ Grundsätze (Regelwerk, Abschnitte 1, 2 und 9):
   Gerundet wird erst für die Anzeige: **zwei Nachkommastellen** (seit Etappe H, 08.11.2026), kaufmännisch
   (ab 5 weg von null), mit Dezimalarithmetik. So entstehen keine Gleitkomma-Fehler wie round(2.675, 2) = 2.67.
 - Die Einstufung verwendet die auf zwei Stellen gerundete Abweichung und die Schwellen aus app/config/schwellen.toml
-  (seit 0.19 je Liga, KPI und Richtung mit Prognosewert hoch/mittel/gering; ohne Schwelle nie auffällig, Regelwerk 2.2).
+  (seit 0.19 je Liga, KPI und Richtung mit Signalqualität stark/mittel/gering (seit 0.20; 0.19: Prognosewert hoch/mittel/gering); ohne Schwelle nie auffällig, Regelwerk 2.2).
 
 Tempo (seit H.1): Die Spiele eines Teams und die Referenzspiele werden je Begegnung nur einmal bestimmt und nur
 einmal in eine Liste von Zeilen umgewandelt (rows_of). Alle Werte werden dann aus diesen Listen gelesen.
@@ -54,7 +54,7 @@ PLACEHOLDER = "–"        # U+2013
 DECIMALS = 2             # Anzeige-Rundung (Regelwerk 2.3, seit 08.11.2026)
 
 NONE = "keine"                                       # nicht auffällig
-HIGH, MEDIUM, LOW = "hoch", "mittel", "gering"      # Prognosewert einer Auffälligkeit (seit 0.19)
+HIGH, MEDIUM, LOW = "stark", "mittel", "gering"     # Signalqualität einer Auffälligkeit (seit 0.20; 0.19: hoch)
 LEVELS = (HIGH, MEDIUM, LOW)
 RANK = {HIGH: 3, MEDIUM: 2, LOW: 1, NONE: 0}
 POSITIVE, NEGATIVE = "positiv", "negativ"
@@ -105,16 +105,16 @@ def de_abs(value: Decimal | None) -> str:
     return PLACEHOLDER if value is None else f"{abs(value):.{DECIMALS}f}".replace(".", ",")
 
 
-# --- Einstufung (Regelwerk 2.2, seit Version 0.19: Auffälligkeit und Prognosewert) --------------------------------
+# --- Einstufung (Regelwerk 2.2, seit Version 0.19: Auffälligkeit; seit 0.20 Signalqualität) --------------------------------
 
 @dataclass(frozen=True)
 class Signal:
-    """Gültige Schwelle einer Kombination Liga × KPI × Richtung mit ihrem Prognosewert (app/config/schwellen.toml).
+    """Gültige Schwelle einer Kombination Liga × KPI × Richtung mit ihrer Signalqualität (app/config/schwellen.toml).
 
     Auffällig ist eine Kennzahl, wenn der Betrag der gerundeten Abweichung grösser als die Schwelle ist. Die übrigen
     Felder sind die Herleitung aus der Sensitivitätsanalyse (Anzeige im Dashboard, Regelwerk 11)."""
     schwelle: Decimal
-    prognosewert: str                       # HIGH, MEDIUM oder LOW
+    signalqualitaet: str                    # HIGH, MEDIUM oder LOW (stark / mittel / gering)
     spiele: int | None = None
     trefferquote: Decimal | None = None
     vergleichsgruppe: Decimal | None = None
@@ -138,14 +138,14 @@ def classify(deviation: Decimal | None, thresholds: Thresholds = NO_THRESHOLDS
              ) -> tuple[str | None, str | None]:
     """(Einstufung, Richtung) anhand der gerundeten Abweichung.
 
-    Einstufung: NONE (nicht auffällig) oder der Prognosewert HIGH/MEDIUM/LOW der Schwelle der Richtung; genau auf der
+    Einstufung: NONE (nicht auffällig) oder die Signalqualität HIGH/MEDIUM/LOW der Schwelle der Richtung; genau auf der
     Schwelle ist nicht auffällig. None, wenn keine Abweichung berechenbar ist."""
     if deviation is None:
         return None, None
     direction = POSITIVE if deviation > 0 else NEGATIVE if deviation < 0 else None
     signal = thresholds.positiv if deviation > 0 else thresholds.negativ if deviation < 0 else None
     if signal is not None and abs(deviation) > signal.schwelle:
-        return signal.prognosewert, direction
+        return signal.signalqualitaet, direction
     return NONE, direction
 
 
@@ -351,7 +351,7 @@ class KpiResult:
 
     @property
     def anomalie(self) -> str | None:
-        """NONE (nicht auffällig), HIGH/MEDIUM/LOW (auffällig mit Prognosewert) oder None (nicht berechenbar)."""
+        """NONE (nicht auffällig), HIGH/MEDIUM/LOW (auffällig mit Signalqualität) oder None (nicht berechenbar)."""
         return classify(self.abweichung_rund, self.schwellen)[0]
 
     @property

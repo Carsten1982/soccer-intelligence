@@ -160,6 +160,11 @@ details.lesen[open] > summary svg { transform: rotate(180deg); }
 .ranking { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
 .rang-zeile { display: flex; align-items: center; gap: 16px; background: #fff; border: 1px solid var(--rand); border-radius: 20px; padding: 18px 20px; color: var(--text); }
 a.rang-zeile:hover { text-decoration: none; border-color: var(--gruen); }
+/* Gespielt (seit 0.20): weniger Farbe, nicht weniger Kontrast (Text #5B6B61 auf #F4F7F2, über 4,5:1) */
+.rang-zeile--gespielt { background: #F4F7F2; }
+.rang-zeile--gespielt .paar, .rang-zeile--gespielt .wann, .rang-zeile--gespielt .liga { color: #5B6B61; }
+.rang-zeile--gespielt .rang { background: #5B6B61; color: #fff; }
+.rang-zeile--gespielt .rechts { filter: grayscale(1); }
 .rang-zeile .inhalt { flex: 1 1 auto; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 14px 24px; }
 .rang-zeile .links { display: flex; align-items: center; gap: 16px; flex: 1 1 240px; min-width: 0; }
 .rang-zeile .rang { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: var(--gruen); color: var(--akzent); font-family: var(--titel); font-weight: 700; font-size: 20px; }

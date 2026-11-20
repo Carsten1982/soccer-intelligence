@@ -75,9 +75,9 @@ def termin(s: dict) -> str:
     return f"{F.tag(d)} · {s['anstoss']}" if s.get("anstoss") else F.tag(d)
 
 
-# Gestaltung bis zum Designentwurf der Website (seit 0.19): Prognosewert hoch wie bisher „stark“ (dunkel),
-# mittel und gering wie bisher „leicht“ (hell). Die Wörter zeigen den Prognosewert.
-STIL = {"hoch": "stark", "mittel": "leicht", "gering": "leicht"}
+# Gestaltung bis zum Designentwurf der Website (seit 0.19): Signalqualität stark dunkel (CSS-Klasse „stark“),
+# mittel und gering hell (CSS-Klasse „leicht“, bis 0.18 „leicht“). Die Wörter zeigen die Signalqualität.
+STIL = {"stark": "stark", "mittel": "leicht", "gering": "leicht"}
 
 
 def stil(stufe: str | None) -> str:
@@ -95,12 +95,23 @@ def balken_daten(k: dict) -> dict:
     stufe = k.get("stufe")
     if stufe in STIL:
         klasse = f"f-{STIL[stufe]}-{richtung}"
-    elif stufe == "nicht_gewertet":
+    elif stufe == "zu_wenig_daten":
         klasse = "f-schraffiert"
     else:
         klasse = "f-normal"
     return {"breite": int(round(min(50.0, betrag / 2))), "richtung": richtung, "klasse": klasse,
             "kappe": betrag > 100}
+
+
+def zaehlform(tab: dict) -> str:
+    """„9 Spiele“, „9 Spiele + 1 Nachholspiel“, „8 Spiele + 2 Nachholspiele“, nur Sonderspiele „1 Nachholspiel“ bzw.
+    „1 Spiel vorgezogen“ (Template-Briefing 3.3, seit 0.20)."""
+    teile = [tn("spieltag.partien", tab["partien"])] if tab["partien"] else []
+    for art in ("nachholspiel", "vorgezogen"):
+        n = tab["sonderspiele"][art]
+        if n:
+            teile.append(tn(f"spieltag.{art}", n) if teile else tn(f"spieltag.nur_sonderspiele.{art}", n))
+    return " + ".join(teile) or tn("spieltag.partien", 0)
 
 
 def zahl(wert, k: dict | None = None) -> str:
@@ -118,10 +129,11 @@ def _env() -> Environment:
                       undefined=StrictUndefined, trim_blocks=True, lstrip_blocks=True)
     env.globals.update(
         t=t, tn=tn, termin=termin, standard_liga=W.STANDARD_LIGA, prozent=F.prozent, zahl=zahl,
-        balken_daten=balken_daten, aufteilung=aufteilung, ligen=W.LIGEN, stil=stil,
+        balken_daten=balken_daten, aufteilung=aufteilung, ligen=W.LIGEN, stil=stil, zaehlform=zaehlform,
         ergebnis=lambda e: F.ergebnis(*e),
         zeitraum=lambda von, bis: F.zeitraum(date.fromisoformat(von), date.fromisoformat(bis)),
         datum_kurz=lambda iso: F.datum_kurz(date.fromisoformat(iso)) if iso else "",
+        tag_monat=lambda iso: F.tag_monat(date.fromisoformat(iso)) if iso else "",
     )
     return env
 
@@ -163,21 +175,32 @@ def spiel_kern(seite: dict) -> dict:
     if seite["bewertung"] == "status":
         return {"label": t("spiel.status_titel"), "wert": "", "richtung": "", "titel": t(f"chip.{seite['status']}"),
                 "text": t("spiel.status_text")}
-    if seite["bewertung"] == "nicht_gewertet":
-        return {"label": t("spiel.bewertung"), "wert": "", "richtung": "", "titel": t("spiel.nicht_gewertet"),
-                "text": t("spiel.nicht_gewertet_leer_text") if seite["ohne_werte"] else t("spiel.nicht_gewertet_text")}
+    if seite["bewertung"] == "werte_ab":                      # noch ohne Werte (seit 0.20, Template-Briefing 3.6)
+        if seite.get("werte_ab"):
+            text = t("spiel.werte_ab", datum=F.tag(date.fromisoformat(seite["werte_ab"])))
+        elif seite.get("ergebnis_vom"):
+            text = t("spiel.werte_folgen", datum=F.datum_kurz(date.fromisoformat(seite["ergebnis_vom"])))
+        else:
+            text = t("spiel.werte_wartet")
+        return {"label": t("spiel.bewertung"), "wert": "", "richtung": "", "titel": t("spiel.werte_ab_titel"),
+                "text": text}
+    if seite["bewertung"] == "zu_wenig_daten":
+        return {"label": t("spiel.bewertung"), "wert": "", "richtung": "", "titel": t("spiel.zu_wenig_daten"),
+                "text": t("spiel.zu_wenig_daten_leer_text") if seite["ohne_werte"] else t("spiel.zu_wenig_daten_text")}
     if seite["auffaellig"]:
         top = seite["auffaellig"][0]
         return {"label": t("spiel.auffaelligstes"), "wert": F.prozent(top["abweichung"]), "richtung": top["richtung"],
                 "titel": t(f"kennzahl.{top['kpi']}.name"), "text": t(f"kennzahl.{top['kpi']}.{top['richtung']}")}
     g = seite["groesste"]
+    schluessel = "spiel.keine_text_eins" if seite["anzahl_gewertet"] == 1 else "spiel.keine_text"   # 0.20: n dynamisch
     return {"label": t("spiel.gesamtbild"), "wert": "", "richtung": "", "titel": t("spiel.keine_titel"),
-            "text": t("spiel.keine_text", n=seite["anzahl_gewertet"], name=t(f"kennzahl.{g['kpi']}.name"),
+            "text": t(schluessel, n=seite["anzahl_gewertet"], name=t(f"kennzahl.{g['kpi']}.name"),
                       wert=F.prozent(g["abweichung"])) if g else ""}
 
 
 def spiel_notizen(seite: dict) -> list[dict]:
-    """Hinweisboxen unter dem Scoreboard: Nachholspiel / vorgezogen, gespielt (Q5)."""
+    """Hinweisboxen unter dem Scoreboard: Nachholspiel / vorgezogen, gespielt (Q5; seit 0.20 mit Schnappschuss:
+    nachträglich berechnet, Ergebnis korrigiert)."""
     out = []
     if seite["sonderspiel"] == "nachholspiel":
         out.append({"titel": t("spiel.hinweis_nachholspiel_titel"),
@@ -186,8 +209,11 @@ def spiel_notizen(seite: dict) -> list[dict]:
         out.append({"titel": t("spiel.hinweis_vorgezogen_titel"),
                     "text": t("spiel.hinweis_vorgezogen", spieltag=t("spieltag.nummer", n=seite["spieltag"]),
                               datum=_zeitpunkt(seite))})
-    if seite["zustand"] == "gespielt":
-        out.append({"titel": t("spiel.hinweis_gespielt_titel"), "text": t("spiel.hinweis_gespielt")})
+    if seite["zustand"] == "gespielt" and seite["bewertung"] not in ("status", "werte_ab"):
+        out.append({"titel": t("spiel.hinweis_gespielt_titel"),
+                    "text": t("spiel.hinweis_nachtraeglich") if seite.get("nachtraeglich") else t("spiel.hinweis_gespielt")})
+    if seite.get("korrigiert"):
+        out.append({"titel": t("spiel.hinweis_korrigiert_titel"), "text": t("spiel.hinweis_korrigiert")})
     return out
 
 
@@ -195,7 +221,7 @@ def spiel_html(seite: dict, k: Kontext) -> str:
     liga = t(f"liga.{seite['liga_key']}")
     if seite["zustand"] == "gespielt":
         wann = t("spiel.endstand", ergebnis=F.ergebnis(*seite["ergebnis"])) if seite["ergebnis"] else \
-            t("spiel.ergebnis_folgt")
+            t("spiel.gespielt")
     else:
         wann = termin(seite)
     return ENV.get_template("spiel.html").render(

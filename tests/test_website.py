@@ -7,6 +7,7 @@ Ohne Netz, ohne Streamlit. Feste kleine Spielpläne (Hilfen aus test_anzeige.py)
 from __future__ import annotations
 
 import json
+from pathlib import Path
 import re
 from datetime import date, datetime, timedelta
 from types import SimpleNamespace
@@ -16,6 +17,8 @@ from conftest import REAL_DATABASE, REAL_FIXTURES
 from test_anzeige import game, plan, real_plan, rnd
 
 from core import anzeige as A
+from core import schnappschuss as SN
+from core.config import load_leagues
 from core.kpis import HIGH, MEDIUM, NONE
 from website import einstellungen as W
 from website import format as F
@@ -53,10 +56,12 @@ class FakeDaten:
     """Daten-Ersatz für spieltag_daten, spiel_daten und start_daten: ein Spielplan je Liga, KPIs je Spiel (nach
     Heimteam), Ergebnisse."""
 
-    def __init__(self, plaene: dict, kpis: dict | None = None, ergebnisse: dict | None = None, gesperrt=False):
+    def __init__(self, plaene: dict, kpis: dict | None = None, ergebnisse: dict | None = None, gesperrt=False,
+                 import_dir=None):
         self.plaene, self._kpis, self._erg = plaene, kpis or {}, ergebnisse or {}
         self.gesperrt = gesperrt
         self._plan_cache = {}
+        self.import_dir = import_dir or Path("/gibt-es-nicht")         # ohne Schnappschüsse (seit 0.20)
 
     def bestand(self):
         fx = SimpleNamespace(leagues=self.plaene, has_errors=self.gesperrt)
@@ -84,6 +89,12 @@ class FakeDaten:
         games = f[(f["saison"] == saison) & (f["spieltag"] == md)]
         return {int(g.reihenfolge): self._kpis.get(g.heim, match()) for g in games.itertuples()}
 
+    def werte(self, liga, row, zp):
+        """Wie website.daten.Daten.werte (seit 0.20): vor dem Anstoss live, danach Schnappschuss bzw. nachträglich."""
+        live = self.kpis(liga, row.saison, int(row.spieltag), zp.bis).get(int(row.reihenfolge))
+        return SN.shown_values(self.import_dir, LIGA_URL.get(liga, "x"), row, live, zp.jetzt, self._erg,
+                              self.spielplan(liga))
+
     def zeitpunkt(self):
         return Zeitpunkt(datetime(2026, 11, 16, 10, 0), datetime(2026, 11, 16, 4, 5), None)
 
@@ -94,6 +105,7 @@ def zp(text: str, import_alter: int = 0) -> Zeitpunkt:
 
 
 BL = W.liga_aus_slug("bundesliga")
+LIGA_URL = {lg.name: lg.url for lg in load_leagues()}
 
 
 # --- W1 Formate -------------------------------------------------------------------------------------------
@@ -121,11 +133,11 @@ def _row(**kw):
     ({"status": "verschoben"}, match(kpi03=kpi(HIGH, 50)), {}, "status"),
     ({}, match(kpi03=kpi(HIGH, 50)), {(S, "A", "B"): (2, 1)}, "gespielt"),          # Ergebnis vor Stufe
     ({}, match(**{k: kpi(HIGH, 50, vorl=True) for k in ("kpi02", "kpi03", "kpi04", "kpi05", "kpi06", "kpi07",
-                                                            "kpi08", "kpi09")}), {}, "nicht_gewertet"),
-    ({}, None, {}, "nicht_gewertet"),
+                                                            "kpi08", "kpi09")}), {}, "zu_wenig_daten"),
+    ({}, None, {}, "zu_wenig_daten"),
     ({}, match(**{k: kpi(abw=None) for k in ("kpi02", "kpi03", "kpi04", "kpi05", "kpi06", "kpi07", "kpi08",
-                                              "kpi09")}), {}, "nicht_gewertet"),  # Aufsteiger ohne Werte
-    ({}, match(kpi03=kpi(HIGH, 44), kpi05=kpi(MEDIUM, 60)), {}, "hoch"),          # stark vor leicht
+                                              "kpi09")}), {}, "zu_wenig_daten"),  # Aufsteiger ohne Werte
+    ({}, match(kpi03=kpi(HIGH, 44), kpi05=kpi(MEDIUM, 60)), {}, "stark"),          # stark vor leicht
     ({}, match(kpi05=kpi(MEDIUM, -18)), {}, "mittel"),
     ({}, match(kpi03=kpi(HIGH, 44, vorl=True), kpi05=kpi(MEDIUM, 18)), {}, "mittel"),  # vorläufig zählt nicht
     ({}, match(), {}, "ohne"),
@@ -137,8 +149,10 @@ def test_w2_classification(kw, kpis, erg, art):
 
 def test_w2_kickoff_passed_without_result_and_strongest():
     row = _row()
-    assert spieltag.einstufen(row, match(), datetime(2026, 11, 21, 15, 30), {}) == \
-        {"art": "gespielt", "status": None, "ergebnis": None, "staerkste": None}            # „Ergebnis folgt“
+    # seit 0.20: bis Anpfiff + 2 Stunden normal (kein Live-Status), danach „Gespielt“ ohne „Ergebnis folgt“
+    assert spieltag.einstufen(row, match(), datetime(2026, 11, 21, 15, 30), {})["art"] == "ohne"
+    assert spieltag.einstufen(row, match(), datetime(2026, 11, 21, 17, 30), {}) == \
+        {"art": "gespielt", "status": None, "ergebnis": None, "staerkste": None, "werte_ab": None}
     r = spieltag.einstufen(row, match(kpi03=kpi(HIGH, 44), kpi06=kpi(HIGH, -52)), datetime(2026, 11, 20), {})
     assert r["staerkste"] == {"kpi": "kpi06", "abweichung": -52.0}
 
@@ -159,22 +173,25 @@ def test_w3_w4_sorting_counting_catchup_mixed_in():
     # Seit 0.18 nach Entwurf 3d: Nachholspiel mitsortiert (O leicht vor C leicht: 22 > 18); nicht gewertet, Status
     # und gespielt in einer Gruppe nach Anstoss (A Fr 20:30, I So 15:30, K So 17:30)
     assert [(x["heim"], x["art"]) for x in tab["spiele"]] == [
-        ("G", "hoch"), ("E", "hoch"), ("O", "mittel"), ("C", "mittel"), ("M", "ohne"), ("A", "gespielt"),
-        ("I", "status"), ("K", "nicht_gewertet")]
+        ("G", "stark"), ("E", "stark"), ("O", "mittel"), ("C", "mittel"), ("M", "ohne"), ("A", "gespielt"),
+        ("I", "status"), ("K", "zu_wenig_daten")]
     assert (tab["partien"], tab["auffaellig"], tab["sonderspiele"]) == (7, 4, {"nachholspiel": 1, "vorgezogen": 0})
     assert tab["spiele"][5]["ergebnis"] == [2, 1] and tab["spiele"][2]["sonderspiel"] == "nachholspiel"
     assert not tab["spiele"][6]["link"]                                                   # verschoben: kein Link
     html = seiten.spieltag_html(s, seiten.Kontext())
-    assert "10. Spieltag · 20.11. – 22.11.2026 · 7 Partien · 4 mit Auffälligkeit · plus 1 Nachholspiel" in html
+    assert "10. Spieltag · 20.11. – 22.11.2026 · 7 Spiele + 1 Nachholspiel · 4 auffällige Spiele" in html   # 0.20
+    assert "Nachholspiel · Spieltag 1" in html
 
 
 def test_w4_no_anomalies_sentence_and_plural():
     s = spieltag.spieltag_daten(FakeDaten({"Bundesliga": plan(rnd(10, date(2026, 11, 20), date(2026, 11, 22)))}), BL,
                                 zp("2026-11-16T10:00"))
     html = seiten.spieltag_html(s, seiten.Kontext())
-    assert "keine mit Auffälligkeit" in html and t("spieltag.keine_abweichungen") in html and "2 Partien" in html
-    assert tn("spieltag.partien", 1) == "1 Partie" and tn("spieltag.nachholspiel", 2) == "plus 2 Nachholspiele"
-    assert tn("spieltag.vorgezogen", 1) == "plus 1 vorgezogenes Spiel"
+    assert "keine auffälligen Spiele" in html and t("spieltag.keine_abweichungen") in html and "2 Spiele" in html
+    assert tn("spieltag.partien", 1) == "1 Spiel" and tn("spieltag.nachholspiel", 2) == "2 Nachholspiele"
+    assert tn("spieltag.auffaellig", 1) == "1 auffälliges Spiel"
+    assert tn("spieltag.vorgezogen", 1) == "1 vorgezogenes Spiel"
+    assert tn("spieltag.nur_sonderspiele.vorgezogen", 1) == "1 Spiel vorgezogen"
 
 
 # --- W5–W7 Nachholspiel, englische Woche, Pausen ---------------------------------------------------------------
@@ -185,7 +202,11 @@ def test_w5_catchup_goes_to_tab_of_its_dates():
               game(23, date(2026, 12, 3), "21:00", "G", "H", hint="vorgezogen"))
     s = spieltag.spieltag_daten(FakeDaten({"Bundesliga": fx}), BL, zp("2026-12-03T10:00"))
     assert [t_["spieltag"] for t_ in s["tabs"]] == [12, 13]
-    assert [x["heim"] for x in s["tabs"][1]["spiele"]][-1] == "E"        # Nachholspiel im Tab seines Zeitraums
+    # Nachholspiel im Tab seines Zeitraums; seit 0.20 stehen A und C („Werte ab So 06.12.“, Vorspiel am 05.12.) danach
+    assert [(x["heim"], x["art"], x["werte_ab"]) for x in s["tabs"][1]["spiele"]] == [
+        ("E", "ohne", None), ("A", "werte_ab", "2026-12-06"), ("C", "werte_ab", "2026-12-06")]
+    html = seiten.spieltag_html(s, seiten.Kontext())
+    assert html.count("Werte ab 6.12.") == 2 and "Vorgezogen · Spieltag 23" in html
     assert [x["heim"] for x in s["tabs"][0]["spiele"]][0] == "G"         # ausserhalb: im ersten Tab, nach Anstoss
     assert s["tabs"][0]["sonderspiele"] == {"nachholspiel": 0, "vorgezogen": 1}
 
@@ -229,13 +250,13 @@ def test_w7_season_start_and_list_from_fourteen_days():
 def test_w8_stale_warning_keeps_list_and_shows_import_date():
     fx = plan(rnd(10, date(2026, 11, 20), date(2026, 11, 22)))
     jetzt = datetime(2026, 11, 16, 10, 0)
-    for alter, veraltet in ((3, False), (4, True)):
+    for alter, veraltet in ((1, False), (2, True)):                        # seit 0.20: Grenze 48 Stunden
         z = Zeitpunkt(jetzt, datetime(2026, 11, 16 - alter, 4, 5), None)
         s = spieltag.spieltag_daten(FakeDaten({"Bundesliga": fx}), BL, z)
         html = seiten.spieltag_html(s, seiten.Kontext())
         assert s["veraltet"] is veraltet and ('role="alert"' in html) is veraltet and 'class="partien"' in html
-    assert "Spielplan zuletzt aktualisiert am Do 12.11." in html
-    assert "Aktueller Datenstand: Do 12.11.2026" in html and "Stand: Do 12.11.2026, 04:05 Uhr" in html
+    assert "Spielplan zuletzt aktualisiert am Sa 14.11." in html
+    assert "Aktueller Datenstand: Sa 14.11.2026" in html and "Stand: Sa 14.11.2026, 04:05 Uhr" in html
 
 
 def test_w8_last_import_reads_only_successful_runs(tmp_path):
@@ -283,8 +304,8 @@ def test_w10_every_template_key_exists_and_eszett():
     keys = set()
     for vorlage in W.VORLAGEN.glob("*.html"):
         keys |= set(re.findall(r"\bt\('([a-z_.]+)'\s*[,)]", vorlage.read_text(encoding="utf-8")))   # feste Schlüssel
-    keys |= {f"chip.{s}" for s in ("verschoben", "abgesagt", "abgebrochen", "ausgesetzt", "gewertet", "hoch", "mittel",
-                                   "nachholspiel", "vorgezogen", "nicht_gewertet", "ergebnis_folgt")}
+    keys |= {f"chip.{s}" for s in ("verschoben", "abgesagt", "abgebrochen", "ausgesetzt", "gewertet", "stark", "mittel",
+                                   "gering", "nachholspiel", "vorgezogen", "zu_wenig_daten", "gespielt")}
     keys |= {f"pause.{a}.{f}" for a in ("spielpause", "winterpause", "sommerpause", "saisonstart", "unbekannt", "keine")
              for f in ("zeile", "titel", "text")}
     keys |= {f"liga.{lg.key}" for lg in W.LIGEN}
@@ -417,13 +438,13 @@ def test_w14_values_q1_q2_q4(partien):
     assert (s["seite"], s["id"], s["liga"], s["spieltag"], s["heim"], s["gast"]) == ("spiel", 101, "bundesliga", 10,
                                                                                       "A", "B")
     assert s["zustand"] == "offen" and s["bewertung"] == "auffaellig" and s["anstoss"] == "15:30"
-    assert [(k["kpi"], k["stufe"], k["richtung"]) for k in s["auffaellig"]] == [("kpi03", "hoch", "hoch"),
+    assert [(k["kpi"], k["stufe"], k["richtung"]) for k in s["auffaellig"]] == [("kpi03", "stark", "hoch"),
                                                                                ("kpi04", "mittel", "tief")]
     k03, k04 = s["auffaellig"]
     assert (k03["erwartung"], k03["vergleich"], k03["vergleich_art"], k03["summe"]) == (3.4, 2.5, "marke", False)  # Q2
     assert (k04["erwartung"], k04["heim"], k04["gast"], k04["vergleich"], k04["summe"]) == (3.6, 1.4, 2.2, 4.62, True)  # Q1
     k05 = next(k for k in s["uebrige"] if k["kpi"] == "kpi05")                      # Q4: vorläufig, ohne Stufe
-    assert k05["stufe"] == "nicht_gewertet" and s["anzahl_gewertet"] == 7
+    assert k05["stufe"] == "zu_wenig_daten" and s["anzahl_gewertet"] == 7
     assert [k["kpi"] for k in s["uebrige"]][0] == "kpi05"                           # nach Betrag (70 > 8 > 5)
     html = seiten.spiel_html(s, seiten.Kontext())
     for text in ("Auffälligstes Merkmal", "+44,00 %", "Über 2,5 Tore", "Mehr als 2,5 Tore erwartet",
@@ -432,15 +453,15 @@ def test_w14_values_q1_q2_q4(partien):
                  "54,35 %", "Sa 21.11. · 15:30", "Bundesliga · 10. Spieltag"):
         assert text in html, text
     assert html.count("Je Mannschaft") == 7                                          # alle ausser Gelbe Karten
-    assert "Weniger als 2,5 Tore" not in html and t("spiel.hinweis_nicht_gewertet_titel") not in html
+    assert "Weniger als 2,5 Tore" not in html and t("spiel.hinweis_zu_wenig_daten_titel") not in html
 
 
 def test_w14_not_rated_status_catchup_form(partien):
     z = zp("2026-11-21T10:00")
     s = spiel.spiel_daten(partien, 102, z)                                            # F2: alle vorläufig
-    assert s["bewertung"] == "nicht_gewertet" and s["ohne_werte"] and s["auffaellig"] == [] and s["groesste"] is None
+    assert s["bewertung"] == "zu_wenig_daten" and s["ohne_werte"] and s["auffaellig"] == [] and s["groesste"] is None
     html = seiten.spiel_html(s, seiten.Kontext())
-    assert t("spiel.hinweis_nicht_gewertet_leer") in html and t("spiel.nicht_gewertet_leer_text") in html
+    assert t("spiel.hinweis_zu_wenig_daten_leer") in html and t("spiel.zu_wenig_daten_leer_text") in html
     assert '<h2 class="h2-klein">Kennzahlen</h2>' in html and 'class="vermerk"' not in html
     s = spiel.spiel_daten(partien, 103, z)                                            # verschoben: keine Werte
     assert (s["zustand"], s["bewertung"], s["status"], s["sonderspiel"]) == ("status", "status", "verschoben", None)
@@ -452,20 +473,56 @@ def test_w14_not_rated_status_catchup_form(partien):
     assert s["form_heim"] == ["S", "U", "N", "-", "S"] and s["form_gast"] == ["N", "N", "-", "-", "-"]
     html = seiten.spiel_html(s, seiten.Kontext())
     assert "Dieses Spiel gehört zu einem früheren Spieltag und wird am So 22.11. um 17:30 Uhr nachgeholt." in html
-    assert "Alle 8 Kennzahlen liegen im Normalbereich. Die größte Abweichung: Erwartete Tore +5,00 %." in html
+    assert "Keine der 8 Kennzahlen überschreitet ihre Schwelle. Größte Abweichung: Erwartete Tore +5,00 %." in html
     assert html.count('class="form-S"') == 2 and html.count('class="form--"') == 4
     assert spiel.spiel_daten(partien, 999, z) is None
 
 
-def test_w14_played_q5(partien):
-    s = spiel.spiel_daten(partien, 105, zp("2026-11-21T10:00"))
-    assert s["zustand"] == "gespielt" and s["ergebnis"] == [2, 1]
+def test_w14_played_q5(partien, tmp_path, monkeypatch):
+    """Q5, seit 0.20 mit Schnappschuss: gespielte Spiele zeigen seine Werte; fehlt er, nachträglich berechnet."""
+    s = spiel.spiel_daten(partien, 105, zp("2026-11-21T10:00"))                      # ohne Schnappschuss
+    assert s["zustand"] == "gespielt" and s["ergebnis"] == [2, 1] and s["nachtraeglich"] and not s["korrigiert"]
     html = seiten.spiel_html(s, seiten.Kontext())
-    assert "Endstand 2 : 1" in html and "Gespielt:</b> Die Werte wurden vor dem Spiel berechnet." in html
-    s = spiel.spiel_daten(partien, 101, zp("2026-11-21T16:00"))                      # Anstoss vorbei, kein Ergebnis
+    assert "Endstand 2 : 1" in html and "Gespielt:</b> Werte nachträglich mit den Daten vor dem Spiel berechnet." in html
+
+    partien.import_dir = tmp_path                                                    # mit Schnappschuss (andere Werte)
+    snap = SN.Snapshot(match(kpi02=kpi(HIGH, 77)), datetime(2026, 11, 20, 19, 30), False, {})
+    monkeypatch.setattr(SN, "read", lambda base, url, saison, api_id: snap if int(api_id) == 105 else None)
+    s = spiel.spiel_daten(partien, 105, zp("2026-11-21T10:00"))
+    html = seiten.spiel_html(s, seiten.Kontext())
+    assert not s["nachtraeglich"] and s["bewertung"] == "auffaellig" and "+77,00 %" in html
+    assert "Gespielt:</b> Die Werte wurden mit den Daten vor dem Spiel berechnet." in html
+    assert "korrigiert" not in html
+    SN.write_once(SN.result_path(tmp_path, "bundesliga", S, 105), {"ergebnis": [1, 1]})   # zuerst 1:1 übernommen
+    s = spiel.spiel_daten(partien, 105, zp("2026-11-21T10:00"))
+    assert s["korrigiert"] and "Endstand:</b> Ergebnis nachträglich korrigiert" in seiten.spiel_html(s, seiten.Kontext())
+
+    s = spiel.spiel_daten(partien, 101, zp("2026-11-21T16:00"))       # läuft: bis Anpfiff + 2 h normal, mit Werten
+    assert s["zustand"] == "offen" and s["bewertung"] == "auffaellig"
+    html = seiten.spiel_html(s, seiten.Kontext())
+    assert "Sa 21.11. · 15:30" in html and "+44,00 %" in html and "Gespielt" not in html
+    s = spiel.spiel_daten(partien, 101, zp("2026-11-21T17:30"))       # danach „Gespielt“, nie „Ergebnis folgt“
     assert s["zustand"] == "gespielt" and s["ergebnis"] is None and s["bewertung"] == "auffaellig"
     html = seiten.spiel_html(s, seiten.Kontext())
-    assert "Ergebnis folgt" in html and "Sa 21.11. · 15:30" not in html and "+44,00 %" in html
+    assert "Ergebnis folgt" not in html and "Sa 21.11. · 15:30" not in html and "+44,00 %" in html
+
+
+def test_w14_values_from_on_match_page_and_tile():
+    """„Werte ab …“ auch auf Matchdetail und Kachel (seit 0.20, Lücke vom 19.11.2026)."""
+    fx = plan(rnd(12, date(2026, 12, 5)), game(13, date(2026, 12, 8), "20:30", "A", "C"))
+    fx["api_id"] = [1, 2, 3]
+    d = FakeDaten({"Bundesliga": fx}, {"A": match(kpi03=kpi(HIGH, 60))})
+    s = spiel.spiel_daten(d, 3, zp("2026-12-03T10:00"))
+    assert s["bewertung"] == "werte_ab" and s["werte_ab"] == "2026-12-06" and s["auffaellig"] == []
+    html = seiten.spiel_html(s, seiten.Kontext())
+    assert "Werte ab So 06.12. – sobald beide Teams ihr vorheriges Ligaspiel gespielt haben." in html
+    assert "+60,00 %" not in html
+    s = spiel.spiel_daten(d, 3, zp("2026-12-07T10:00"))                 # Vorspiel gespielt, Ergebnis fehlt
+    assert s["bewertung"] == "werte_ab" and s["ergebnis_vom"] == "2026-12-05"
+    assert "Werte folgen, sobald das Ergebnis vom 05.12. übernommen ist." in seiten.spiel_html(s, seiten.Kontext())
+    d = FakeDaten({"Bundesliga": fx}, {"A": match(kpi03=kpi(HIGH, 60))}, {(S, "B", "A"): (1, 0), (S, "D", "C"): (0, 0)})
+    s = spiel.spiel_daten(d, 3, zp("2026-12-07T10:00"))
+    assert s["bewertung"] == "auffaellig" and "+60,00 %" in seiten.spiel_html(s, seiten.Kontext())
 
 
 def test_w14_every_pairing_has_its_own_page():
@@ -499,13 +556,13 @@ def test_w14_escaped_and_labels():
 
 
 def test_w14_bar_and_number_helpers():
-    assert seiten.balken_daten({"abweichung": 44.0, "stufe": "hoch"}) == \
+    assert seiten.balken_daten({"abweichung": 44.0, "stufe": "stark"}) == \
         {"breite": 22, "richtung": "hoch", "klasse": "f-stark-hoch", "kappe": False}
     assert seiten.balken_daten({"abweichung": -130.0, "stufe": "mittel"}) == \
         {"breite": 50, "richtung": "tief", "klasse": "f-leicht-tief", "kappe": True}           # gekappt
     assert seiten.balken_daten({"abweichung": 5.0, "stufe": "normal"})["klasse"] == "f-normal"
-    assert seiten.balken_daten({"abweichung": None, "stufe": "nicht_gewertet"})["breite"] == 0
-    assert seiten.balken_daten({"abweichung": 70.0, "stufe": "nicht_gewertet"})["klasse"] == "f-schraffiert"
+    assert seiten.balken_daten({"abweichung": None, "stufe": "zu_wenig_daten"})["breite"] == 0
+    assert seiten.balken_daten({"abweichung": 70.0, "stufe": "zu_wenig_daten"})["klasse"] == "f-schraffiert"
     assert F.zahl(3.4) == "3,40" and F.zahl(64.0, einheit="%") == "64,00 %" and F.zahl(None) == "–"
     assert F.zahl(-0.5) == "−0,50"
     assert seiten.aufteilung({"heim": 1.4, "gast": 2.2}) == 39 and seiten.aufteilung({"heim": 0, "gast": 0}) == 50
@@ -532,7 +589,7 @@ def test_w15_ranking_like_dashboard():
     s = start.start_daten(_start_daten(), zp("2026-11-16T10:00"))
     assert s["zustand"] == "liste" and s["pause"] is None
     assert [(r["rang"], r["heim"], r["kpi"], r["stufe"], r["richtung"]) for r in s["ranking"]] == [
-        (1, "K", "kpi08", "hoch", "hoch"), (2, "A", "kpi03", "hoch", "hoch"), (3, "C", "kpi05", "mittel", "tief"),
+        (1, "K", "kpi08", "stark", "hoch"), (2, "A", "kpi03", "stark", "hoch"), (3, "C", "kpi05", "mittel", "tief"),
         (4, "O", "kpi06", "mittel", "hoch")]          # verschoben und vorläufig nie; höchstens 4, einer je Spiel;
     # Liga-Mix (seit 0.19): höchstens zwei je Liga – G (Bundesliga, dritter) weicht O (La Liga) trotz grösserer Abweichung
     assert [r["id"] for r in s["ranking"]] == [301, 201, 202, 303] and s["ranking"][0]["liga"] == "la-liga"
@@ -540,8 +597,14 @@ def test_w15_ranking_like_dashboard():
     assert html.count('class="rang-zeile"') == 4 and 'href="/vorschau/spiel/301"' in html
     assert "La Liga · Spieltag 13" in html and "Bundesliga · Spieltag 10" in html and "+50,00 %" in html
     assert "−30,00 %" in html and "Sa 21.11. · 21:00" in html and t("start.ranking_text") in html
-    s = start.start_daten(_start_daten(), zp("2026-11-21T16:00"))                   # nur Spiele vor dem Anpfiff
-    assert [r["heim"] for r in s["ranking"]] == ["K", "G", "E", "O"]
+    # seit 0.20 kein Nachrücken: A (Fr 20:30) ist gespielt und bleibt ausgegraut, C (15:30) läuft noch (bis + 2 h normal)
+    s = start.start_daten(_start_daten(), zp("2026-11-21T16:00"))
+    assert [(r["heim"], r["gespielt"], r["ergebnis"]) for r in s["ranking"]] == [
+        ("K", False, None), ("A", True, None), ("C", False, None), ("O", False, None)]
+    html = seiten.start_html(s, seiten.Kontext())
+    assert html.count("rang-zeile--gespielt") == 1 and '<span class="wann">Gespielt</span>' in html
+    s = start.start_daten(_start_daten(ergebnisse={(S, "A", "B"): (2, 1)}), zp("2026-11-21T16:00"))
+    assert s["ranking"][1]["ergebnis"] == [2, 1] and "Endstand 2 : 1" in seiten.start_html(s, seiten.Kontext())
 
 
 @pytest.mark.parametrize("plaene, now, alter, art, tage, liga, texte", [

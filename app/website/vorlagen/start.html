@@ -40,14 +40,14 @@
   <ol class="ranking">
     {% for r in seite.ranking %}
     <li>
-      <a class="rang-zeile"{% if r.id %} href="{{ url('/spiel/' ~ r.id) }}"{% endif %}>
+      <a class="rang-zeile{% if r.gespielt %} rang-zeile--gespielt{% endif %}"{% if r.id %} href="{{ url('/spiel/' ~ r.id) }}"{% endif %}>
         <span class="inhalt">
           <span class="links">
             <span class="rang">{{ r.rang }}</span>
             <span>
-              <span class="liga">{{ t('start.ranking_zeile', liga=t('liga.' ~ r.liga_key), n=r.spieltag) }}</span>
+              <span class="liga">{% if r.sonderspiel %}{{ t('liga.' ~ r.liga_key) }} · {{ t('chip.' ~ r.sonderspiel ~ '_nr', n=r.spieltag) }}{% else %}{{ t('start.ranking_zeile', liga=t('liga.' ~ r.liga_key), n=r.spieltag) }}{% endif %}</span>
               <span class="paar">{{ r.heim }} – {{ r.gast }}</span>
-              <span class="wann">{{ termin(r) }}</span>
+              <span class="wann">{% if r.gespielt %}{{ t('spiel.endstand', ergebnis=ergebnis(r.ergebnis)) if r.ergebnis else t('chip.gespielt') }}{% else %}{{ termin(r) }}{% endif %}</span>
             </span>
           </span>
           <span class="rechts">

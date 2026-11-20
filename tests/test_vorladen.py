@@ -33,7 +33,7 @@ def test_warm_up_prepares_all_pages(monkeypatch):
     monkeypatch.setattr(st, "get_frequency", lambda lg: calls.append("frequency"))
     monkeypatch.setattr(st, "get_matchday_kpis", lambda lg, s, m: calls.append(("kpis", s, m)))
     monkeypatch.setattr(st, "get_results", lambda lg: calls.append("results"))
-    monkeypatch.setattr(st, "last_import_day", lambda: None)
+    monkeypatch.setattr(st, "last_import", lambda: None)
     sections = [SimpleNamespace(key=("2026/2027", 11)), SimpleNamespace(key=("2026/2027", 23)),
                 SimpleNamespace(key=("2026/2027", 11))]
     monkeypatch.setattr(vorladen, "upcoming", lambda f, at, imp: SimpleNamespace(sections=sections))

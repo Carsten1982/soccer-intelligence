@@ -131,14 +131,14 @@ def _simulation():
 
 @needs_files
 def test_simulation_page():
-    """Version 0.19: zwei Zeilen je KPI (mehr, weniger) mit je einer Schwelle, Spalte Prognosewert, Erklärfeld und
+    """Version 0.19: zwei Zeilen je KPI (mehr, weniger) mit je einer Schwelle, Spalte Signalqualität (bis 0.19 Prognosewert), Erklärfeld und
     Schwellenvorschlag. Vorbelegt mit den gültigen Schwellen; bei „Alle Ligen“ leer, wenn die Ligen verschieden sind
     („je Liga“) oder keine haben („keine“), bei einer Liga deren Werte. Eingaben wirken nur hier."""
     at = AppTest.from_function(_simulation, default_timeout=TIMEOUT).run()
     assert not at.exception, at.exception
     text = _texts(at)
     assert "Sensitivitätsanalyse" in text and "keinen Einfluss auf die anderen Dashboard-Tabs" in text
-    for label in ("Betroffene Spiele", "Ergebnisqualität und Prognosewert", "Vergleichs", "Empfehlung", "↗ mehr",
+    for label in ("Betroffene Spiele", "Ergebnisqualität und Signalqualität", "Vergleichs", "Empfehlung", "↗ mehr",
                   "↘ weniger", "Mehr Details findest du unter der Tabelle.", "Schüsse aufs Tor", "Schwellenvorschlag"):
         assert label in text, label
     assert "Leicht positiv" not in text and "Stark negativ" not in text
@@ -159,10 +159,10 @@ def test_simulation_page():
     assert 'class="si-perliga"' not in _texts(at)                     # eine Liga: Zahl im Feld, kein Hinweis
     at.button(key="sens_proposal").click().run()                   # Vorschlag: nur Anzeige und Download
     assert not at.exception, at.exception
-    tables = [d.value for d in at.dataframe if "prognosewert" in d.value.columns]
-    assert tables and len(tables[0]) > 0 and set(tables[0]["prognosewert"]) <= {"hoch", "mittel", "gering"}
+    tables = [d.value for d in at.dataframe if "signalqualitaet" in d.value.columns]
+    assert tables and len(tables[0]) > 0 and set(tables[0]["signalqualitaet"]) <= {"stark", "mittel", "gering"}
     single = [s for s in at.selectbox(key="sens_saison").options if s.startswith("Saison ")]
-    at.selectbox(key="sens_saison").set_value(single[0]).run()     # eine Saison: kein Prognosewert
+    at.selectbox(key="sens_saison").set_value(single[0]).run()     # eine Saison: keine Signalqualität
     assert not at.exception and "nur bei mehreren Saisons" in _texts(at)
 
 
@@ -171,9 +171,9 @@ def test_datenqualitaet_page():
     at = AppTest.from_function(_datenqualitaet, default_timeout=TIMEOUT).run()
     assert not at.exception, at.exception
     text = _texts(at)
-    assert "Datenqualität" in text and "Gültige Schwellen und Prognosewerte" in text    # seit 0.19
+    assert "Datenqualität" in text and "Gültige Schwellen und Signalqualität" in text    # seit 0.20
     assert "Häufigkeit je Liga und KPI" in text
-    tables = [d.value for d in at.dataframe if "Prognosewert" in d.value.columns and "Richtung" in d.value.columns]
+    tables = [d.value for d in at.dataframe if "Signalqualität" in d.value.columns and "Richtung" in d.value.columns]
     assert tables and len(tables[0]) == 23                          # die freigegebenen Schwellen
 
 
@@ -186,7 +186,7 @@ def test_top_selection_text_and_navigation_order():
     titles = ["**Berücksichtigte Spiele**", "**Auswahl der Auffälligkeiten**", "**Verteilung der Spiele**"]
     assert [text.index(t) for t in titles] == sorted(text.index(t) for t in titles)
     for part in ("Je Liga zählt der nächste Spieltag, wenn er innerhalb der nächsten 14 Tage beginnt",
-                 "in der Regel höchstens zwei Spiele", "Maximale Anzahl: 4 Spiele", "zuerst hoch, dann mittel"):
+                 "in der Regel höchstens zwei Spiele", "Maximale Anzahl: 4 Spiele", "zuerst stark, dann mittel"):
         assert part in text, part
     app = (Path(__file__).resolve().parents[1] / "app" / "app.py").read_text(encoding="utf-8")
     nav = app[app.index("st.navigation(["):]
@@ -223,7 +223,7 @@ def _explanation():
 @pytest.mark.skipif(AppTest is None, reason="Streamlit nicht vorhanden")
 def test_explanation_uses_the_shipped_example():
     """Erklärfeld der Sensitivitätsanalyse: Beispiel Bundesliga, Schüsse aufs Tor, weniger (Schwelle 10 %, 227 Spiele,
-    144 eingetroffen, 63,44 % gegen 51,57 %, +11,87 Pp., Spanne +5,06 bis +18,25, 7 von 7, hoch) und die Zahlen der
+    144 eingetroffen, 63,44 % gegen 51,57 %, +11,87 Pp., Spanne +5,06 bis +18,25, 7 von 7, stark) und die Zahlen der
     Regeln. Seit 0.19.1 mit zwei Nachkommastellen, damit die Rechnung aufgeht (vorher 63 − 52 = +12)."""
     at = AppTest.from_function(_explanation, default_timeout=TIMEOUT).run()
     assert not at.exception, at.exception
@@ -231,7 +231,7 @@ def test_explanation_uses_the_shipped_example():
     for part in ("mehr als <b>10 %</b> darunter", "In 227 früheren Spielen lag die Erwartung mehr als 10 % unter",
                  "In 144", "<b>63,44 %</b>", "in\n51,57 % der Fälle", "63,44 − 51,57 = <b>+11,87 Prozentpunkte</b>",
                  "in rund 12 von 100", "<b>+5,06 und +18,25\nPp.</b>", "rund 5 Treffer mehr", "7 von 7 Saisons",
-                 "Prognosewert <b>hoch</b>", "10, 15, 20, 25, 30 und 35 %", "**ab 60 %**", "**ab +8 Pp.**",
+                 "Signalqualität <b>stark</b>", "10, 15, 20, 25, 30 und 35 %", "**ab 60 %**", "**ab +8 Pp.**",
                  "**ab 55 %**", "**ab 50 %**", "über +2 Pp.", "rechte (obere) Wert", "weder in den Top Anomalien"):
         assert part in text, part
 
@@ -408,7 +408,7 @@ def _patch_display(monkeypatch, module, now, fx, imported):
     monkeypatch.setattr(module, "get_fixtures", lambda: SimpleNamespace(has_errors=False, leagues={"Bundesliga": fx}))
     monkeypatch.setattr(module, "get_results", lambda lg: {("2026/2027", "A", "B"): (2, 1)})
     monkeypatch.setattr(module, "get_round_kpis", lambda lg, s, m: {})
-    monkeypatch.setattr(module, "last_import_day", lambda: imported)
+    monkeypatch.setattr(module, "last_import", lambda: imported)
     monkeypatch.setattr(module, "now", lambda: now)
 
 
@@ -422,7 +422,7 @@ def test_league_page_sections_and_forward_two(monkeypatch):
     fx = plan(*[rnd(n, date(2026, 11, 6 + 7 * (n - 1)), date(2026, 11, 8 + 7 * (n - 1))) for n in range(1, 4)],
               rnd(4, date(2026, 11, 24), date(2026, 11, 25)), rnd(5, date(2026, 11, 29), date(2026, 11, 29)),
               rnd(6, date(2026, 12, 4), date(2026, 12, 6)), rnd(7, date(2026, 12, 11), date(2026, 12, 13)))
-    _patch_display(monkeypatch, liga, datetime(2026, 11, 22, 12, 0), fx, date(2026, 11, 22))
+    _patch_display(monkeypatch, liga, datetime(2026, 11, 22, 12, 0), fx, datetime(2026, 11, 22, 4, 0))
     at = AppTest.from_function(_liga_test_league, default_timeout=TIMEOUT).run()
     assert not at.exception, at.exception
     text = _texts(at)
@@ -444,14 +444,14 @@ def test_league_page_winter_break_notice_only(monkeypatch):
     from test_anzeige import plan, rnd
     import views.liga as liga
     fx = plan(rnd(14, date(2026, 12, 18), date(2026, 12, 20)), rnd(15, date(2027, 1, 8), date(2027, 1, 10)))
-    _patch_display(monkeypatch, liga, datetime(2026, 12, 23, 10, 0), fx, date(2026, 12, 23))
+    _patch_display(monkeypatch, liga, datetime(2026, 12, 23, 10, 0), fx, datetime(2026, 12, 23, 4, 0))
     at = AppTest.from_function(_liga_test_league, default_timeout=TIMEOUT).run()
     assert not at.exception, at.exception
     text = _texts(at)
     assert "<b>Winterpause</b> – nächster Spieltag am Fr 08.01.2027 (Spieltag 15)" in text
     assert 'class="si-sec"' not in text
     assert not at.button(key="prev_bundesliga").disabled and not at.button(key="next_bundesliga").disabled
-    _patch_display(monkeypatch, liga, datetime(2026, 12, 23, 10, 0), fx, date(2026, 12, 19))   # Import 4 Tage alt
+    _patch_display(monkeypatch, liga, datetime(2026, 12, 23, 10, 0), fx, datetime(2026, 12, 19, 4, 0))   # Import 4 Tage alt
     at = AppTest.from_function(_liga_test_league, default_timeout=TIMEOUT).run()
     assert "Spielplan zuletzt aktualisiert am <b>Sa 19.12.2026</b>" in _texts(at) and "Winterpause" not in _texts(at)
 
@@ -462,7 +462,7 @@ def test_top_page_headers_per_league(monkeypatch):
     from test_anzeige import plan, rnd
     import views.top_anomalien as top
     fx = plan(rnd(10, date(2026, 11, 20), date(2026, 11, 22)), rnd(11, date(2026, 11, 27), date(2026, 11, 29)))
-    _patch_display(monkeypatch, top, datetime(2026, 11, 21, 16, 0), fx, date(2026, 11, 21))
+    _patch_display(monkeypatch, top, datetime(2026, 11, 21, 16, 0), fx, datetime(2026, 11, 21, 4, 0))
     from core.config import League
     monkeypatch.setattr(top, "get_active_leagues", lambda: [League("Bundesliga", "bundesliga", 4, True)])
     at = AppTest.from_function(_top_page, default_timeout=TIMEOUT).run()
@@ -480,10 +480,29 @@ def test_top_card_shows_date_and_kickoff():
     k = _match_kpis()
     c = Candidate("Bundesliga", 0, "2026/2027", 10, date(2026, 11, 21), 0, "A", "B", "geplant", k, "Sa 21.11. · 18:30")
     html = card_html(TopEntry(1, c, "kpi02", "KPI 02 – Erwartete Tore", k.kpi02))
-    assert "Bundesliga · Spieltag 10 · <b>Sa 21.11. · 18:30</b>" in html
+    assert "Bundesliga · Spieltag 10 · <b>Sa 21.11. · 18:30</b>" in html and "si-card-played" not in html
+    played = Candidate("Bundesliga", 0, "2026/2027", 10, date(2026, 11, 21), 0, "A", "B", "geplant", k,
+                       "Sa 21.11. · Gespielt", played=True)                            # seit 0.20: ausgegraut
+    html = card_html(TopEntry(1, played, "kpi02", "KPI 02 – Erwartete Tore", k.kpi02))
+    assert 'class="si-card si-card-played"' in html and "<b>Sa 21.11. · Gespielt</b>" in html
 
 
 # --- Datenimport/API (Version 0.14) -------------------------------------------------------
+
+def test_import_tab_snapshot_box():
+    """Überwachung der Schnappschüsse im Reiter (seit 0.20)."""
+    pytest.importorskip("streamlit")
+    from datetime import datetime
+    from views.datenimport import snapshot_box
+    assert "Noch kein Lauf" in snapshot_box(None, datetime(2026, 11, 21, 15, 0))
+    stand = {"lauf": "2026-11-21T14:00:05", "neu": 3, "neu_nachtraeglich": 1, "ergebnisse_neu": 2, "vorhanden": 9,
+             "wartend": ["Bundesliga: A – B (21.11.2026)"], "fehler": None, "dauer_s": 6.1,
+             "ligen": {"Bundesliga": {"neu": 3, "vorhanden": 9, "wartend": 1}}}
+    html = snapshot_box(stand, datetime(2026, 11, 21, 15, 0))
+    assert 'class="di-ok"' in html and "neu 3 (davon nachträglich 1)" in html and "Bundesliga: A – B" in html
+    assert 'class="di-bad"' in snapshot_box(stand, datetime(2026, 11, 21, 16, 30))       # älter als 2 Stunden
+    assert "Fehler: kaputt" in snapshot_box({**stand, "fehler": "kaputt"}, datetime(2026, 11, 21, 15, 0))
+
 
 def _datenimport():
     from views import datenimport

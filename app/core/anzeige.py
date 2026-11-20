@@ -10,6 +10,12 @@ Begriffe (4.1):
 - Sonderspiel: Status „geplant“ mit Vermerk „Nachholspiel“ oder „vorgezogen“; es behält seine Spieltagsnummer
 - Ende eines Spieltags: Tagesende des letzten Tages mit einem regulären Spiel
 - anstehender Spieltag: der Spieltag mit dem frühesten Termin, dessen Ende noch nicht erreicht ist
+
+Seit 0.20 (Entscheidungen Carsten 19.11.2026, `07`, 4.3 und 4.7):
+- gespielt: ab Anpfiff + 2 Stunden (ohne bekannte Anstosszeit ab Mitternacht nach dem Spieltag) ausgegraut mit
+  „Gespielt“, nach dem Import mit dem Endstand; bis dahin normal, ohne Live-Status und ohne „Ergebnis folgt“
+- Datenstand: veraltet erst, wenn der letzte erfolgreiche Importlauf mehr als 48 Stunden zurückliegt
+- Top Anomalien: die Spiele des Blocks bleiben bis zu seinem Ende stehen, gespielte ausgegraut; es rückt keines nach
 """
 
 from __future__ import annotations
@@ -26,7 +32,9 @@ from .fixtures import (
 
 WINDOW_DAYS = 6       # weitere Spieltage und Sonderspiele: erstes Spiel heute bis heute + 6 (O2)
 PAUSE_DAYS = 14       # Pause: mehr als 14 Tage (O1); der nächste Spieltag erscheint ab 14 Tagen vorher
-STALE_DAYS = 3        # Pausenhinweise nur, wenn der letzte erfolgreiche Importlauf höchstens 3 Tage alt ist (S9)
+STALE_HOURS = 48      # Pausenhinweise nur, wenn der letzte erfolgreiche Importlauf höchstens 48 Stunden alt ist
+                      # (S9; seit 0.20, bis 0.19.1: 3 Tage)
+PLAYED_AFTER = timedelta(hours=2)   # ab Anpfiff + 2 Stunden „Gespielt“ (seit 0.20)
 FORWARD = 2           # Navigation: höchstens 2 Spieltage über den anstehenden hinaus (4.4)
 
 WEEKDAYS = ("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
@@ -70,21 +78,34 @@ def _clock(text) -> time | None:
         return None
 
 
+def _known_clock(row) -> time | None:
+    return None if row.termin == TERMIN_TIME_OPEN else _clock(row.anstoss)
+
+
 def kickoff(row) -> datetime:
     """Geplanter Anstoss. Ohne bekannte Uhrzeit (Zeit offen, alter Spielplan ohne Spalte Anstoss) gilt das
     Tagesende: Das Spiel bleibt den ganzen Tag „kommend“."""
-    clock = None if row.termin == TERMIN_TIME_OPEN else _clock(row.anstoss)
-    return datetime.combine(row.datum_von, clock or DAY_END)
+    return datetime.combine(row.datum_von, _known_clock(row) or DAY_END)
+
+
+def played_from(row) -> datetime:
+    """Ab wann ein Spiel als gespielt gilt (seit 0.20): Anpfiff + 2 Stunden; ohne bekannte Anstosszeit ab
+    Mitternacht nach dem Spieltag (keine angenommene Uhrzeit)."""
+    clock = _known_clock(row)
+    if clock is None:
+        return datetime.combine(row.datum_von + timedelta(days=1), time(0, 0))
+    return datetime.combine(row.datum_von, clock) + PLAYED_AFTER
 
 
 def prepare(fixtures: pd.DataFrame) -> pd.DataFrame:
-    """Spielplan einer Liga mit Hilfsspalten: anstoss_zeit, regulaer, sonderspiel, aktiv."""
+    """Spielplan einer Liga mit Hilfsspalten: anstoss_zeit, gespielt_ab, regulaer, sonderspiel, aktiv."""
     fx = fixtures.copy()
     for col in ("anstoss", "termin", "hinweis"):
         if col not in fx.columns:
             fx[col] = ""
         fx[col] = fx[col].fillna("")
     fx["anstoss_zeit"] = [kickoff(r) for r in fx.itertuples()] if len(fx) else pd.Series(dtype="object")
+    fx["gespielt_ab"] = [played_from(r) for r in fx.itertuples()] if len(fx) else pd.Series(dtype="object")
     fx["aktiv"] = fx["status"].eq(STATUS_PLANNED)
     fx["regulaer"] = fx["aktiv"] & fx["hinweis"].eq("")
     fx["sonderspiel"] = fx["aktiv"] & fx["hinweis"].isin((HINT_CATCHUP, HINT_EARLY))
@@ -170,7 +191,7 @@ class Upcoming:
     notice: Notice | None
     anchor: tuple[str, int] | None      # anstehender Spieltag, sonst der letzte; Ausgangspunkt der Pfeile
     anchor_shown: bool                  # steht der Anker als Abschnitt auf der Seite?
-    stale: bool                         # Datenstand älter als 3 Tage (S9)
+    stale: bool                         # Datenstand älter als 48 Stunden (S9, seit 0.20)
 
 
 def round_section(fx: pd.DataFrame, saison: str, spieltag: int, full: bool = False) -> Section:
@@ -193,8 +214,10 @@ def _special_sections(fx: pd.DataFrame, specials: pd.DataFrame, all_rounds: list
     return out
 
 
-def is_stale(last_import: date | None, today: date) -> bool:
-    return last_import is None or (today - last_import).days > STALE_DAYS
+def is_stale(last_import: datetime | None, now: datetime) -> bool:
+    """Datenstand veraltet: kein erfolgreicher Importlauf oder der letzte liegt mehr als 48 Stunden zurück (S9).
+    last_import = Beginn des letzten erfolgreichen Laufs (Europe/Zurich, ohne Zeitzonenangabe)."""
+    return last_import is None or now - last_import > timedelta(hours=STALE_HOURS)
 
 
 def _has_christmas(start: date, end: date) -> bool:
@@ -209,12 +232,12 @@ def _open_games(fx: pd.DataFrame, today: date) -> bool:
     return bool((planned | latest["status"].isin((STATUS_POSTPONED, STATUS_SUSPENDED))).any())
 
 
-def upcoming(fixtures: pd.DataFrame, now: datetime, last_import: date | None) -> Upcoming:
+def upcoming(fixtures: pd.DataFrame, now: datetime, last_import: datetime | None) -> Upcoming:
     """Abschnitte und Hinweis der Ligaseite ohne Auswahl (Spezifikation 4.2 und 4.3)."""
     fx = prepare(fixtures)
     today = now.date()
     if fx.empty:
-        return Upcoming([], None, None, False, is_stale(last_import, today))
+        return Upcoming([], None, None, False, is_stale(last_import, now))
     all_rounds = rounds(fx)
     nxt, prev = next_round(all_rounds, today), previous_round(all_rounds, today)
     window_end = today + timedelta(days=WINDOW_DAYS)
@@ -251,9 +274,9 @@ def upcoming(fixtures: pd.DataFrame, now: datetime, last_import: date | None) ->
     if show_previous and prev is not None:
         sections.insert(0, round_section(fx, prev.saison, prev.spieltag, full=True))
 
-    stale = is_stale(last_import, today)
+    stale = is_stale(last_import, now)
     if stale:                                     # S9: keine Pausenhinweise, stattdessen der Datenstand
-        when = day_text_year(last_import) if last_import else "unbekannt (kein Importlauf gefunden)"
+        when = day_text_year(last_import.date()) if last_import else "unbekannt (kein Importlauf gefunden)"
         notice = Notice(STALE, "Spielplan zuletzt aktualisiert am", when,
                         "Pausenhinweise ausgeblendet, bis der Import wieder läuft")
     if not sections and notice is None and prev is not None:       # nichts anstehend: letzter Spieltag
@@ -288,7 +311,7 @@ def results_index(prepared: pd.DataFrame | None) -> dict[tuple[str, str, str], t
 @dataclass(frozen=True)
 class DateCell:
     text: str            # „Fr 20.11. · 20:30“
-    strong: str = ""     # fett hervorgehobener Teil („20:30“, „2:1“, „Ergebnis folgt“)
+    strong: str = ""     # fett hervorgehobener Teil („20:30“, „2:1“, „Gespielt“)
     grey: bool = False   # gespielt oder nicht aktiv: ganze Zeile grau
     active: bool = True  # False: verschoben usw., ohne KPI-Werte
     played: bool = False
@@ -304,15 +327,25 @@ def _weekend(d: date) -> str:
     return f"Wochenende {first}/{sun:%d.%m.}"
 
 
+def is_played(row, now: datetime, results: dict) -> bool:
+    """Gilt das Spiel als gespielt (ausgegraut)? Mit Ergebnis in der Datenbank immer, sonst ab Anpfiff + 2 Stunden
+    bzw. ab Mitternacht (seit 0.20). Verschobene usw. Spiele sind nie gespielt."""
+    if row.status in INACTIVE_STATUS:
+        return False
+    return (row.saison, row.heim, row.gast) in results or now >= played_from(row)
+
+
 def date_cell(row, now: datetime, results: dict) -> DateCell:
+    """Spalte „Datum“: bis Anpfiff + 2 Stunden der Termin (auch während des Spiels), danach ausgegraut „Gespielt“,
+    nach dem Import der Endstand (seit 0.20; bis 0.19.1 ab dem Anpfiff „Ergebnis folgt“)."""
     day = day_text(row.datum_von)
     if row.status in INACTIVE_STATUS:
         return DateCell(f"{day} · {row.status}", grey=True, active=False)
     score = results.get((row.saison, row.heim, row.gast))
     if score is not None:
         return DateCell(f"{day} · ", f"{score[0]}:{score[1]}", grey=True, played=True)
-    if now >= row.anstoss_zeit:
-        return DateCell(f"{day} · ", "Ergebnis folgt", grey=True, played=True)
+    if now >= played_from(row):
+        return DateCell(f"{day} · ", "Gespielt", grey=True, played=True)
     if row.termin == TERMIN_PROVISIONAL:
         return DateCell(f"{_weekend(row.datum_von)} · Termin offen")
     if row.termin == TERMIN_TIME_OPEN:
@@ -332,21 +365,49 @@ def _previous_game(fx: pd.DataFrame, team: str, before: datetime):
     return games.sort_values(["anstoss_zeit", "reihenfolge"], kind="stable").iloc[-1]
 
 
-def values_gate(fx: pd.DataFrame, row, now: datetime, results: dict) -> str | None:
-    """None: Werte zeigen. Sonst der Text statt der Werte („Werte ab Do 03.12. – Real Madrid spielt vorher noch
-    (Mi 02.12.)“). Werte erscheinen erst, wenn beide Teams ihr vorheriges Ligaspiel gespielt haben und das Ergebnis
-    in der Datenbank steht. fx = prepare(...) mit beiden Saisons."""
+def missing_previous(fx: pd.DataFrame, row, results: dict) -> list[tuple[str, pd.Series]]:
+    """Teams, deren vorheriges Ligaspiel noch kein Ergebnis in der Datenbank hat, mit diesem Spiel. Leer: Die Werte
+    sind vollständig berechenbar (auch für den Schnappschuss, der darauf wartet)."""
     missing = []
     for team in (row.heim, row.gast):
         prev = _previous_game(fx, team, row.anstoss_zeit)
         if prev is not None and (prev["saison"], prev["heim"], prev["gast"]) not in results:
             missing.append((team, prev))
+    return missing
+
+
+@dataclass(frozen=True)
+class Gate:
+    """Warum ein Spiel noch keine Werte zeigt (4.5). Genau eines der beiden Datumsfelder ist gesetzt."""
+    text: str                    # Text des Dashboards („Werte ab Do 03.12. – Real Madrid spielt vorher noch …“)
+    ab: date | None = None       # „Werte ab“: Tag nach dem späteren der ausstehenden Vorspiele
+    ergebnis_vom: date | None = None   # Vorspiel an einem früheren Tag gespielt, Ergebnis noch nicht übernommen
+
+
+def values_from(fx: pd.DataFrame, row, now: datetime, results: dict) -> Gate | None:
+    """None: Werte zeigen. Sonst warum noch nicht. Werte erscheinen erst, wenn beide Teams ihr vorheriges Ligaspiel
+    gespielt haben und das Ergebnis in der Datenbank steht. Nach dem Anstoss nie (seit 0.20, Entscheidungsprotokoll
+    4a: dann gilt der Schnappschuss bzw. die nachträgliche Berechnung). fx = prepare(...) mit beiden Saisons."""
+    if now >= row.anstoss_zeit:
+        return None
+    missing = missing_previous(fx, row, results)
     if not missing:
         return None
     latest = max(p["datum_von"] for _, p in missing)
     if latest < now.date():                       # Vorspiel an einem früheren Tag, Ergebnis noch nicht übernommen
-        return f"Werte folgen, sobald das Ergebnis vom {day_text(latest)} übernommen ist"
-    head = f"Werte ab {day_text(latest + timedelta(days=1))} – "
+        return Gate(f"Werte folgen, sobald das Ergebnis vom {day_text(latest)} übernommen ist", ergebnis_vom=latest)
+    ab = latest + timedelta(days=1)
+    return Gate(_gate_text(missing, now, f"Werte ab {day_text(ab)} – "), ab=ab)
+
+
+def values_gate(fx: pd.DataFrame, row, now: datetime, results: dict) -> str | None:
+    """Wie values_from, nur der Text des Dashboards („Werte ab Do 03.12. – Real Madrid spielt vorher noch
+    (Mi 02.12.)“); None: Werte zeigen."""
+    gate = values_from(fx, row, now, results)
+    return gate.text if gate else None
+
+
+def _gate_text(missing: list, now: datetime, head: str) -> str:
     ahead = [(team, p) for team, p in missing if p["datum_von"] >= now.date()]   # nur wer wirklich noch spielt
     if len(ahead) == 1:
         team, p = ahead[0]
@@ -363,15 +424,16 @@ def values_gate(fx: pd.DataFrame, row, now: datetime, results: dict) -> str | No
 class Block:
     """Der zeitlich nächste Block einer Liga für die Top Anomalien."""
     label: str                 # „Spieltag 10“ bzw. „Spieltag 23 · vorgezogen“
-    games: pd.DataFrame        # Spiele vor dem Anpfiff (kommen für die Top Anomalien in Frage)
+    games: pd.DataFrame        # alle angesetzten Spiele des Blocks, auch angepfiffene (seit 0.20: kein Nachrücken)
     remaining: int             # davon noch nicht angepfiffen
     takes_part: bool           # höchstens 14 Tage entfernt
     header: str                # Kopfzeile ohne Liganame: „Spieltag 10 · noch 4 Spiele“
 
 
-def top_block(fixtures: pd.DataFrame, now: datetime, last_import: date | None) -> Block | None:
+def top_block(fixtures: pd.DataFrame, now: datetime, last_import: datetime | None) -> Block | None:
     """Je Liga ein Block: normal der anstehende Spieltag samt Sonderspielen an seinen Tagen; Sonderspiele vor dem
-    nächsten Spieltag bilden einen eigenen Block bis zu ihrem Tagesende. Nur Spiele vor dem Anpfiff (S7)."""
+    nächsten Spieltag bilden einen eigenen Block bis zu ihrem Tagesende. Seit 0.20 bleiben angepfiffene Spiele im
+    Block (ausgegraut), damit die Liste bis zum Ende des Blocks gleich bleibt (bis 0.19.1: nur vor dem Anpfiff, S7)."""
     fx = prepare(fixtures)
     today = now.date()
     if fx.empty:
@@ -393,18 +455,18 @@ def top_block(fixtures: pd.DataFrame, now: datetime, last_import: date | None) -
         label, start = f"Spieltag {nxt.spieltag}", nxt.first
     else:
         return None
-    open_games = sort_games(games[games["anstoss_zeit"] > now])
-    remaining = len(open_games)
+    games = sort_games(games)
+    remaining = int((games["anstoss_zeit"] > now).sum())
     takes_part = (start - today).days <= PAUSE_DAYS
     if takes_part:
         state = f"noch {games_text(remaining)}" if remaining else "alle Spiele angepfiffen"
         header = f"{label} · {state}"
     else:
         header = _pause_header(fixtures, now, last_import, start)
-    return Block(label, open_games, remaining, takes_part, header)
+    return Block(label, games, remaining, takes_part, header)
 
 
-def _pause_header(fixtures: pd.DataFrame, now: datetime, last_import: date | None, start: date) -> str:
+def _pause_header(fixtures: pd.DataFrame, now: datetime, last_import: datetime | None, start: date) -> str:
     """Kopfzeile einer Liga, deren Block mehr als 14 Tage entfernt ist: „Winterpause bis 07.01.“."""
     view = upcoming(fixtures, now, last_import)
     until = f"{start - timedelta(days=1):%d.%m.}"
@@ -429,7 +491,7 @@ class Preview:
 
 def preview(fixtures: pd.DataFrame, now: datetime) -> Preview:
     """Was die Ligaseite und die Top Anomalien mit diesem Spielplan zeigen würden (Datenstand = heute)."""
-    view = upcoming(fixtures, now, now.date())
+    view = upcoming(fixtures, now, now)
     parts = []
     for s in view.sections:
         tag = f" ({s.hinweis})" if s.hinweis else ""
@@ -438,7 +500,7 @@ def preview(fixtures: pd.DataFrame, now: datetime) -> Preview:
     if view.notice is not None:
         text = " – ".join(x for x in (view.notice.title, view.notice.text) if x)
         parts.insert(0, f"{text} {view.notice.detail}".strip())
-    block = top_block(fixtures, now, now.date())
+    block = top_block(fixtures, now, now)
     return Preview("; ".join(parts) or "–", " + ".join(str(len(s.games)) for s in view.sections) or "–",
                    block.header if block else "–",
                    " bzw. ".join(f"{day_text(s.last)}, Tagesende" for s in view.sections) or "–")

@@ -1,6 +1,6 @@
 # Soccer Intelligence – Dashboard-Briefing
 
-**Version 5.7** · Stand 18.11.2026 (Version 0.19.1: Reiter-Reihenfolge, Text Top Anomalien, Schwellen je Liga in der Sensitivitätsanalyse; Version 0.19: Auffälligkeit und Prognosewert statt leicht/stark, 4.1, 5, 6.3, 6.4, 8; Version 0.14: Bereich Datenimport/API, 6.5; Version 0.15: Entwurf 2 mit Blöcken A/B und Entscheiden; Version 0.15.2: Anmeldemaske, 2.4; Version 0.16: kommende Spieltage, 4, 4.4, 5)
+**Version 5.8** · Stand 19.11.2026 (Version 0.20: Signalqualität stark/mittel/gering statt Prognosewert, gespielt ab Anpfiff + 2 Stunden, Top Anomalien ohne Nachrücken, Schnappschüsse im Reiter Datenimport/API, 48-Stunden-Grenze, 4, 5, 6.5; Version 0.19.1: Reiter-Reihenfolge, Text Top Anomalien, Schwellen je Liga in der Sensitivitätsanalyse; Version 0.19: Auffälligkeit und Prognosewert statt leicht/stark, 4.1, 5, 6.3, 6.4, 8; Version 0.14: Bereich Datenimport/API, 6.5; Version 0.15: Entwurf 2 mit Blöcken A/B und Entscheiden; Version 0.15.2: Anmeldemaske, 2.4; Version 0.16: kommende Spieltage, 4, 4.4, 5)
 
 > **Massgebliche Quelle seit 31.10.2026.** Änderungen werden nur noch in dieser Datei gemacht, mit Datum in der Änderungshistorie bzw. im `CHANGELOG.md`.
 > Das Word-Dokument *Dashboard-Briefing v4.2* liegt nur noch als Archiv im Ordner `word/` und wird nicht mehr gepflegt. Änderungen seit 31.10.2026 sind im Text als „Änderung“ mit Datum gekennzeichnet.
@@ -194,7 +194,7 @@ Die KPI-Bereiche sollen visuell voneinander getrennt sein.
 
 **Änderung 08.11.2026 (Carsten, beschlossen – gilt ab Etappe H):** Ziel ist eine **kompaktere Tabelle mit besserer Übersicht**. Mit KPI 05–09 (Ecken, Tore 1. HZ, Tore 2. HZ, Beide Teams treffen, Schüsse aufs Tor; Definitionen im KPI-Regelwerk, Abschnitt 9) wird die Tabelle **kompakt**:
 
-- Je Begegnung eine Zeile mit Laufnummer, Spielpaarung, Formkurve (KPI 01) und je KPI 02–09 **Hauptwert und Punkt nach Prognosewert** (seit 0.19, Kapitel 8), Kennzeichnung „V“ bei vorläufigen Werten (nie auffällig). Die aufgeklappte KPI-Karte zeigt rechts oben „Auffällig · Prognosewert hoch“ bzw. „Keine Auffälligkeit“ und darunter die Herleitung (Schwelle, Trefferquote, alle Spiele, Mehrwert, Spiele).
+- Je Begegnung eine Zeile mit Laufnummer, Spielpaarung, Formkurve (KPI 01) und je KPI 02–09 **Hauptwert und Punkt nach Signalqualität** (seit 0.19, Kapitel 8), Kennzeichnung „V“ bei vorläufigen Werten (nie auffällig). Die aufgeklappte KPI-Karte zeigt rechts oben „Auffällig · Signalqualität stark“ bzw. „Keine Auffälligkeit“ und darunter die Herleitung (Schwelle, Trefferquote, alle Spiele, Mehrwert, Spiele).
 - Alle Details einer Begegnung (je KPI: Teamwerte, Ligareferenz, Abweichung, Datenbasis inkl. Referenzspiele, Überschrift und Text) erscheinen **per Aufklappen** der Begegnung.
 - Fixierte Spalten (# und Spiel), Legende und die übrigen Regeln aus 4.2–4.4 bleiben.
 - Alle Zahlen mit **zwei Nachkommastellen** (KPI-Regelwerk 2.3, Entscheidung 08.11.2026).
@@ -246,9 +246,9 @@ Welche Begegnungen angezeigt werden, steht ausschliesslich in der Datei data/Spi
 
 1.  Ein Spieltag ist beendet am Tagesende seines letzten regulären Spiels (Zeitzone Europe/Zurich). **Anstehend** ist der nicht beendete Spieltag mit dem frühesten Termin.
 
-2.  Ohne Auswahl („Kommende Spiele“) erscheinen als **Abschnitte**: der anstehende Spieltag (höchstens 14 Tage entfernt), weitere Spieltage, die heute bis heute + 6 beginnen, und Nachhol- oder vorgezogene Spiele unter ihrer offiziellen Nummer. Gespielte Spiele bleiben grau mit Ergebnis stehen.
+2.  Ohne Auswahl („Kommende Spiele“) erscheinen als **Abschnitte**: der anstehende Spieltag (höchstens 14 Tage entfernt), weitere Spieltage, die heute bis heute + 6 beginnen, und Nachhol- oder vorgezogene Spiele unter ihrer offiziellen Nummer. Gespielte Spiele bleiben grau mit Ergebnis stehen (seit 0.20: ab Anpfiff + 2 Stunden grau mit „Gespielt“, nach dem Import mit Ergebnis; bis dahin normal; Werte des Schnappschusses, `07`, 4.9).
 
-3.  Pausen über 14 Tage zeigen eine Box („Winterpause“, „Spielpause“, „Sommerpause“), nur wenn der letzte Importlauf höchstens 3 Tage alt ist; sonst „Spielplan zuletzt aktualisiert am …“.
+3.  Pausen über 14 Tage zeigen eine Box („Winterpause“, „Spielpause“, „Sommerpause“), nur wenn der letzte erfolgreiche Importlauf höchstens 48 Stunden zurückliegt (seit 0.20; bis 0.19.1: 3 Tage); sonst „Spielplan zuletzt aktualisiert am …“.
 
 4.  Spiele mit Status (verschoben, abgesagt, abgebrochen, ausgesetzt, gewertet) erscheinen nicht unter den kommenden Spielen. Beim Blättern stehen sie in ihrem Spieltag mit dem Status in der Spalte Datum, ohne KPI-Werte. Die 3-Tage-Pflegeregel von 07.11.2026 ist seit 0.15 ersetzt (`04_Spielplan.md`, Abschnitt 6).
 
@@ -270,15 +270,15 @@ Der Bereich Top Anomalien (/dashboard) zeigt die auffälligsten Anomalien der an
 
 ### 5.1 Auswahl-Logik
 
-1.  Grundlage ist je aktiver Liga der zeitlich nächste Block (*Änderung 16.11.2026, Version 0.16*): der anstehende Spieltag samt Nachhol- und vorgezogenen Spielen an seinen Tagen; Sonderspiele davor bilden einen eigenen Block. Eine Liga nimmt teil, wenn ihr Block höchstens 14 Tage entfernt ist. Nur Spiele **vor dem Anpfiff** und **mit Werten** („Werte ab“, 4.4).
+1.  Grundlage ist je aktiver Liga der zeitlich nächste Block (*Änderung 16.11.2026, Version 0.16*): der anstehende Spieltag samt Nachhol- und vorgezogenen Spielen an seinen Tagen; Sonderspiele davor bilden einen eigenen Block. Eine Liga nimmt teil, wenn ihr Block höchstens 14 Tage entfernt ist. Nur Spiele **mit Werten** („Werte ab“, 4.4). *Änderung 19.11.2026 (Version 0.20):* Die Liste steht vor dem ersten Anpfiff fest; angepfiffene Spiele bleiben mit den Werten ihres Schnappschusses stehen, ab Anpfiff + 2 Stunden ausgegraut mit „Gespielt“ bzw. dem Ergebnis; es rückt kein anderes Spiel nach (bis 0.19.1: nur Spiele vor dem Anpfiff).
 
 2.  Berücksichtigt werden **KPI02 bis KPI09**, die **auffällig** sind (seit 0.19: Abweichung über der Schwelle ihrer Liga, KPI und Richtung; KPI-Regelwerk 2.2).
 
 3.  Vorläufige Werte sowie Spiele mit Status (verschoben, abgesagt, abgebrochen, ausgesetzt, gewertet) werden nicht berücksichtigt.
 
-4.  Rangfolge (seit 0.19, Entscheidungen Carsten 17./18.11.2026): Prognosewert **hoch** vor **mittel** vor **gering**; innerhalb einer Stufe der grösste Betrag der Abweichung; bei Gleichstand das frühere Spieldatum, danach die Reihenfolge im Spielplan. Keine Mischformel.
+4.  Rangfolge (seit 0.19, Entscheidungen Carsten 17./18.11.2026): Signalqualität **stark** vor **mittel** vor **gering**; innerhalb einer Stufe der grösste Betrag der Abweichung; bei Gleichstand das frühere Spieldatum, danach die Reihenfolge im Spielplan. Keine Mischformel.
 
-5.  Pro Begegnung wird höchstens ein Eintrag angezeigt: der KPI mit dem höchsten Prognosewert, dann der grössten Abweichung (bei Gleichstand der KPI mit der kleineren Nummer).
+5.  Pro Begegnung wird höchstens ein Eintrag angezeigt: der KPI mit der höchsten Signalqualität, dann der grössten Abweichung (bei Gleichstand der KPI mit der kleineren Nummer).
 
 6.  **Liga-Mix:** höchstens zwei Einträge je Liga; nur wenn die anderen Ligen nicht genug Auffälligkeiten haben, wird mit weiteren Spielen derselben Liga aufgefüllt.
 
@@ -286,7 +286,7 @@ Der Bereich Top Anomalien (/dashboard) zeigt die auffälligsten Anomalien der an
 
 8.  Gibt es keine Auffälligkeit, erscheint der Hinweis «Für die anstehenden Spiele liegen keine Auffälligkeiten vor.»
 
-9.  Text unter der Liste (Wortlaut Carsten 18.11.2026, seit 0.19.1) mit drei Zwischentiteln: **Berücksichtigte Spiele** (anstehende Spieltage aller Ligen samt Nachhol- und vorgezogenen Spielen, je Liga der nächste Spieltag, wenn er innerhalb der nächsten 14 Tage beginnt, Sonderspiele separat; nur Spiele vor dem Anpfiff mit vollständigen, nicht vorläufigen Werten) · **Auswahl der Auffälligkeiten** (über der Schwelle der Liga; nach Prognosewert hoch, mittel, gering, innerhalb der Stufe grösste Abweichung) · **Verteilung der Spiele** (eine Auffälligkeit je Begegnung, in der Regel höchstens zwei Spiele je Liga mit Auffüllen, maximal 4 Spiele). Wortlaut in `app/views/top_anomalien.py` (`selection_text`). Die Karten zeigen den Prognosewert und die Herleitung.
+9.  Text unter der Liste (Wortlaut Carsten 18.11.2026, seit 0.19.1) mit drei Zwischentiteln: **Berücksichtigte Spiele** (anstehende Spieltage aller Ligen samt Nachhol- und vorgezogenen Spielen, je Liga der nächste Spieltag, wenn er innerhalb der nächsten 14 Tage beginnt, Sonderspiele separat; nur Spiele mit vollständigen, nicht vorläufigen Werten; seit 0.20 Satz „Die Liste steht vor dem ersten Anpfiff fest: Gespielte Spiele bleiben ausgegraut an ihrem Platz, es rückt kein anderes Spiel nach.“) · **Auswahl der Auffälligkeiten** (über der Schwelle der Liga; nach Signalqualität stark, mittel, gering, innerhalb der Stufe grösste Abweichung) · **Verteilung der Spiele** (eine Auffälligkeit je Begegnung, in der Regel höchstens zwei Spiele je Liga mit Auffüllen, maximal 4 Spiele). Wortlaut in `app/views/top_anomalien.py` (`selection_text`). Die Karten zeigen den Signalqualität und die Herleitung.
 
 Die Auswahl-Logik wird zusätzlich im KPI-Regelwerk festgehalten (Abschnitt 2.6), da sie später auch für die öffentliche Startseite gilt.
 
@@ -340,25 +340,25 @@ Der Bereich Datenqualität (/dashboard/datenqualitaet) ist ein internes Kontroll
 
 ### 6.3 Schwellen und Häufigkeit (Tab „Schwellen und Häufigkeit“, seit 0.19)
 
-**Gültige Schwellen und Prognosewerte:** Tabelle je Liga, KPI und Richtung mit Schwelle, Prognosewert, Spielen, Trefferquote, Vergleichsgruppe und Mehrwert aus `schwellen.toml`, dazu Saisons und Freigabedatum der Datei. Kombinationen, die fehlen, werden nie ausgezeichnet. Nur Anzeige, Änderung einmal pro Saison über die Datei.
+**Gültige Schwellen und Signalqualität:** Tabelle je Liga, KPI und Richtung mit Schwelle, Signalqualität, Spielen, Trefferquote, Vergleichsgruppe und Mehrwert aus `schwellen.toml`, dazu Saisons und Freigabedatum der Datei. Kombinationen, die fehlen, werden nie ausgezeichnet. Nur Anzeige, Änderung einmal pro Saison über die Datei.
 
-**Häufigkeit je Liga und KPI:** Wie oft ist jeder KPI (ausser KPI01) auffällig, und mit welchem Prognosewert (hoch, mittel, gering; nicht auffällig; vorläufig; nicht berechenbar; Anteil auffällig, Anteil hoch)? Grundlage sind alle Spiele der letzten abgeschlossenen Saison (nie der Referenzsaison), jeweils so berechnet, als wären sie noch nicht gespielt. Anteile mit zwei Nachkommastellen, kaufmännisch gerundet. Bis 0.18: Spalten „leicht/stark“.
+**Häufigkeit je Liga und KPI:** Wie oft ist jeder KPI (ausser KPI01) auffällig, und mit welchem Signalqualität (stark, mittel, gering; nicht auffällig; vorläufig; nicht berechenbar; Anteil auffällig, Anteil hoch)? Grundlage sind alle Spiele der letzten abgeschlossenen Saison (nie der Referenzsaison), jeweils so berechnet, als wären sie noch nicht gespielt. Anteile mit zwei Nachkommastellen, kaufmännisch gerundet. Bis 0.18: Spalten „leicht/stark“.
 
-### 6.4 Sensitivitätsanalyse (Version 0.12; Entwurf C seit 0.13; seit 0.19 eine Schwelle je Richtung und Prognosewert)
+### 6.4 Sensitivitätsanalyse (Version 0.12; Entwurf C seit 0.13; seit 0.19 eine Schwelle je Richtung und Signalqualität)
 
 Siebter Bereich (ganz rechts, nur intern), Tab-Name **„Sensitivitätsanalyse“**, Adresse `/dashboard/simulation`. Frage: Wie oft schlagen die Auffälligkeiten mit bestimmten Schwellen an, und wie verlässlich sind sie? Rechenregeln: KPI-Regelwerk, Abschnitt 11. Die Darstellung ist ein Zwischenstand bis zum Designentwurf (Design-Briefing vom 18.11.2026).
 
 - **Kopf:** „Soccer Intelligence“, darunter **„Sensitivitätsanalyse“**. Gelber Hinweis: „Die hier angepassten Schwellen dienen der Simulation und haben keinen Einfluss auf die anderen Dashboard-Tabs. Es gelten weiterhin die Werte in der Datei schwellen.toml.“ Darunter 1 cm Abstand.
 - **Links Einstellungen** (bleiben beim Scrollen stehen): **Liga** (Alle Ligen oder eine Liga) und **Saison** (Regelwerk 11.4, voreingestellt „Alle Saisons“, mit ⓘ).
 - **Rechts:** Grundlage (Spiele, Liga, Saisons, abgeschlossene Spieltage); bei „Alle Ligen“ ein orangefarbener Hinweis mit den Spieltagen je Liga; Knopf **„Auf gültige Schwellen zurücksetzen“**.
-- **Eine Tabelle für alle KPIs 02–09.** Kopfzeile (bleibt oben): **KPI** · **Schwelle:** Richtung (ⓘ), Abweichung in % (ⓘ) · **Betroffene Spiele:** Anzahl Spiele, Ø/ST, Spieltagsabdeckung · **Ergebnisqualität und Prognosewert:** Anzahl eingetroffen, Trefferquote, Vergleichsgruppe (alle Spiele), Mehrwert in Pp., Spanne (Wilson 95 %), Empfehlung, **Prognosewert** (jede Spalte mit ⓘ-Kurzhilfe, Verweis „Mehr Details findest du unter der Tabelle.“).
+- **Eine Tabelle für alle KPIs 02–09.** Kopfzeile (bleibt oben): **KPI** · **Schwelle:** Richtung (ⓘ), Abweichung in % (ⓘ) · **Betroffene Spiele:** Anzahl Spiele, Ø/ST, Spieltagsabdeckung · **Ergebnisqualität und Signalqualität:** Anzahl eingetroffen, Trefferquote, Vergleichsgruppe (alle Spiele), Mehrwert in Pp., Spanne (Wilson 95 %), Empfehlung, **Signalqualität** (jede Spalte mit ⓘ-Kurzhilfe, Verweis „Mehr Details findest du unter der Tabelle.“).
   - Je KPI **zwei Zeilen: ↗ mehr, ↘ weniger**; Nummer und Name links; KPIs durch eine Linie getrennt.
   - In jeder Zeile ein **Eingabefeld** (Betrag, eine Nachkommastelle). Vorbelegt mit der gültigen Schwelle; leer mit grauem Text **„keine“** (keine gültige Schwelle) bzw. bei „Alle Ligen“ **„je Liga“** (unterschiedliche Schwellen; jede Liga zählt mit ihrer gültigen). Seit 0.19.1 stehen bei „je Liga“ die gültigen Schwellen klein und grau unter dem Feld (z. B. „PL 10 · SA 15“), und beim Wechsel auf eine Liga zeigt das Feld deren Schwelle (Fehler 0.19 behoben). Eigene Werte blau. Ohne Schwelle steht in der Zeile nur die Vergleichsgruppe und „keine Schwelle“; das Feld bleibt leer (Entscheidung Carsten 18.11.2026, keine Vorbelegung mit 0 %).
   - Empfehlung als farbige Marke wie bisher (Funktioniert grün, Funktioniert leicht gelb, Keine relevante Verbesserung grau, Noch unklar blau, Negativ rot, Zu wenige Daten grau). Unter 50 Spielen ist die Zeile grau.
-  - **Prognosewert:** Marke hoch (dunkel), mittel, gering (hell) in einer Farbe; „–“ mit grauem Grund (z. B. „Empfehlung: Funktioniert leicht“, „nicht stabil (4 von 7 Saisons)“). Bei einer einzelnen Saison ist die Spalte ausgegraut: „–“, „nur bei mehreren Saisons“.
+  - **Signalqualität:** Marke stark (dunkel), mittel, gering (hell) in einer Farbe; „–“ mit grauem Grund (z. B. „Empfehlung: Funktioniert leicht“, „nicht stabil (4 von 7 Saisons)“). Bei einer einzelnen Saison ist die Spalte ausgegraut: „–“, „nur bei mehreren Saisons“.
   - Kein „Total“ mehr (bis 0.18).
 - **Anmerkung** unter der Tabelle: über der Schwelle zählt, blaue Werte, graue Zeilen, leere Felder.
-- **Erklärfeld** (ersetzt „Definitionen und Änderungen“): Rahmen „Wie kommen die Werte in dieser Tabelle zustande?“ und **Beispiel** in sechs Schritten (Bundesliga, Schüsse aufs Tor, weniger; Werte aus der gültigen Datei mit Stand der Saisons) immer sichtbar; aufklappbar: Abweichung in % und Schwelle · Anzahl Spiele, Ø pro Spieltag, Spieltagsabdeckung · Anzahl eingetroffen und Trefferquote · Vergleichsgruppe und Mehrwert in Pp. · Spanne (Wilson 95 %) · Empfehlung (sechs Stufen) · Prognosewert (Voraussetzungen, vier Stufen, Hinweis auf zu optimistische Werte) · Grundlage der Berechnung. Verständlich für einen 16-Jährigen (Wunsch Carsten). Texte: Spezifikation 18.11.2026, Abschnitt 4. Die Änderungshistorie steht nur im Regelwerk (11.5).
+- **Erklärfeld** (ersetzt „Definitionen und Änderungen“): Rahmen „Wie kommen die Werte in dieser Tabelle zustande?“ und **Beispiel** in sechs Schritten (Bundesliga, Schüsse aufs Tor, weniger; Werte aus der gültigen Datei mit Stand der Saisons) immer sichtbar; aufklappbar: Abweichung in % und Schwelle · Anzahl Spiele, Ø pro Spieltag, Spieltagsabdeckung · Anzahl eingetroffen und Trefferquote · Vergleichsgruppe und Mehrwert in Pp. · Spanne (Wilson 95 %) · Empfehlung (sechs Stufen) · Signalqualität (Voraussetzungen, vier Stufen, Hinweis auf zu optimistische Werte) · Grundlage der Berechnung. Verständlich für einen 16-Jährigen (Wunsch Carsten). Texte: Spezifikation 18.11.2026, Abschnitt 4. Die Änderungshistorie steht nur im Regelwerk (11.5).
 - **Schwellenvorschlag:** Knopf „Schwellenvorschlag berechnen“ rechnet mit den gewählten Saisons für alle Ligen, KPIs und Richtungen die Schwelle nach Regelwerk 2.2 und zeigt sie als Tabelle; „Vorschlag als schwellen.toml herunterladen“. Nichts wird gespeichert; Übernahme nach Freigabe über GitHub (einmal pro Saison nach Saisonende).
 - Die Fälle aller Spiele werden einmal je Datenbankstand berechnet (beim ersten Aufruf rund 50 Sekunden); jede Änderung der Schwellen wirkt danach sofort.
 
@@ -396,6 +396,9 @@ Festhalten der Entscheide macht der Container `soccer-import`.
   „Freigabe hinterlegt“. A und B werden immer gemeinsam übernommen.
 - **Protokoll der letzten 14 Tage:** je Lauf Zeit, Abfragen, neue Spiele, Korrekturen, Spielplan (wichtig ·
   Anstosszeiten), Prüfung, Status (wartet, übernommen, verworfen, ersetzt, fehlgeschlagen mit Meldung).
+- **Schnappschüsse (Werte vor dem Anpfiff)** (seit 0.20, `07`, 4.9): letzter Lauf (✓, rot ✕ bei einem Fehler oder wenn
+  er älter als 2 Stunden ist), neu (davon nachträglich), erste Ergebnisse, Dauer; je Liga neu, vorhanden und „wartet
+  auf Vorspiel-Ergebnis“; die wartenden Spiele mit Datum. E-Mail-Alarm ab 0.22.
 - Nach der Testphase (Datum `automatisch_ab`) verschwinden die Buttons; das Protokoll bleibt. Fassungen mit Fehlern,
   kritischen Punkten oder neuen Warnungen werden nie automatisch übernommen.
 
@@ -447,7 +450,7 @@ Für KPI02 sind folgende acht Spalten vorgesehen:
 | 3       | Hauptwert    | Gemeinsamer Torindikator der Begegnung                  |
 | 4       | Ligareferenz | Durchschnitt der Liga                                   |
 | 5       | Abweichung   | Prozentuale Abweichung von der Ligareferenz             |
-| 6       | Einstufung   | Nicht auffällig oder auffällig mit Prognosewert (seit 0.19) |
+| 6       | Einstufung   | Nicht auffällig oder auffällig mit Signalqualität (seit 0.19) |
 | 7       | Datenbasis   | Anzahl verwendeter Spiele                               |
 | 8       | Beschreibung | Überschrift und Beschreibung exakt gemäss KPI-Regelwerk |
 
@@ -466,7 +469,7 @@ Für KPI03 sind folgende acht Spalten vorgesehen:
 | 3       | Hauptwert    | Gemeinsamer Teamdurchschnitt                            |
 | 4       | Referenzwert | Fixer Referenzwert von 2,5                              |
 | 5       | Abweichung   | Prozentuale Abweichung vom Referenzwert                 |
-| 6       | Einstufung   | Nicht auffällig oder auffällig mit Prognosewert (seit 0.19) |
+| 6       | Einstufung   | Nicht auffällig oder auffällig mit Signalqualität (seit 0.19) |
 | 7       | Datenbasis   | Anzahl verwendeter Spiele                               |
 | 8       | Beschreibung | Überschrift und Beschreibung exakt gemäss KPI-Regelwerk |
 
@@ -487,7 +490,7 @@ Für KPI04 sind folgende acht Spalten vorgesehen:
 | 3       | Hauptwert    | Erwartete gelbe Karten der Begegnung                    |
 | 4       | Ligareferenz | Durchschnitt der Liga                                   |
 | 5       | Abweichung   | Prozentuale Abweichung von der Ligareferenz             |
-| 6       | Einstufung   | Nicht auffällig oder auffällig mit Prognosewert (seit 0.19) |
+| 6       | Einstufung   | Nicht auffällig oder auffällig mit Signalqualität (seit 0.19) |
 | 7       | Datenbasis   | Anzahl verwendeter Spiele                               |
 | 8       | Beschreibung | Überschrift und Beschreibung exakt gemäss KPI-Regelwerk |
 
@@ -497,18 +500,18 @@ Diese Information kann kompakt in der Spalte «Datenbasis» oder über einen Too
 
 ## 8. Darstellung der Auffälligkeiten (seit Version 0.19)
 
-Die Auffälligkeiten sollen in der Tabelle schnell und eindeutig erkennbar sein. Seit 0.19 zeigt der Punkt den **Prognosewert** (Zwischenstand bis zum Designentwurf, Design-Briefing 18.11.2026): eine Farbe in drei Stufen, damit er nicht mit der Richtung (mehr/weniger) verwechselt wird.
+Die Auffälligkeiten sollen in der Tabelle schnell und eindeutig erkennbar sein. Seit 0.19 zeigt der Punkt den **Signalqualität** (Zwischenstand bis zum Designentwurf, Design-Briefing 18.11.2026): eine Farbe in drei Stufen, damit er nicht mit der Richtung (mehr/weniger) verwechselt wird.
 
 | **Status**                         | **Darstellung**                 |
 |------------------------------------|---------------------------------|
 | Nicht auffällig (oder vorläufig)   | heller, umrandeter Punkt        |
-| Auffällig · Prognosewert gering    | hell-türkiser Punkt mit Rand    |
-| Auffällig · Prognosewert mittel    | türkiser Punkt                  |
-| Auffällig · Prognosewert hoch      | dunkel-türkiser Punkt           |
+| Auffällig · Signalqualität gering    | hell-türkiser Punkt mit Rand    |
+| Auffällig · Signalqualität mittel    | türkiser Punkt                  |
+| Auffällig · Signalqualität stark      | dunkel-türkiser Punkt           |
 
 Bis 0.18: grau = keine, gelb = leichte, rot = starke Anomalie.
 
-Die Richtung der Abweichung wird über den Prozentwert mit Vorzeichen dargestellt (z. B. +24,50 %, −18,20 %). Die genauen Schwellen und Prognosewerte stehen im KPI-Regelwerk (2.2) und in `schwellen.toml`; sie dürfen nicht im Frontend neu definiert werden.
+Die Richtung der Abweichung wird über den Prozentwert mit Vorzeichen dargestellt (z. B. +24,50 %, −18,20 %). Die genauen Schwellen und Signalqualität stehen im KPI-Regelwerk (2.2) und in `schwellen.toml`; sie dürfen nicht im Frontend neu definiert werden.
 
 KPI01 Formkurve erhält keine Einstufung.
 
@@ -700,7 +703,7 @@ Die Umsetzung gilt als erfolgreich, wenn folgende Punkte erfüllt sind:
 
 14. Die technische Grundlage ermöglicht eine spätere öffentliche Website mit derselben Berechnungslogik.
 
-15. Der Bereich Top Anomalien zeigt höchstens vier Einträge gemäss der Auswahl-Logik in Kapitel 5 (seit 0.19 nach Prognosewert mit Liga-Mix).
+15. Der Bereich Top Anomalien zeigt höchstens vier Einträge gemäss der Auswahl-Logik in Kapitel 5 (seit 0.19 nach Signalqualität mit Liga-Mix).
 
 16. Der Bereich Datenqualität zeigt die Prüfergebnisse von Datenbank und Spielplan, die Spieltagsübersicht mit dem aktuellen Spieltag und die Häufigkeit der Anomalien.
 

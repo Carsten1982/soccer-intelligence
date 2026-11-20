@@ -1,8 +1,8 @@
-"""Bereich Sensitivitätsanalyse (seit 0.12; Version 0.19: eine Schwelle je Richtung und Prognosewert; Dashboard-Briefing
+"""Bereich Sensitivitätsanalyse (seit 0.12; Version 0.19: eine Schwelle je Richtung und Prognosewert, seit 0.20 Signalqualität; Dashboard-Briefing
 6.4, KPI-Regelwerk 11).
 
 Links Liga und Saison, rechts je KPI 02–09 zwei Zeilen (mehr / weniger), jede mit eigener Schwelle, Häufigkeit
-(betroffene Spiele), Ergebnisqualität, Empfehlung und Prognosewert. Gerechnet wird in core/sensitivity.py mit den Fällen
+(betroffene Spiele), Ergebnisqualität, Empfehlung und Signalqualität. Gerechnet wird in core/sensitivity.py mit den Fällen
 aus core/simulation.py. Die Eingaben hier ändern nie die gültigen Schwellen (schwellen.toml). Haben die Ligen
 unterschiedliche Schwellen, bleibt das Feld bei „Alle Ligen“ leer („je Liga“); eine eingetragene Zahl gilt dann für alle
 Ligen. Darunter das Erklärfeld (Rahmen, Beispiel, aufklappbare Erklärungen) und der Schwellenvorschlag.
@@ -67,9 +67,9 @@ INFO = {
               f"günstigste Fall. {MORE}",
     "empfehlung": "Urteil aus Anzahl, Mehrwert und Spanne: Zu wenige Daten, Negativ, Funktioniert, Funktioniert leicht, "
                   f"Keine relevante Verbesserung oder Noch unklar. {MORE}",
-    "prognosewert": "Wie stark wir uns auf die Auffälligkeit verlassen können: hoch, mittel, gering oder „–“ (mit Grund). "
+    "signalqualitaet": "Wie oft sich solche Auffälligkeiten früher bestätigt haben: stark, mittel, gering oder „–“ (mit Grund). "
                     f"Nur bei „Funktioniert“ und stabil über die Saisons. {MORE}",
-    "saisons": "Welche Saisons ausgewertet werden. Den Prognosewert gibt es nur bei mehreren Saisons. Die älteste Saison "
+    "saisons": "Welche Saisons ausgewertet werden. Die Signalqualität gibt es nur bei mehreren Saisons. Die älteste Saison "
                "der Datenbank (Referenzsaison) liefert nur die Vorsaison und fehlt immer.",
 }
 
@@ -127,7 +127,7 @@ table.si-t {border-collapse:collapse; width:100%; margin:0 !important; table-lay
 .si-i.r .tip {left:auto; right:-.3rem; transform:none;} .si-i.l .tip {left:-.3rem; transform:none;}
 .si-i:hover .tip {display:block;}
 .si-pw {display:inline-block; border-radius:.25rem; padding:.02rem .4rem; font-size:.74rem; font-weight:700; white-space:nowrap;}
-.si-pw.hoch {background:#0f766e; color:#fff;} .si-pw.mittel {background:#8fd3cb; color:#0b4f4a;}
+.si-pw.stark {background:#0f766e; color:#fff;} .si-pw.mittel {background:#8fd3cb; color:#0b4f4a;}
 .si-pw.gering {background:#e3f4f2; color:#0b4f4a; border:1px solid #8fd3cb;}
 .si-why {color:#8a96a8; font-size:.7rem; white-space:normal; line-height:1.15;}
 .si-t td.off {background:#f1f3f6; color:#9aa6b8;}
@@ -257,12 +257,12 @@ def head() -> None:
                       f'<div class="si-h l">Abweichung in %&nbsp;{info("schwelle", "l")}</div>', unsafe_allow_html=True)
         c[3].markdown(
             f'<table class="si-t">{colgroup()}<tr><th colspan=3 class=g>Betroffene Spiele</th>'
-            '<th colspan=7 class="g q">Ergebnisqualität und Prognosewert</th></tr><tr class=l>'
+            '<th colspan=7 class="g q">Ergebnisqualität und Signalqualität</th></tr><tr class=l>'
             f'<th>Anzahl Spiele {info("spiele")}</th><th>Ø/ST {info("schnitt")}</th>'
             f'<th>Spieltags&shy;abdeckung {info("abdeckung")}</th><th class=q>Anzahl eingetroffen {info("eingetroffen")}</th>'
             f'<th>Treffer&shy;quote {info("treffer")}</th><th>Vergleichs&shy;gruppe (alle Spiele) {info("vergleich")}</th>'
             f'<th>Mehrwert in Pp. {info("mehrwert", "r")}</th><th>Spanne (Wilson 95 %) {info("spanne", "r")}</th>'
-            f'<th>Empfehlung {info("empfehlung", "r")}</th><th>Prognose&shy;wert {info("prognosewert", "r")}</th></tr>'
+            f'<th>Empfehlung {info("empfehlung", "r")}</th><th>Signal&shy;qualität {info("signalqualitaet", "r")}</th></tr>'
             '</table>', unsafe_allow_html=True)
 
 
@@ -275,13 +275,13 @@ def _count_cells(c: Count) -> str:
 def prognosis_cell(q: Quality, one_season: bool) -> str:
     if one_season:
         return '<td class="c off">–<div class="si-why">nur bei mehreren Saisons</div></td>'
-    if q.prognosewert:
-        return f'<td class=c><span class="si-pw {q.prognosewert}">{q.prognosewert}</span></td>'
+    if q.signalqualitaet:
+        return f'<td class=c><span class="si-pw {q.signalqualitaet}">{q.signalqualitaet}</span></td>'
     return f'<td class=c>–<div class="si-why">{escape(q.reason)}</div></td>'
 
 
 def line_html(c: Count, q: Quality, one_season: bool, no_threshold: bool) -> str:
-    """Eine Zeile: betroffene Spiele, Ergebnisqualität, Empfehlung und Prognosewert mit derselben Schwelle."""
+    """Eine Zeile: betroffene Spiele, Ergebnisqualität, Empfehlung und Signalqualität mit derselben Schwelle."""
     if no_threshold:
         cells = ("<td>–</td><td>–</td><td>–</td><td class=q>–</td><td>–</td>"
                  + (f"<td>{pct(q.base)} %</td>" if q.base is not None else "<td>–</td>")
@@ -347,7 +347,7 @@ def _example() -> dict | None:
     return {"t": _n(s.schwelle), "n": s.spiele, "h": hits, "q": de(s.trefferquote), "b": de(s.vergleichsgruppe),
             "g": de_signed(s.mehrwert), "g0": round(float(s.mehrwert)), "lo": de_signed(s.spanne_links),
             "lo0": round(float(s.spanne_links)), "hi": de_signed(s.spanne_rechts), "st": s.saisons_positiv or "",
-            "pw": s.prognosewert, "seasons": seasons}
+            "pw": s.signalqualitaet, "seasons": seasons}
 
 
 def explanation() -> None:
@@ -356,7 +356,7 @@ def explanation() -> None:
     st.markdown(
         "<div class='si-box'><h4>Wie kommen die Werte in dieser Tabelle zustande?</h4>Wir schauen in die Vergangenheit: "
         "Wie oft ist eingetroffen, was eine Auffälligkeit angekündigt hat? Die Tabelle zeigt das Spalte für Spalte. Am "
-        "Ende steht der <b>Prognosewert</b>. Er zeigt, wie zuverlässig sich eine Auffälligkeit in der Vergangenheit "
+        "Ende steht die <b>Signalqualität</b>. Sie zeigt, wie zuverlässig sich eine Auffälligkeit in der Vergangenheit "
         "bestätigt hat. Die folgenden Erklärungen beschreiben, wie die einzelnen Werte berechnet werden und welche "
         "Aussagekraft sie haben.</div>", unsafe_allow_html=True)
     e = _example()
@@ -381,11 +381,11 @@ Pp.</b> Selbst am unteren Ende der Spanne bleiben rund {e["lo0"]} Treffer mehr p
 Frage: Gibt es einen statistisch relevanten Vorteil? Die möglichen Urteile sind <i>Zu wenige Daten, Negativ,
 Funktioniert, Funktioniert leicht, Keine relevante Verbesserung</i> und <i>Noch unklar</i>. Hier lautet das Ergebnis:
 <b>Funktioniert</b>. Wie die einzelnen Urteile berechnet werden, steht weiter unten unter „Empfehlung“.</li>
-<li><b>Prognosewert:</b> Er zeigt, wie zuverlässig sich eine Auffälligkeit in der Vergangenheit bestätigt hat:
-<b>hoch</b>, <b>mittel</b>, <b>gering</b> oder <b>–</b> (nicht verlässlich genug). Ein Prognosewert wird nur vergeben, wenn
+<li><b>Signalqualität:</b> Sie zeigt, wie zuverlässig sich eine Auffälligkeit in der Vergangenheit bestätigt hat:
+<b>stark</b>, <b>mittel</b>, <b>gering</b> oder <b>–</b> (nicht verlässlich genug). Eine Signalqualität wird nur vergeben, wenn
 die Empfehlung „Funktioniert“ lautet und der Mehrwert auch über mehrere Saisons hinweg stabil positiv war (hier in
-{escape(e["st"]).replace("/", " von ")} Saisons). Im Beispiel ergeben {e["q"]} % Trefferquote und {e["g"]} Pp. den
-Prognosewert <b>{e["pw"]}</b>. Die genauen Regeln stehen weiter unten unter „Prognosewert“.</li></ol></div>""",
+{escape(e["st"]).replace("/", " von ")} Saisons). Im Beispiel ergeben {e["q"]} % Trefferquote und {e["g"]} Pp. die
+Signalqualität <b>{e["pw"]}</b>. Die genauen Regeln stehen weiter unten unter „Signalqualität“.</li></ol></div>""",
                     unsafe_allow_html=True)
     with st.expander("Abweichung in % und Schwelle"):
         st.markdown(f"""**Abweichung in %:** Wie stark weicht die Erwartung für ein Spiel vom Ligaschnitt ab? Die Erwartung wird anhand der letzten 10 Spiele beider Teams berechnet (Datenstand höchstens zwei Tage vor dem Anpfiff). Als Vergleich dient der Ligaschnitt der 20 vorherigen Spieltage. Beispiel: Erwartung 7,8 Schüsse, Ligaschnitt 9,0 Schüsse → −13,3 %.
@@ -394,8 +394,8 @@ Prognosewert <b>{e["pw"]}</b>. Die genauen Regeln stehen weiter unten unter „P
 
 **Es gibt keine einheitliche Schwelle.** Jede Liga hat je Kennzahl und Richtung (*mehr* / *weniger*) höchstens eine eigene Schwelle. Diese wird nach einem festen Verfahren bestimmt:
 1. Wir probieren {", ".join(_n(c) for c in R.candidates[:-1])} und {_n(R.candidates[-1])} % aus.
-2. In Frage kommen nur Schwellen mit der Empfehlung **Funktioniert**, deren Vorteil zudem **stabil** ist (siehe „Prognosewert“).
-3. Davon nehmen wir die mit dem **besten Prognosewert**; bei Gleichstand die mit **mehr Spielen**, damit Auffälligkeiten nicht zu selten werden.
+2. In Frage kommen nur Schwellen mit der Empfehlung **Funktioniert**, deren Vorteil zudem **stabil** ist (siehe „Signalqualität“).
+3. Davon nehmen wir die mit der **besten Signalqualität**; bei Gleichstand die mit **mehr Spielen**, damit Auffälligkeiten nicht zu selten werden.
 4. Gibt es keine passende Schwelle, wird diese Kennzahl in der jeweiligen Liga und Richtung nicht als Auffälligkeit ausgewiesen.
 
 Die gültigen Schwellen werden einmal pro Saison nach Saisonende neu bestimmt und freigegeben (Knopf „Schwellenvorschlag berechnen“ unten). In der Tabelle kannst du andere Werte ausprobieren; was von der gültigen Schwelle abweicht, ist blau. Bei „Alle Ligen“ zählt jede Liga mit ihrer eigenen Schwelle, solange das Feld leer ist; die Schwellen der Ligen stehen klein darunter.""")
@@ -445,25 +445,25 @@ Die gültigen Schwellen werden einmal pro Saison nach Saisonende neu bestimmt un
 5. **Keine relevante Verbesserung:** Mindestens {R.min_cases} Spiele, und selbst der rechte (obere) Wert der Spanne liegt unter +{_n(R.relevant_high)} Pp. Ein relevanter Mehrwert ist damit nicht erkennbar.
 6. **Noch unklar:** Mindestens {R.min_cases} Spiele, aber keine der anderen Stufen trifft zu. Die Daten reichen noch nicht für eine eindeutige Bewertung; häufig ist die Spanne noch zu gross.
 
-Für den Prognosewert zählt nur „Funktioniert“. Die anderen Stufen zeigen, warum eine Zeile nicht reicht.""")
-    with st.expander("Prognosewert"):
+Für die Signalqualität zählt nur „Funktioniert“. Die anderen Stufen zeigen, warum eine Zeile nicht reicht.""")
+    with st.expander("Signalqualität"):
         a, b = R.stable_share
         share = "zwei Dritteln" if (a, b) == (2, 3) else f"{a}/{b}"
-        st.markdown(f"""Der Prognosewert zeigt, wie zuverlässig sich eine Auffälligkeit in früheren Spielen bestätigt hat. Er bestimmt auch die Reihenfolge der **Top Anomalien**: zuerst hoch, dann mittel, dann gering. Innerhalb jeder Stufe entscheidet die Grösse der Abweichung. Pro Liga werden in der Regel höchstens zwei Spiele berücksichtigt.
+        st.markdown(f"""Die Signalqualität zeigt, wie zuverlässig sich eine Auffälligkeit in früheren Spielen bestätigt hat. Sie bestimmt auch die Reihenfolge der **Top Anomalien**: zuerst stark, dann mittel, dann gering. Innerhalb jeder Stufe entscheidet die Grösse der Abweichung. Pro Liga werden in der Regel höchstens zwei Spiele berücksichtigt.
 
 **Voraussetzungen:**
 1. Die Empfehlung lautet **Funktioniert**.
 2. **Stabil:** Der Mehrwert war in mindestens **{share} der ausgewerteten Saisons** jeweils positiv (bei 7 Saisons also in mindestens {R.stable_needed(7)}). Dadurch werden Auffälligkeiten ausgeschlossen, deren positiver Gesamtwert hauptsächlich durch einzelne besonders gute Saisons zustande kommt.
 
 **Die vier Stufen:**
-- **hoch:** Trefferquote **ab {_n(R.high_rate)} %** und Mehrwert **ab +{_n(R.high_gain)} Pp.** Das Ergebnis trat also in mindestens 6 von 10 Fällen ein und lag gleichzeitig deutlich über dem Vergleichswert. Der zusätzliche Mindestwert von +{_n(R.high_gain)} Pp. verhindert, dass eine Kennzahl allein aufgrund einer ohnehin hohen Grundhäufigkeit als „hoch“ eingestuft wird (z. B. „wenig Tore in der 1. Halbzeit“: schon bei allen Spielen rund 64 %).
+- **stark:** Trefferquote **ab {_n(R.high_rate)} %** und Mehrwert **ab +{_n(R.high_gain)} Pp.** Das Ergebnis trat also in mindestens 6 von 10 Fällen ein und lag gleichzeitig deutlich über dem Vergleichswert. Der zusätzliche Mindestwert von +{_n(R.high_gain)} Pp. verhindert, dass eine Kennzahl allein aufgrund einer ohnehin hohen Grundhäufigkeit als „stark“ eingestuft wird (z. B. „wenig Tore in der 1. Halbzeit“: schon bei allen Spielen rund 64 %).
 - **mittel:** Trefferquote **ab {_n(R.medium_rate)} %** (oder ab {_n(R.high_rate)} %, wenn der Mehrwert unter +{_n(R.high_gain)} Pp. liegt).
 - **gering:** Trefferquote **ab {_n(R.low_rate)} %**. Die Auffälligkeit bestätigt sich mindestens in jedem zweiten Fall. Der Vorteil gegenüber dem Vergleichswert ist aber geringer.
 - **–:** Die Voraussetzungen sind nicht erfüllt oder die Trefferquote liegt unter {_n(R.low_rate)} %. Der Grund wird grau daneben angezeigt. Mit einer solchen Schwelle wird die Kennzahl nirgends als auffällig ausgewiesen – weder in den Top Anomalien noch auf den Ligaseiten.
 
 Bei einer **einzelnen Saison** lässt sich die Stabilität nicht prüfen: Die Spalte ist dann ausgegraut mit „–“ und dem Hinweis „nur bei mehreren Saisons“.
 
-**Wichtig:** Der Prognosewert ist **keine Wahrscheinlichkeit für das nächste Spiel**, sondern zeigt die Ergebnisse vergleichbarer Auffälligkeiten aus der Vergangenheit. Da wir aus mehreren möglichen Schwellen die jeweils beste auswählen, können die historischen Werte etwas zu positiv ausfallen. In einer neuen Saison kann die Trefferquote deshalb einige Prozentpunkte tiefer liegen. Prüfen kannst du das, indem du oben nur die letzte Saison auswählst und die Trefferquote vergleichst.""")
+**Wichtig:** Die Signalqualität ist **keine Wahrscheinlichkeit für das nächste Spiel**, sondern zeigt die Ergebnisse vergleichbarer Auffälligkeiten aus der Vergangenheit. Da wir aus mehreren möglichen Schwellen die jeweils beste auswählen, können die historischen Werte etwas zu positiv ausfallen. In einer neuen Saison kann die Trefferquote deshalb einige Prozentpunkte tiefer liegen. Prüfen kannst du das, indem du oben nur die letzte Saison auswählst und die Trefferquote vergleichst.""")
     with st.expander("Grundlage der Berechnung"):
         st.markdown("Jedes frühere Spiel wird so berechnet, als wäre es noch nicht gespielt – nur mit Daten, die vor dem "
                     "Anpfiff bekannt waren. Ausgewertet werden die gewählten Saisons, nur abgeschlossene Spieltage. Nicht "
@@ -490,7 +490,7 @@ def proposal_section(cases, matchdays_all, seasons: list[str]) -> None:
         st.info("Keine Kombination erfüllt die Bedingungen.")
         return
     show = df.assign(KPI=df["kpi"].map(TOP_KPIS), Stabil=df["saisons_positiv"].astype(str) + "/" + df["saisons"].astype(str))
-    show = show[["liga", "KPI", "richtung", "schwelle", "prognosewert", "spiele", "trefferquote", "vergleichsgruppe",
+    show = show[["liga", "KPI", "richtung", "schwelle", "signalqualitaet", "spiele", "trefferquote", "vergleichsgruppe",
                  "mehrwert", "spanne_links", "Stabil"]]
     st.dataframe(show.round(2), hide_index=True, use_container_width=True)
     span = f"{seasons[0]}-{seasons[-1]}" if seasons else ""

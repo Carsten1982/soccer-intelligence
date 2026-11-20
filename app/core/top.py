@@ -1,12 +1,14 @@
-"""Auswahl der Top Anomalien (KPI-Regelwerk, Abschnitt 2.6; seit Version 0.19 nach Prognosewert).
+"""Auswahl der Top Anomalien (KPI-Regelwerk, Abschnitt 2.6; seit Version 0.19 nach Prognosewert, seit 0.20 Signalqualität).
 
 - Grundlage: je aktiver Liga der zeitlich nächste Block (anstehender Spieltag samt Sonderspielen an seinen Tagen bzw.
-  Sonderspiele davor, höchstens 14 Tage entfernt), nur Spiele vor dem Anpfiff und mit Werten (core/anzeige.py).
+  Sonderspiele davor, höchstens 14 Tage entfernt), nur Spiele mit Werten (core/anzeige.py). Seit 0.20 bleiben
+  angepfiffene Spiele mit den Werten ihres Schnappschusses in der Auswahl: Die Liste steht vor dem ersten Anpfiff
+  fest und bleibt bis zum Ende des Blocks, gespielte Spiele ausgegraut; es rückt keines nach.
 - Auffällig ist eine Kennzahl KPI 02–09, wenn ihre Abweichung über der Schwelle ihrer Liga liegt (schwellen.toml);
-  sie trägt den Prognosewert hoch / mittel / gering. Ausgeschlossen: vorläufige Werte, verschobene/abgesagte Spiele.
-- Pro Begegnung ein Eintrag: die Kennzahl mit dem höchsten Prognosewert, dann der grössten Abweichung (gerundet),
+  sie trägt die Signalqualität stark / mittel / gering. Ausgeschlossen: vorläufige Werte, verschobene/abgesagte Spiele.
+- Pro Begegnung ein Eintrag: die Kennzahl mit der höchsten Signalqualität, dann der grössten Abweichung (gerundet),
   bei Gleichstand die kleinere KPI-Nummer.
-- Rangfolge: hoch vor mittel vor gering; innerhalb einer Stufe grösste Abweichung; dann früheres „Datum von“,
+- Rangfolge: stark vor mittel vor gering; innerhalb einer Stufe grösste Abweichung; dann früheres „Datum von“,
   Reihenfolge der Ligen in der Konfiguration und im Spielplan.
 - Liga-Mix: höchstens zwei Einträge je Liga; nur wenn danach weniger als vier gewählt sind, wird mit den
   übersprungenen Begegnungen in derselben Rangfolge aufgefüllt. Höchstens vier Einträge; gibt es weniger
@@ -49,6 +51,7 @@ class Candidate:
     status: str
     kpis: MatchKpis | None   # None bei verschobenen/abgesagten Spielen
     when: str = ""           # Datum und Anstoss für die Karte („Sa 21.11. · 18:30“, seit 0.16)
+    played: bool = False     # gespielt (ab Anpfiff + 2 Stunden): Karte ausgegraut (seit 0.20)
 
 
 @dataclass(frozen=True)
@@ -66,7 +69,7 @@ def _eligible(result: KpiResult) -> bool:
 
 def _sort_key(c: Candidate, result: KpiResult, kpi_order: int) -> tuple:
     return (
-        -RANK[result.anomalie],                     # 1. hoch vor mittel vor gering
+        -RANK[result.anomalie],                     # 1. stark vor mittel vor gering
         -abs(result.abweichung_rund),               # 2. grösster Betrag zuerst
         c.datum_von,                                # 3. früheres Spieldatum
         c.league_order, c.file_order,               # 4. Reihenfolge im Spielplan
@@ -108,5 +111,5 @@ def select_top(candidates: list[Candidate], max_entries: int = MAX_ENTRIES,
 
 
 def has_low(entries: list[TopEntry]) -> bool:
-    """Enthält die Auswahl Einträge mit Prognosewert „gering“ (Hinweis über der Liste)?"""
+    """Enthält die Auswahl Einträge mit Signalqualität „gering“ (Hinweis über der Liste)?"""
     return any(e.result.anomalie == LOW for e in entries)

@@ -42,7 +42,7 @@ def warm_up() -> float:
         return time.monotonic() - start
     state.get_prepared()
     state.get_thresholds()
-    at, last_import = state.now(), state.last_import_day()
+    at, last_import = state.now(), state.last_import()
     for league in state.get_active_leagues():
         state.get_frequency(league)
         state.get_results(league)

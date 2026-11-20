@@ -78,6 +78,68 @@
 
 Reihenfolge der Ligen auf der Website (Entwurf): Bundesliga, La Liga, Premier League, Serie A.
 
+### 4.1 Adressschema ab 0.20 (Entscheidung Carsten 19.11.2026)
+
+**Spiel-ID** = Fixture-ID von API-Football (z. B. `1550203`): bleibt bei Verschiebungen gleich und ist über alle Ligen und
+Saisons eindeutig; Spiele des Altbestands (2018/19–2025/26) haben sie über `app/config/zuordnung_api.csv`. Bei einem
+späteren Anbieterwechsel bleibt diese Nummer unsere feste ID (Zuordnung neuer Nummern).
+
+| Adresse | Seite |
+|---|---|
+| `/de/` | Startseite |
+| `/de/spieltag/<liga>/` | Spieltag (kommende Spiele) |
+| `/de/spieltag/<liga>/<saison>/<nr>/` | Archivseite je Spieltag, `<saison>` z. B. `2025-26` |
+| `/de/spiel/<liga>/<heim>-<gast>-<id>/` | Matchdetail, z. B. `/de/spiel/bundesliga/vfb-stuttgart-bayern-muenchen-1550203/` |
+| `/de/methodik/`, `/de/glossar/`, `/de/impressum/`, `/de/datenschutz/`, `/de/kontakt/` | Inhaltsseiten |
+
+Regeln:
+- **Eindeutig ist nur die ID am Ende.** Liga und Teamnamen dienen der Lesbarkeit; Namen = **API-Namen** wie angezeigt
+  (keine eigene Namensliste; Spielseiten sind kein SEO-Ziel).
+- **Namen in Adressen:** Kleinschreibung, ä → ae, ö → oe, ü → ue, ß → ss, übrige Akzente entfernt (Atlético → atletico),
+  alles andere als ein Zeichen ausser a–z und 0–9 → Bindestrich, keine doppelten Bindestriche.
+- **Liga-Teil:** `bundesliga`, `premier-league`, `serie-a`, `la-liga`.
+- **Weicht eine Adresse mit gültiger ID ab** (andere Liga, alter Vereinsname, fehlender Schrägstrich am Ende,
+  Grossbuchstaben): dauerhafte Weiterleitung **301** auf die richtige Adresse. Unbekannte ID: 404.
+- Jede Seite trägt ein `canonical`-Tag mit ihrer richtigen Adresse.
+- **`/de/` gilt ab dem Livegang für alle Seiten**; `/` leitet auf `/de/` weiter. Alte Adressen der Vorschau
+  (`/spiel/<id>`, `/spieltag/<liga>`) leiten dauerhaft auf die neuen weiter.
+- Ein Vereinsname ändert sich → neue lesbare Adresse, alte leitet per 301 weiter; die ID bleibt.
+
+**Englisch zum Livegang (Entscheidung Carsten 19.11.2026):** Die Website erscheint deutsch und englisch.
+
+| Deutsch | Englisch |
+|---|---|
+| `/de/` | `/en/` |
+| `/de/spieltag/<liga>/` | `/en/matchday/<liga>/` |
+| `/de/spieltag/<liga>/<saison>/<nr>/` | `/en/matchday/<liga>/<saison>/<nr>/` |
+| `/de/spiel/<liga>/<slug>-<id>/` | `/en/match/<liga>/<slug>-<id>/` |
+| `/de/methodik/` | `/en/methodology/` |
+| `/de/glossar/` | `/en/glossary/` |
+| `/de/impressum/` | `/en/legal-notice/` |
+| `/de/datenschutz/` | `/en/privacy-policy/` |
+| `/de/kontakt/` | `/en/contact/` |
+| `/de/cookie-einstellungen/` | `/en/cookie-settings/` |
+
+- **Slug in beiden Sprachen gleich** (aus den API-Namen, z. B. `vfb-stuttgart-bayern-muenchen-1550203`); nur die
+  Pfadwörter werden übersetzt. So ergibt sich die Adresse der anderen Sprache mit einer Regel.
+- **Liga-Teil in beiden Sprachen gleich:** `bundesliga`, `premier-league`, `serie-a`, `la-liga`.
+- Jede Seite verweist mit `hreflang` (de, en, x-default = de) auf beide Fassungen; Sprachwechsel führt auf dieselbe Seite.
+- **Ohne Liga:** `/de/spieltag/` bzw. `/en/matchday/` leiten auf die Standardliga weiter (Bundesliga, F8; 302, weil
+  die Standardliga sich ändern kann).
+- **Sonderzeichen in Namen:** Apostrophe werden ersatzlos entfernt; „&“, Punkte, Leerzeichen und alle übrigen Zeichen
+  ausser a–z und 0–9 werden zu einem Bindestrich; keine doppelten Bindestriche, keine am Anfang oder Ende.
+  Beispiele: „1. FC Köln“ → `1-fc-koeln`, „Brighton & Hove Albion“ → `brighton-hove-albion`, „Atlético Madrid“ →
+  `atletico-madrid`.
+- **Cookie-Einstellungen:** `noindex`, nicht in der Sitemap.
+- **404 je Sprachverzeichnis:** unbekannte Adresse unter `/de/` → deutsche Seite „nicht gefunden“, unter `/en/` → englische; sonst deutsch.
+- **Neue Mannschaft:** Der Slug entsteht immer automatisch aus dem API-Namen. Fehlt im Namenverzeichnis ein deutscher oder englischer Anzeigename, zeigt die Seite bis dahin den API-Namen und meldet das intern (Datenimport/API); die Veröffentlichung wird nicht blockiert. Ein späterer Anzeigename ändert den Slug nicht.
+- **Wiederholungsspiel mit neuer ID:** eigene Seite; die alte Seite bleibt erreichbar und wird nie gelöscht (mit ihrem Status, z. B. „Abgebrochen“).
+- **Fehlende Übersetzung:** kommt nicht vor, solange alle Seiten in beiden Sprachen existieren. Falls künftig (z. B. dritte Sprache): kein `hreflang`-Eintrag für diese Seite, der Sprachwechsel führt auf die Startseite der Zielsprache. Fehlt nur ein einzelner Text, gilt der deutsche (Fallback der Sprachdatei).
+- **Texte:** alle Website-Texte zusätzlich englisch (`texte/en.json`), Inhalte (Methodik, Glossar, rechtliche Seiten)
+  aus dem finalen Content in beiden Sprachen; Teamnamen bleiben die API-Namen.
+
+
+
 ## 5. Seite Spieltag (Übergabe, Abschnitt 6)
 
 ### 5.1 Aufbau (seit 0.18 nach Entwurf 3d)
@@ -92,17 +154,18 @@ Reihenfolge der Ligen auf der Website (Entwurf): Bundesliga, La Liga, Premier Le
 ### 5.2 Welche Spiele (gleiche Regeln wie Dashboard, `07`, Abschnitt 4)
 - Tabs = die Spieltage, die das Dashboard ohne Auswahl als Abschnitte zeigt (anstehender Spieltag, weitere Spieltage, die heute bis heute + 6 beginnen).
 - Je Tab: alle Spiele des Spieltags (auch gespielte und solche mit Status, F5), dazu Nachhol- und vorgezogene Spiele der nächsten 7 Tage, die in den Zeitraum des Tabs fallen (sonst im ersten Tab, F4).
-- Pausen (F7): Ist kein Spieltag in höchstens 14 Tagen, ersetzt eine Pausen-Karte die Liste (Spielpause, Winterpause, Sommerpause, Saisonstart). Datenstand über 3 Tage: gelbe Warnbox, Liste bleibt.
+- Pausen (F7): Ist kein Spieltag in höchstens 14 Tagen, ersetzt eine Pausen-Karte die Liste (Spielpause, Winterpause, Sommerpause, Saisonstart). Datenstand über 48 Stunden (seit 0.20; bis 0.19.1: 3 Tage): gelbe Warnbox, Liste bleibt.
 
 ### 5.3 Einstufung je Partie (Codes in Klammern)
-Reihenfolge der Prüfung: **Status > gespielt > nicht gewertet > Stufe** (Übergabe 6.4, letzter Absatz).
+Reihenfolge der Prüfung (seit 0.20, Entscheidungsprotokoll 19.11.2026 Nr. 1): **Status > gespielt > Werte ab > zu wenig Daten > Stufe** (bis 0.19.1: Status > gespielt > nicht gewertet > Stufe).
 
 | Art | Wann |
 |---|---|
-| Status (`status`) | Spielplan-Status verschoben, abgesagt, abgebrochen, ausgesetzt, gewertet |
-| Gespielt (`gespielt`) | Ergebnis in der Datenbank, oder Anstoss vorbei (dann „Ergebnis folgt“) |
-| Nicht gewertet (`nicht_gewertet`) | alle 8 Kennzahlen vorläufig (F2) oder keine Werte |
-| Hoch / Mittel / Gering (`hoch`, `mittel`, `gering`, seit 0.19) | mindestens eine nicht vorläufige Kennzahl ist auffällig; Art = höchster Prognosewert (Regelwerk 2.2). Bis 0.18: Stark (`stark`) / Leicht (`leicht`) |
+| Status (`status`) | Spielplan-Status verschoben, abgesagt, abgebrochen, ausgesetzt, gewertet (gewertet nur für nie gespielte Spiele, `07`, 4.9) |
+| Gespielt (`gespielt`) | Ergebnis in der Datenbank, oder ab Anpfiff + 2 Stunden (ohne Anstosszeit ab Mitternacht) mit Chip „Gespielt“ (seit 0.20; bis 0.19.1 ab dem Anstoss „Ergebnis folgt“) |
+| Werte ab (`werte_ab`, seit 0.20) | vor dem Anstoss, ein Team hat sein vorheriges Ligaspiel noch nicht gespielt bzw. das Ergebnis fehlt: Chip „Werte ab 5.12.“ bzw. „Werte folgen“ |
+| Zu wenig Daten (`zu_wenig_daten`, bis 0.19.1 `nicht_gewertet`) | alle 8 Kennzahlen vorläufig (F2) oder keine Werte |
+| Stark / Mittel / Gering (`stark`, `mittel`, `gering`, seit 0.20; 0.19: `hoch`/`mittel`/`gering`) | mindestens eine nicht vorläufige Kennzahl ist auffällig; Art = höchste Signalqualität (Regelwerk 2.2). Bis 0.18: Stark (`stark`) / Leicht (`leicht`) als Grösse der Abweichung |
 | Ohne Auffälligkeit (`ohne`) | sonst |
 
 Stufen kommen aus `schwellen.toml` über den Rechenkern (Übergabe 4.1, keine festen 20/35). Vorläufige Kennzahlen zählen für die Stufe nicht.
@@ -110,7 +173,7 @@ Stufen kommen aus `schwellen.toml` über den Rechenkern (Übergabe 4.1, keine fe
 ### 5.4 Sortierung und Zählung
 - Seit 0.18 wie im Entwurf 3d (Skript `renderVals`): Stark (nach grösster Abweichung) → Leicht (nach grösster Abweichung) → Ohne Auffälligkeit → alle übrigen (Nicht gewertet, Status, Gespielt) als **eine** Gruppe nach Anstoss.
 - Nachhol- und vorgezogene Spiele werden mitsortiert (wie im Entwurf); in 0.17 standen sie als Gruppe am Ende (Annahme A2, ersetzt).
-- „Partien“ = Spiele des Spieltags ohne Sonderspiele; „mit Auffälligkeit“ = Stark + Leicht, Sonderspiele eingeschlossen; „plus n Nachholspiel(e)“ bzw. „plus n vorgezogene(s) Spiel(e)“.
+- Zählform seit 0.20 (Template-Briefing 3.3): „9 Spiele“, „9 Spiele + 1 Nachholspiel“, „8 Spiele + 2 Nachholspiele“, nur Sonderspiele „1 Nachholspiel“ bzw. „1 Spiel vorgezogen“, danach „· 4 auffällige Spiele“ (Sonderspiele eingeschlossen). Chips der Sonderspiele mit Nummer: „Nachholspiel · Spieltag 13“, „Vorgezogen · Spieltag 23“ (auch im Scoreboard und in der Kopfzeile des Rankings). Bis 0.19.1: „Partien“, „mit Auffälligkeit“, „plus n Nachholspiel(e)“.
 
 ### 5.5 Kachel
 Heim, „gegen“, Gast, Termin („Sa 14.11. · 15:30“, „Sa 14.11. · Zeit offen“, „Wochenende 06./07.02. · Termin offen“, bei Status „Termin offen“ bzw. Datum), bei gespielten Spielen das Ergebnis. Chips (Stufe, Nachholspiel/vorgezogen, Status, Ergebnis folgt), runder Pfeil zur Seite des Spiels. Farben, Ränder und Masse nach Entwurf 3d. Verschobene und abgesagte Spiele sind nicht verlinkt (F8).
@@ -137,7 +200,7 @@ Heim, „gegen“, Gast, Termin („Sa 14.11. · 15:30“, „Sa 14.11. · Zeit 
 
 ## 7. Matchdetail und Startseite (seit 0.18)
 
-**Seit 0.19 (Prognosewert, Regelwerk 2.2):** Website-Daten tragen statt „stark/leicht“ den Prognosewert `hoch`/`mittel`/`gering` (Kacheln, Karten, Ranking, Chips „Prognosewert hoch“ usw.). Gestaltung bis zum Designentwurf der Website unverändert: hoch wie bisher „stark“ (dunkel), mittel und gering wie bisher „leicht“ (hell). Neuer Entwurf und Release B folgen.
+**Seit 0.20 Signalqualität `stark`/`mittel`/`gering`** (Chips „Signalqualität stark“ usw.; Werte unverändert). **Seit 0.19 (Prognosewert, Regelwerk 2.2):** Website-Daten tragen statt „stark/leicht“ den Prognosewert `hoch`/`mittel`/`gering` (Kacheln, Karten, Ranking, Chips „Prognosewert hoch“ usw.). Gestaltung bis zum Designentwurf der Website unverändert: hoch wie bisher „stark“ (dunkel), mittel und gering wie bisher „leicht“ (hell). Neuer Entwurf und Release B folgen.
 
 ### 7.1 Matchdetail (Entwurf 2i, ergänzend 2c; Übergabe Abschnitt 7)
 **Jede Paarung des Spielplans hat eine eigene Seite** unter `/spiel/<Spiel-ID von API-Football>` – auch gespielte, Nachhol- und vorgezogene Spiele. Verlinkt sind sie von der Spieltag-Seite und vom Ranking der Startseite. Verschobene und abgesagte Spiele haben ebenfalls eine Seite (über die Adresse erreichbar), werden aber nicht verlinkt (F8). Programm: `app/website/spiel.py` (Datensatz), `vorlagen/spiel.html`.
@@ -145,7 +208,7 @@ Heim, „gegen“, Gast, Termin („Sa 14.11. · 15:30“, „Sa 14.11. · Zeit 
 1. Kopf rechts „Zurück zum Spieltag“ (statt Navigation).
 2. Scoreboard: Liga · Spieltag, Termin (bzw. „Endstand 2 : 1“ / „Ergebnis folgt“, Q5) mit Chips Nachholspiel/vorgezogen/Status, beide Teams mit Formkurve „Letzte 5 Spiele“ (S/U/N, „–“ = noch kein Spiel, KPI 01) und Legende.
 3. Kernaussage: grösste Auffälligkeit („+44,00 % · Über 2,5 Tore · Mehr als 2,5 Tore erwartet“); ohne Auffälligkeit „Keine statistischen Auffälligkeiten – Alle 8 Kennzahlen liegen im Normalbereich. Die größte Abweichung: …“; nicht gewertet „Nicht gewertet“; Status „Für dieses Spiel gibt es keine Werte.“
-4. Hinweise: Nachholspiel („… wird am So 22.11. um 17:30 Uhr nachgeholt“), vorgezogen, gespielt („Die Werte wurden vor dem Spiel berechnet.“, Q5).
+4. Hinweise: Nachholspiel („… wird am So 22.11. um 17:30 Uhr nachgeholt“), vorgezogen, gespielt („Die Werte wurden mit den Daten vor dem Spiel berechnet.“, Q5). Seit 0.20 mit dem Schnappschuss (`07`, 4.9): gespielte Spiele zeigen seine Werte; fehlt er „Werte nachträglich mit den Daten vor dem Spiel berechnet.“; weicht das Ergebnis vom zuerst übernommenen ab „Endstand: Ergebnis nachträglich korrigiert“. Bis Anpfiff + 2 Stunden steht der Termin (kein Live-Status), danach „Gespielt“ bzw. „Endstand 2 : 1“. Vor dem Anstoss ohne Werte: Scoreboard bleibt, statt der Kennzahlen „Werte ab Sa 05.12. – sobald beide Teams ihr vorheriges Ligaspiel gespielt haben.“ bzw. „Werte folgen, sobald das Ergebnis vom 28.11. übernommen ist.“ Ohne Auffälligkeit „Keine der {n} Kennzahlen überschreitet ihre Schwelle.“ mit n = bewertete Kennzahlen (n = 1: „Die einzige gewertete Kennzahl …“).
 5. „Auffälligkeiten“: Karten je Kennzahl mit Stufe, nach Betrag der Abweichung sortiert; Balken (Länge = Betrag/2 % der Breite, höchstens 50 %, über 100 % gekappt mit Streifen, Übergabe 4.2); aufklappbar „Zahlen im Detail“: Erwartungswert, „Je Mannschaft · Mittelwert beider Teams“ (bei Gelben Karten „Heim + Gast“ mit zweiteiliger Leiste, Q1), Ligaschnitt bzw. „Vergleichswert (Marke)“ 2,50 bei KPI 03 (Q2), Abweichung mit Stufe, „Zuklappen“.
 6. „Im Normalbereich“: übrige Kennzahlen als aufklappbare Zeilen, nach Betrag; eine einzelne vorläufige Kennzahl dort schraffiert mit „· nicht gewertet“ (Q4). Ist das ganze Spiel nicht gewertet: Hinweisbox und Überschrift „Kennzahlen“ (ohne Werte: eigener Text „Für dieses Spiel liegen noch keine Werte vor …“).
 7. Status-Spiele (verschoben, abgesagt …): nur Scoreboard und Kernaussage, keine Kennzahlen (wie die graue Kachel, F5).
@@ -157,9 +220,9 @@ Werte unverändert aus dem Rechenkern (F6): Erwartungswert = `hauptwert`, Teamwe
 Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
 
 1. Kopfbereich „Fußballspiele **durchleuchtet.**“ mit Knöpfen „Auffällige Spiele“ und „So funktioniert’s“.
-2. **„Die auffälligsten Spiele“** = genau die Top Anomalien des Dashboards (F6): je Liga der zeitlich nächste Block (`core/anzeige.top_block`), nur Spiele vor dem Anpfiff und mit Werten (`values_gate`), Auswahl und Rangfolge nach Regelwerk 2.6 (`core/top.select_top`, seit 0.19: Prognosewert hoch vor mittel vor gering, dann grösster Betrag, früheres Datum, Ligareihenfolge; Liga-Mix höchstens 2 je Liga; höchstens 4, einer je Spiel; vorläufige Werte und verschobene Spiele nie). Je Zeile: Rang, „Bundesliga · Spieltag 10“, Paarung, Termin, Pfeil, Abweichung, Stufe, Kennzahl, Balken; Link zum Matchdetail.
+2. **„Die auffälligsten Spiele“** = genau die Top Anomalien des Dashboards (F6): je Liga der zeitlich nächste Block (`core/anzeige.top_block`), nur Spiele mit Werten (`values_from`, nie „Werte ab“); seit 0.20 bleiben gespielte Spiele mit den Werten ihres Schnappschusses auf ihrem Platz, ausgegraut mit „Gespielt“ bzw. „Endstand 2 : 1“, es rückt keines nach (bis 0.19.1: nur Spiele vor dem Anpfiff); Auswahl und Rangfolge nach Regelwerk 2.6 (`core/top.select_top`, seit 0.19: Prognosewert hoch vor mittel vor gering, dann grösster Betrag, früheres Datum, Ligareihenfolge; Liga-Mix höchstens 2 je Liga; höchstens 4, einer je Spiel; vorläufige Werte und verschobene Spiele nie). Je Zeile: Rang, „Bundesliga · Spieltag 10“, Paarung, Termin, Pfeil, Abweichung, Stufe, Kennzahl, Balken; Link zum Matchdetail.
 3. Zustände statt der Liste (Pausenkarte): **Keine Abweichungen** (eine Liga spielt, aber ohne Auffälligkeit) · **Spielpause** / **Winterpause** (keine Liga in den nächsten 14 Tagen; Winterpause, wenn Weihnachten in der Lücke liegt) · **Saisonstart** (alle nächsten Spieltage gehören zu einer neuen Saison) · **Sommerpause** („Die Saison ist beendet“, kein angesetztes Spiel) · **Nächster Spieltag** ohne Pausennamen bei veraltetem Datenstand (S9). Massgebend ist der früheste nächste Spieltag aller Ligen; der Knopf führt zu dessen Liga. Tage-Zähler (Q7) bei Spiel-, Winterpause, Saisonstart und veraltetem Stand. Fehler in den Daten: Hinweis „Daten werden geprüft“.
-4. Warnbox bei veraltetem Datenstand (über 3 Tage, F7); „Aktueller Datenstand: …“ (D1).
+4. Warnbox bei veraltetem Datenstand (über 48 Stunden seit 0.20, bis 0.19.1 über 3 Tage, F7); „Aktueller Datenstand: …“ (D1).
 5. „Deine Liga. Dein Spieltag.“ (vier Liga-Knöpfe), „So funktioniert’s“ (drei Spalten), Band „Bereit für den Spieltag?“, Block „Von einem Fußballfan gebaut“ mit Foto (Q6) oder Platzhalter, SEO-Text „Was ist Soccer Intelligence?“.
 
 **Foto (Q6):** Datei `portrait.jpg` im Ordner `/docker/football-dashboard/website-bilder/` auf dem Server (quadratisch, mindestens 230 × 230 Pixel, JPEG). Der Ordner ist nur lesend im Container `soccer-vorschau` eingebunden (`/bilder`), steht in `.gitignore` und kommt nie ins Programm-Abbild (Dockerfile kopiert nur `app/`). Ein neues Foto wirkt sofort (kein Neustart nötig; Browser-Zwischenspeicher bis 1 Stunde).
@@ -169,7 +232,7 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
 | Nr. | Situation | Erwartet |
 |---|---|---|
 | W1 | Formate | „Sa 21.11.“, „+47,36 %“, „−22,07 %“ (U+2212), „0,00 %“ ohne Vorzeichen, „2 : 1“, Zeitraum über den Jahreswechsel |
-| W2 | Einstufung | Status vor gespielt vor nicht gewertet vor Stufe; vorläufige Kennzahlen zählen nicht; seit 0.19 Prognosewert hoch vor mittel vor gering |
+| W2 | Einstufung | Status vor gespielt vor nicht gewertet vor Stufe; vorläufige Kennzahlen zählen nicht; seit 0.19 Prognosewert hoch vor mittel vor gering; seit 0.20 Status vor gespielt (ab Anpfiff + 2 h) vor Werte ab vor zu wenig Daten vor Signalqualität stark/mittel/gering |
 | W3 | Sortierung | seit 0.18: Stark → Leicht → Ohne → übrige (Nicht gewertet, Status, Gespielt) nach Anstoss; innerhalb Stark/Leicht nach Betrag; Sonderspiele mitsortiert |
 | W4 | Zählung | Partien ohne Sonderspiele; „mit Auffälligkeit“ mit Sonderspielen; „keine mit Auffälligkeit“ |
 | W5 | Nachholspiel | im Tab, in dessen Zeitraum es fällt, sonst im ersten; mitsortiert (seit 0.18); Chip |
@@ -181,8 +244,8 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
 | W11 | Vorschau-Dienst | Adressen (Startseite, Matchdetail, JSON), Weiterleitung, 404, ungültiges Datum, Dateien nur aus dem eigenen Ordner, Kopfzeilen; Foto nur aus `website-bilder/`, sonst Platzhalter; Vorladen bricht nie ab |
 | W12 | Container | Router nur unter `/vorschau`, mit Passwortabfrage, noindex, Anfragebremse; nur lesend |
 | W13 | Echte Daten | alle vier Ligen an mehreren Tagen (wie A27) ohne Fehler; mit echten Dateien auch Startseite und Matchdetail jeder verlinkten Paarung |
-| W14 | Matchdetail | Q1 (Summe nur Gelbe Karten, sonst Mittelwert), Q2 (Marke 2,50), Q4 (einzelne vorläufige Kennzahl unter Normalbereich), Q5 (Endstand, Ergebnis folgt, Hinweis), nicht gewertet mit/ohne Werte, Status ohne Kennzahlen, Nachholspiel-Hinweis, Formkurve, Balken und Zahlen; **jede Paarung eines Spieltags und der ganzen Saison hat eine eigene Seite** (echte Saisonlisten) |
-| W15 | Startseite | Ranking wie Dashboard (Prognosewert, Betrag, Liga-Mix, höchstens 4, einer je Spiel, ohne vorläufige und verschobene, nur vor dem Anpfiff); Zustände Spielpause, Winterpause, Sommerpause, Saisonstart, unbekannt (veraltet), keine, gesperrt; Tage-Zähler |
+| W14 | Matchdetail | Q1 (Summe nur Gelbe Karten, sonst Mittelwert), Q2 (Marke 2,50), Q4 (einzelne vorläufige Kennzahl unter Normalbereich), Q5 (Endstand, Ergebnis folgt, Hinweis), nicht gewertet mit/ohne Werte, Status ohne Kennzahlen, Nachholspiel-Hinweis, Formkurve, Balken und Zahlen; **jede Paarung eines Spieltags und der ganzen Saison hat eine eigene Seite** (echte Saisonlisten); seit 0.20: Schnappschuss, nachträglich, korrigiert, „Werte ab“ auf der Seite, bis Anpfiff + 2 h normal |
+| W15 | Startseite | Ranking wie Dashboard (Prognosewert, Betrag, Liga-Mix, höchstens 4, einer je Spiel, ohne vorläufige und verschobene, nur vor dem Anpfiff); Zustände Spielpause, Winterpause, Sommerpause, Saisonstart, unbekannt (veraltet), keine, gesperrt; Tage-Zähler; seit 0.20 gespielte bleiben ausgegraut (kein Nachrücken), Endstand |
 | W16 | Sicherheit | keine Inline-Stile und -Skripte (Content-Security-Policy), jede Balkenbreite hat eine CSS-Klasse |
 
 ## 9. Annahmen (bitte in der Vorschau prüfen)
@@ -192,7 +255,7 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
 | A1 | ~~Spieltag-Kachel und Liste im Stil der Startseite~~ – **erledigt mit 0.18**: genau nach Entwurf 3d | Entwurf `Spieltag_P1` war in 0.17 nicht angekommen |
 | A2 | ~~Nachhol- und vorgezogene Spiele als eigene Gruppe am Ende~~ – **ersetzt mit 0.18**: mitsortiert wie im Entwurf 3d (Abschnitt 5.4) | Entwurf 3d sortiert alle Spiele gemeinsam |
 | A3 | Status „gewertet“ (am grünen Tisch) bekommt den Chip „Am grünen Tisch gewertet“, damit er nicht mit „Nicht gewertet“ verwechselt wird | Begriffe sonst gleich |
-| A4 | „Ergebnis folgt“ als Chip, solange das Ergebnis nach dem Anstoss noch nicht übernommen ist | Übergabe nennt nur „Ergebnis“ |
+| A4 | ~~„Ergebnis folgt“ als Chip, solange das Ergebnis nach dem Anstoss noch nicht übernommen ist~~ – entfällt seit 0.20 (Entscheidung Carsten 19.11.2026): ab Anpfiff + 2 Stunden „Gespielt“ | Übergabe nennt nur „Ergebnis“ |
 | A5 | Liga-Kachel zeigt in einer Pause den Pausennamen statt der Spieltagsnummer | Übergabe nennt nur „24. Spieltag“ |
 | A6 | Bei veraltetem Datenstand ohne anstehenden Spieltag: Warnbox und Karte „Nächster Spieltag am …“ ohne Pausennamen | S9: keine Pausenhinweise bei veraltetem Stand |
 | A7 | Die Pausen-Karte der Spieltag-Seite hat keinen Tage-Zähler (nur die Startseite, Q7) | Übergabe 6.4; Entwurf 3d bestätigt |
@@ -201,11 +264,121 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
 
 ## 10. Offene Punkte
 
+- **Beschluss Carsten 19.11.2026: Englischer Match-Title mit „vs“** (Glossar): „{Home} vs {Away} · {League}, Matchday {n} {Season} | Soccer Intelligence“; Deutsch mit Gedankenstrich. Anzeigenamen je Sprache aus einer Namenstabelle (Glossar Abschnitt 11), Slug weiter aus dem Namen der Datenquelle (0.21). **Releaseplan** 0.20 / 0.21 / 0.22 / 1.0 freigegeben (`01`, Abschnitt 0); Spezifikation der E-Mail-Alarme offen, vor Beginn von 0.22.
+- **SEO-Check, Beschlüsse Carsten 19.11.2026:**
+  - *0.21* Kein `eventStatus` (z. B. verschoben): solche Seiten sind `noindex` und haben kein `SportsEvent`; Nachholspiele
+    mit Werten tragen nur das neue `startDate`.
+  - *0.21* Keine Event-Rich-Results angestrebt: `SportsEvent` als reine Auszeichnung, ohne Ort.
+  - *0.20* Impressum und Datenschutz `index` und in der Sitemap (Cookie-Einstellungen bleiben `noindex`).
+  - *0.20* H1 der Spielseite visuell versteckt („nur für Screenreader und Suchmaschinen“, gleicher Text wie das
+    Scoreboard; CSS-Klasse für Screenreader, nicht `display:none`).
+  - *0.20* Benannte Stufen in SEO-Texten gross wie im Glossar („High signal quality“ bzw. „Signalqualität stark“).
+  - *0.20* Startseiten-Text „Die interessantesten Abweichungen und Prognosen des kommenden Spieltags.“ bleibt (Carsten).
+  - *0.20* **Title der Spielseite mit Spieltag und Saison** (eindeutig auch über Saisons und Wiederholungsspiele):
+    „{Heim} – {Gast} · {Liga}, {n}. Spieltag {Saison} | Soccer Intelligence“ bzw. „{Home} – {Away} · {League}, Matchday {n}
+    {Season} | Soccer Intelligence“, z. B. „VfB Stuttgart – Bayern München · Bundesliga, 13. Spieltag 2025/26 | Soccer
+    Intelligence“.
+- **Beschlüsse Carsten 19.11.2026 (Themen 1–7, neun Fragen):**
+  - *0.20* **Kachel Sonderspiel:** „Nachholspiel · Spieltag 13“ / „Rescheduled · Matchday 13“, „Vorgezogen · Spieltag 23“ /
+    „Brought forward · Matchday 23“.
+  - *0.20* **Zählform** im Tab nur mit Sonderspielen: „1 Nachholspiel“ / „1 rescheduled match“ (Mehrzahl entsprechend).
+  - *0.20* **Am grünen Tisch:** Status nur bei nie gespielten Spielen; gespielte, später umgewertete Spiele bleiben normal
+    gespielt mit Ergebnis auf dem Platz. Absicherung: Meldet die API für ein Spiel mit Ergebnis in der Datenbank `AWD`,
+    wird „gewertet“ für die Anzeige ignoriert und intern gemeldet.
+  - *0.20* **Tabs ohne JavaScript:** alle Tabs untereinander mit Überschrift und Sprungliste (Anker); das Skript schaltet
+    die Tab-Ansicht erst ein, wenn es läuft. Aufklapper mit `<details>`.
+  - *0.20* **Caching:** Daten und Berechnungen im Speicher bis zur nächsten Dateiänderung; HTML bei jedem Aufruf gebaut, mit
+    `Cache-Control: max-age=300`; 503 mit `no-store`; CSS, JS, Schriften 30 Tage (Versionsnummer `?v=`). Kein statischer
+    Export.
+  - *bereits umgesetzt (0.17)* **Schriften** selbst gehostet (Outfit, Inter, variable WOFF2, `font-display: swap`, OFL);
+    keine Google-Fonts-Links aus den Entwürfen.
+  - *0.21* **Kontaktformular:** Versand per E-Mail über das Hostinger-Postfach (Zugang in `.env`), `Reply-To` = Absender,
+    keine Speicherung; Pflichtfelder E-Mail, Nachricht, Einverständnis, Sicherheitsfrage; Prüfung auf dem Server;
+    verstecktes Feld; höchstens 3 Nachrichten pro Stunde und Besucher (IP nur kurz im Speicher); Inhalt nie in Protokollen;
+    funktioniert ohne JavaScript; Fehlertext „Deine Nachricht konnte nicht gesendet werden. Bitte versuche es in ein paar
+    Minuten noch einmal.“ / „Your message could not be sent. Please try again in a few minutes.“ plus Feldfehler;
+    Abschnitt Kontaktformular in der Datenschutzerklärung.
+  - *0.21* **Cookie-Wahl:** eigenes Cookie `cookie_wahl` (`zugestimmt`/`abgelehnt`), 6 Monate, `SameSite=Lax`, `Secure`;
+    vor Zustimmung nichts von Google (auch kein Tag Manager); Cookie-Einstellungen funktionieren ohne JavaScript;
+    automatischer Browser-Test: keine Anfrage an Google vor der Zustimmung.
+  - *0.20* **Barrierefreiheit:** WCAG AA auch für ausgegraute Kacheln (Text mindestens 4,5:1, „Gespielt“ als Text);
+    Kontrast-Check der Entwurfsfarben im Design-Chat; automatische Prüfung mit axe-core; Lighthouse vor 1.0.
+  - *Entwicklung:* Frist veralteter Spielplan 48 Stunden ab letztem erfolgreichem Lauf (0.20); Prüfung fehlender
+    englischer Schlüssel vor jedem Release als Warnung (0.20); Anstosszeiten bereits in Europe/Zurich (seit 0.14),
+    Zeitzonenangabe in strukturierten Daten (0.21); Wiederholungsspiel wie beschlossen (0.20).
+- **Lücke gefunden (19.11.2026), Behebung in 0.20: „Werte ab …“ auf der Website.** Das Dashboard zeigt Werte erst,
+  wenn beide Teams ihr vorheriges Ligaspiel gespielt haben und das Ergebnis übernommen ist (`core/anzeige.values_gate`,
+  `07`, 4.5); vorher steht „Werte ab …“. Die Website wendet diese Regel bisher nur im Ranking der Startseite an: Kacheln
+  der Spieltag-Seite und Matchdetail zeigen auch für weit entfernte Spiele Werte und Auffälligkeiten (geprüft:
+  Dortmund – Gladbach am 20.03.2027 zeigte am 21.11.2026 „auffällig · gering“). Ab 0.20 gilt die Regel auf allen Seiten:
+  Scoreboard und „Zurück zum Spieltag“ bleiben, statt der Kennzahlen steht der „Werte ab“-Hinweis (Wortlaut DE/EN nach
+  Freigabe Carsten), keine Bewertung, damit `noindex` (0.21).
+  Wortlaut (Freigabe Carsten 19.11.2026): Vorspiel steht aus – „Werte ab Sa 05.12. – sobald beide Teams ihr vorheriges
+  Ligaspiel gespielt haben.“ / „Values from Sat 5 Dec – once both teams have played their previous league match.“;
+  Ergebnis noch nicht übernommen – „Werte folgen, sobald das Ergebnis vom 28.11. übernommen ist.“ / „Values will follow
+  once the result from 28 Nov has been processed.“; Kachel – „Werte ab 5.12.“ / „Values from 5 Dec“.
+  Regeln: vorheriges Spiel = zeitlich letztes angesetztes Ligaspiel vor dem Anpfiff (über die Saisongrenze; verschobene
+  usw. zählen nicht, Nachholspiele schon); Aufsteiger ohne vorheriges Spiel: keine Sperre („Zu wenig Daten“); „Werte ab“ =
+  Tag nach dem späteren ausstehenden Vorspiel (erwartetes Datum), „Ergebnis vom“ = späteres fehlendes Vorspiel.
+  **Anpfiff ohne Werte:** Der Schnappschuss wartet, bis die Vorspiel-Ergebnisse übernommen sind, und rechnet dann mit den
+  Daten vor dem Spiel (Vermerk „Werte nachträglich mit den Daten vor dem Spiel berechnet.“); bis dahin ab Anpfiff + 2 h
+  ausgegraut mit „Gespielt“, ohne Werte; „Werte ab …“ erscheint nach dem Anpfiff nie.
+  SEO/Social: Description „{Heimteam} – {Auswärtsteam} ({Liga}, {n}. Spieltag, {Datum}): Die Werte folgen, sobald beide
+  Teams ihr vorheriges Ligaspiel gespielt haben.“ / „{Home} – {Away} ({League}, Matchday {n}, {date}): Values will follow
+  once both teams have played their previous league match.“; og:title „{Heimteam} – {Auswärtsteam}“; kein SportsEvent.
+- **Für 0.20 beschlossen (Carsten 19.11.2026): Archivseite und Glossar ohne eigenen Entwurf.** Archivseite aus der
+  Spieltag-Seite abgeleitet (gleiche Kacheln mit Endstand, Kopf „<Liga> · Spieltag <nr> · Saison <saison>“, Pfeile zum
+  vorherigen und nächsten Spieltag, keine Tabs, nicht in der Navigation). Glossar als Textseite im Stil der Methodik,
+  verlinkt im Footer und von der Methodik. Texte DE/EN sowie SEO-Title und -Description liefert Carsten
+  (Vorschlag von Claude für die Archivseite).
+- **Für 0.21 beschlossen (Carsten 19.11.2026):**
+  - **Zeitzone:** alle Anstosszeiten in mitteleuropäischer Zeit; Hinweis „Alle Anstoßzeiten in mitteleuropäischer Zeit
+    (MEZ/MESZ).“ bzw. „All kick-off times in Central European Time (CET/CEST).“
+  - **Archivseiten im Index:** indexierbar, wenn der Spieltag nach dem Livegang begonnen hat (Index-Fenster),
+    unabhängig vom Status einzelner Spiele; davor begonnene Spieltage `noindex,follow`; nur indexierbare Archivseiten in
+    der Sitemap; Spielseiten folgen ihrer eigenen Regel.
+  - **Navigation:** verlinkt direkt auf `/de/spieltag/bundesliga/` bzw. `/en/matchday/bundesliga/`; die Weiterleitung
+    `/de/spieltag/` (302) bleibt für eingetippte Adressen, ohne `hreflang` und Canonical.
+  - **Index-Fenster kommender Spiele:** indexierbar, sobald das Spiel in einem Tab der Spieltag-Seite erscheint
+    (anstehender Spieltag und Spieltage mit erstem Spiel bis heute + 6; Sonderspiele ab 7 Tagen vorher).
+  - **Strukturierte Daten:** `SportsEvent` (mit `startDate` inkl. Zeitzone) nur auf indexierbaren Spielseiten; auf
+    `noindex`-Seiten nur `BreadcrumbList`.
+- **Für 0.21 beschlossen (Carsten 19.11.2026): Spielseiten ohne Werte.** Eine Spielseite ist indexierbar und in der
+  Sitemap, wenn sie im Index-Fenster liegt (Thema 4), keinen der fünf ausschliessenden Status hat und **mindestens eine
+  bewertete Kennzahl** zeigt; sonst `noindex,follow` und nicht in der Sitemap (Seite bleibt erreichbar). Eine Funktion
+  entscheidet für Seite und Sitemap. Teilweise vorläufige Spiele sind indexierbar; gespielte Spiele behalten den Stand
+  ihres Schnappschusses; abgebrochene oder ausgesetzte Spiele sind `noindex`, bis sie als beendet Werte zeigen; ein
+  verschobenes Spiel wird mit neuem Termin und Werten indexierbar (Adresse unverändert).
+- **Release-Zuschnitt (Carsten 19.11.2026):** Der Umfang von 0.20 ist mit den bis hier beschlossenen Punkten abgeschlossen. Weitere Beschlüsse aus der Abstimmung mit dem Design- und Content-Chat kommen in **0.21** (zusammen mit E-Mail, Cookie-Banner, GA4, Search Console, robots.txt und Sitemap); danach 1.0 (Qualität und Livegang).
+- **Für 0.20 beschlossen (Carsten 19.11.2026): Technik, SEO und Indexierung (Thema 4).**
+  - Alle Texte, Zahlen und Zustände stehen im ausgelieferten HTML, auch alle Tabs der Spieltag-Seite und alle Ebenen
+    und Tabellen der Methodik; JavaScript blendet nur ein und aus.
+  - Bei Dateifehlern („Die Daten werden gerade geprüft.“) Status **503 mit `Retry-After`**; Impressum, Datenschutz,
+    Kontakt und Cookie-Einstellungen bleiben mit 200 erreichbar.
+  - **Indexierung:** kommende Spiele und Spiele ab dem Livegang (mit Schnappschuss) indexierbar und in der Sitemap;
+    laufende Saison vor dem Livegang und Vorsaison 2025/26 erreichbar, aber `noindex` und nicht in der Sitemap;
+    Saisons 2018/19–2024/25 zunächst ohne Seiten (404).
+  - **Nichts verbauen für den Rückblick (Version 2/3):** Adressschema gilt für alle Saisons, einmal veröffentlichte
+    Adressen werden nie gelöscht (sonst 301); Schnappschüsse ab 0.20 vor jedem Anpfiff und einmalig nachträglich für
+    laufende Saison und Vorsaison (gekennzeichnet); Schnappschuss-Format mit Versionsnummer; Indexierung zentral in der
+    Konfiguration (`index_ab`, `seiten_ab_saison`); Sitemap als Index mit Teilen je Liga und Saison; Archivseiten je
+    Spieltag ohne Eintrag in der Navigation (nur von Spielseiten verlinkt); Ergebnis und Schnappschuss je Spiel als
+    Grundlage der späteren Bilanz.
+- **Für 0.20 beschlossen (Carsten 19.11.2026): Englisch zum Livegang** mit gleichem Slug in beiden Sprachen, übersetzten Pfadwörtern, `hreflang` und Regeln für Sonderzeichen (Abschnitt 4.1).
+- **Für 0.20 beschlossen (Carsten 19.11.2026): Adressschema** nach Abschnitt 4.1 (ID am Ende, API-Namen, 301-Weiterleitungen, `/de/` für alle Seiten ab dem Livegang).
+- **Für 0.20 beschlossen (Carsten 19.11.2026): kein Live-Status.** Ab dem Anpfiff gilt ein Spiel als gespielt: ausgegraut, markiert mit „Gespielt“, sobald importiert mit dem Endstand. Es bleibt an seinem Platz in den Top Anomalien (Startseite) und auf der Spieltag-Seite, bis der Spieltag endet; die Werte vor dem Spiel (Schnappschuss) bleiben sichtbar. Der Chip „Ergebnis folgt“ und der Glossar-Begriff entfallen, auch auf der Spielseite (`07`, 4.7). Präzisierung (Carsten 19.11.2026): **bis Anpfiff + 2 Stunden** normal ohne Beschriftung (während des Spiels nichts), **ab Anpfiff + 2 Stunden** ausgegraut mit „Gespielt“, **ab Import des Endstands** ausgegraut mit Endstand. Sichtbarkeit: reguläre Spiele bis zum Ende ihres Spieltags (Abend des letzten regulären Spiels), Sonderspiele bis zu ihrem eigenen Tagesende, Top Anomalien bis zum Ende des Blocks (4.2, 4.7).
+- **Für 0.20 beschlossen (Carsten 19.11.2026): Datenstand 48 Stunden.** Daten bis 48 Stunden alt sind normal, die Website schlägt keinen Alarm. Erst wenn der letzte erfolgreiche Import mehr als 48 Stunden zurückliegt, erscheint der Hinweis „Spielplan zuletzt aktualisiert am …“ (bisher ab mehr als 3 Tagen; `07`, 4.3, S9). Intern meldet der E-Mail-Alarm (0.21) schon den ersten Ausfall.
+- **Für 0.20 beschlossen (Carsten 19.11.2026): fehlender Schnappschuss.** Der Schnappschuss läuft stündlich als eigener Schritt (unabhängig von API und Freigabe) mit den Daten, die die Website gerade zeigt, für alle Spiele mit Anpfiff in der nächsten Stunde. Fehlt er trotzdem (Container-Ausfall), wird er beim nächsten Lauf aus den Daten vor dem Spiel nachträglich erstellt, gekennzeichnet („Werte nachträglich mit den Daten vor dem Spiel berechnet“) und in einer späteren Bilanz gesondert ausweisbar; Meldung im Reiter Datenimport/API, ab 0.21 per E-Mail.
+- **Für 0.20 beschlossen (Carsten 19.11.2026): Werte eines Spiels einfrieren.** Bisher werden Kennzahlen und Einstufung bei jedem Laden neu berechnet. Die Regeln (Stichtag = Termin des Spiels, nur Daten davor) liefern dieselben Zahlen wie vor dem Spiel, ausser bei Korrekturen früherer Spiele, neuen Schwellen (einmal pro Saison) oder Regeländerungen. Neu: **Schnappschuss je Spiel** (Werte, Einstufung, Signalqualität, Stand der Schwellendatei), angelegt am Spieltag vor dem Anpfiff durch den Import-Container und danach nie mehr verändert; gespielte Spiele zeigen den Schnappschuss. Satz auf der Spielseite präzisiert: „Die Werte wurden mit den Daten vor dem Spiel berechnet.“
+- **Für 0.20 beschlossen (Carsten 19.11.2026): Korrekturen.** Bei einer nachträglichen Änderung des **Ergebnisses** (Import, Korrekturfenster oder späte Korrektur) zeigt die Spielseite beim Endstand den Hinweis „Ergebnis nachträglich korrigiert“; bei Statistik-Korrekturen kein Hinweis. Der Schnappschuss eines Spiels wird **nie** geändert, auch nicht bei späteren Korrekturen früherer Spiele: Er zeigt, was vor dem Spiel bekannt war.
+- **Später (Wunsch Carsten 19.11.2026): Rückblick für Fans.** Besucher sollen vergangene Spiele und deren Signale ansehen können (auf Basis der Schnappschüsse und Archivseiten), z. B. mit Bilanz „Was hat sich bestätigt?“.
+- **Für 0.20 beschlossen (Carsten 19.11.2026): Links auf alte Spieltage.** „Zurück zum Spieltag“ und „Alle Spiele des Spieltags“ führen heute auf `/spieltag/<liga>`, also auf den **aktuellen** Spieltag, nicht auf den Spieltag des Spiels. Umsetzung: Archivseite je Spieltag (`/spieltag/<liga>/<saison>/<nr>`) mit allen Spielen, Ergebnissen und Schnappschüssen; „Zurück zum Spieltag“, „Alle Spiele des Spieltags“ und „Weitere Spiele dieses Spieltags“ zeigen bei gespielten Spielen dorthin, bei kommenden wie bisher auf den aktuellen Spieltag.
+- **Für 0.20 beschlossen (Carsten 19.11.2026):** Fehlen für ein Spiel die Daten für eine Bewertung (zu wenig Spiele, z. B. Aufsteiger, oder technische Lücke), lautet der Text neutral **„Für dieses Spiel liegen nicht genug Daten für eine Bewertung vor.“** statt „Die statistische Datengrundlage ist zu schwach.“ Der Begriff „Nicht gewertet“ wird dabei durch einen eindeutigen Begriff ersetzt (Vorschlag „Zu wenig Daten“; Wortlaut mit dem finalen Content). Hero bei keiner Auffälligkeit mit dynamischer Zahl: „Keine der {n} Kennzahlen überschreitet ihre Schwelle.“ (n = gewertete Kennzahlen).
 - Startseite: maximale Anzahl im Ranking (vorerst 4, wie Dashboard).
 - Methodik-Seite mit den besprochenen Änderungen (Mehrwert = Trefferquote − Grundquote aller Spiele, Prozentpunkte statt Prozent).
 - Methodik-Seite: eine oder zwei (Übergabe 10, Punkt 9).
 - Livegang: Impressum, Datenschutz, rechtliche Prüfung „keine Wettberatung“, statischer Export und nginx, Weiterleitung `/` statt Platzhalter.
-- Mehrsprachigkeit (EN, IT, ES): Übersetzungen, Namenstabellen, Adressen je Sprache (später).
+- Mehrsprachigkeit: Englisch zum Livegang (Abschnitt 4.1); IT und ES später.
 
 ## 11. Versionen
 
@@ -215,4 +388,5 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
 | 0.18 | Alle drei Seiten **nach den Entwürfen**: Startseite (1d), Spieltag (3d), Matchdetail (2i) mit eigener Seite je Paarung; Entscheidungen Q1–Q7 |
 | 0.19 | Prognosewert statt stark/leicht in den Daten und Texten (Gestaltung unverändert bis zum neuen Entwurf); Ranking mit Liga-Mix |
 | 0.19.1 | CSS und JS mit Versionsnummer (`?v=`), damit nach einem Release kein Strg+F5 nötig ist |
+| 0.20 | Nur nötige Textanpassungen im heutigen Aussehen: Signalqualität stark/mittel/gering; Statusmodell (gespielt ab Anpfiff + 2 h, „Werte ab …“ auf Spieltag-Seite und Matchdetail, „Zu wenig Daten“); Werte gespielter Spiele aus dem Schnappschuss mit Hinweisen; Ranking ohne Nachrücken; Sonderspiele mit Nummer, neue Zählform; 48-Stunden-Grenze |
 | später | Methodik, Impressum, Datenschutz, Livegang |

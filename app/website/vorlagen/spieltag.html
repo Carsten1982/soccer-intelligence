@@ -4,8 +4,8 @@
     Sprachdatei, Werte aus website.spieltag.spieltag_daten (Codes). -#}
 
 {% macro kachel(s) -%}
-{% set art = {'hoch': 'kachel--stark', 'mittel': 'kachel--leicht', 'gering': 'kachel--leicht', 'ohne': '', 'nicht_gewertet': 'kachel--status',
-              'status': 'kachel--status', 'gespielt': 'kachel--gespielt'}[s.art] %}
+{% set art = {'stark': 'kachel--stark', 'mittel': 'kachel--leicht', 'gering': 'kachel--leicht', 'ohne': '', 'zu_wenig_daten': 'kachel--status',
+              'werte_ab': '', 'status': 'kachel--status', 'gespielt': 'kachel--gespielt'}[s.art] %}
 {% set innen %}
   <span class="teams">
     <span class="team">{{ s.heim }}</span>
@@ -15,11 +15,12 @@
   </span>
   <span class="rechts">
     <span class="chips">
-      {%- if s.art in ('hoch', 'mittel', 'gering') %}<span class="kchip kchip--{{ stil(s.art) }}">{{ t('chip.' ~ s.art) }}</span>{% endif %}
-      {%- if s.art == 'nicht_gewertet' %}<span class="kchip kchip--status">{{ t('chip.nicht_gewertet') }}</span>{% endif %}
+      {%- if s.art in ('stark', 'mittel', 'gering') %}<span class="kchip kchip--{{ stil(s.art) }}">{{ t('chip.' ~ s.art) }}</span>{% endif %}
+      {%- if s.art == 'zu_wenig_daten' %}<span class="kchip kchip--status">{{ t('chip.zu_wenig_daten') }}</span>{% endif %}
+      {%- if s.art == 'werte_ab' %}<span class="kchip kchip--status">{{ t('chip.werte_ab', datum=tag_monat(s.werte_ab)) if s.werte_ab else t('chip.werte_folgen') }}</span>{% endif %}
       {%- if s.art == 'status' %}<span class="kchip kchip--status">{{ t('chip.' ~ s.status) }}</span>{% endif %}
-      {%- if s.art == 'gespielt' %}{% if s.ergebnis %}<span class="kchip kchip--ergebnis">{{ ergebnis(s.ergebnis) }}</span>{% else %}<span class="kchip kchip--status">{{ t('chip.ergebnis_folgt') }}</span>{% endif %}{% endif %}
-      {%- if s.sonderspiel %}<span class="kchip kchip--status">{{ t('chip.' ~ s.sonderspiel) }}</span>{% endif %}
+      {%- if s.art == 'gespielt' %}{% if s.ergebnis %}<span class="kchip kchip--ergebnis">{{ ergebnis(s.ergebnis) }}</span>{% else %}<span class="kchip kchip--status">{{ t('chip.gespielt') }}</span>{% endif %}{% endif %}
+      {%- if s.sonderspiel %}<span class="kchip kchip--status">{{ t('chip.' ~ s.sonderspiel ~ '_nr', n=s.spieltag) }}</span>{% endif %}
     </span>
     {% if s.link %}<span class="kpfeil" aria-hidden="true">{{ pfeil_rechts() }}</span>{% endif %}
   </span>
@@ -34,9 +35,7 @@
 {% macro zusammenfassung(tab) -%}
 {{ t('spieltag.nummer', n=tab.spieltag) }}
 {%- if tab.von %} · {{ zeitraum(tab.von, tab.bis) }}{% endif %}
- · {{ tn('spieltag.partien', tab.partien) }} · {{ tn('spieltag.auffaellig', tab.auffaellig) }}
-{%- if tab.sonderspiele.nachholspiel %} · {{ tn('spieltag.nachholspiel', tab.sonderspiele.nachholspiel) }}{% endif %}
-{%- if tab.sonderspiele.vorgezogen %} · {{ tn('spieltag.vorgezogen', tab.sonderspiele.vorgezogen) }}{% endif %}
+ · {{ zaehlform(tab) }} · {{ tn('spieltag.auffaellig', tab.auffaellig) }}
 {%- endmacro %}
 
 {% block inhalt %}
@@ -82,7 +81,7 @@
     </div>
     {% endif %}
     <div class="legende" aria-label="{{ t('spieltag.legende') }}">
-      <span class="eintrag"><span class="muster muster--stark" aria-hidden="true"></span>{{ t('stufe.hoch') }}</span>
+      <span class="eintrag"><span class="muster muster--stark" aria-hidden="true"></span>{{ t('stufe.stark') }}</span>
       <span class="eintrag"><span class="muster muster--leicht" aria-hidden="true"></span>{{ t('stufe.mittel_gering') }}</span>
       <span class="eintrag"><span class="muster" aria-hidden="true"></span>{{ t('stufe.ohne') }}</span>
       <details class="lesen">
