@@ -1,5 +1,5 @@
 {% extends "basis.html" %}
-{% from "teile.html" import deko_mitte, pfeil_zurueck, pfeil_weiter, pfeil_rechts, chevron, info_icon, symbole, balken, lesen_knopf, lesen_ligaschnitt, q_chip with context %}
+{% from "teile.html" import deko_mitte, pfeil_zurueck, pfeil_weiter, chevron, info_icon, symbole, balken, lesen_knopf, lesen_ligaschnitt, q_chip with context %}
 {#- Spielseite (seit 0.18; seit 0.21 nach Entwurf „Spiel_P1“ in Deutsch und Englisch; Konzept 08, Abschnitt 7;
     Entscheidungen Q1–Q5). H1 visuell versteckt (gleicher Text wie das Scoreboard, Beschluss M10). Werte aus
     website.spiel.spiel_daten (Codes), Darstellungshilfen aus seiten.py. -#}
@@ -145,16 +145,8 @@
 </div>
 {% endif %}
 
-{% if seite.weitere %}
-<div class="eng abschnitt-detail weitere">
-  <h2 class="h2-klein">{{ t('spiel.weitere') }}</h2>
-  <ul class="weitere-liste">
-    {% for w in seite.weitere %}<li><a href="{{ link('spiel', liga=seite.liga, slug=w.slug) }}"><span>{{ team(seite.liga, w.heim) }} {{ t('spiel.trenner') }} {{ team(seite.liga, w.gast) }}</span>{{ pfeil_rechts('currentColor', 2.4, 18) }}</a></li>{% endfor %}
-  </ul>
-</div>
-{% endif %}
 
-<div class="eng methodik-link"><a href="{{ link('methodik') }}">{{ t('spiel.methodik') }}</a></div>
-<div class="eng abschluss"><a href="{{ zurueck_url }}">{{ t('spiel.alle_spiele') }}{{ pfeil_weiter() }}</a></div>
+<div class="eng methodik-link"><a href="{{ zurueck_url }}">{{ t('spiel.alle_spiele') }}</a></div>
+<div class="eng abschluss"><a href="{{ link('methodik') }}">{{ t('spiel.methodik') }}{{ pfeil_weiter() }}</a></div>
 <div class="eng"><p class="zeitzone-hinweis">{{ t('allgemein.zeitzone') }}</p></div>
 {% endblock %}

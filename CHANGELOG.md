@@ -5,6 +5,19 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 20.11.2026 – Version 0.21.1: Entwürfe vom 20.11. und Vorschau 5 Tage
+
+- **Carsten** · Prüfung der Website, überarbeitete Entwürfe und Briefings vom 20.11.2026; Entscheidungen: Vorschau 5 statt 7 Tage (mehr Ruhe am Spieltag), zusätzliche API-Abfragen an die Spielzeit gekoppelt (Anpfiff + 2¼ h, Umsetzung mit 0.22), später Prognose gegen Ergebnis auf der Spielseite.
+- **Claude** · **Vorschau 5 Tage** (`core/anzeige.WINDOW_DAYS` 6 → 5): weitere Spieltage und Sonderspiele erst ab heute + 5, für Dashboard und Website (Tabs, Index-Fenster). Tests A5–A7, A27 und W5 angepasst.
+- **Claude** · **Entwürfe vom 20.11.:** kräftigere Grüntöne der Signalqualität (Chip, Balken, Kachel, Karte); Spielseite ohne „Weitere Spiele“, Textlink und Schaltfläche getauscht; Spieltag ohne SEO-Satz „Wir bieten …“; Methodik-Einstieg als drei Karten mit Ein- und Ausblenden der Ebenen und Weiter-Schaltflächen; mobil einzeilige Navigation (Sprachknopf „DE“/„EN“ bis 440 px), Footer-Abstand, Ligen-Tabelle ohne Scrollbalken (Fehler gefunden: Abstände der Kopfzeile überstimmten die Handy-Regel); SEO-Box der Startseite schmaler; Prüfhaken im Kreis.
+- **Claude** · Entwurf **Abfrageplan** (`06`, 10.2): Läufe bei Anpfiff + 2¼ h aus dem Spielplan; offen: automatische Übernahme der Abendläufe, Sicherheitslauf, E-Mail-Alarme.
+- **Claude** · Tests W27; axe-core ohne Befund; Breiten 320–412 px ohne Querscrollen (DE/EN). Doku: `01` (0), `05` v5.10, `06` v0.8, `07` v2.3, `08` (5, 7.3, 10), RELEASE.md.
+
+## 20.11.2026 – Version 0.21 eingespielt
+
+- **Carsten** · Version 0.21 eingespielt (`006a150`, Pull Request #21; Tests grün). Ein erster Lauf um 06:04 brach ab, der zweite holte die Schritte 4–6 nach. Die Schlussfrage wurde wegen gepufferter Pfeiltasten als „nicht bestätigt“ gelesen; der neue Stand läuft (Server und GitHub auf `006a150`). Browser-Prüfung nach `RELEASE.md` und Live-Test (Freitagsspiel) folgen.
+- **Claude** · Stand nachgetragen (`01`, Abschnitt 0 und Versionstabelle).
+
 ## 20.11.2026 – Version 0.21 „Neue Website“
 
 - **Carsten** · Auftrag: Release 0.21 nach dem freigegebenen Releaseplan (Templates nach den Entwürfen P1, Deutsch und Englisch, Adressen, SEO, Inhaltsseiten; Cookie-Wahl, Formular-Versand und GA4 erst 0.22). Archiv- und Glossartexte schlägt Claude vor.

@@ -1,6 +1,6 @@
 # Soccer Intelligence – Dashboard-Briefing
 
-**Version 5.9** · Stand 20.11.2026 (Version 0.21: Vereine ohne Anzeigenamen der Website im Reiter Datenimport/API, 6.5; Version 0.20: Signalqualität stark/mittel/gering statt Prognosewert, gespielt ab Anpfiff + 2 Stunden, Top Anomalien ohne Nachrücken, Schnappschüsse im Reiter Datenimport/API, 48-Stunden-Grenze, 4, 5, 6.5; Version 0.19.1: Reiter-Reihenfolge, Text Top Anomalien, Schwellen je Liga in der Sensitivitätsanalyse; Version 0.19: Auffälligkeit und Prognosewert statt leicht/stark, 4.1, 5, 6.3, 6.4, 8; Version 0.14: Bereich Datenimport/API, 6.5; Version 0.15: Entwurf 2 mit Blöcken A/B und Entscheiden; Version 0.15.2: Anmeldemaske, 2.4; Version 0.16: kommende Spieltage, 4, 4.4, 5)
+**Version 5.10** · Stand 20.11.2026 (Version 0.21.1: Vorschau heute + 5 statt + 6, 4; Version 0.21: Vereine ohne Anzeigenamen der Website im Reiter Datenimport/API, 6.5; Version 0.20: Signalqualität stark/mittel/gering statt Prognosewert, gespielt ab Anpfiff + 2 Stunden, Top Anomalien ohne Nachrücken, Schnappschüsse im Reiter Datenimport/API, 48-Stunden-Grenze, 4, 5, 6.5; Version 0.19.1: Reiter-Reihenfolge, Text Top Anomalien, Schwellen je Liga in der Sensitivitätsanalyse; Version 0.19: Auffälligkeit und Prognosewert statt leicht/stark, 4.1, 5, 6.3, 6.4, 8; Version 0.14: Bereich Datenimport/API, 6.5; Version 0.15: Entwurf 2 mit Blöcken A/B und Entscheiden; Version 0.15.2: Anmeldemaske, 2.4; Version 0.16: kommende Spieltage, 4, 4.4, 5)
 
 > **Massgebliche Quelle seit 31.10.2026.** Änderungen werden nur noch in dieser Datei gemacht, mit Datum in der Änderungshistorie bzw. im `CHANGELOG.md`.
 > Das Word-Dokument *Dashboard-Briefing v4.2* liegt nur noch als Archiv im Ordner `word/` und wird nicht mehr gepflegt. Änderungen seit 31.10.2026 sind im Text als „Änderung“ mit Datum gekennzeichnet.
@@ -246,7 +246,7 @@ Welche Begegnungen angezeigt werden, steht ausschliesslich in der Datei data/Spi
 
 1.  Ein Spieltag ist beendet am Tagesende seines letzten regulären Spiels (Zeitzone Europe/Zurich). **Anstehend** ist der nicht beendete Spieltag mit dem frühesten Termin.
 
-2.  Ohne Auswahl („Kommende Spiele“) erscheinen als **Abschnitte**: der anstehende Spieltag (höchstens 14 Tage entfernt), weitere Spieltage, die heute bis heute + 6 beginnen, und Nachhol- oder vorgezogene Spiele unter ihrer offiziellen Nummer. Gespielte Spiele bleiben grau mit Ergebnis stehen (seit 0.20: ab Anpfiff + 2 Stunden grau mit „Gespielt“, nach dem Import mit Ergebnis; bis dahin normal; Werte des Schnappschusses, `07`, 4.9).
+2.  Ohne Auswahl („Kommende Spiele“) erscheinen als **Abschnitte**: der anstehende Spieltag (höchstens 14 Tage entfernt), weitere Spieltage, die heute bis heute + 5 beginnen (seit 0.21.1; bis 0.21 heute + 6), und Nachhol- oder vorgezogene Spiele unter ihrer offiziellen Nummer. Gespielte Spiele bleiben grau mit Ergebnis stehen (seit 0.20: ab Anpfiff + 2 Stunden grau mit „Gespielt“, nach dem Import mit Ergebnis; bis dahin normal; Werte des Schnappschusses, `07`, 4.9).
 
 3.  Pausen über 14 Tage zeigen eine Box („Winterpause“, „Spielpause“, „Sommerpause“), nur wenn der letzte erfolgreiche Importlauf höchstens 48 Stunden zurückliegt (seit 0.20; bis 0.19.1: 3 Tage); sonst „Spielplan zuletzt aktualisiert am …“.
 

@@ -87,10 +87,7 @@
     "nicht_auffaellig": "No anomalies",
     "zu": "Go to matchday {n}",
     "seo_titel": "All matches on this matchday",
-    "seo_1": "Here you will find all matches of the current matchday in the Bundesliga, Premier League, La Liga and Serie A. Matches with statistical anomalies are highlighted in the list. The signal quality (high, medium or low) shows how often similar statistical anomalies were confirmed by actual match results in previous seasons. Select a match to view the details.",
-    "seo_2_fett": "We provide transparent football statistics, but no betting advice or forecasts of potential winnings.",
-    "seo_2": "How we identify standout matches is explained on the",
-    "seo_2_link": "methodology page"
+    "seo_1": "Here you will find all matches of the current matchday in the Bundesliga, Premier League, La Liga and Serie A. Matches with statistical anomalies are highlighted in the list. The signal quality (high, medium or low) shows how often similar statistical anomalies were confirmed by actual match results in previous seasons. Select a match to view the details."
   },
   "stufe": {
     "stark": "High signal quality",
@@ -306,8 +303,6 @@
     "schwelle_keine": "none",
     "schwelle_ueber": "above {wert}",
     "schwelle_unter": "below {wert}",
-    "trenner": "vs",
-    "weitere": "More matches on this matchday",
     "werte_label": "Values",
     "werte_ab_kurz": "Values from {datum}",
     "werte_ab_sub": "Once both teams have played their previous league match.",
@@ -490,15 +485,18 @@
     "tiefe": {
       "1": {
         "name": "In brief",
-        "text": "Just the principle: how do we find standout matches, and what does signal quality tell you?"
+        "text": "The principle in one minute.",
+        "marke": "Level 1"
       },
       "2": {
         "name": "With numbers",
-        "text": "Plus a worked example and a practical check of the leagues."
+        "text": "One match worked through step by step.",
+        "marke": "Level 2"
       },
       "3": {
         "name": "Full details",
-        "text": "Plus the exact calculation, uncertainty and checks, for statistics fans."
+        "text": "Practical check of the leagues, calculation and verification in detail.",
+        "marke": "Level 3"
       }
     },
     "tabelle_titel": "Thresholds and signal quality – {liga}",

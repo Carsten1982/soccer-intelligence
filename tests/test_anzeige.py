@@ -159,21 +159,21 @@ def test_a4_english_week_two_sections_then_values():
     assert keys(view(fx, "2026-12-10T08:00")) == [(14, "")]
 
 
-def test_a5_three_rounds_within_six_days_real_bundesliga():
+def test_a5_three_rounds_within_five_days_real_bundesliga():
     fx = real_plan("bundesliga", d("2027-01-09"))
-    assert keys(view(fx, "2027-01-09T10:00")) == [(15, ""), (16, ""), (17, "")]
-    assert keys(view(fx, "2027-01-08T10:00")) == [(15, ""), (16, "")]             # 17 beginnt erst heute + 7
+    assert keys(view(fx, "2027-01-10T10:00")) == [(15, ""), (16, ""), (17, "")]
+    assert keys(view(fx, "2027-01-09T10:00")) == [(15, ""), (16, "")]             # 17 beginnt erst heute + 6 (seit 0.21.1)
 
 
-@pytest.mark.parametrize("offset, shown", [(6, True), (7, False)])
-def test_a6_window_today_plus_six(offset, shown):
+@pytest.mark.parametrize("offset, shown", [(5, True), (6, False)])          # seit 0.21.1: heute + 5 (bis 0.21: + 6)
+def test_a6_window_today_plus_five(offset, shown):
     today = d("2026-11-09")
     fx = plan(rnd(1, d("2026-11-06"), d("2026-11-09")), rnd(2, today + timedelta(days=offset)))
     v = view(fx, "2026-11-09T10:00")
     assert ((2, "") in keys(v)) is shown
 
 
-@pytest.mark.parametrize("offset, shown", [(5, True), (6, True), (7, False), (10, False)])
+@pytest.mark.parametrize("offset, shown", [(4, True), (5, True), (6, False), (10, False)])
 def test_a7_catchup_game_under_original_matchday(offset, shown):
     today = d("2026-11-16")
     fx = plan(rnd(1, d("2026-11-06"), d("2026-11-08")), rnd(2, d("2026-11-13"), d("2026-11-15")),
@@ -429,7 +429,7 @@ def test_a26_day_boundary_sunday_evening():
 
 EXPECTED_2026 = {
     ("bundesliga", "2026-11-16"): (None, [10]), ("bundesliga", "2026-12-21"): (A.WINTER, []),
-    ("bundesliga", "2026-12-25"): (A.WINTER, [15]), ("bundesliga", "2027-01-09"): (None, [15, 16, 17]),
+    ("bundesliga", "2026-12-25"): (A.WINTER, [15]), ("bundesliga", "2027-01-09"): (None, [15, 16]),     # 17 erst ab 10.01. (5 Tage, 0.21.1)
     ("premier_league", "2026-12-01"): (None, [13, 14]), ("premier_league", "2026-12-24"): (None, [17, 18]),
     ("premier_league", "2027-01-02"): (None, [19, 20]),
     ("serie_a", "2026-12-21"): (None, [17]), ("serie_a", "2026-12-28"): (None, [17]),

@@ -401,3 +401,30 @@ def test_w26_compact_score_on_tiles_and_long_on_match_page():
     assert "Gespielt · 2:1" in seiten.spieltag_html(spieltag.spieltag_daten(d, BL, z), seiten.Kontext())
     html = seiten.spiel_html(spiel.spiel_daten(d, 9, z), seiten.Kontext(lang="en"))
     assert "Final score 2 : 1" in html
+
+
+# --- W27 Entwurfsrunde 20.11.2026 (0.21.1) ------------------------------------------------------------------------------
+
+def test_w27_drafts_of_20_november(dienst):
+    """Spielseite ohne „Weitere Spiele“, Textlink und Schaltfläche getauscht; Spieltag ohne SEO-Satz „Wir bieten …“;
+    Methodik mit drei Einstiegskarten und Ebenen zum Ein- und Ausblenden; kräftigere Grüntöne; Sprachknopf mobil kurz."""
+    spiel_html = vorschau.beantworten("/vorschau/de/spiel/bundesliga/e-f-1388512/", "", dienst).inhalt.decode()
+    assert "weitere-liste" not in spiel_html and "Weitere Spiele" not in spiel_html
+    link = re.search(r'<div class="eng methodik-link"><a href="([^"]+)">([^<]+)</a>', spiel_html)
+    assert link.group(2) == t("spiel.alle_spiele") and link.group(1) == "/vorschau/de/spieltag/bundesliga/"
+    assert re.search(r'<div class="eng abschluss"><a href="/vorschau/de/methodik/">' + re.escape(t("spiel.methodik")), spiel_html)
+    spieltag_html = vorschau.beantworten("/vorschau/de/spieltag/bundesliga/", "", dienst).inhalt.decode()
+    assert "Wettberatung oder Gewinnprognosen" not in spieltag_html.split('id="seo-titel"')[1]
+    m = vorschau.beantworten("/vorschau/de/methodik/", "", dienst).inhalt.decode()
+    assert m.count('class="tiefe-karte"') == 3 and "Das Prinzip in einer Minute." in m and "Ebene 2" in m
+    assert all(f'data-ebene="{n}"' in m for n in (1, 2, 3)) and 'class="download" aria-labelledby="download-titel" data-ebene="3"' in m
+    assert 'class="knopf-voll knopf-weiter" href="#ebene2" data-tiefe-wahl="2" data-springen' in m
+    js = (W.STATISCH / "site.js").read_text(encoding="utf-8")
+    assert "data-tiefe-wahl" in js and "data-aufklappen" in js
+    css = (W.STATISCH / "site.css").read_text(encoding="utf-8")
+    for regel in (".q-chip.q-stark { background: #C8DECE; color: #2F4A3C; border-color: #8FB59D; }",
+                  ".kachel--stark { min-height: 104px; background: #D6E8DB;", ".f-stark { background: #4F8268; }",
+                  ".kopf-rechts { flex-wrap: nowrap;", "@media (max-width: 440px) {\n  .sprache-lang { display: none; }",
+                  ".tabelle--breit { min-width: 0;"):
+        assert regel in css, regel
+    assert '<span class="sprache-kurz" aria-hidden="true">DE</span>' in m

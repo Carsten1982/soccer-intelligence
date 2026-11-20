@@ -87,10 +87,7 @@
     "nicht_auffaellig": "Nicht auffällig",
     "zu": "Zu Spieltag {n}",
     "seo_titel": "Alle Spiele des Spieltags auf einen Blick",
-    "seo_1": "Hier findest du alle Spiele des aktuellen Spieltags in Bundesliga, Premier League, La Liga und Serie A. Partien mit statistischen Auffälligkeiten sind in der Liste markiert. Die Signalqualität (stark, mittel oder gering) zeigt, wie oft sich ähnliche Auffälligkeiten in früheren Saisons durch tatsächliche Spielergebnisse bestätigt haben. Tippe auf ein Spiel, um die Details zu sehen.",
-    "seo_2_fett": "Wir bieten transparente Fußball-Statistiken, jedoch keine Wettberatung oder Gewinnprognosen.",
-    "seo_2": "Wie wir auffällige Spiele finden, erklärt die",
-    "seo_2_link": "Methodik-Seite"
+    "seo_1": "Hier findest du alle Spiele des aktuellen Spieltags in Bundesliga, Premier League, La Liga und Serie A. Partien mit statistischen Auffälligkeiten sind in der Liste markiert. Die Signalqualität (stark, mittel oder gering) zeigt, wie oft sich ähnliche Auffälligkeiten in früheren Saisons durch tatsächliche Spielergebnisse bestätigt haben. Tippe auf ein Spiel, um die Details zu sehen."
   },
   "stufe": {
     "stark": "Signalqualität stark",
@@ -306,8 +303,6 @@
     "schwelle_keine": "keine",
     "schwelle_ueber": "über {wert}",
     "schwelle_unter": "unter {wert}",
-    "trenner": "–",
-    "weitere": "Weitere Spiele dieses Spieltags",
     "werte_label": "Werte",
     "werte_ab_kurz": "Werte ab {datum}",
     "werte_ab_sub": "Sobald beide Teams ihr vorheriges Ligaspiel gespielt haben.",
@@ -490,15 +485,18 @@
     "tiefe": {
       "1": {
         "name": "Kurz erklärt",
-        "text": "Nur das Prinzip: Wie finden wir auffällige Spiele und was sagt die Signalqualität?"
+        "text": "Das Prinzip in einer Minute.",
+        "marke": "Ebene 1"
       },
       "2": {
         "name": "Mit Zahlen",
-        "text": "Dazu ein durchgerechnetes Beispiel und der Praxischeck der Ligen."
+        "text": "Ein Spiel Schritt für Schritt durchgerechnet.",
+        "marke": "Ebene 2"
       },
       "3": {
         "name": "Alles im Detail",
-        "text": "Zusätzlich die genaue Berechnung, Unsicherheit und Prüfung für Statistik-Fans."
+        "text": "Praxischeck der Ligen, Berechnung und Prüfung im Detail.",
+        "marke": "Ebene 3"
       }
     },
     "tabelle_titel": "Schwellen und Signalqualität – {liga}",

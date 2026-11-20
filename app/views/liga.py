@@ -2,7 +2,7 @@
 seit 0.16 nach Spielplan v2.1, Abschnitt 4, und dem Designentwurf vom 16.11.2026).
 
 Ohne Auswahl („Kommende Spiele“) zeigt die Seite Abschnitte, je Abschnitt genau einen offiziellen Spieltag:
-den anstehenden Spieltag, weitere Spieltage, die heute bis heute + 6 beginnen, und Sonderspiele (Nachholspiel,
+den anstehenden Spieltag, weitere Spieltage, die heute bis heute + 5 beginnen, und Sonderspiele (Nachholspiel,
 vorgezogen) unter ihrer ursprünglichen Nummer; dazu bei Bedarf eine Hinweis-Box (Winter-, Spiel-, Sommerpause,
 veralteter Datenstand). Welche Spiele erscheinen, entscheidet core/anzeige.py; hier wird nur dargestellt.
 
