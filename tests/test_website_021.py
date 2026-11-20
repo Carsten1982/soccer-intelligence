@@ -469,3 +469,17 @@ def test_w28_second_round_of_drafts(dienst):
                   "@media (max-width: 520px) {\n  .knopf-weiter { max-width: min(100%, 300px); }\n  .umbruch-mobil { display: block; }"):
         assert regel in css, regel
     assert ".hero .datenstand" not in css
+
+
+# --- W29 Wünsche Carsten 20.11.2026 (0.22) ---------------------------------------------------------------------------------
+
+def test_w29_start_without_data_line_and_athletic_bilbao(dienst):
+    """Startseite ohne „Aktueller Datenstand“ unter dem Ranking (steht in der Fusszeile); Athletic Club heisst auf der
+    Website „Athletic Bilbao“ (DE und EN), die Adresse bleibt beim API-Namen."""
+    for pfad in ("/vorschau/de/", "/vorschau/en/"):
+        start = vorschau.beantworten(pfad, "", dienst).inhalt.decode()
+        assert "Aktueller Datenstand" not in start and "Current data as of" not in start
+        assert 'class="datenstand-hell zeitzone"' in start
+    for lang in ("de", "en"):
+        assert namen.anzeige("LaLiga", "Athletic Club", lang) == "Athletic Bilbao"
+    assert AD.slug("Athletic Club") == "athletic-club"

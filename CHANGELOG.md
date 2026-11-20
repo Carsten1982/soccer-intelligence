@@ -5,6 +5,11 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 20.11.2026 – Für Version 0.22 (in Arbeit)
+
+- **Carsten** · Wünsche: „Athletic Club“ heisst „Athletic Bilbao“; Startseite ohne „Aktueller Datenstand“ unter den Top-Spielen.
+- **Claude** · Anzeigename Athletic Bilbao (DE und EN, `app/config/teamnamen_anzeige.csv`; Adresse bleibt `athletic-club`). Startseite ohne Datenstand-Zeile (steht in der Fusszeile), Text `start.datenstand` entfernt. Test W29.
+
 ## 20.11.2026 – Version 0.21.2 eingespielt
 
 - **Carsten** · Version 0.21.2 eingespielt (`9efe682`, Pull Request #23; Server und GitHub gleich). Der Pull Request wurde zusammengeführt, bevor der Testlauf fertig war; die Tests liefen beim Einspielen auf dem Server.
