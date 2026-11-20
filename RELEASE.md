@@ -1,47 +1,49 @@
-# Release: Version 0.21.1 – Entwürfe vom 20.11. und Vorschau 5 Tage
+# Release: Version 0.21.2 – Entwürfe vom 20.11., zweite Lieferung
 
-**Stand:** 20.11.2026 · Version 0.21.1 · Entscheidungen Carsten 20.11.2026 · Entwürfe und Briefings vom 20.11.2026 (Template-Briefing 2, 7, 8; Entscheidungsprotokoll Beschluss 13)
+**Stand:** 20.11.2026 · Version 0.21.2 · Releasepaket vom 20.11.2026 (Entwürfe Main_P1, Spieltag_P1, Spiel_P1, Methodik_10; Template-Briefing; Entscheidungsprotokoll Beschluss 13)
 
-**Commit:** Version 0.21.1: Entwürfe vom 20.11. und Vorschau 5 Tage
+**Commit:** Version 0.21.2: Entwürfe vom 20.11., zweite Lieferung
 
 ## Was ändert sich?
 
-- **Vorschau 5 statt 7 Tage** (Dashboard und Website): Ein weiterer Spieltag erscheint erst, wenn sein erstes Spiel höchstens 5 Tage entfernt ist. Ein Spieltag ab Freitag kommt also am Sonntag davor, einer ab Samstag am Montag. Ausnahme bleibt die englische Woche: Ein Dienstag-Spieltag erscheint am Donnerstag davor. Nachhol- und vorgezogene Spiele ebenfalls erst 5 Tage vorher.
-- **Signalqualität kräftiger:** Chips, Balken, Kacheln und Karten in den neuen Grüntönen aus dem Entwurf.
-- **Spielseite:** Der Block „Weitere Spiele dieses Spieltags“ ist weg. „Alle Spiele des Spieltags“ ist jetzt ein Textlink, „Wie entstehen diese Werte?“ die grosse Schaltfläche am Ende.
-- **Spieltag:** Im SEO-Text unten fehlt der Satz „Wir bieten transparente Fußball-Statistiken …“.
-- **Methodik:** Einstieg „Wie tief möchtest du einsteigen?“ als drei Karten (Ebene 1–3). Die gewählte Karte ist dunkelgrün; tiefere Ebenen werden ausgeblendet. „Weiter mit Zahlen“ und „Zur ausführlichen Auswertung“ öffnen die nächste Ebene. Die Ligen-Tabellen haben auf dem Handy keinen Scrollbalken mehr.
-- **Handy:** Navigation und Sprachmenü in einer Zeile; auf schmalen Geräten steht im Sprachknopf „DE“ bzw. „EN“. Footer mit gleichmässigem Abstand.
-- **Für 0.22 vorbereitet:** Entwurf des Abfrageplans in `docs/06_Datenlieferung.md`, Abschnitt 10.2 (Läufe bei Anpfiff + 2¼ Stunden). Noch nichts davon ist aktiv.
+Nur die Website-Vorschau, am Dashboard und an den Berechnungen ändert sich nichts.
+
+- **Spielseite:** Unten steht jetzt die grüne Schaltfläche „Alle Spiele des Spieltags“, darunter der unterstrichene Textlink „Wie entstehen diese Werte?“. Gegenüber 0.21.1 sind die Rollen also wieder getauscht. Der Hinweis zur Zeitzone entfällt auf der Spielseite.
+- **Spieltag:** Im dunklen Kopfbereich fehlt die Zeile „Aktueller Datenstand: …“; der Datenstand steht in der Fusszeile. Der Kopfbereich ist dadurch niedriger.
+- **Startseite:**
+  - Die SEO-Box „Was ist Soccer Intelligence?“ ist ein eigener Block nach „Von einem Fußballfan gebaut“. Optisch ändert sich wenig.
+  - In den Karten „Die auffälligsten Spiele“ bleibt der Signalqualität-Chip auf dem Handy immer neben der Kennzahl; ein langer Name bricht um.
+- **Methodik:** Die Schaltfläche heisst „Weiter mit Zahlen: Ein Spiel durchgerechnet“, auf Englisch „Continue with numbers: a worked example“. Auf dem Computer steht sie in einer Zeile. Auf dem Handy ist sie höchstens 300 px breit und bricht fest nach dem Doppelpunkt um.
 
 ## Einspielen
 
-Wie immer in `tmux`, aber diesmal mit einem neuen Sitzungsnamen, damit keine alte Sitzung im Weg ist:
+Wie immer in `tmux`, mit neuem Sitzungsnamen:
 
 ```bash
-tmux new -s release0211
+tmux new -s release0212
 ```
 
 ```bash
 bash /docker/football-dashboard/tools/einspielen.sh github
 ```
 
-Später wieder verbinden mit `tmux attach -t release0211`. **Während der Tests keine Tasten drücken**, auch keine Pfeiltasten. Am Ende `j`, danach `exit`.
+Später wieder verbinden mit `tmux attach -t release0212`. **Während der Tests keine Tasten drücken.** Am Ende `j`, danach `exit`.
 
 ## Erwartungswerte
 
-- Git-Stand vorher: `006a150` (bzw. `ddf4578`, falls der Doku-Nachtrag zu 0.21 schon zusammengeführt ist).
-- Schritt 4: rund **663 bestanden, 16 übersprungen, 18 ausgelassen**, keine Fehler.
+- Git-Stand vorher: `273b969`.
+- Schritt 4: rund **664 bestanden, 16 übersprungen, 18 ausgelassen**, keine Fehler.
 - Schritt 5: alle Container laufen, `/` = 200, `/dashboard/` = 200, `/vorschau/` = 401.
-- Dashboard-Fusszeile: „Version 0.21.1 – Entwürfe 20.11. und Vorschau 5 Tage“.
+- Dashboard-Fusszeile: „Version 0.21.2 – Entwürfe 20.11., zweite Lieferung“.
 
 ## Im Browser prüfen
 
-1. **Vorschau 5 Tage:** Am Freitag oder Samstag zeigt die Spieltag-Seite (Dashboard und Website) nur den laufenden Spieltag, ausser bei englischen Wochen. Der nächste Wochenend-Spieltag erscheint am Sonntag bzw. Montag. Mit der Zeitreise prüfbar, z. B. Bundesliga `?datum=2027-01-09` (zwei Tabs: 15 und 16) und `?datum=2027-01-10` (drei Tabs: 15, 16 und 17).
-2. **Kacheln und Chips** der Signalqualität: deutlich kräftigeres Grün als bisher.
-3. **Spielseite:** unten kein „Weitere Spiele dieses Spieltags“ mehr; zuerst der Textlink „Alle Spiele des Spieltags“, darunter die dunkle Schaltfläche „Wie entstehen diese Werte?“.
-4. **Methodik:** Die drei Karten oben anklicken: „Kurz erklärt“ zeigt nur Ebene 1, „Mit Zahlen“ Ebene 1 und 2, „Alles im Detail“ alles inklusive Excel-Download. Unter Ebene 1 führt „Weiter mit Zahlen …“ zu Ebene 2.
-5. **Handy:** Navigation in einer Zeile, Sprachknopf „DE“; Methodik-Tabellen ohne seitliches Scrollen.
-6. **Noch offen aus 0.21** (gerne mit dieser Prüfung): Glossar, Texte der Archivseite, Namen der 12 Aufsteiger, Frage „Auffällige Spiele je Spieltag“ (alte RELEASE.md, Punkte 8 und 9; Text steht im Git-Verlauf und in meiner Nachricht).
-7. **Zum Abfrageplan** (`06`, 10.2) brauche ich vor 0.22 deine Entscheidungen: automatische Übernahme der Abendläufe (nur Endstand und Status), Sicherheitslauf, Inhalt der E-Mail-Alarme.
-8. Sag mir, ob alles passt.
+1. **Spielseite** (eine beliebige Partie): unten zuerst die grüne Schaltfläche „Alle Spiele des Spieltags“ (führt zum Spieltag), darunter der Link „Wie entstehen diese Werte?“ (führt zur Methodik). Kein Satz zur Zeitzone mehr.
+2. **Spieltag:** Im grünen Kopfbereich unter den vier Ligen steht kein „Aktueller Datenstand“ mehr. Der Hinweis zur Zeitzone steht weiterhin unter den Spielen.
+3. **Startseite, Handy:** In den Karten „Die auffälligsten Spiele“ steht der Chip „Signalqualität …“ rechts neben dem Namen der Kennzahl, nicht darunter. Ganz unten nach „Von einem Fußballfan gebaut“ folgt „Was ist Soccer Intelligence?“.
+4. **Methodik:** Auf dem Handy steht in der Schaltfläche unter Ebene 1 „Weiter mit Zahlen:“ in der ersten Zeile, „Ein Spiel durchgerechnet“ in der zweiten. Auf dem Computer steht alles in einer Zeile. Englisch: „Continue with numbers: / a worked example“.
+5. **Für den Design-Chat** (nicht zu prüfen, nur weitergeben):
+   - Das SEO-Briefing (3.1) und das Template-Briefing (3.3, 5) nennen noch 7 Tage Vorschau; umgesetzt sind 5 Tage.
+   - Im README „Noch zu entscheiden“: Level-3-Chip DE („Für Statistik-Fans“ oder „Alles im Detail“), englischer Spieltitel („–“ oder „vs“, umgesetzt „vs“), Position des Glossar-Links (umgesetzt nach Methodik).
+6. **Noch offen aus 0.21:** Glossar, Texte der Archivseite, Namen der 12 Aufsteiger, Frage „Auffällige Spiele je Spieltag“. Vor 0.22 dazu die Entscheidungen zum Abfrageplan (`06`, 10.2) und zu den E-Mail-Alarmen.
+7. Sag mir, ob alles passt.

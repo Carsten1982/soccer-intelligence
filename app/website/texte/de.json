@@ -40,7 +40,6 @@
     "intro": "Wähle deine Liga und sieh, bei welchen Partien die Zahlen aus der Reihe fallen.",
     "ligen": "Liga wählen",
     "nummer": "{n}. Spieltag",
-    "datenstand": "Aktueller Datenstand: {datum}",
     "partien": {
       "eins": "1 Spiel",
       "mehr": "{n} Spiele"

@@ -34,7 +34,7 @@
 | F6 | Ranking der Startseite = Top Anomalien des Dashboards (Regelwerk 2.6) |
 | F7 | Pausen und Datenstand wie im Dashboard (Pause über 14 Tage, Spieltag ab 14 Tagen vorher, Warnung bei Datenstand über 3 Tage) |
 | F8 | Adressen `/spieltag/<liga>`, Standard Bundesliga; nur der anstehende Spieltag (bei englischer Woche Tabs), kein Blättern; gespielte Spiele verlinken zum Matchdetail, verschobene nicht. Liganame „La Liga“ mit Abstand |
-| D1 | **„Aktueller Datenstand“** (Startseite, Spieltag) und **„Stand“** (Fusszeile) = Datum bzw. Datum und Uhrzeit des **letzten erfolgreichen Importlaufs** über die API |
+| D1 | **„Aktueller Datenstand“** (Startseite; Spieltag bis 0.21.1) und **„Stand“** (Fusszeile) = Datum bzw. Datum und Uhrzeit des **letzten erfolgreichen Importlaufs** über die API |
 | Z1 | **Zeitreise** nur in der Vorschau: `?datum=…` auf jeder Seite (Abschnitt 6) |
 
 **Entscheidungen Carsten vom 17.11.2026 (Fragerunde vor 0.18, alle Empfehlungen angenommen):**
@@ -188,7 +188,7 @@ Regeln:
 
 ### 5.1 Aufbau (seit 0.18 nach Entwurf 3d)
 1. Kopf: Logo „Soccer Intelligence“, Navigation Spieltag · Methodik · Impressum.
-2. Dunkler Kopfbereich: H1 „Alle Spiele im **Überblick**“ (Akzent), Text „Wähle deine Liga und sieh, bei welchen Partien die Zahlen aus der Reihe fallen.“, darunter die Liga-Auswahl: vier Kacheln mit „10. Spieltag“ bzw. Pausenname (A5); die gewählte in der Akzentfarbe. Darunter „Aktueller Datenstand: Mo 16.11.2026“ (D1).
+2. Dunkler Kopfbereich: H1 „Alle Spiele im **Überblick**“ (Akzent), Text „Wähle deine Liga und sieh, bei welchen Partien die Zahlen aus der Reihe fallen.“, darunter die Liga-Auswahl: vier Kacheln mit „10. Spieltag“ bzw. Pausenname (A5); die gewählte in der Akzentfarbe. Seit 0.21.2 ohne „Aktueller Datenstand“ (steht in der Fusszeile) und mit niedrigerem Kopfbereich (bis 0.21.1: „Aktueller Datenstand: Mo 16.11.2026“, D1).
 3. Titel = Liganame, Zusammenfassung „10. Spieltag · 20.11. – 22.11.2026 · 9 Partien · 2 mit Auffälligkeit · plus 1 Nachholspiel“ (je Tab eine eigene Zeile).
 4. Bei englischer Woche Tabs „10. Spieltag · ab 20.11.“ / „11. Spieltag · ab 24.11.“ (Standard: der frühere; ohne JavaScript stehen beide untereinander).
 5. Legende Stark · Leicht · Ohne Auffälligkeit, „Wie lese ich das?“ (aufklappbar, Texte Übergabe 6.3).
@@ -256,7 +256,7 @@ Heim, „gegen“, Gast, Termin („Sa 14.11. · 15:30“, „Sa 14.11. · Zeit 
 5. „Auffälligkeiten“: Karten je Kennzahl mit Stufe, nach Betrag der Abweichung sortiert; Balken (Länge = Betrag/2 % der Breite, höchstens 50 %, über 100 % gekappt mit Streifen, Übergabe 4.2); aufklappbar „Zahlen im Detail“: Erwartungswert, „Je Mannschaft · Mittelwert beider Teams“ (bei Gelben Karten „Heim + Gast“ mit zweiteiliger Leiste, Q1), Ligaschnitt bzw. „Vergleichswert (Marke)“ 2,50 bei KPI 03 (Q2), Abweichung mit Stufe, „Zuklappen“.
 6. „Im Normalbereich“: übrige Kennzahlen als aufklappbare Zeilen, nach Betrag; eine einzelne vorläufige Kennzahl dort schraffiert mit „· nicht gewertet“ (Q4). Ist das ganze Spiel nicht gewertet: Hinweisbox und Überschrift „Kennzahlen“ (ohne Werte: eigener Text „Für dieses Spiel liegen noch keine Werte vor …“).
 7. Status-Spiele (verschoben, abgesagt …): nur Scoreboard und Kernaussage, keine Kennzahlen (wie die graue Kachel, F5).
-8. Link „Wie entstehen diese Werte?“ (Methodik, folgt) und „Alle Spiele des Spieltags“.
+8. Seit 0.21.2: grüne Schaltfläche „Alle Spiele des Spieltags“, darunter der unterstrichene Textlink „Wie entstehen diese Werte?“ (Methodik); kein Zeitzonen-Hinweis auf der Spielseite.
 
 Werte unverändert aus dem Rechenkern (F6): Erwartungswert = `hauptwert`, Teamwerte = `heim`/`auswaerts`, Ligaschnitt = `referenz`, Abweichung = `abweichung` (gerundet), Stufe aus `schwellen.toml`; KPI 08 in Prozent.
 
@@ -283,6 +283,14 @@ der Adresse, sonst 1), ohne Skript ist alles sichtbar; Weiter-Schaltflächen je 
 Ligen-Tabellen bis 520 px ohne Mindestbreite (kein Scrollbalken von 320 bis 412 px, bis 340 px ohne Balkensymbol).
 Mobil bis 520 px: Navigation und Sprachmenü einzeilig, bis 440 px Sprachknopf „DE“/„EN“; Footer bis 640 px mit 14 px
 Abstand; SEO-Box der Startseite höchstens 816 px breit.
+
+**Seit 0.21.2 (zweite Lieferung der Entwürfe vom 20.11., Entscheidungsprotokoll Beschluss 13):** Spielseite mit
+grüner Schaltfläche „Alle Spiele des Spieltags“ und darunter dem Textlink „Wie entstehen diese Werte?“ (Rollen
+gegenüber 0.21.1 wieder getauscht), ohne Zeitzonen-Hinweis. Spieltag: Kopfbereich ohne „Aktueller Datenstand“ und
+niedriger (oben 12–24 px, unten 18–28 px). Startseite: SEO-Box als eigener Block nach „Von einem Fußballfan gebaut“;
+in der Ranking-Karte bleibt der Signalqualität-Chip neben der Kennzahl, ein langer Name bricht um. Methodik:
+Schaltfläche „Weiter mit Zahlen: Ein Spiel durchgerechnet“ (EN „Continue with numbers: a worked example“) auf dem
+Computer einzeilig, bis 520 px höchstens 300 px breit mit festem Umbruch nach dem Doppelpunkt.
 
 - **Startseite, Spieltag, Spielseite** nach den Entwürfen P1 vom 19.11.2026 (Main_P1, Spieltag_P1, Spiel_P1): Ranking als
   Karten mit Signalqualität (drei Balken), Kacheln je Stufe (stark/mittel/gering mit farbigem Streifen), Legende mit
@@ -336,6 +344,8 @@ Abstand; SEO-Box der Startseite höchstens 816 px breit.
 | W24 | Methodik | Zahlen aus der Schwellendatei, Rechenbeispiel passt zur Schwellendatei, Excel-Download (Spalten, Zeilen, Zahlen) |
 | W25 | Inhaltsseiten | je Seite ein H1, Sprache, keine Inline-Stile, eindeutige IDs, Sprungmarken vorhanden; Betreiberangaben nur aus der Server-Konfiguration; keine privaten E-Mail-Adressen im Code |
 | W26 | Endstand | kompakt auf Kacheln, lang auf der Spielseite |
+| W27 | Entwurfsrunde 20.11. (0.21.1) | Spielseite ohne „Weitere Spiele“, Spieltag ohne SEO-Satz, Methodik mit drei Karten und Ebenen, Farben, Sprachknopf mobil |
+| W28 | Entwürfe 20.11., zweite Lieferung (0.21.2) | Spielseite Schaltfläche/Textlink und kein Zeitzonen-Hinweis; Spieltag-Kopf ohne Datenstand; SEO-Box eigener Block; Chip neben Kennzahl; Weiter-Schaltfläche mit Umbruch nur mobil |
 | – | Browser (vor dem Release, nicht automatisch) | axe-core 4.10 auf allen Seitenarten DE/EN, 1280 und 390 px: keine Verstösse; 360 px ohne Querscrollen; Sprachmenü (Escape, Klick daneben), Tabs mit und ohne JavaScript, Download |
 
 ## 9. Annahmen (bitte in der Vorschau prüfen)
@@ -485,4 +495,6 @@ Abstand; SEO-Box der Startseite höchstens 816 px breit.
 | 0.19.1 | CSS und JS mit Versionsnummer (`?v=`), damit nach einem Release kein Strg+F5 nötig ist |
 | 0.20 | Nur nötige Textanpassungen im heutigen Aussehen: Signalqualität stark/mittel/gering; Statusmodell (gespielt ab Anpfiff + 2 h, „Werte ab …“ auf Spieltag-Seite und Matchdetail, „Zu wenig Daten“); Werte gespielter Spiele aus dem Schnappschuss mit Hinweisen; Ranking ohne Nachrücken; Sonderspiele mit Nummer, neue Zählform; 48-Stunden-Grenze |
 | 0.21 | **Neue Website** nach den Entwürfen P1: Deutsch und Englisch mit Adressen `/de/` und `/en/`, 301/302/404, Archiv je Spieltag; Methodik mit Excel-Download, Glossar, Kontakt (ohne Versand), Impressum, Datenschutz, Seite nicht gefunden; Index-Regeln, robots.txt, Sitemap, Title/Description/Open Graph/JSON-LD; Caching und 503; Tabs ohne JavaScript, Fokus, Kontraste, axe-core; Anzeigenamen je Sprache |
+| 0.21.1 | Entwürfe 20.11. (Farben, Spielseite, Methodik-Karten, Handy) und Vorschau 5 Tage |
+| 0.21.2 | Zweite Lieferung der Entwürfe 20.11.: Spielseite, Spieltag-Kopf, Startseite (SEO-Box, Ranking-Karte), Methodik-Schaltfläche |
 | später | 0.22 Kontakt-Versand, Cookie-Wahl, GA4, E-Mail-Alarme; 1.0 Qualität und Livegang |

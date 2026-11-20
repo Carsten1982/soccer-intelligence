@@ -30,4 +30,4 @@ LEAGUE_SHEETS = REQUIRED_LEAGUE_SHEETS + OPTIONAL_LEAGUE_SHEETS
 # Anzeige-Zeitzone
 TIMEZONE = "Europe/Zurich"  # massgeblich für „heute“ (aktueller Spieltag)
 
-APP_VERSION = "0.21.1 – Entwürfe 20.11. und Vorschau 5 Tage"
+APP_VERSION = "0.21.2 – Entwürfe 20.11., zweite Lieferung"
