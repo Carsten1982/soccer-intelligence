@@ -41,7 +41,7 @@ Später wieder verbinden mit `tmux attach -t release022`. **Während der Tests k
 ## Erwartungswerte
 
 - Git-Stand vorher: `9efe682`.
-- Schritt 4: rund **680 bestanden, 16 übersprungen, 18 ausgelassen**, keine Fehler.
+- Schritt 4: rund **683 bestanden, 16 übersprungen, 18 ausgelassen**, keine Fehler.
 - Schritt 5: alle Container laufen, `/` = 200, `/dashboard/` = 200, `/vorschau/` = 401.
 - Dashboard-Fusszeile: „Version 0.22 – Daten nach jedem Spiel“.
 - Ein Lauf nach dem Spiel braucht rund 15–30 Abfragen. Am Samstag sind es zusammen rund 150–250, unter der eigenen Grenze von 500.
