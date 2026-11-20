@@ -34,7 +34,7 @@
 | F6 | Ranking der Startseite = Top Anomalien des Dashboards (Regelwerk 2.6) |
 | F7 | Pausen und Datenstand wie im Dashboard (Pause über 14 Tage, Spieltag ab 14 Tagen vorher, Warnung bei Datenstand über 3 Tage) |
 | F8 | Adressen `/spieltag/<liga>`, Standard Bundesliga; nur der anstehende Spieltag (bei englischer Woche Tabs), kein Blättern; gespielte Spiele verlinken zum Matchdetail, verschobene nicht. Liganame „La Liga“ mit Abstand |
-| D1 | **„Aktueller Datenstand“** (Startseite; Spieltag bis 0.21.1) und **„Stand“** (Fusszeile) = Datum bzw. Datum und Uhrzeit des **letzten erfolgreichen Importlaufs** über die API |
+| D1 | **„Aktueller Datenstand“** (Startseite bis 0.21.2; Spieltag bis 0.21.1) und **„Stand“** (Fusszeile) = Datum bzw. Datum und Uhrzeit des **letzten erfolgreichen Importlaufs** über die API |
 | Z1 | **Zeitreise** nur in der Vorschau: `?datum=…` auf jeder Seite (Abschnitt 6) |
 
 **Entscheidungen Carsten vom 17.11.2026 (Fragerunde vor 0.18, alle Empfehlungen angenommen):**
@@ -266,7 +266,7 @@ Programm: `app/website/start.py` (Datensatz), `vorlagen/start.html`.
 1. Kopfbereich „Fußballspiele **durchleuchtet.**“ mit Knöpfen „Auffällige Spiele“ und „So funktioniert’s“.
 2. **„Die auffälligsten Spiele“** = genau die Top Anomalien des Dashboards (F6): je Liga der zeitlich nächste Block (`core/anzeige.top_block`), nur Spiele mit Werten (`values_from`, nie „Werte ab“); seit 0.20 bleiben gespielte Spiele mit den Werten ihres Schnappschusses auf ihrem Platz, ausgegraut mit „Gespielt“ bzw. „Endstand 2 : 1“, es rückt keines nach (bis 0.19.1: nur Spiele vor dem Anpfiff); Auswahl und Rangfolge nach Regelwerk 2.6 (`core/top.select_top`, seit 0.19: Prognosewert hoch vor mittel vor gering, dann grösster Betrag, früheres Datum, Ligareihenfolge; Liga-Mix höchstens 2 je Liga; höchstens 4, einer je Spiel; vorläufige Werte und verschobene Spiele nie). Je Zeile: Rang, „Bundesliga · Spieltag 10“, Paarung, Termin, Pfeil, Abweichung, Stufe, Kennzahl, Balken; Link zum Matchdetail.
 3. Zustände statt der Liste (Pausenkarte): **Keine Abweichungen** (eine Liga spielt, aber ohne Auffälligkeit) · **Spielpause** / **Winterpause** (keine Liga in den nächsten 14 Tagen; Winterpause, wenn Weihnachten in der Lücke liegt) · **Saisonstart** (alle nächsten Spieltage gehören zu einer neuen Saison) · **Sommerpause** („Die Saison ist beendet“, kein angesetztes Spiel) · **Nächster Spieltag** ohne Pausennamen bei veraltetem Datenstand (S9). Massgebend ist der früheste nächste Spieltag aller Ligen; der Knopf führt zu dessen Liga. Tage-Zähler (Q7) bei Spiel-, Winterpause, Saisonstart und veraltetem Stand. Fehler in den Daten: Hinweis „Daten werden geprüft“.
-4. Warnbox bei veraltetem Datenstand (über 48 Stunden seit 0.20, bis 0.19.1 über 3 Tage, F7); „Aktueller Datenstand: …“ (D1).
+4. Warnbox bei veraltetem Datenstand (über 48 Stunden seit 0.20, bis 0.19.1 über 3 Tage, F7); bis 0.21.2 darunter „Aktueller Datenstand: …“ (D1), seit 0.22 nur noch in der Fusszeile (Wunsch Carsten 20.11.2026).
 5. „Deine Liga. Dein Spieltag.“ (vier Liga-Knöpfe), „So funktioniert’s“ (drei Spalten), Band „Bereit für den Spieltag?“, Block „Von einem Fußballfan gebaut“ mit Foto (Q6) oder Platzhalter, SEO-Text „Was ist Soccer Intelligence?“.
 
 **Foto (Q6):** Datei `portrait.jpg` im Ordner `/docker/football-dashboard/website-bilder/` auf dem Server (quadratisch, mindestens 230 × 230 Pixel, JPEG). Der Ordner ist nur lesend im Container `soccer-vorschau` eingebunden (`/bilder`), steht in `.gitignore` und kommt nie ins Programm-Abbild (Dockerfile kopiert nur `app/`). Ein neues Foto wirkt sofort (kein Neustart nötig; Browser-Zwischenspeicher bis 1 Stunde).
@@ -303,7 +303,7 @@ Computer einzeilig, bis 520 px höchstens 300 px breit mit festem Umbruch nach d
   Schwellendatei. Excel-Datei mit allen Zahlen je Liga, Kennzahl und Richtung (Spiele, Trefferquote, Vergleichswert,
   Mehrwert, Spanne, Saisons mit Vorteil) und einem Blatt „Grundlage“, beim Aufruf aus der Schwellendatei erzeugt.
 - **Glossar** (ohne Entwurf, im Stil der Methodik): Grundbegriffe, Kennzahlen, Spielstatus, Datenstand und Zeiten;
-  Begriffe nach dem Glossar (Release-Fassung 19.11.2026). Text ist ein Vorschlag zur Freigabe.
+  Begriffe nach dem Glossar (Release-Fassung 19.11.2026). Text freigegeben von Carsten am 20.11.2026.
 - **Kontakt** (Entwurf Kontakt): Formular mit Pflichtfeldern, Sicherheitsfrage und verstecktem Feld; Versand ab 0.22,
   bis dahin ist die Schaltfläche gesperrt mit Hinweis.
 - **Impressum, Datenschutz** (Entwürfe): Betreiberangaben nur aus `.env` auf dem Server (`SI_IMPRESSUM_NAME`,
@@ -346,6 +346,7 @@ Computer einzeilig, bis 520 px höchstens 300 px breit mit festem Umbruch nach d
 | W26 | Endstand | kompakt auf Kacheln, lang auf der Spielseite |
 | W27 | Entwurfsrunde 20.11. (0.21.1) | Spielseite ohne „Weitere Spiele“, Spieltag ohne SEO-Satz, Methodik mit drei Karten und Ebenen, Farben, Sprachknopf mobil |
 | W28 | Entwürfe 20.11., zweite Lieferung (0.21.2) | Spielseite Schaltfläche/Textlink und kein Zeitzonen-Hinweis; Spieltag-Kopf ohne Datenstand; SEO-Box eigener Block; Chip neben Kennzahl; Weiter-Schaltfläche mit Umbruch nur mobil |
+| W29 | Wünsche 20.11. (0.22) | Startseite ohne „Aktueller Datenstand“; Athletic Club heisst „Athletic Bilbao“ (DE/EN), Adresse bleibt `athletic-club` |
 | – | Browser (vor dem Release, nicht automatisch) | axe-core 4.10 auf allen Seitenarten DE/EN, 1280 und 390 px: keine Verstösse; 360 px ohne Querscrollen; Sprachmenü (Escape, Klick daneben), Tabs mit und ohne JavaScript, Download |
 
 ## 9. Annahmen (bitte in der Vorschau prüfen)
@@ -361,10 +362,10 @@ Computer einzeilig, bis 520 px höchstens 300 px breit mit festem Umbruch nach d
 | A7 | Die Pausen-Karte der Spieltag-Seite hat keinen Tage-Zähler (nur die Startseite, Q7) | Übergabe 6.4; Entwurf 3d bestätigt |
 | A8 | Navigation zu Methodik und Impressum zeigt bis zur Umsetzung „Diese Seite folgt später.“ | Seiten noch nicht im Umfang |
 | A9 | Vorschau-Leiste oben (Zeitpunkt, Eingabe, seit 0.21 Index-Status) nur in der Vorschau, nicht Teil der Website | wie die Prototyp-Leiste des Entwurfs |
-| A10 | Methodik: Die Angabe „Auffällige Spiele je Spieltag“ (Entwurf: z. B. Bundesliga stark 1,4 · mittel 1,9 · gering 1,4) fehlt vorerst; die Übersicht zeigt Anzahl der Schwellen je Stufe | Zahlen stehen nicht in `schwellen.toml` und lassen sich daraus nicht herleiten (Quelle offen) |
+| A10 | Methodik: Die Angabe „Auffällige Spiele je Spieltag“ (Entwurf: z. B. Bundesliga stark 1,4 · mittel 1,9 · gering 1,4) fehlt vorerst; die Übersicht zeigt Anzahl der Schwellen je Stufe | Zahlen stehen nicht in `schwellen.toml`; **Entscheid Carsten 20.11.2026: weglassen** |
 | A11 | Methodik: Ebenen als Sprungmarken, alle Ebenen immer sichtbar (der Entwurf blendet tiefere Ebenen erst nach Wahl ein) | alles im HTML (Beschluss Thema 4), ohne JavaScript nutzbar |
 | A12 | Vorschaubild `og-image.png` sprachneutral: Logo, „Soccer Intelligence“ und die vier Ligen | ein Bild für beide Sprachen |
-| A13 | Glossar und Archivseite: Texte von Claude vorgeschlagen (Freigabe offen) | Beschluss 19.11.2026: ohne Entwurf |
+| A13 | Glossar und Archivseite: Texte von Claude vorgeschlagen, **freigegeben von Carsten am 20.11.2026** | Beschluss 19.11.2026: ohne Entwurf |
 | A14 | Ranking der Startseite: gespieltes Spiel zeigt „Gespielt · 2:1“ wie die Kachel | Glossar Abschnitt 19 |
 | A15 | Methodik Ebene 3: Chip DE „Ebene 3 · Für Statistik-Fans“ (EN „Level 3 · Full details“); Auswahlkarte „Alles im Detail“ | Beschluss Carsten 20.11.2026 |
 | A16 | Glossar-Link im Footer als fünfter Link nach „Methodik“ | Beschluss Carsten 20.11.2026 |
@@ -499,4 +500,5 @@ Computer einzeilig, bis 520 px höchstens 300 px breit mit festem Umbruch nach d
 | 0.21 | **Neue Website** nach den Entwürfen P1: Deutsch und Englisch mit Adressen `/de/` und `/en/`, 301/302/404, Archiv je Spieltag; Methodik mit Excel-Download, Glossar, Kontakt (ohne Versand), Impressum, Datenschutz, Seite nicht gefunden; Index-Regeln, robots.txt, Sitemap, Title/Description/Open Graph/JSON-LD; Caching und 503; Tabs ohne JavaScript, Fokus, Kontraste, axe-core; Anzeigenamen je Sprache |
 | 0.21.1 | Entwürfe 20.11. (Farben, Spielseite, Methodik-Karten, Handy) und Vorschau 5 Tage |
 | 0.21.2 | Zweite Lieferung der Entwürfe 20.11.: Spielseite, Spieltag-Kopf, Startseite (SEO-Box, Ranking-Karte), Methodik-Schaltfläche |
-| später | 0.22 Kontakt-Versand, Cookie-Wahl, GA4, E-Mail-Alarme; 1.0 Qualität und Livegang |
+| 0.22 | Startseite ohne Datenstand-Zeile; Anzeigenamen der 12 Aufsteiger und Athletic Bilbao; Glossar und Archivtexte freigegeben |
+| später | 0.23 Kontakt-Versand und E-Mail-Alarme; 0.24 Cookie-Wahl, GA4; 1.0 Qualität und Livegang |

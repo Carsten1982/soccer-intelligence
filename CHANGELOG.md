@@ -5,6 +5,21 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 20.11.2026 – Version 0.22: Daten nach jedem Spiel
+
+- **Carsten** · Beschlüsse B1–B5 und F1–F3 (`06`, 10.2): Lauf nach jedem Spiel (Anpfiff + 2¼ h) mit Ergebnis und allen Statistiken, keine Freigabe mehr, Kontrolllauf 04:00, Wiederholung nach 1 Stunde (höchstens zwei), Backups gestaffelt; kritische Spiele einzeln zurückhalten. Freigaben aus 0.21: Glossar, Archivtexte, Namen der 12 Aufsteiger; „Auffällige Spiele je Spieltag“ weglassen. Wünsche: „Athletic Bilbao“, Startseite ohne Datenstand-Zeile. Zuschnitt: 0.23 E-Mail und Überwachung, 0.24 Cookie-Hinweis und Google Analytics.
+- **Claude** · **Laufplan** (`importer/laufplan.py`): Läufe aus dem Spielplan (Anpfiff + 2¼ h, zusammengelegt unter 30 Minuten, keiner in der Stunde 04:00, verpasste bis 6 h nachgeholt), Wiederholung, Backup-Staffel (14 Tage, 8 Wochen, 12 Monate, je Saison dauerhaft; bisher die letzten 30).
+- **Claude** · **Dienst**: Anlass je Lauf (Kontrolllauf, nach dem Spiel, Wiederholung); Läufe nach dem Spiel holen nur neue Spiele und fehlende Werte (kein Neuprüfen der letzten 2 Spieltage, keine ganze Saison); Ereignisprotokoll `import/ereignisse.jsonl`. **Automatik aktiv** (`automatisch_ab = 2026-11-20`); kritische Punkte sperren die Fassung nicht mehr, Fehler und neue Warnungen schon.
+- **Claude** · **Reiter Datenimport/API**: „Läufe heute“, Anlass im Protokoll, nächster Lauf mit Anlass, Entscheide auch nach automatischer Übernahme; Kasten mit „Übernehmen“ nur noch bei Fehlern oder Warnungen.
+- **Claude** · **Website**: Anzeigenamen der 12 Aufsteiger und „Athletic Bilbao“ (`teamnamen_anzeige.csv`); Startseite ohne „Aktueller Datenstand“; Glossar freigegeben.
+- **Carsten / Claude** · **Nachprüfung vor dem Zusammenführen** (auf Wunsch von Carsten), drei Befunde behoben: (1) „Statistik fehlt“ und „Spieltag unvollständig“ sperrten die automatische Übernahme, also fast jeden Lauf nach dem Spiel – sperren jetzt nicht mehr (Regel 5); (2) ein noch laufendes oder verspätetes Spiel löste keine Wiederholung aus – jetzt schon (Bericht „nicht_beendet“); (3) späte Korrekturen verschwanden nach einem Lauf nach dem Spiel aus „Ihre Entscheidung“ – kommen jetzt aus dem letzten Kontrolllauf. Test `test_score_against_goal_events…` an F1 angepasst (Rest wird übernommen). Der erste GitHub-Testlauf scheiterte daran, dass dieser Test bei der automatischen Übernahme in den echten Ordner `/backup` schreiben wollte; Tests schreiben Backups jetzt immer in einen temporären Ordner (`conftest.py`).
+- **Claude** · Tests L1–L6 (`test_import_022.py`), W29, Datenimport-Reiter; Import-Tests laufen standardmässig „von Hand“ (`conftest.py`). Doku: `01` (0, 5, 6.5), `05` v5.11, `06` v0.9 (10.2 freigegeben), `08`, RELEASE.md.
+
+## 20.11.2026 – Version 0.21.2 eingespielt
+
+- **Carsten** · Version 0.21.2 eingespielt (`9efe682`, Pull Request #23; Server und GitHub gleich). Der Pull Request wurde zusammengeführt, bevor der Testlauf fertig war; die Tests liefen beim Einspielen auf dem Server.
+- **Claude** · Stand nachgetragen (`01`, Abschnitt 0 und Versionstabelle).
+
 ## 20.11.2026 – Version 0.21.2: Entwürfe vom 20.11., zweite Lieferung
 
 - **Carsten** · Überarbeitete Briefings (README, Glossar EN, SEO, Template, Kontrast-Check, Entscheidungsprotokoll Beschluss 13) und Entwürfe Main_P1, Spieltag_P1, Spiel_P1, Methodik_10 vom 20.11.2026; Auftrag zur Umsetzung.

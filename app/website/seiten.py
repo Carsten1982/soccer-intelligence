@@ -196,7 +196,6 @@ def _rahmen(k: Kontext, stand_iso: str | None) -> dict:
         "zeitreise": F.stand(k.jetzt, k.lang) if k.zeitreise and k.jetzt else None,
         "datum_wert": k.jetzt.strftime("%Y-%m-%dT%H:%M") if k.zeitreise and k.jetzt else "",
         "stand_text": F.stand(stand, k.lang),
-        "datenstand_text": F.tag_jahr(stand.date(), k.lang) if stand else F.STRICH,
         "veraltet_text": F.tag(stand.date(), k.lang) if stand else F.STRICH,
     }
 

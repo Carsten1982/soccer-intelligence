@@ -1,4 +1,4 @@
-# Anzeigenamen der Vereine je Sprache (Glossar Abschnitt 11, Stand 19.11.2026; seit Version 0.21).
+# Anzeigenamen der Vereine je Sprache (Glossar Abschnitt 11, Stand 19.11.2026; seit Version 0.21). Athletic Club → Athletic Bilbao: Carsten 20.11.2026.
 # name = Name von API-Football wie in Datenbank und Spielplan (app/config/teamnamen.toml); de/en = Anzeigename.
 # Fehlt ein Verein (z. B. Aufsteiger), zeigt die Website den Namen der Datenquelle und meldet das im Reiter
 # Datenimport/API. Die Adresse (Slug) entsteht immer aus dem Namen der Datenquelle und ändert sich hier nie.
@@ -62,7 +62,7 @@ Serie A;Sassuolo;US Sassuolo;Sassuolo
 Serie A;Torino;FC Turin;Torino
 Serie A;Udinese;Udinese Calcio;Udinese
 LaLiga;Alavés;Deportivo Alavés;Deportivo Alavés
-LaLiga;Athletic Club;Athletic Club;Athletic Club
+LaLiga;Athletic Club;Athletic Bilbao;Athletic Bilbao
 LaLiga;Atlético Madrid;Atlético Madrid;Atlético Madrid
 LaLiga;Barcelona;FC Barcelona;FC Barcelona
 LaLiga;Celta Vigo;Celta Vigo;Celta Vigo
@@ -81,3 +81,16 @@ LaLiga;Real Sociedad;Real Sociedad;Real Sociedad
 LaLiga;Sevilla;FC Sevilla;Sevilla FC
 LaLiga;Valencia;FC Valencia;Valencia CF
 LaLiga;Villarreal;FC Villarreal;Villarreal CF
+# Aufsteiger 2026/27, Freigabe Carsten 20.11.2026 (Version 0.22)
+Bundesliga;FC Schalke 04;FC Schalke 04;Schalke 04
+Bundesliga;SC Paderborn 07;SC Paderborn 07;SC Paderborn
+Bundesliga;SV Elversberg;SV Elversberg;SV Elversberg
+Premier League;Coventry;Coventry City;Coventry City
+Premier League;Hull City;Hull City;Hull City
+Premier League;Ipswich;Ipswich Town;Ipswich Town
+Serie A;Frosinone;Frosinone Calcio;Frosinone
+Serie A;Monza;AC Monza;Monza
+Serie A;Venezia;FC Venedig;Venezia
+LaLiga;Deportivo La Coruña;Deportivo La Coruña;Deportivo La Coruña
+LaLiga;Málaga;FC Málaga;Málaga CF
+LaLiga;Racing Santander;Racing Santander;Racing Santander

@@ -15,6 +15,11 @@
 - Ab dem Datum automatisch_ab in app/config/import.toml wird eine Fassung sofort übernommen, wenn sie unkritisch ist
   (R5): keine Fehler, keine kritischen Punkte, keine Plausibilitätswarnung, keine neue Warnung der Prüfregeln.
 
+Seit 0.22 (Spezifikation 10.2, Beschlüsse Carsten 20.11.2026): zusätzlich ein Lauf nach jedem Spiel (Anpfiff + 2¼ h,
+importer/laufplan.py) mit Wiederholung nach 1 Stunde (höchstens zwei); jede fehlerfreie Fassung wird sofort übernommen
+(automatisch_ab = Einspieldatum); Backups gestaffelt statt „die letzten 30“; jeder Lauf schreibt eine Zeile ins
+Ereignisprotokoll /import/ereignisse.jsonl (Grundlage für Alarme und Statusmail ab 0.23).
+
 Aufruf: python -m importer.dienst            Dauerbetrieb im Container
         python -m importer.dienst --jetzt    sofort einen Lauf (z. B. nach dem Einspielen)
 """
@@ -36,12 +41,13 @@ from core.config import load_leagues
 
 from . import einstellungen as E
 from . import entscheide
-from . import schnappschuss
+from . import laufplan, schnappschuss
 from .client import ApiClient, ImportFehler, used_today
 from .erzeugen import build, save_report, sha256
 from .teams import load_team_names
 
 STATE = "zustand.json"
+EVENTS = "ereignisse.jsonl"
 
 
 def _dirs(base: Path) -> dict[str, Path]:
@@ -70,8 +76,17 @@ def _drop_files(base: Path, run_id: str) -> None:
         (d / name).unlink(missing_ok=True)
 
 
-def run(base: Path, data_dir: Path, now: datetime, full_season: bool | None = None, client: ApiClient | None = None) -> dict:
-    """Ein Lauf: neue Fassung erzeugen, Bericht speichern, wartende Fassung ersetzen, ggf. automatisch übernehmen."""
+def event(base: Path, entry: dict) -> None:
+    """Eine Zeile ins Ereignisprotokoll (seit 0.22)."""
+    with (base / EVENTS).open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+
+def run(base: Path, data_dir: Path, now: datetime, full_season: bool | None = None, client: ApiClient | None = None,
+        anlass: str = "kontrolle") -> dict:
+    """Ein Lauf: neue Fassung erzeugen, Bericht speichern, wartende Fassung ersetzen, ggf. automatisch übernehmen.
+    anlass: „kontrolle“ (täglich 04:00, letzte 2 Spieltage bzw. montags die ganze Saison), „spiel“ (nach einem Spiel)
+    oder „wiederholung“ – die beiden letzten holen nur neue Spiele und Spiele mit fehlenden Werten (seit 0.22)."""
     dirs = _dirs(base)
     for d in dirs.values():
         d.mkdir(parents=True, exist_ok=True)
@@ -80,12 +95,14 @@ def run(base: Path, data_dir: Path, now: datetime, full_season: bool | None = No
     out = dirs["laeufe"] / run_id
     client = client or ApiClient(key=os.environ.get(E.KEY_ENV), raw_dir=dirs["roh"],
                                  used_before=used_today(dirs["roh"], now.strftime("%Y-%m-%d")))
-    full = now.weekday() == 0 if full_season is None else full_season
-    report = {"lauf": run_id, "start": now.isoformat(timespec="seconds")}
+    kontrolle = anlass == "kontrolle"
+    full = (now.weekday() == 0 and kontrolle) if full_season is None else full_season
+    report = {"lauf": run_id, "start": now.isoformat(timespec="seconds"), "anlass": anlass}
     try:
         report.update(build(client, load_team_names(E.TEAM_NAMES_FILE), load_leagues(),
                             data_dir / settings.DATABASE_FILENAME, data_dir / settings.FIXTURES_FILENAME, out,
-                            now.date(), full, decisions=entscheide.load(base)))
+                            now.date(), full, decisions=entscheide.load(base), recheck=kontrolle,
+                            jetzt=now if now.tzinfo else None))
         report["status"] = "wartet" if report["fehler"] == 0 else "Fehler – nicht übernehmbar"
     except Exception as exc:                                  # Lauf fehlgeschlagen: gültige Dateien bleiben
         report["status"] = "fehlgeschlagen"
@@ -101,7 +118,8 @@ def run(base: Path, data_dir: Path, now: datetime, full_season: bool | None = No
             _set_status(base, old, "ersetzt", f"ersetzt durch Lauf {run_id}")
             _drop_files(base, old)
         state["wartend"] = run_id
-    state["letzter_lauf_tag"] = now.strftime("%Y-%m-%d")
+    if kontrolle:
+        state["letzter_lauf_tag"] = now.strftime("%Y-%m-%d")
     state["letzter_lauf"] = run_id
     save_report(report, out / "bericht.json")
     save_state(base, state)
@@ -109,7 +127,13 @@ def run(base: Path, data_dir: Path, now: datetime, full_season: bool | None = No
     auto = E.automatic_from()
     if report["status"] == "wartet" and auto and now.date() >= auto and (report.get("automatik") or {}).get("ok"):
         apply(base, data_dir, E.BACKUP_DIR, run_id, "uebernehmen", "automatisch", now)
-    return load_report(base, run_id)
+    final = load_report(base, run_id) or report
+    event(base, {"zeit": now.isoformat(timespec="seconds"), "lauf": run_id, "anlass": anlass, "status": final.get("status"),
+                 "neue_spiele": sum(len(v) for v in (final.get("neue_spiele") or {}).values()),
+                 "korrekturen": len(final.get("korrekturen") or []), "offen": len(final.get("offen") or []),
+                 "kritisch": len(final.get("kritisch") or []), "fehler": final.get("fehler"),
+                 "abfragen": (final.get("anfragen") or {}).get("verbraucht"), "meldung": final.get("meldung")})
+    return final
 
 
 def _prune_raw(raw: Path, today) -> None:
@@ -153,7 +177,8 @@ def _target(backup_dir: Path, stem: str, tag: str, suffix: str) -> Path:
 
 
 def _backup(base: Path, data_dir: Path, backup_dir: Path, run_id: str, now: datetime) -> None:
-    """Gültige Dateien und Entscheide mit Datum (Sekunden) und Lauf ins Backup; die letzten 30 bleiben."""
+    """Gültige Dateien und Entscheide mit Datum (Sekunden) und Lauf ins Backup; seit 0.22 gestaffelt aufgeräumt
+    (laufplan.behalten: 14 Tage, 8 Wochen, 12 Monate, je Saison dauerhaft; bis 0.21.2: die letzten 30)."""
     backup_dir.mkdir(parents=True, exist_ok=True)
     tag = f"{now:%Y-%m-%d_%H%M%S}_lauf-{run_id}"
     sources = [(base / E.DECISIONS_FILE, "entscheidungen", ".json")] + [
@@ -161,8 +186,7 @@ def _backup(base: Path, data_dir: Path, backup_dir: Path, run_id: str, now: date
     for src, stem, suffix in sources:
         if src.exists():
             shutil.copy2(src, _target(backup_dir, stem, tag, suffix))
-        for old in sorted(backup_dir.glob(f"{stem}_*_vor_import{suffix}"))[:-E.BACKUPS_KEPT]:
-            old.unlink()
+    laufplan.backups_aufraeumen(backup_dir, [(stem, suffix) for _, stem, suffix in sources], now.date())
 
 
 def _finish(base: Path, run_id: str, by: str, stamp: str) -> None:
@@ -281,6 +305,35 @@ def due(state: dict, now: datetime) -> bool:
     return now.hour >= E.RUN_HOUR and state.get("letzter_lauf_tag") != now.strftime("%Y-%m-%d")
 
 
+def naechster(base: Path, data_dir: Path, now: datetime) -> str | None:
+    """Welcher Lauf ist fällig? Kontrolllauf vor Lauf nach dem Spiel vor Wiederholung (seit 0.22)."""
+    state = load_state(base)
+    if due(state, now):
+        return "kontrolle"
+    if laufplan.faellig(state, now, data_dir / settings.FIXTURES_FILENAME):
+        return "spiel"
+    if laufplan.wiederholung_faellig(state, now.replace(tzinfo=None)):
+        return "wiederholung"
+    return None
+
+
+def run_planned(base: Path, data_dir: Path, now: datetime, anlass: str, client: ApiClient | None = None) -> dict:
+    """Lauf ausführen und Laufplan nachführen: erledigte Läufe vermerken, Wiederholung planen."""
+    fx = data_dir / settings.FIXTURES_FILENAME
+    local = now.replace(tzinfo=None, microsecond=0)
+    state = load_state(base)
+    laufplan.erledigt(state, local, fx)                    # auch bei Abbruch nicht endlos wiederholen
+    save_state(base, state)
+    rep = run(base, data_dir, now, client=client, anlass=anlass)
+    state = load_state(base)
+    if anlass == "kontrolle":
+        state["wiederholung"] = None                       # der Kontrolllauf holt alles nach
+    else:
+        laufplan.wiederholung_planen(state, rep, local, anlass)
+    save_state(base, state)
+    return rep
+
+
 def main(argv: list[str]) -> None:
     tz = ZoneInfo(E.TIMEZONE)
     base, data_dir = E.IMPORT_DIR, settings.DATA_DIR
@@ -297,9 +350,11 @@ def main(argv: list[str]) -> None:
     while True:
         now = datetime.now(tz)
         process_requests(base, data_dir, E.BACKUP_DIR, now)
-        if due(load_state(base), now):
-            rep = run(base, data_dir, now)
-            print(now.isoformat(timespec="seconds"), "Lauf", rep["lauf"], "->", rep["status"], rep.get("meldung", ""), flush=True)
+        anlass = naechster(base, data_dir, now)
+        if anlass:
+            rep = run_planned(base, data_dir, now, anlass)
+            print(now.isoformat(timespec="seconds"), "Lauf", rep["lauf"], f"({anlass})", "->", rep["status"],
+                  rep.get("meldung", ""), flush=True)
         if schnappschuss.due(load_state(base), now):
             snap_hour(base, data_dir, now)
         time.sleep(30)

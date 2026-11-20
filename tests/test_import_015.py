@@ -299,9 +299,12 @@ def test_correction_window_late_decision_and_empty_values(base_db, season_list, 
 
 @pytest.mark.langsam
 def test_score_against_goal_events_waits_for_decision(base_db, season_list, details, halves, tmp_path, monkeypatch):
-    """R2 und R5: Endstand ≠ Tor-Ereignisse -> Spiel wartet, kein Automatik-Tausch; „platz“ bzw. „api“ entscheiden."""
+    """R2 und R5: Endstand ≠ Tor-Ereignisse -> Spiel wartet auf den Entscheid; „platz“ bzw. „api“ entscheiden.
+    Seit 0.22 (F1, Carsten 20.11.2026): Die übrigen Spiele werden trotzdem automatisch übernommen, nur die beiden
+    Spiele bleiben zurückgehalten (bis 0.21.2 sperrte der kritische Punkt die ganze Fassung)."""
     monkeypatch.setattr(E, "automatic_from", lambda: date(2026, 1, 1))     # Automatikbetrieb
     e = env(tmp_path, base_db)
+    monkeypatch.setattr(E, "BACKUP_DIR", e["backup"])                       # automatische Übernahme sichert hierhin
     f0, f1 = sorted(details)[:2]
     d = copy.deepcopy(details)
     for fid in (f0, f1):
@@ -312,7 +315,8 @@ def test_score_against_goal_events_waits_for_decision(base_db, season_list, deta
     crit = {k["id"]: k for k in r1["kritisch"] if k["art"] == "endstand"}
     assert set(crit) == {f0, f1} and crit[f0]["api"] == "3:0"
     assert {g["id"] for g in r1["neue_spiele"]["Bundesliga"]} == set(sorted(details)[2:])
-    assert r1["status"] == "wartet" and r1["automatik"]["ok"] is False             # nicht automatisch übernommen
+    assert r1["status"] == "übernommen (automatisch)" and r1["automatik"]["ok"] is True   # F1: Rest übernommen
+    assert list(e["backup"].glob("Database-Soccer-Intelligence_*_vor_import.xlsx"))         # Backup vor dem Tausch
     md9 = [m for m in r1["vollstaendigkeit"]["Bundesliga"] if m["spieltag"] == 9]
     assert md9 and any("wartet auf Entscheid" in x for x in md9[0]["fehlende"])
     events = crit[f0]["ereignisse"]

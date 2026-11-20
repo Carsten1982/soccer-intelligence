@@ -76,10 +76,52 @@ def reports(base: Path, days: int) -> list[dict]:
 
 
 def next_run(now: datetime, state: dict) -> datetime:
-    """Täglich um 04:00 (seit 0.15 auch am Wochenende)."""
+    """Nächster Kontrolllauf: täglich um 04:00 (seit 0.15 auch am Wochenende)."""
     ran_today = state.get("letzter_lauf_tag") == now.strftime("%Y-%m-%d")
     day = now + timedelta(days=1) if ran_today else now
     return day.replace(hour=E.RUN_HOUR, minute=0, second=0, microsecond=0)
+
+
+def next_any(now: datetime, state: dict) -> tuple[datetime, str]:
+    """Nächster Lauf überhaupt (seit 0.22): Kontrolllauf, Lauf nach dem Spiel oder Wiederholung."""
+    from importer import laufplan
+    fx = settings.DATA_DIR / settings.FIXTURES_FILENAME
+    local = now.replace(tzinfo=None, microsecond=0)
+    done = set(state.get("spiel_laeufe") or [])
+    kandidaten = [(next_run(now, state).replace(tzinfo=None), "Kontrolllauf")]
+    for tag in (local.date(), local.date() + timedelta(days=1)):
+        kandidaten += [(z, "nach dem Spiel") for z in laufplan.plan(fx, tag)
+                       if z > local and z.isoformat(timespec="minutes") not in done]
+    w = state.get("wiederholung")
+    if w:
+        kandidaten.append((datetime.fromisoformat(w["um"]), f"Wiederholung {w['nr']}"))
+    z, art = min(kandidaten)
+    return z.replace(tzinfo=now.tzinfo), art
+
+
+ANLASS = {"kontrolle": "Kontrolllauf", "spiel": "nach dem Spiel", "wiederholung": "Wiederholung"}
+
+
+def plan_box(now: datetime, state: dict, reps: list[dict]) -> str:
+    """„Läufe heute“ (seit 0.22): geplante Läufe nach dem Spiel und die schon gelaufenen des Tages."""
+    from importer import laufplan
+    fx = settings.DATA_DIR / settings.FIXTURES_FILENAME
+    local = now.replace(tzinfo=None)
+    heute = local.strftime("%Y-%m-%d")
+    rows = [[_when(r.get("start")), escape(ANLASS.get(r.get("anlass", "kontrolle"), "–")),
+             f'<span class="di-tag {TAG.get(r.get("status", ""), "t-g")}">{escape(r.get("status", "–"))}</span>']
+            for r in reversed(reps) if (r.get("start") or "")[:10] == heute]
+    done = set(state.get("spiel_laeufe") or [])
+    rows += [[_when(z.isoformat()), "nach dem Spiel", '<span class="di-tag t-g">geplant</span>']
+             for z in laufplan.plan(fx, local.date()) if z > local and z.isoformat(timespec="minutes") not in done]
+    w = state.get("wiederholung")
+    if w:
+        rows.append([_when(w["um"]), f"Wiederholung {w['nr']}", '<span class="di-tag t-g">geplant</span>'])
+    if not rows:
+        return '<p class="di-note">Heute keine Läufe nach dem Spiel; nächster Kontrolllauf um 04:00.</p>'
+    return ("<h4>Läufe heute</h4>" + _table(["Zeit", "Anlass", "Status"], rows, left=(0, 1, 2))
+            + '<p class="di-note">Je Anstosszeit ein Lauf bei Anpfiff + 2¼ Stunden; fehlen danach Werte, folgt nach '
+              '1 Stunde eine Wiederholung (höchstens zwei). Fehlerfreie Fassungen werden sofort übernommen.</p>')
 
 
 def _when(iso: str | None) -> str:
@@ -106,12 +148,12 @@ def status_bar(state: dict, latest: dict | None, now: datetime) -> str:
     auto = E.automatic_from()
     mode = ("automatisch" if auto and now.date() >= auto else "halbautomatisch")
     mode_txt = (f"Freigabe von Hand bis {auto - timedelta(days=1):%d.%m.%Y}" if auto and now.date() < auto
-                else "fehlerfreie Fassungen werden sofort übernommen" if auto else "Freigabe von Hand")
+                else "nach jedem Spiel und um 04:00, ohne Freigabe" if auto else "Freigabe von Hand")
     return (f'<div class="di-st"><div><small>Quelle</small><b>API-Football · {escape(abo.get("plan", "–"))}</b>{abo_txt}</div>'
             f'<div><small>Kontingent heute (Rest laut API)</small><b>{num(rest)}</b><small>eigene Obergrenze '
             f'{E.DAILY_LIMIT} je Tag</small></div>'
             f'<div><small>Letzter Lauf</small><b class="{last_css}">{_when(last)} {"✓" if ok else "✕"}</b>'
-            f'<small>nächster: {_when(next_run(now, state).isoformat())} · täglich</small></div>'
+            f'<small>nächster: {_when(next_any(now, state)[0].isoformat())} · {next_any(now, state)[1]}</small></div>'
             f'<div><small>Betriebsart</small><b>{mode}</b><small>{mode_txt}</small></div></div>')
 
 
@@ -208,7 +250,7 @@ def decisions(rep: dict, base: Path) -> None:
         return
     st.markdown('<div class="di-h">Ihre Entscheidung</div>', unsafe_allow_html=True)
     if not open_items:
-        st.info("Alle Entscheide sind festgehalten. Sie wirken ab dem nächsten Lauf (täglich 04:00).")
+        st.info("Alle Entscheide sind festgehalten. Sie wirken ab dem nächsten Lauf.")
         return
     for i, (art, k, col) in enumerate(open_items):
         if art == "endstand":
@@ -426,16 +468,17 @@ def history(reps: list[dict]) -> None:
         st_txt = r.get("status", "–")
         note = r.get("meldung", "")
         tag = f'<span class="di-tag {TAG.get(st_txt, "t-g")}">{escape(st_txt)}{(": " + escape(note)) if note else ""}</span>'
-        rows.append([_when(r.get("start")), num((r.get("anfragen") or {}).get("verbraucht")),
+        rows.append([_when(r.get("start")), escape(ANLASS.get(r.get("anlass", "kontrolle"), "–")),
+                     num((r.get("anfragen") or {}).get("verbraucht")),
                      num(sum(len(v) for v in (r.get("neue_spiele") or {}).values())) if "neue_spiele" in r else "–",
                      num(len(r.get("korrekturen") or [])) if "korrekturen" in r else "–",
                      f"{num(important)} · {num(kickoff)}" if fx else "–",
                      f'{num(db.get("fehler"))} Fehler · {num(db.get("warnungen"))} Warnungen' if db else "–", tag])
-    st.markdown(_table(["Lauf", "Abfragen", "neue Spiele", "Korrekturen", "Spielplan (wichtig · Anstosszeiten)", "Prüfung",
-                        "Status"], rows, left=(0, 6)), unsafe_allow_html=True)
-    st.markdown('<p class="di-note">Nach der Testphase verschwinden die Buttons; das Protokoll bleibt. Fassungen mit '
-                'Fehlern, kritischen Punkten oder neuen Warnungen werden nie automatisch übernommen.</p>',
-                unsafe_allow_html=True)
+    st.markdown(_table(["Lauf", "Anlass", "Abfragen", "neue Spiele", "Korrekturen", "Spielplan (wichtig · Anstosszeiten)",
+                        "Prüfung", "Status"], rows, left=(0, 1, 7)), unsafe_allow_html=True)
+    st.markdown('<p class="di-note">Seit 0.22 ohne Freigabe: Fehlerfreie Fassungen werden sofort übernommen. Fassungen '
+                'mit Fehlern oder neuen Warnungen warten auf Ihre Freigabe; kritische Spiele werden zurückgehalten und '
+                'warten oben auf Ihren Entscheid.</p>', unsafe_allow_html=True)
 
 
 def snapshot_box(stand: dict | None, now: datetime) -> str:
@@ -513,7 +556,19 @@ def render() -> None:
     if rep:
         pending_box(rep, base)
     else:
-        st.success("Keine neuen Daten zur Freigabe. Die gültigen Dateien sind auf dem Stand des letzten übernommenen Laufs.")
+        st.success("Alles übernommen. Die gültigen Dateien sind auf dem Stand des letzten übernommenen Laufs.")
+        last = next((r for r in reps if str(r.get("status", "")).startswith("übernommen")), None)
+        if last:                                       # zurückgehaltene Spiele warten auf den Entscheid (F1, 0.22)
+            # Späte Korrekturen erkennt nur der Kontrolllauf: sie kommen aus dem letzten übernommenen Kontrolllauf,
+            # alles andere aus dem letzten übernommenen Lauf.
+            ctrl = next((r for r in reps if str(r.get("status", "")).startswith("übernommen")
+                         and r.get("anlass", "kontrolle") == "kontrolle"), None)
+            if ctrl is not None and ctrl is not last:
+                last = {**last, "spaete_korrekturen": ctrl.get("spaete_korrekturen") or []}
+            decisions(last, base)
+            for k in [k for k in last.get("kritisch") or [] if k["art"] != "endstand"]:
+                st.warning(f"**{escape(k['liga'])}**, {escape(k['spiel'])}: {escape(k['text'])}")
+    st.markdown(plan_box(now, state, reps), unsafe_allow_html=True)
     history(reps)
     from importer.schnappschuss import load_status
     st.markdown(snapshot_box(load_status(base), now), unsafe_allow_html=True)

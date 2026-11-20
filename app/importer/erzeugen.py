@@ -120,13 +120,15 @@ def _season_list(client: ApiClient, lid: int, year: int) -> list[dict]:
 
 def build(client: ApiClient, names: TeamNames, leagues: list[League], db_path: Path, fx_path: Path, out_dir: Path,
           today: date, full_season: bool, decisions: list[dict] | None = None,
-          mapping: dict[str, dict[int, int]] | None = None) -> dict:
-    """Erzeugt out_dir/Database-Soccer-Intelligence.xlsx und out_dir/Spielplan.xlsx; gibt den Bericht zurück."""
+          mapping: dict[str, dict[int, int]] | None = None, recheck: bool = True, jetzt: datetime | None = None) -> dict:
+    """Erzeugt out_dir/Database-Soccer-Intelligence.xlsx und out_dir/Spielplan.xlsx; gibt den Bericht zurück.
+    recheck=False (seit 0.22, Lauf nach dem Spiel): nur neue Spiele und Spiele mit fehlenden Werten holen, die letzten
+    2 Spieltage nicht neu prüfen (das macht der Kontrolllauf um 04:00)."""
     decisions = decisions or []
     mapping = load_mapping() if mapping is None else mapping
     out_dir.mkdir(parents=True, exist_ok=True)
     report = {"basis": {"datenbank": sha256(db_path), "spielplan": sha256(fx_path) if fx_path.exists() else None},
-              "ganze_saison": full_season, "neue_spiele": {}, "korrekturen": [], "spaete_korrekturen": [],
+              "ganze_saison": full_season, "neupruefung": recheck, "nicht_beendet": [], "neue_spiele": {}, "korrekturen": [], "spaete_korrekturen": [],
               "kritisch": [], "plausibilitaet": {"fehler": [], "warnungen": []}, "offen": [], "wertungen": [],
               "umbenennungen": [], "spielplan_aenderungen": {}, "vollstaendigkeit": {}, "saison": {}}
     try:
@@ -162,7 +164,9 @@ def build(client: ApiClient, names: TeamNames, leagues: list[League], db_path: P
         previous = _season_list(client, lid, year - 1)                 # Vorsaison für den Spielplan (3.6)
         api_lists[lg.name] = previous + season_list
         fixture_sheets[lg.name] = fixture_rows(previous, names, today) + fixture_rows(season_list, names, today)
-        _league(client, names, lg, wb[lg.name], season_list, label, year, today, full_season, decisions, mapping, report)
+        _league(client, names, lg, wb[lg.name], season_list, label, year, today, full_season, decisions, mapping, report,
+                recheck)
+        report["nicht_beendet"] += _not_finished(season_list, lg.name, jetzt)
 
     db_out = out_dir / settings.DATABASE_FILENAME
     for lg in active:                                       # Filterbereich wächst mit (L9)
@@ -209,12 +213,13 @@ def build(client: ApiClient, names: TeamNames, leagues: list[League], db_path: P
     report["namensaenderungen_api"] = [{"api_team_id": k, "festgehalten": a, "api": b} for k, (a, b) in names.changed.items()]
     report["fehler"] = (new_db.count("Fehler") + new_fx.count("Fehler") + len(report["plausibilitaet"]["fehler"])
                         + len(links["fehler"]) + len(report["doppelte_ids"]))
-    report["automatik"] = _automatic(report, new_warnings)
+    report["automatik"] = _automatic(report, [w for w in new_warnings if w["pruefung"] not in NICHT_SPERREND])
     report["dateien"] = {"datenbank": sha256(db_out), "spielplan": sha256(fx_out)}
     return report
 
 
-def _league(client, names, lg, ws, season_list, label, year, today, full_season, decisions, mapping, report) -> None:
+def _league(client, names, lg, ws, season_list, label, year, today, full_season, decisions, mapping, report,
+            recheck=True) -> None:
     """Neue Spiele, Neuprüfung, Korrekturen und kritische Punkte einer Liga (Datenbankblatt ws wird verändert)."""
     head = [c.value for c in ws[1]]
     col = {h: i for i, h in enumerate(head)}
@@ -254,7 +259,7 @@ def _league(client, names, lg, ws, season_list, label, year, today, full_season,
             new.append(f)
         elif int(row[col["id"]].value) >= API_ID_FROM:
             values = {h: row[col[h]].value for h in head}
-            if full_season or round_number(f["league"]["round"]) in recent or missing_kpi_fields(values):
+            if full_season or (recheck and round_number(f["league"]["round"]) in recent) or missing_kpi_fields(values):
                 check.append(f)
     # verschwundene Spiele (R5, L12): API-Spiel der laufenden Saison in der Datenbank, aber nicht mehr in der Liste
     for rid, row in by_id.items():
@@ -272,7 +277,7 @@ def _league(client, names, lg, ws, season_list, label, year, today, full_season,
     halves = {}
     if year >= HALF_FROM:
         for f in new + check:
-            if f in new or round_number(f["league"]["round"]) in recent:
+            if f in new or not recheck or round_number(f["league"]["round"]) in recent:
                 fid = f["fixture"]["id"]
                 halves[fid] = client.get("fixtures/statistics", {"fixture": fid, "half": "true"})["response"]
 
@@ -347,6 +352,21 @@ def _league(client, names, lg, ws, season_list, label, year, today, full_season,
             report["offen"].append({"liga": lg.name, **_short(merged), "fehlt": missing_kpi_fields(merged), "grund": age_txt})
 
 
+def _not_finished(season_list: list[dict], league: str, jetzt: datetime | None) -> list[dict]:
+    """Spiele, die laufen oder seit über 2 Stunden angepfiffen sein müssten und noch nicht begonnen haben (seit 0.22)."""
+    if jetzt is None:
+        return []
+    out = []
+    for f in season_list:
+        short = f["fixture"]["status"]["short"]
+        when = datetime.fromisoformat(f["fixture"]["date"])
+        late = short == "NS" and timedelta(hours=2) < jetzt - when < timedelta(hours=12)   # TBD: ohne Uhrzeit
+        if short in LAUFEND or late:
+            out.append({"liga": league, "id": f["fixture"]["id"], "status": short, "datum": when.strftime("%d.%m.%Y"),
+                        "spiel": f"{f['teams']['home']['name']} - {f['teams']['away']['name']}"})
+    return out
+
+
 def _find(by_id: dict, league: str, fid: int, mapping) -> object | None:
     """Datenbankzeile zu einem API-Spiel: über die Zuordnungsdatei, sonst über die API-ID selbst (neu importiert)."""
     row = by_id.get(db_id(league, fid, mapping))
@@ -386,13 +406,24 @@ def _check_row(row: dict, league: str, report: dict) -> None:
     report["plausibilitaet"]["warnungen"] += [{"liga": league, "id": row["id"], "spiel": who, "meldung": m} for m in warnings]
 
 
+# Seit 0.22 (Regel 5): Warnungen, die bei frisch gespielten Spielen normal sind, sperren die Übernahme nicht. Leere
+# Statistikwerte werden später nachgefüllt (Bericht „offen“), ein angefangener Spieltag wird mit den nächsten Läufen
+# vollständig. Sie stehen weiter im Bericht und im Bereich Datenqualität.
+NICHT_SPERREND = {"Statistik fehlt", "Spieltag unvollständig"}
+
+# Seit 0.22 (B4): Spiele, die beim Lauf noch laufen oder trotz vergangener Anstosszeit nicht begonnen haben, lösen eine
+# Wiederholung aus (Verlängerung, Unterbrechung, Verspätung).
+LAUFEND = ("1H", "HT", "2H", "ET", "BT", "P", "INT", "LIVE")
+
+
 def _automatic(report: dict, new_warnings: list[dict]) -> dict:
-    """Freigabe-Klasse für den Automatikbetrieb (R5): nur unkritische Fassungen werden ohne Carsten übernommen."""
+    """Freigabe-Klasse für den Automatikbetrieb (R5). Seit 0.22 (F1, Carsten 20.11.2026) sperren kritische Punkte die
+    Fassung nicht mehr: Das betroffene Spiel bzw. der Wert ist schon zurückgehalten (Endstand gegen Tor-Ereignisse und
+    Zuordnung: nicht aufgenommen; späte Korrektur: nicht geändert; „verschwunden“ und „Status offen“ ändern nichts)
+    und wartet im Reiter auf den Entscheid. Fehler und neue Warnungen sperren weiterhin."""
     reasons = []
     if report["fehler"]:
         reasons.append(f"{report['fehler']} Fehler")
-    if report["kritisch"]:
-        reasons.append(f"{len(report['kritisch'])} kritische Punkte")
     if report["plausibilitaet"]["warnungen"]:
         reasons.append(f"{len(report['plausibilitaet']['warnungen'])} Plausibilitätswarnungen")
     if new_warnings:
