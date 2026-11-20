@@ -44,6 +44,6 @@ Später wieder verbinden mit `tmux attach -t release0212`. **Während der Tests 
 4. **Methodik:** Auf dem Handy steht in der Schaltfläche unter Ebene 1 „Weiter mit Zahlen:“ in der ersten Zeile, „Ein Spiel durchgerechnet“ in der zweiten. Auf dem Computer steht alles in einer Zeile. Englisch: „Continue with numbers: / a worked example“.
 5. **Für den Design-Chat** (nicht zu prüfen, nur weitergeben):
    - Das SEO-Briefing (3.1) und das Template-Briefing (3.3, 5) nennen noch 7 Tage Vorschau; umgesetzt sind 5 Tage.
-   - Im README „Noch zu entscheiden“: Level-3-Chip DE („Für Statistik-Fans“ oder „Alles im Detail“), englischer Spieltitel („–“ oder „vs“, umgesetzt „vs“), Position des Glossar-Links (umgesetzt nach Methodik).
+   - Entschieden (Carsten 20.11.2026, so umgesetzt): Level-3-Chip DE „Ebene 3 · Für Statistik-Fans“, englischer Spieltitel mit „vs“, Glossar-Link im Footer nach Methodik. Bitte in den Briefings als Beschluss nachführen.
 6. **Noch offen aus 0.21:** Glossar, Texte der Archivseite, Namen der 12 Aufsteiger, Frage „Auffällige Spiele je Spieltag“. Vor 0.22 dazu die Entscheidungen zum Abfrageplan (`06`, 10.2) und zu den E-Mail-Alarmen.
 7. Sag mir, ob alles passt.

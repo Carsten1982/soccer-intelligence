@@ -8,6 +8,7 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 ## 20.11.2026 – Version 0.21.2: Entwürfe vom 20.11., zweite Lieferung
 
 - **Carsten** · Überarbeitete Briefings (README, Glossar EN, SEO, Template, Kontrast-Check, Entscheidungsprotokoll Beschluss 13) und Entwürfe Main_P1, Spieltag_P1, Spiel_P1, Methodik_10 vom 20.11.2026; Auftrag zur Umsetzung.
+- **Carsten** · Entscheide zu den offenen README-Punkten (wie umgesetzt): Level-3-Chip DE „Ebene 3 · Für Statistik-Fans“; englischer Spieltitel mit „vs“; Glossar-Link im Footer nach Methodik.
 - **Claude** · **Spielseite:** grüne Schaltfläche „Alle Spiele des Spieltags“, darunter der Textlink „Wie entstehen diese Werte?“ (gegenüber 0.21.1 wieder getauscht); Zeitzonen-Hinweis entfällt auf der Spielseite.
 - **Claude** · **Spieltag:** Kopfbereich ohne „Aktueller Datenstand“ (steht in der Fusszeile) und niedriger; Text `spieltag.datenstand` entfernt.
 - **Claude** · **Startseite:** SEO-Box als eigener Block nach „Von einem Fußballfan gebaut“; in der Ranking-Karte bleibt der Signalqualität-Chip neben der Kennzahl, ein langer Name bricht um.

@@ -365,11 +365,13 @@ Computer einzeilig, bis 520 px höchstens 300 px breit mit festem Umbruch nach d
 | A11 | Methodik: Ebenen als Sprungmarken, alle Ebenen immer sichtbar (der Entwurf blendet tiefere Ebenen erst nach Wahl ein) | alles im HTML (Beschluss Thema 4), ohne JavaScript nutzbar |
 | A12 | Vorschaubild `og-image.png` sprachneutral: Logo, „Soccer Intelligence“ und die vier Ligen | ein Bild für beide Sprachen |
 | A13 | Glossar und Archivseite: Texte von Claude vorgeschlagen (Freigabe offen) | Beschluss 19.11.2026: ohne Entwurf |
+| A15 | Methodik Ebene 3: Chip DE „Ebene 3 · Für Statistik-Fans“ (EN „Level 3 · Full details“); Auswahlkarte „Alles im Detail“ | Beschluss Carsten 20.11.2026 |
+| A16 | Glossar-Link im Footer als fünfter Link nach „Methodik“ | Beschluss Carsten 20.11.2026 |
 | A14 | Ranking der Startseite: gespieltes Spiel zeigt „Gespielt · 2:1“ wie die Kachel | Glossar Abschnitt 19 |
 
 ## 10. Offene Punkte
 
-- **Beschluss Carsten 19.11.2026: Englischer Match-Title mit „vs“** (Glossar): „{Home} vs {Away} · {League}, Matchday {n} {Season} | Soccer Intelligence“; Deutsch mit Gedankenstrich. Anzeigenamen je Sprache aus einer Namenstabelle (Glossar Abschnitt 11), Slug weiter aus dem Namen der Datenquelle (0.21). **Releaseplan** 0.20 / 0.21 / 0.22 / 1.0 freigegeben (`01`, Abschnitt 0); Spezifikation der E-Mail-Alarme offen, vor Beginn von 0.22.
+- **Beschluss Carsten 19.11.2026, bestätigt 20.11.2026: Englischer Match-Title mit „vs“** (Glossar): „{Home} vs {Away} · {League}, Matchday {n} {Season} | Soccer Intelligence“; Deutsch mit Gedankenstrich. Anzeigenamen je Sprache aus einer Namenstabelle (Glossar Abschnitt 11), Slug weiter aus dem Namen der Datenquelle (0.21). **Releaseplan** 0.20 / 0.21 / 0.22 / 1.0 freigegeben (`01`, Abschnitt 0); Spezifikation der E-Mail-Alarme offen, vor Beginn von 0.22.
 - **SEO-Check, Beschlüsse Carsten 19.11.2026:**
   - *0.21* Kein `eventStatus` (z. B. verschoben): solche Seiten sind `noindex` und haben kein `SportsEvent`; Nachholspiele
     mit Werten tragen nur das neue `startDate`.
