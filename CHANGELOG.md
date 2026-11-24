@@ -9,6 +9,7 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 - **Carsten** · Version 0.23 eingespielt (`efcc976`, Pull Request #25; Tests grün). `tools/mail_einrichten.sh` ausgeführt: Zugangsdaten in `.env`, zwei Container neu gestartet, Prüfskript im Zeitplan des Servers (cron), drei Testmails angekommen.
 - **Claude** · Stand nachgetragen (`01`, Abschnitt 0).
+- **Carsten** · Releaseplan: kleine Layout-Anpassungen und Qualitätsrunde Front- und Backend zusammen als 0.24; Cookie-Hinweis und Google Analytics werden 0.25. Frontend-Review mit ChatGPT (Mobile first, app-nahes Erlebnis).
 
 ## 24.11.2026 – Version 0.23: E-Mail, Alarme, Überwachung und Designrunde
 
