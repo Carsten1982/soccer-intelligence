@@ -23,5 +23,5 @@ Noch nicht – das Release ist in Arbeit.
 ## Im Browser prüfen
 
 1. Startseite (DE/EN): „Wie lese ich das?“ aufklappen – neuer Satz bei „Signalqualität“.
-3. Handy: Spielseite – „Zahlen im Detail“ etwas höher; Browserleiste grün (Android). Im Browser-Menü „Zum Startbildschirm“: Icon mit den drei Balken, Name „Soccer Intel“.
 2. Spielseite mit einer Karte „Nicht eingestuft ⓘ“: ⓘ antippen – neuer Erklärsatz.
+3. Handy: Spielseite – „Zahlen im Detail“ etwas höher; Browserleiste grün (Android). Im Browser-Menü „Zum Startbildschirm“: Icon mit den drei Balken, Name „Soccer Intel“.
