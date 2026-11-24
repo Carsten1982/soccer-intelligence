@@ -62,7 +62,7 @@ Das Skript fragt das Passwort des Postfachs `info@` verdeckt ab (wie bei Hosting
 ## Erwartungswerte
 
 - Git-Stand vorher: `1701bc6`.
-- Schritt 4: rund **714 bestanden, 16 übersprungen, 18 ausgelassen**, keine Fehler.
+- Schritt 4: rund **715 bestanden, 16 übersprungen, 18 ausgelassen**, keine Fehler.
 - Schritt 5: alle Container laufen, `/` = 200, `/dashboard/` = 200, `/vorschau/` = 401; Hinweis „nur 0 von 3 Testmails“ (beim ersten Mal).
 - Dashboard-Fusszeile: „Version 0.23 – E-Mail, Alarme und Überwachung“.
 - `mail_einrichten.sh`: „✅ Gespeichert in .env“, „✅ Neu gestartet“, „✅ Eingetragen: * * * * * …“ und drei Zeilen „✅ Testmail …: gesendet“.
