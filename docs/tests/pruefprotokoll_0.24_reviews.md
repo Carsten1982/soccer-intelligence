@@ -32,15 +32,15 @@ lokal (4 Kerne, Testdaten). **Rechenkern (`app/core/`) unverändert** – KPI-Er
 | A10 | Rechenaufgabe wiederverwendbar (2 h) | bestätigt | keine Änderung: Schutz ist die Bremse (3/h je Adresse), die Aufgabe nur eine Hürde |
 | A11 | Dashboard-Cookie nicht HttpOnly | bestätigt; Streamlit kann Cookies nur per Skript setzen | keine Änderung: signiert, 12 h, `Secure`, `SameSite=Strict`; internes Werkzeug |
 | A12 | Login-Sperre nur im Prozess | zutreffend; Streamlit läuft als ein Prozess, Sperre mit Lock | keine Änderung |
-| B | ZIP-Weg kann `.env` überschreiben | **bestätigt:** Python macht aus `../.env` ein `.env` im Projektordner | **umgesetzt:** Einträge vor dem Entpacken prüfen (`.env`, Daten-, Import-, Backup-Ordner, `.git`, `..`, absolute Pfade). Entfernen des ZIP-Wegs: Entscheid Carsten offen |
+| B | ZIP-Weg kann `.env` überschreiben | **bestätigt:** Python macht aus `../.env` ein `.env` im Projektordner | **umgesetzt:** ZIP-Weg ganz entfernt (Entscheid Carsten 24.11.2026); nur noch `github` |
 | B | Rechte von `.env` und Kopien | Skripte schreiben mit `umask 077`; Kopien in `backup/` | keine Änderung |
-| C | Container als root | bestätigt | **nach dem Livegang:** braucht Besitzerwechsel von `data/`, `import/`, `backup/` auf dem Server – zu riskant kurz vor dem Livegang |
+| C | Container als root | bestätigt | **nach dem Livegang** (Entscheid Carsten, `01` Abschnitt 8): braucht Besitzerwechsel von `data/`, `import/`, `backup/` auf dem Server – zu riskant kurz vor dem Livegang |
 | C | `no-new-privileges` fehlt | bestätigt | **umgesetzt** für unsere drei Container (Platzhalter unverändert, entfällt beim Livegang) |
-| C | keine CPU-/RAM-Grenzen | bestätigt | erst nach Messung (`docker stats`), sonst Gefahr eines Abbruchs mitten im Import |
+| C | keine CPU-/RAM-Grenzen | bestätigt | **umgesetzt** nach Messung (Ruhezustand 108–168 MiB): `mem_limit` 1 GB / 1,5 GB (Import) / 1 GB; CPU-Grenzen nicht nötig (1 vCPU) |
 | C | Root-Dateisystem schreibbar | bestätigt | später (Streamlit schreibt Zwischendateien) |
 | D | Datenbank und Spielplan nicht gemeinsam getauscht | bestätigt; Website lädt neu, sobald sich eine Datei ändert → kurz gemischter Stand möglich (selbstheilend) | **umgesetzt:** Website behält den bisherigen Stand, solange `import/uebergabe.json` steht (höchstens 10 Min.; Test R5). Dashboard (intern) unverändert |
 | E1–E4 | Startseite rechnet jedes Mal neu, gleichzeitige Misses | bestätigt (Messung oben) | **umgesetzt:** Seitenspeicher je Adresse, Datenstand, Minute (Test R4) |
-| E5 | Speicherbedarf der Container | nicht messbar von hier | Carsten: `docker stats --no-stream` (RELEASE.md) |
+| E5 | Speicherbedarf der Container | gemessen (Carsten 24.11.2026): Dashboard 168 MiB, Import 108 MiB, Vorschau 111 MiB von 3,8 GiB | unkritisch; Grenzen gesetzt |
 | E6 | Sensitivitätsanalyse, Testdauer | zutreffend (≈ 13 Min.) | keine Änderung vor dem Livegang |
 | F | `requests==2.32.3` | bekannte Schwachstelle (.netrc, behoben in 2.32.4) | **umgesetzt:** 2.32.5 |
 

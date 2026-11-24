@@ -21,6 +21,7 @@ services:
     build:
       context: /docker/football-dashboard
     container_name: football-dashboard
+    mem_limit: 1g                                  # seit 0.24: Obergrenze (gemessen 24.11.2026 im Ruhezustand: 110–170 MiB; Import mit Reserve für den Bau der Excel-Fassung)
     restart: unless-stopped
     security_opt: ["no-new-privileges:true"]        # seit 0.24 (Backend-Review C): keine Rechteausweitung im Container
     ports:
@@ -52,6 +53,7 @@ services:
     build:
       context: /docker/football-dashboard
     container_name: soccer-import
+    mem_limit: 1536m                                  # seit 0.24: Obergrenze (gemessen 24.11.2026 im Ruhezustand: 110–170 MiB; Import mit Reserve für den Bau der Excel-Fassung)
     restart: unless-stopped
     security_opt: ["no-new-privileges:true"]        # seit 0.24 (Backend-Review C): keine Rechteausweitung im Container
     command: ["python", "-m", "importer.dienst"]
@@ -75,6 +77,7 @@ services:
     build:
       context: /docker/football-dashboard
     container_name: soccer-vorschau
+    mem_limit: 1g                                  # seit 0.24: Obergrenze (gemessen 24.11.2026 im Ruhezustand: 110–170 MiB; Import mit Reserve für den Bau der Excel-Fassung)
     restart: unless-stopped
     security_opt: ["no-new-privileges:true"]        # seit 0.24 (Backend-Review C): keine Rechteausweitung im Container
     command: ["python", "-m", "website.vorschau"]

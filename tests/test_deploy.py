@@ -171,16 +171,17 @@ def test_release_scripts_touch_only_our_container(script):
     assert "data/" not in code.replace("data/*|", "")                # data/ nur in der Sperrliste für Löschungen
 
 
-def test_release_script_asks_before_commit():
+def test_release_script_asks_and_never_commits():
     code = SCRIPTS[0].read_text(encoding="utf-8")
-    assert code.index("read -rp") < code.index("git commit")          # Commit erst nach j/n
+    assert "read -rp" in code                                         # fragt am Schluss j/n
     assert "zurueck.sh" in code                                       # nennt den Rückweg
+    assert "git commit" not in code and "git push" not in code        # seit 0.24 nur noch Weg github: nie eigener Commit
 
 
 def test_github_weg_holt_nur_von_github():
     code = SCRIPTS[0].read_text(encoding="utf-8")
     assert "merge -q --ff-only" in code                               # Server bekommt genau den Stand von GitHub
-    assert code.index('if [ "$WEG" = github ]; then\n  read -rp') < code.index("git commit")  # kein Commit im Weg github
+    assert "zipfile" not in code and "release.zip\"" not in code      # seit 0.24 kein ZIP-Weg mehr
 
 
 def test_automatische_tests_auf_github():
