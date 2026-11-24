@@ -5,7 +5,7 @@ kommt, wenn ein Container ausgefallen ist.
 
 Es liest nur: /proc (Arbeitsspeicher, CPU), die Belegung der Festplatte, `docker inspect` unserer vier Container,
 einen Abruf der eigenen Adressen und das Lebenszeichen des Import-Dienstes. Es startet, stoppt oder ändert nichts
-(Schutzregeln 01, Abschnitt 5). Zugangsdaten für den Mailversand aus .env (nur SI_SMTP_*, SI_ALERT_*).
+(Schutzregeln 01, Abschnitt 5). Zugangsdaten für den Mailversand aus .env (nur SI_SMTP_*, SI_ALARM_AN).
 
 Schreibt: import/server.json (letzte Messwerte, Höchstwerte der Woche), import/ueberwachung.json (Zustand der Alarme,
 Dauer über der Schwelle) und Zeilen ins Ereignisprotokoll import/ereignisse.jsonl.
@@ -35,7 +35,7 @@ from betrieb import alarme, mail  # noqa: E402
 CONTAINER = ("football-dashboard", "soccer-import", "soccer-vorschau", "soccer-placeholder")
 URL = "https://soccer-intelligence.com"
 ADRESSEN = {"/": (200,), "/dashboard/": (200,), "/vorschau/": (200, 401)}
-ENV_SCHLUESSEL = ("SI_SMTP_HOST", "SI_SMTP_PORT", "SI_ALERT_USER", "SI_ALERT_PASSWORT")
+ENV_SCHLUESSEL = ("SI_SMTP_HOST", "SI_SMTP_PORT", "SI_SMTP_USER", "SI_SMTP_PASSWORT", "SI_ALARM_AN")
 
 # Schwellen (Entscheid Carsten 20.11.2026, M4): (Prozent, Minuten)
 FESTPLATTE = {"warnung": 85, "kritisch": 95}
@@ -233,7 +233,7 @@ def pruefen(projekt: Path = PROJEKT, now: datetime | None = None, senden=None) -
 def main(argv: list[str]) -> int:
     if "--test" in argv:
         release = argv[argv.index("--release") + 1] if "--release" in argv and argv.index("--release") + 1 < len(argv) else ""
-        ok, meldung = mail.testmail("alert", release, "Prüfskript auf dem Server (alert@)",
+        ok, meldung = mail.testmail("alert", release, "Prüfskript auf dem Server (an alert@)",
                                     env=env_lesen(PROJEKT / ".env"))
         print(("✅ " if ok else "✖ ") + f"Testmail Server: {meldung}")
         alarme.ereignis(PROJEKT / "import" / "ereignisse.jsonl",

@@ -60,11 +60,12 @@ services:
     environment:
       - API_FOOTBALL_KEY=${API_FOOTBALL_KEY:-}
       - TZ=Europe/Zurich
-      # Mailversand für Alarme und Statusmail (seit 0.23, docs/09): Zugangsdaten des Alarm-Postfachs NUR in .env, nie in Git
+      # Mailversand für Alarme und Statusmail (seit 0.23, docs/09): Zugangsdaten des Postfachs NUR in .env, nie in Git
       - SI_SMTP_HOST=${SI_SMTP_HOST:-}
       - SI_SMTP_PORT=${SI_SMTP_PORT:-}
-      - SI_ALERT_USER=${SI_ALERT_USER:-}
-      - SI_ALERT_PASSWORT=${SI_ALERT_PASSWORT:-}
+      - SI_SMTP_USER=${SI_SMTP_USER:-}
+      - SI_SMTP_PASSWORT=${SI_SMTP_PASSWORT:-}
+      - SI_ALARM_AN=${SI_ALARM_AN:-}
 
   soccer-vorschau:
     # Vorschau der öffentlichen Website (seit 0.17, docs/08_Website.md): erzeugt die Seiten bei jedem Aufruf neu,
@@ -82,11 +83,12 @@ services:
     environment:
       - TZ=Europe/Zurich
       - SI_VORSCHAU_PORT=8080
-      # Kontaktformular (seit 0.23, docs/09, Abschnitt 6): Zugangsdaten des Info-Postfachs NUR in .env, nie in Git
+      # Kontaktformular (seit 0.23, docs/09, Abschnitt 6): Zugangsdaten des Postfachs NUR in .env, nie in Git
       - SI_SMTP_HOST=${SI_SMTP_HOST:-}
       - SI_SMTP_PORT=${SI_SMTP_PORT:-}
-      - SI_INFO_USER=${SI_INFO_USER:-}
-      - SI_INFO_PASSWORT=${SI_INFO_PASSWORT:-}
+      - SI_SMTP_USER=${SI_SMTP_USER:-}
+      - SI_SMTP_PASSWORT=${SI_SMTP_PASSWORT:-}
+      - SI_KONTAKT_AN=${SI_KONTAKT_AN:-}
       # Betreiberangaben für Impressum und Kontakt (seit 0.21): NUR in .env auf dem Server, nie in Git.
       # Adresse mit „|“ getrennt (Strasse|PLZ Ort|Land). Fehlen sie, zeigt die Seite einen Platzhalter.
       - SI_IMPRESSUM_NAME=${SI_IMPRESSUM_NAME:-}

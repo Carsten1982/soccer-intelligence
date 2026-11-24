@@ -19,7 +19,7 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 | **0.20 Fundament** | Rechenlogik, Datenregeln, Dashboard | Umbenennung Signalqualität stark/mittel/gering; Schnappschuss je Spiel (stündlich, versioniert, nachträglich für laufende Saison und Vorsaison); Statusmodell (Zu wenig Daten, AWD-Absicherung, Gespielt nach Anpfiff + 2 h, kein Nachrücken in den Top Anomalien, „Werte ab …“ auf allen Seiten, Sonderspiel-Nummer und Zählform); 48-Stunden-Grenze; Dashboard angepasst | keine |
 | **0.21 Neue Website** | Templates, Sprachen, Adressen, SEO | Templates T1–T7, T9–T11 nach den Entwürfen; DE/EN mit Anzeigenamen je Sprache; Adressen `/de/`, `/en/`, 301, Canonical, hreflang, 404, 503; Indexierungsregeln, robots.txt, Sitemap; Titles/Descriptions/Social/JSON-LD; Tabs ohne JS, Fokus, Kontraste, axe-core; Caching; Excel-Download Methodik | Texte Archiv/Glossar, offene Glossar-Vorschläge |
 | **0.22 Daten nach jedem Spiel** | Import ohne Freigabe | Lauf nach jedem Spiel (Anpfiff + 2¼ h) mit Wiederholung, Kontrolllauf 04:00, Backups gestaffelt, Ereignisprotokoll (`06`, 10.2; Zuschnitt Carsten 20.11.2026) | – |
-| **0.23 E-Mail & Überwachung** | Alarme, Statusmail, Kontakt | Postfächer `info@`/`alert@` (Hostinger), Alarme sofort (Import, Kontingent, Schnappschuss, Datei-Prüfung), Server-Überwachung (Festplatte, Arbeitsspeicher, CPU, eigene Container; Warnung/Kritisch), wöchentliche Statusmail, Kontaktformular-Versand | Postfächer und Zugangsdaten in `.env` |
+| **0.23 E-Mail & Überwachung** | Alarme, Statusmail, Kontakt | Postfach `info@` mit Alias `alert@` (Hostinger), Alarme sofort (Import, Kontingent, Schnappschuss, Datei-Prüfung), Server-Überwachung (Festplatte, Arbeitsspeicher, CPU, eigene Container; Warnung/Kritisch), wöchentliche Statusmail, Kontaktformular-Versand | Postfächer und Zugangsdaten in `.env` |
 | **0.24 Einwilligung** | Cookies, Analytics | Cookie-Hinweis und Cookie-Einstellungen; Tag Manager und GA4 nach Zustimmung; Search Console | GA4-/GTM-IDs |
 | **1.0 Qualität & Livegang** | Prüfung, Korrekturen, Umschalten | Qualitätschecks (Compound Engineering, Web Quality Skills, Lighthouse, axe mit echten Daten); Befunde beheben; Domain umschalten, `/` → `/de/`, Vorschau-Passwort weg, `index_ab` setzen, Sitemap einreichen | Impressum mit Projektadresse, juristische Prüfung DE/EN, Nutzungsrechte API-Football, Hosting-Angabe |
 
@@ -444,16 +444,16 @@ Lädt alle Datenbank-Backups des laufenden Monats in den aktuellen Ordner; die n
 
 ### 6.6 Mailversand und Server-Überwachung (seit Version 0.23)
 
-Regeln und Inhalte: `09_Betrieb_EMail.md`. Postfächer bei Hostinger: `info@soccer-intelligence.com` (Kontaktformular,
-Impressum) und `alert@soccer-intelligence.com` (Alarme, Statusmail); beide leiten an die private Adresse weiter, die
-nur bei Hostinger steht.
+Regeln und Inhalte: `09_Betrieb_EMail.md`. Bei Hostinger: ein Postfach `info@soccer-intelligence.com` (Kontaktformular,
+Impressum, Versand aller Mails) und `alert@soccer-intelligence.com` als Alias darauf (Empfänger der Alarme); das
+Postfach leitet an die private Adresse weiter, die nur bei Hostinger steht.
 
 **Einrichten** (einmalig nach dem Einspielen von 0.23; ebenso zum Ändern eines Passworts):
 ```bash
 bash /docker/football-dashboard/tools/mail_einrichten.sh
 ```
-Fragt die beiden Postfach-Passwörter verdeckt ab (leer = bisheriges behalten), schreibt sie mit Server, Port, den
-Postfach-Adressen und `SI_KONTAKT_EMAIL=info@…` (Impressum) nach `.env` (vorher Kopie nach `backup/`), startet
+Fragt das Passwort des Postfachs `info@` verdeckt ab (leer = bisheriges behalten; `alert@` ist ein Alias und braucht
+keins), schreibt es mit Server, Port, den Adressen und `SI_KONTAKT_EMAIL=info@…` (Impressum) nach `.env` (vorher Kopie nach `backup/`), startet
 `soccer-import` und `soccer-vorschau` neu, fragt nach dem Eintrag des Prüfskripts in den Zeitplan (`j`) und schickt drei
 Testmails.
 

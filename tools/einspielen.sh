@@ -202,9 +202,9 @@ RELEASE_TEXT="$(sed -n 's/^APP_VERSION = "\(.*\)"/\1/p' app/core/settings.py | h
 MAILS=0
 info "Testmails über alle drei Versandwege:"
 set +e
-docker exec soccer-import python -m betrieb.mail --test alert --release "$RELEASE_TEXT" --weg "Container soccer-import (alert@)" 2>&1 | sed 's/^/   /'
+docker exec soccer-import python -m betrieb.mail --test alert --release "$RELEASE_TEXT" --weg "Container soccer-import (an alert@)" 2>&1 | sed 's/^/   /'
 [ "${PIPESTATUS[0]}" -eq 0 ] && MAILS=$((MAILS + 1))
-docker exec soccer-vorschau python -m betrieb.mail --test info --release "$RELEASE_TEXT" --weg "Container soccer-vorschau (info@)" 2>&1 | sed 's/^/   /'
+docker exec soccer-vorschau python -m betrieb.mail --test info --release "$RELEASE_TEXT" --weg "Container soccer-vorschau (an info@)" 2>&1 | sed 's/^/   /'
 [ "${PIPESTATUS[0]}" -eq 0 ] && MAILS=$((MAILS + 1))
 python3 tools/ueberwachen.py --test --release "$RELEASE_TEXT" 2>&1 | sed 's/^/   /'
 [ "${PIPESTATUS[0]}" -eq 0 ] && MAILS=$((MAILS + 1))

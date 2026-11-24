@@ -21,8 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 import ueberwachen as U  # noqa: E402
 
-ENV = {"SI_ALERT_USER": "alert@soccer-intelligence.com", "SI_ALERT_PASSWORT": "pw-geheim-123",
-       "SI_INFO_USER": "info@soccer-intelligence.com", "SI_INFO_PASSWORT": "pw-info-456"}
+ENV = {"SI_SMTP_USER": "info@soccer-intelligence.com", "SI_SMTP_PASSWORT": "pw-geheim-123"}   # ein Postfach, alert@ = Alias
 
 
 class FakeSMTP:
@@ -55,7 +54,7 @@ def _smtp_leeren():
 # --- B1 Mailversand ----------------------------------------------------------------------------------------------------
 
 def test_b1_not_configured_sends_nothing():
-    assert mail.konfig("alert", {}) is None and not mail.eingerichtet("info", {"SI_INFO_USER": "x"})
+    assert mail.konfig("alert", {}) is None and not mail.eingerichtet("info", {"SI_SMTP_USER": "x"})
     assert mail.senden("alert", "x", "y", env={}) == (False, mail.NICHT_EINGERICHTET)
 
 
@@ -64,11 +63,21 @@ def test_b1_send_to_own_mailbox_with_reply_to_and_no_header_injection():
                               env=ENV, smtp_klasse=FakeSMTP)
     msg = FakeSMTP.gesendet[0]
     assert ok and meldung == "gesendet"
-    assert msg["To"] == "info@soccer-intelligence.com" and msg["From"].endswith("<info@soccer-intelligence.com>")
+    assert msg["To"] == "info@soccer-intelligence.com" and msg["From"] == "Soccer Intelligence Kontakt <info@soccer-intelligence.com>"
     assert msg["Subject"] == "[Soccer Intelligence] Kontakt Bcc: boese@example.com" and msg["Bcc"] is None
     assert "\n" not in str(msg["Reply-To"]) and msg["X"] is None                     # kein eingeschleuster Kopf
     cfg = mail.konfig("alert", ENV)
-    assert (cfg["host"], cfg["port"]) == ("smtp.hostinger.com", 465)
+    assert (cfg["host"], cfg["port"], cfg["an"]) == ("smtp.hostinger.com", 465, "alert@soccer-intelligence.com")
+
+
+def test_b1_alerts_go_to_alias_and_are_sent_from_the_mailbox():
+    """Ein Postfach (info@), alert@ ist ein Alias (Carsten 20.11.2026): Anmeldung und Absender immer das Postfach,
+    Alarme an den Alias, damit sie erkennbar und filterbar bleiben."""
+    ok, _ = mail.senden("alert", "KRITISCH: Test", "…", env=ENV, smtp_klasse=FakeSMTP)
+    msg = FakeSMTP.gesendet[0]
+    assert ok and msg["To"] == "alert@soccer-intelligence.com"
+    assert msg["From"] == "Soccer Intelligence Alarm <info@soccer-intelligence.com>"
+    assert mail.konfig("alert", {**ENV, "SI_ALARM_AN": "test@example.com"})["an"] == "test@example.com"
 
 
 def test_b1_error_message_never_contains_password():
@@ -78,10 +87,10 @@ def test_b1_error_message_never_contains_password():
 
 
 def test_b1_release_testmail_subject(monkeypatch):
-    ok, _ = mail.testmail("alert", "0.23 – Betrieb (abc1234)", "Container soccer-import (alert@)", env=ENV,
+    ok, _ = mail.testmail("alert", "0.23 – Betrieb (abc1234)", "Container soccer-import (an alert@)", env=ENV,
                           smtp_klasse=FakeSMTP)
     assert ok and FakeSMTP.gesendet[0]["Subject"] == ("[Soccer Intelligence] Test nach Release 0.23 – Betrieb (abc1234) – "
-                                                      "Container soccer-import (alert@)")
+                                                      "Container soccer-import (an alert@)")
     monkeypatch.setattr(mail, "testmail", lambda *a, **k: (False, mail.NICHT_EINGERICHTET))
     assert mail.main(["--test", "alert"]) == 3 and mail.main(["--test", "x"]) == 2
 
@@ -289,9 +298,10 @@ def test_b6_proc_values_and_env_reads_only_mail_keys(tmp_path):
     (tmp_path / "stat").write_text("cpu  100 0 100 700 100 0 0 0\ncpu0 1 2 3\n")
     assert U.speicher(tmp_path) == 75.0 and U.cpu_zaehler(tmp_path) == (1000, 800)
     assert U.cpu_prozent([0, 0], (1000, 800)) == 20.0 and U.cpu_prozent(None, (1, 1)) is None
-    (tmp_path / ".env").write_text("API_FOOTBALL_KEY=geheim\nSI_ALERT_USER=alert@soccer-intelligence.com\n"
-                                   "SI_ALERT_PASSWORT='a$b'\n# SI_SMTP_HOST=x\nSI_LOGIN_HASH=$2b$xyz\n")
-    assert U.env_lesen(tmp_path / ".env") == {"SI_ALERT_USER": "alert@soccer-intelligence.com", "SI_ALERT_PASSWORT": "a$b"}
+    (tmp_path / ".env").write_text("API_FOOTBALL_KEY=geheim\nSI_SMTP_USER=info@soccer-intelligence.com\n"
+                                   "SI_SMTP_PASSWORT='a$b'\n# SI_SMTP_HOST=x\nSI_LOGIN_HASH=$2b$xyz\nSI_ALARM_AN=alert@soccer-intelligence.com\n")
+    assert U.env_lesen(tmp_path / ".env") == {"SI_SMTP_USER": "info@soccer-intelligence.com", "SI_SMTP_PASSWORT": "a$b",
+                                              "SI_ALARM_AN": "alert@soccer-intelligence.com"}
 
 
 def test_b6_week_maxima(tmp_path):
@@ -366,8 +376,8 @@ def test_b7_page_post_and_redirect(monkeypatch, tmp_path):
     for text in ("Please check the highlighted fields.", "This email address doesn't look complete.",
                  "Your message is a little short", 'aria-invalid="true"', 'value="x"'):
         assert text.replace("'", "&#39;") in falsch, text
-    monkeypatch.setenv("SI_INFO_USER", ENV["SI_INFO_USER"])
-    monkeypatch.setenv("SI_INFO_PASSWORT", ENV["SI_INFO_PASSWORT"])
+    monkeypatch.setenv("SI_SMTP_USER", ENV["SI_SMTP_USER"])
+    monkeypatch.setenv("SI_SMTP_PASSWORT", ENV["SI_SMTP_PASSWORT"])
     form = _form(KT)
     from urllib.parse import urlencode
     body = urlencode({k: v[0] for k, v in form.items()}).encode()
@@ -386,8 +396,8 @@ def test_b7_page_post_and_redirect(monkeypatch, tmp_path):
 
 def test_b8_compose_and_release_script():
     compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
-    for var in ("SI_ALERT_USER=${SI_ALERT_USER:-}", "SI_ALERT_PASSWORT=${SI_ALERT_PASSWORT:-}",
-                "SI_INFO_USER=${SI_INFO_USER:-}", "SI_INFO_PASSWORT=${SI_INFO_PASSWORT:-}", "./import/meldungen:/meldungen"):
+    for var in ("SI_SMTP_USER=${SI_SMTP_USER:-}", "SI_SMTP_PASSWORT=${SI_SMTP_PASSWORT:-}", "SI_ALARM_AN=${SI_ALARM_AN:-}",
+                "SI_KONTAKT_AN=${SI_KONTAKT_AN:-}", "./import/meldungen:/meldungen"):
         assert var in compose, var
     assert not re.search(r"@yahoo|PASSWORT=[^$]", compose)
     skript = (ROOT / "tools" / "einspielen.sh").read_text(encoding="utf-8")
@@ -409,9 +419,9 @@ def test_b8_setup_script_touches_only_mail_keys_and_one_cron_line():
     """tools/mail_einrichten.sh: Passwörter verdeckt, nur die Mail-Einträge in .env ersetzt (vorher Backup), genau eine
     Zeile im Zeitplan, keine private Adresse."""
     s = (ROOT / "tools" / "mail_einrichten.sh").read_text(encoding="utf-8")
-    assert 'read -rsp "Passwort für $ALERT: "' in s and 'read -rsp "Passwort für $INFO: "' in s
+    assert s.count("read -rsp") == 1 and 'read -rsp "Passwort für $INFO' in s                # ein Postfach
     assert "cp -a .env \"backup/env_$(date" in s
-    assert "grep -Ev '^(SI_SMTP_HOST|SI_SMTP_PORT|SI_ALERT_USER|SI_ALERT_PASSWORT|SI_INFO_USER|SI_INFO_PASSWORT|SI_KONTAKT_EMAIL)='" in s
+    assert "grep -Ev '^(SI_SMTP_HOST|SI_SMTP_PORT|SI_SMTP_USER|SI_SMTP_PASSWORT|SI_ALARM_AN|SI_KONTAKT_AN|SI_KONTAKT_EMAIL)='" in s
     assert 'grep -qF "tools/ueberwachen.py"' in s and "docker compose up -d soccer-import soccer-vorschau" in s
     assert "docker compose down" not in s and "yahoo" not in s.lower()
     assert set(re.findall(r"[\w.+-]+@[\w-]+\.[\w.-]+", s)) == {"alert@soccer-intelligence.com", "info@soccer-intelligence.com"}

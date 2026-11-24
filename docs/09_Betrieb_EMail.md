@@ -12,7 +12,7 @@ Carsten vom 20.11.2026 (Zuschnitt 0.22/0.23/0.24, Postfächer, Alarmliste, Statu
 
 | Nr. | Thema | Entscheid |
 |---|---|---|
-| M1 | Postfächer | Bei Hostinger eingerichtet: `info@soccer-intelligence.com` (allgemeine Mails, Kontaktformular, Impressum) und `alert@soccer-intelligence.com` (Alarme, Weiterleitung an die private Adresse). Postfach gültig bis 20.11.2028. |
+| M1 | Postfächer | Bei Hostinger: **ein Postfach** `info@soccer-intelligence.com` (allgemeine Mails, Kontaktformular, Impressum) und `alert@soccer-intelligence.com` als **Alias** darauf (Alarme). Postfach gültig bis 20.11.2028 (Carsten 20.11.2026). |
 | M2 | Was kommt per Mail | **Nur Alarme** und **eine Statusmail pro Woche** (Beweis, dass alles läuft). Keine tägliche Sammelmail. |
 | M3 | Daten-Alarme (sofort) | Import fehlgeschlagen · API-Kontingent fast aufgebraucht · Schnappschuss fehlt · Datei-Prüfung gescheitert (Website zeigt „Daten werden geprüft“). |
 | M4 | Server-Alarme (Warnung / Kritisch) | Festplatte über 85 % / über 95 % · Arbeitsspeicher über 90 % für 15 Minuten / über 95 % für 5 Minuten · CPU über 90 % für 30 Minuten / – · Docker-Container mehr als 3 Neustarts in 10 Minuten / länger als 5 Minuten nicht verfügbar. |
@@ -20,16 +20,20 @@ Carsten vom 20.11.2026 (Zuschnitt 0.22/0.23/0.24, Postfächer, Alarmliste, Statu
 | M6 | Kontaktformular | Versand per Mail, keine Speicherung (Beschluss 8, 19.11.2026). Spamschutz: Rechenaufgabe, verstecktes Feld, höchstens 3 Nachrichten pro Stunde je Absender – reicht für den Anfang. |
 | M7 | Laufzeiten | Im Dashboard verfolgen: API-Football-Abo (aus der API), Domain (bis 23.10.2027, automatische Verlängerung an), Postfach (bis 20.11.2028). |
 | M9 | Testmails nach jedem Release | Wunsch Carsten 20.11.2026: Nach jedem Einspielen geht über **jeden** Versandweg eine Testmail (Abschnitt 2.1). |
-| M8 | Weiterleitung | Beide Postfächer (`info@` und `alert@`) leiten an die private Adresse von Carsten weiter (eingerichtet bei Hostinger; die Adresse steht nur dort, nie im Programm oder in `.env`). |
+| M8 | Weiterleitung | Das Postfach leitet an die private Adresse von Carsten weiter, also auch alles, was an den Alias `alert@` geht (eingerichtet bei Hostinger; die Adresse steht nur dort, nie im Programm oder in `.env`). |
 
 ## 2. Mailversand (Technik)
 
-- **Ein Absender je Zweck:** Alarme und Statusmail von `alert@`, Kontaktformular von `info@`. Versand über SMTP von
-  Hostinger mit SSL (`smtp.hostinger.com`, Port 465 – beim Einrichten zu bestätigen).
-- **Empfänger:** Alarme und Statusmail an `alert@` selbst; das Postfach leitet an die private Adresse weiter (M1).
-  So steht die private Adresse nirgends im Programm, auch nicht in `.env`. Kontaktformular an `info@` (F3: leitet ebenfalls weiter).
+- **Eine Anmeldung:** Versand immer über das Postfach `info@` (SMTP von Hostinger mit SSL, `smtp.hostinger.com`,
+  Port 465). Ein Alias hat kein eigenes Login; ob Hostinger einen Alias als Absender erlaubt, ist nicht sicher –
+  darum ist der Absender immer `info@`, mit eigenem Namen je Zweck: „Soccer Intelligence Alarm“ bzw. „Soccer
+  Intelligence Kontakt“ (Rückfrage Carsten 20.11.2026).
+- **Empfänger:** Alarme und Statusmail **an den Alias `alert@`**, Kontaktformular an `info@`; beides landet im Postfach,
+  das an die private Adresse weiterleitet (M8). Alarme bleiben am Empfänger `alert@` und am Absendernamen erkennbar und
+  lassen sich filtern. Die private Adresse steht nirgends im Programm, auch nicht in `.env`.
 - **Zugangsdaten nur in `.env`** auf dem Server (nie in Git, Code, Logs oder Chat):
-  `SI_SMTP_HOST`, `SI_SMTP_PORT`, `SI_ALERT_USER`, `SI_ALERT_PASSWORT`, `SI_INFO_USER`, `SI_INFO_PASSWORT`. Eintragen
+  `SI_SMTP_HOST`, `SI_SMTP_PORT`, `SI_SMTP_USER`, `SI_SMTP_PASSWORT`, dazu die Empfänger `SI_ALARM_AN` und
+  `SI_KONTAKT_AN` (Standard `alert@` bzw. `info@`). Eintragen
   mit dem Skript `tools/mail_einrichten.sh` (Passwort wird nicht angezeigt, vorher Kopie von `.env` nach `backup/`;
   Ablauf in `01`, Abschnitt 6.6).
 - **Fehlt die Konfiguration**, wird nichts versendet; das Dashboard zeigt „Mailversand nicht eingerichtet“, die Website
@@ -45,11 +49,11 @@ Carsten vom 20.11.2026 (Zuschnitt 0.22/0.23/0.24, Postfächer, Alarmliste, Statu
 Das Einspiel-Skript schickt nach dem Neustart (Schritt 5) über **alle drei Versandwege** je eine Testmail und meldet
 das Ergebnis; in Schritt 6 fragt es, ob alle drei angekommen sind:
 
-| Weg | Absender | Prüft |
+| Weg | Empfänger | Prüft |
 |---|---|---|
-| Container `soccer-import` | `alert@` | Alarme und Statusmail (Zugangsdaten `alert@` im Container) |
-| Container `soccer-vorschau` | `info@` | Kontaktformular (Zugangsdaten `info@` im Container) |
-| Prüfskript auf dem Server | `alert@` | Server-Alarme (Zugangsdaten aus `.env`, ohne Container) |
+| Container `soccer-import` | an `alert@` | Alarme und Statusmail (Zugangsdaten im Container) |
+| Container `soccer-vorschau` | an `info@` | Kontaktformular (Zugangsdaten im Container) |
+| Prüfskript auf dem Server | an `alert@` | Server-Alarme (Zugangsdaten aus `.env`, ohne Container) |
 
 Betreff: `[Soccer Intelligence] Test nach Release <Version> (<Git>) – <Weg>`. Eine gescheiterte Testmail stoppt das
 Einspielen nicht (die Website läuft trotzdem), wird aber deutlich gemeldet und ins Ereignisprotokoll geschrieben. Ist

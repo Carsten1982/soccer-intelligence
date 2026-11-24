@@ -6,7 +6,7 @@
 
 ## Was ändert sich?
 
-- **Alarme per Mail** von `alert@`, die Mails kommen über die Weiterleitung bei dir an:
+- **Alarme per Mail** an `alert@` (Alias auf das Postfach `info@`, Absender „Soccer Intelligence Alarm“), über die Weiterleitung bei dir:
   - Import fehlgeschlagen
   - API-Kontingent
   - Schnappschuss
@@ -57,7 +57,7 @@ Beim ersten Mal meldet Schritt 5 „nur 0 von 3 Testmails gesendet“. Das ist r
 bash /docker/football-dashboard/tools/mail_einrichten.sh
 ```
 
-Das Skript fragt die beiden Postfach-Passwörter verdeckt ab (wie bei Hostinger festgelegt), trägt alles in `.env` ein und startet die zwei betroffenen Container neu. Dann fragt es, ob das Prüfskript in den Zeitplan des Servers kommt: mit `j` bestätigen. Zum Schluss schickt es drei Testmails.
+Das Skript fragt das Passwort des Postfachs `info@` verdeckt ab (wie bei Hostinger festgelegt; `alert@` ist ein Alias und braucht keins), trägt alles in `.env` ein und startet die zwei betroffenen Container neu. Dann fragt es, ob das Prüfskript in den Zeitplan des Servers kommt: mit `j` bestätigen. Zum Schluss schickt es drei Testmails.
 
 ## Erwartungswerte
 
@@ -69,7 +69,7 @@ Das Skript fragt die beiden Postfach-Passwörter verdeckt ab (wie bei Hostinger 
 
 ## Im Browser prüfen
 
-1. **Posteingang (Yahoo):** drei Mails „[Soccer Intelligence] Testmail – …“ (Container soccer-import, Container soccer-vorschau, Prüfskript auf dem Server). Bitte auch im Spam-Ordner nachsehen.
+1. **Posteingang (Yahoo):** drei Mails „[Soccer Intelligence] Testmail – …“ (Container soccer-import an alert@, Container soccer-vorschau an info@, Prüfskript auf dem Server an alert@). Bitte auch im Spam-Ordner nachsehen.
 2. **Dashboard, Reiter Datenimport/API:**
    - Block „Alarme“: „Mailversand: funktioniert“. Das erscheint erst, wenn eine Alarm-Mail verschickt wurde; vorher steht „noch keine Mail“.
    - Block „Server“: Messwerte, nach einer Minute ohne roten Hinweis.
