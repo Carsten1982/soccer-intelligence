@@ -28,3 +28,4 @@ Noch nicht – das Release ist in Arbeit.
 1. Startseite (DE/EN): „Wie lese ich das?“ aufklappen – neuer Satz bei „Signalqualität“.
 2. Spielseite mit einer Karte „Nicht eingestuft ⓘ“: ⓘ antippen – neuer Erklärsatz.
 3. Handy: Spielseite – „Zahlen im Detail“ etwas höher; Browserleiste grün (Android). Im Browser-Menü „Zum Startbildschirm“: Icon mit den drei Balken, Name „Soccer Intel“.
+4. **Komprimierung und HSTS** (Computer, Chrome): Vorschau öffnen, **F12** → Reiter „Netzwerk“ → **Strg+F5** (ohne Zwischenspeicher neu laden) → `site.css` anklicken → Antwort-Header. Erwartet: `content-encoding: gzip` (oder `br`) und `strict-transport-security: max-age=31536000`. Vorher (24.11.): beides fehlte, `content-length: 61064`.
