@@ -5,7 +5,7 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
-## 24.11.2026 – Version 0.24 (in Arbeit): Layout-Anpassungen und Qualitätsrunde
+## 24.11.2026 – Version 0.24: Qualität und Sicherheit
 
 - **Carsten** · Designanpassungen 24.11.2026 (Design-Datei Version 508): zwei Hinweistexte DE/EN.
 - **Carsten** · Entscheide zum Frontend-Review (ChatGPT): Spielseiten erst ab 6 von 8 bewerteten Kennzahlen indexierbar; Web-App-Manifest mit selbst abgeleiteten Icons; „Zahlen im Detail“ 44 px hoch; `SportsEvent` entfernen.

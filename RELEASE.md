@@ -1,8 +1,8 @@
-# Release: Version 0.24 – Layout-Anpassungen und Qualitätsrunde (in Arbeit)
+# Release: Version 0.24 – Qualität und Sicherheit
 
-**Stand:** 24.11.2026 · Version 0.24 · Designanpassungen 24.11.2026 (Version 508) · Reviews Front- und Backend folgen
+**Stand:** 24.11.2026 · Version 0.24 · Designanpassungen 24.11.2026 (Version 508) · Reviews Front- und Backend (Prüfprotokoll `docs/tests/pruefprotokoll_0.24_reviews.md`)
 
-**Commit:** Version 0.24: Layout-Anpassungen und Qualitätsrunde
+**Commit:** Version 0.24: Qualität und Sicherheit
 
 ## Was ändert sich?
 
@@ -17,11 +17,24 @@
 
 ## Einspielen
 
-Noch nicht – das Release ist in Arbeit.
+Wie immer in tmux:
+
+```bash
+tmux new -s release024
+```
+
+```bash
+bash /docker/football-dashboard/tools/einspielen.sh github
+```
+
+Neu: Es gibt nur noch den Weg über GitHub (der ZIP-Weg ist entfernt). Ohne Angabe gilt ebenfalls `github`.
 
 ## Erwartungswerte
 
-- Testreihe (Stand 24.11.2026, ohne echte Daten): 744 bestanden, 18 übersprungen. Auf dem Server kommen die Tests mit echten Daten dazu.
+- Git-Stand vorher: `efcc976`.
+- Schritt 4: rund **740 bestanden**, einige übersprungen und ausgelassen, keine Fehler (hier ohne echte Daten: 742 bestanden, 18 übersprungen).
+- Schritt 5: alle Container laufen, `/` = 200, `/dashboard/` = 200, `/vorschau/` = 401; drei Testmails.
+- Dashboard-Fusszeile: „Version 0.24 – Qualität und Sicherheit“.
 
 ## Im Browser prüfen
 
@@ -29,3 +42,5 @@ Noch nicht – das Release ist in Arbeit.
 2. Spielseite mit einer Karte „Nicht eingestuft ⓘ“: ⓘ antippen – neuer Erklärsatz.
 3. Handy: Spielseite – „Zahlen im Detail“ etwas höher; Browserleiste grün (Android). Im Browser-Menü „Zum Startbildschirm“: Icon mit den drei Balken, Name „Soccer Intel“.
 4. **Komprimierung und HSTS** (Computer, Chrome): Vorschau öffnen, **F12** → Reiter „Netzwerk“ → **Strg+F5** (ohne Zwischenspeicher neu laden) → `site.css` anklicken → Antwort-Header. Erwartet: `content-encoding: gzip` (oder `br`) und `strict-transport-security: max-age=31536000`. Vorher (24.11.): beides fehlte, `content-length: 61064`.
+5. **Tempo:** Startseite und Spieltag-Seite mehrmals schnell hintereinander aufrufen – sie sollten sofort da sein.
+6. Sag mir, ob alles passt.
