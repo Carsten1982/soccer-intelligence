@@ -1,95 +1,24 @@
-# Release: Version 0.23 – E-Mail, Alarme, Überwachung und Designrunde
+# Release: Version 0.24 – Layout-Anpassungen und Qualitätsrunde (in Arbeit)
 
-**Stand:** 24.11.2026 · Version 0.23 · Spezifikation `docs/09_Betrieb_EMail.md` (Entscheide Carsten 20.11.2026: M1–M9, F1–F7) · Designanpassungen 24.11.2026 (`docs/08_Website.md`, 7.1)
+**Stand:** 24.11.2026 · Version 0.24 · Designanpassungen 24.11.2026 (Version 508) · Reviews Front- und Backend folgen
 
-**Commit:** Version 0.23: E-Mail, Alarme, Überwachung und Designrunde
+**Commit:** Version 0.24: Layout-Anpassungen und Qualitätsrunde
 
 ## Was ändert sich?
 
-- **Alarme per Mail** an `alert@` (Alias auf das Postfach `info@`, Absender „Soccer Intelligence Alarm“), über die Weiterleitung bei dir:
-  - Import fehlgeschlagen
-  - API-Kontingent
-  - Schnappschuss
-  - Datei-Prüfung („Daten werden geprüft“)
-  - neue Daten warten auf Freigabe
-  - Entscheid offen
-  - Statistik fehlt dauerhaft
-  - Laufzeit endet
-  - Kontaktformular gescheitert
-
-  Höchstens eine Mail pro Stunde je Alarmart, höchstens 3 Mails je Alarm, dazu „Behoben“, solange die 3 nicht aufgebraucht sind.
-- **Server-Überwachung:** Ein Prüfskript läuft jede Minute auf dem Server und prüft:
-  - Festplatte, Arbeitsspeicher, CPU
-  - unsere vier Container
-  - ob die Website erreichbar ist
-  - ob der Import-Dienst lebt
-
-  Die Schwellen sind deine (Warnung / Kritisch).
-- **Statusmail jeden Montag um 06:00:** Läufe, Alarme, Server, Backups, Laufzeiten; am ersten Montag im Monat die Erinnerung an die Monatssicherung.
-- **Laufzeiten im Dashboard:** VPS bis 22.06.2027, Domain bis 23.10.2027, Postfach bis 20.11.2028, API-Abo aus der API. Die Farbe zeigt, wie viel Zeit bleibt.
-- **Kontaktformular aktiv:**
-  - Versand über `info@`.
-  - Fehler werden je Feld angezeigt.
-  - Die Rechenaufgabe wechselt.
-  - Höchstens 3 Nachrichten pro Stunde je Absender.
-  - Nichts wird gespeichert.
-- **Impressum** zeigt die Projektadresse `info@soccer-intelligence.com` (nach dem Einrichten).
-- **Nach jedem Release** schickt das Einspiel-Skript über alle drei Wege eine Testmail (dein Wunsch).
-- **Reiter Datenimport/API:**
-  - neue Blöcke „Alarme“, „Server“ und „Laufzeiten“
-  - in „Läufe heute“ stehen die Partien hinter „nach dem Spiel“ (dein Wunsch)
-  - das Protokoll zeigt rund 20 Zeilen, der Rest scrollt; die Schnappschüsse sind kurz erklärt
-- **Datenqualität:** „Spieltag unvollständig“ ist während der laufenden Saison nur noch ein Hinweis. Neu warnt „Ergebnis fehlt“, wenn ein Spieltag laut Spielplan vorbei ist und am Folgetag nach 04:00 noch ein Ergebnis fehlt. Verschobene Spiele sind nur ein Hinweis, bis ihr Nachholtermin vorbei ist.
-- **Website (Designrunde 24.11.):**
-  - Spielseite nach „2k final“: Karten „Auffällig“ (Signalqualität), „Keine Auffälligkeit“, „Nicht eingestuft ⓘ“, „Zu wenig Daten“; Gruppen „Auffälligkeiten“ und „Ohne Auffälligkeit“.
-  - „Zahlen im Detail“ in vier Blöcken, neu mit dem **Grenzwert** (z. B. „auffällig unter 41,60 %“) bei allen acht Kennzahlen; ohne Schwelle in dieser Richtung ein Hinweis.
-  - Startseite: gespielte Spiele „Endstand“ mit weisser Marke „2 : 1“, vorher „Gespielt“.
-  - Spieltag-Seite: Legende in jedem Reiter vor den Kacheln. Handy: Sprachwahl rechts im Kopf.
-  - Methodik: Spalte „Schwelle (vom Ligadurchschnitt)“ und neue Einleitung; Glossar: drei freigegebene Texte.
-  - Kontaktformular lässt sich nicht doppelt absenden.
+- **Startseite, „Wie lese ich das?“:** neuer Satz zur Signalqualität („… in früheren Spielen als Prognose bestätigt …“), Deutsch und Englisch.
+- **Spielseite, Chip „Nicht eingestuft ⓘ“:** neue Erklärung („Ein Blick auf vergangene Spiele zeigt: …“), Deutsch und Englisch.
+- Folgt: Befunde aus den Reviews (Frontend, Backend) nach Freigabe, weitere Layout-Anpassungen.
 
 ## Einspielen
 
-Zuerst wie immer:
-
-```bash
-tmux new -s release023
-```
-
-```bash
-bash /docker/football-dashboard/tools/einspielen.sh github
-```
-
-Beim ersten Mal meldet Schritt 5 „nur 0 von 3 Testmails gesendet“. Das ist richtig, der Versand ist noch nicht eingerichtet. Danach **einmalig** den Mailversand einrichten:
-
-```bash
-bash /docker/football-dashboard/tools/mail_einrichten.sh
-```
-
-Das Skript fragt das Passwort des Postfachs `info@` verdeckt ab (wie bei Hostinger festgelegt; `alert@` ist ein Alias und braucht keins), trägt alles in `.env` ein und startet die zwei betroffenen Container neu. Dann fragt es, ob das Prüfskript in den Zeitplan des Servers kommt: mit `j` bestätigen. Zum Schluss schickt es drei Testmails.
+Noch nicht – das Release ist in Arbeit.
 
 ## Erwartungswerte
 
-- Git-Stand vorher: `1701bc6`.
-- Schritt 4: rund **740 bestanden**, einige übersprungen und ausgelassen, keine Fehler.
-- Schritt 5: alle Container laufen, `/` = 200, `/dashboard/` = 200, `/vorschau/` = 401; Hinweis „nur 0 von 3 Testmails“ (beim ersten Mal).
-- Dashboard-Fusszeile: „Version 0.23 – E-Mail, Alarme und Überwachung“.
-- `mail_einrichten.sh`: „✅ Gespeichert in .env“, „✅ Neu gestartet“, „✅ Eingetragen: * * * * * …“ und drei Zeilen „✅ Testmail …: gesendet“.
+- Folgen mit dem fertigen Release.
 
 ## Im Browser prüfen
 
-1. **Posteingang (Yahoo):** drei Mails „[Soccer Intelligence] Testmail – …“ (Container soccer-import an alert@, Container soccer-vorschau an info@, Prüfskript auf dem Server an alert@). Bitte auch im Spam-Ordner nachsehen.
-2. **Dashboard, Reiter Datenimport/API:**
-   - Block „Alarme“: „Mailversand: funktioniert“. Das erscheint erst, wenn eine Alarm-Mail verschickt wurde; vorher steht „noch keine Mail“.
-   - Block „Server“: Messwerte, nach einer Minute ohne roten Hinweis.
-   - Block „Laufzeiten“: VPS, Domain, Postfach, API-Abo.
-   - „Läufe heute“ mit Partien.
-3. **Kontaktformular** (`/vorschau/de/kontakt/`):
-   - Absenden ohne Angaben: rote Fehler je Feld.
-   - Dann richtig ausfüllen und senden: „Danke, deine Nachricht ist angekommen.“ und eine Mail „Kontaktformular: …“ im Posteingang. Mit „Antworten“ geht die Antwort an die eingegebene Adresse.
-4. **Impressum:** zeigt `info@soccer-intelligence.com`.
-5. **Am Montag um 06:00** kommt die erste Statusmail „Wochenstatus KW …“.
-6. **Spielseite** (z. B. ein Spiel mit Auffälligkeit über die Spieltag-Seite, auch auf dem Handy): Karten wie im Entwurf 2k, „Zahlen im Detail“ aufklappen – vierte Zeile Grenzwert; bei „Nicht eingestuft“ das ⓘ antippen.
-7. **Startseite:** ein gespieltes Spiel im Ranking zeigt „Endstand“ und die weisse Marke.
-8. **Spieltag-Seite:** Legende steht in jedem Reiter direkt vor den Kacheln.
-9. Sag mir, ob alles passt.
+1. Startseite (DE/EN): „Wie lese ich das?“ aufklappen – neuer Satz bei „Signalqualität“.
+2. Spielseite mit einer Karte „Nicht eingestuft ⓘ“: ⓘ antippen – neuer Erklärsatz.

@@ -551,3 +551,13 @@ def test_w30_not_enough_data_names_the_new_team():
         "Da SV Elversberg neu in der Liga ist, reicht die Datenbasis für eine Bewertung noch nicht aus."
     assert seiten.zu_wenig_hinweis(seite, "en", ["SV Elversberg", "Hull City"]) == \
         "There are no values for this match yet because SV Elversberg and Hull City are new to the league."
+
+
+def test_w31_hinweistexte_design_508():
+    """Design 24.11.2026 (Version 508): Hinweistexte Startseite (Signalqualität) und Spielseite (Fall C) in DE und EN."""
+    de = json.loads((APP / "website" / "texte" / "de.json").read_text(encoding="utf-8"))
+    en = json.loads((APP / "website" / "texte" / "en.json").read_text(encoding="utf-8"))
+    assert de["lesen"]["signal"].startswith("Sie zeigt, wie häufig sich vergleichbare Auffälligkeiten in früheren Spielen als Prognose")
+    assert en["lesen"]["signal"].endswith("The rating has three levels: high, medium or low.")
+    assert de["spiel"]["c_notiz"].endswith("Deshalb stufen wir sie nicht als relevantes Signal ein.")
+    assert en["spiel"]["c_notiz"].startswith("A look at past matches shows that such deviations say little")

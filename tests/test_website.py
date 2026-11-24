@@ -633,6 +633,8 @@ def test_w15_ranking_like_dashboard():
     assert html.count("mc-card--gespielt") == 1 and '<span class="mc-status">Gespielt</span>' in html
     s = start.start_daten(_start_daten(ergebnisse={(S, "A", "B"): (2, 1)}), zp("2026-11-21T16:00"))
     assert s["ranking"][1]["ergebnis"] == [2, 1] and "Endstand <span class=\"mc-endstand\">2 : 1</span>" in seiten.start_html(s, seiten.Kontext())  # seit 0.23
+    # seit 0.24 (Design 24.11., Version 508): Hinweis „Signalqualität“ in „Wie lese ich das?“ der Startseite
+    assert "in früheren Spielen als Prognose bestätigt haben" in seiten.start_html(s, seiten.Kontext())
 
 
 @pytest.mark.parametrize("plaene, now, alter, art, tage, liga, texte", [

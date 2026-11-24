@@ -236,7 +236,7 @@
     "richtung_titel": "Direction:",
     "richtung": "The bar extends to the right when the value is above average and to the left when it is below average.",
     "signal_titel": "Signal quality:",
-    "signal": "This shows how often similar statistical anomalies were confirmed by actual match results in previous seasons. The rating has three levels: high, medium and low.",
+    "signal": "This shows how often similar statistical anomalies in earlier matches were confirmed as a forecast. The rating has three levels: high, medium or low.",
     "ligaschnitt_kurz": "League average"
   },
   "spiel": {
@@ -310,7 +310,7 @@
     "chip_nicht_eingestuft": "Not assessed",
     "chip_zu_wenig_daten": "Not enough data",
     "chip_info": "Show explanation",
-    "c_notiz": "Past matches show that such deviations have not been reliably confirmed in this league. That is why we do not flag them as statistical anomalies.",
+    "c_notiz": "A look at past matches shows that such deviations say little about how future matches will go. That is why we do not treat them as a relevant signal.",
     "keine_bewertung": "No assessment possible.",
     "d_letzte10": "Average of the last 10 matches",
     "d_letzte10_gelb": "Yellow cards per team per match · average of the last 10 matches",
