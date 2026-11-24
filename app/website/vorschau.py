@@ -40,6 +40,8 @@ SICHERHEIT = {
     "X-Frame-Options": "DENY",
     "Content-Security-Policy": ("default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; "
                                 "img-src 'self' data:; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"),
+    # seit 0.24 (Frontend-Review 19): Browser-Funktionen, die die Seite nie braucht, ausdrücklich abschalten
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()",
 }
 WURZEL = W.STATISCH / "wurzel"                  # Icons und og-image (im Livebetrieb im Hauptverzeichnis der Domain)
 WURZEL_DATEIEN = {"favicon.ico": "image/x-icon", "favicon.svg": "image/svg+xml", "favicon-64.png": "image/png",
@@ -89,6 +91,36 @@ def _wurzel(name: str) -> Antwort:
     if not datei.is_file():
         return Antwort(404, b"nicht gefunden", "text/plain; charset=utf-8")
     return Antwort(200, datei.read_bytes(), WURZEL_DATEIEN[name], **{"Cache-Control": "public, max-age=2592000"})
+
+
+class Seitenspeicher:
+    """Fertige Seiten (nur Status 200) für kurze Zeit. Bei gleichzeitigen Aufrufen derselben neuen Seite rechnet nur
+    einer; die anderen warten kurz und bekommen dasselbe Ergebnis (auf 1 vCPU schneller als parallel zu rechnen)."""
+    MAX_EINTRAEGE = 500                                  # rund 10 MB bei ≈ 20 KB je Seite
+
+    def __init__(self) -> None:
+        self._seiten: dict = {}
+        self._rechnen = threading.Lock()
+
+    def holen(self, schluessel, rechnen) -> Antwort:
+        a = self._seiten.get(schluessel)
+        if a is not None:
+            return a
+        with self._rechnen:
+            a = self._seiten.get(schluessel)
+            if a is None:
+                a = rechnen()
+                if a.status == 200:
+                    if len(self._seiten) >= self.MAX_EINTRAEGE:
+                        self._seiten.clear()
+                    self._seiten[schluessel] = a
+            return a
+
+    def leeren(self) -> None:
+        self._seiten.clear()
+
+
+SEITEN = Seitenspeicher()
 
 
 def _manifest(prefix: str) -> Antwort:
@@ -158,24 +190,36 @@ def beantworten(pfad: str, query: str, daten: Daten = DATEN) -> Antwort:
         return Antwort(503, hinweis_html("daten", k, stand).encode("utf-8"),
                        **{"Cache-Control": "no-store", "Retry-After": "600"})
 
-    if z.art == "start":
-        foto = f"{prefix}/bilder/{W.FOTO}" if (W.BILDER / W.FOTO).is_file() else None
-        return _html(200, start_html(start_daten(daten, zp), k, foto))
-    if z.art == "spieltag":
-        return _html(200, spieltag_html(spieltag_daten(daten, W.liga_aus_slug(z.liga), zp), k))
-    if z.art == "archiv":
-        seite = archiv_daten(daten, W.liga_aus_slug(z.liga), z.saison, z.nr, zp) if seo.saison_hat_seiten(z.saison) else None
-        if seite is None:
-            return _html(404, fehlt_html(k, stand))
-        return _html(200, archiv_html(seite, k))
-    if z.art == "spiel":
-        return _spiel(z, rest, daten, zp, k, stand, prefix, q)
-    if z.art == "cookie":                                    # Cookie-Einstellungen folgen mit 0.22
-        return _html(200, hinweis_html("folgt", k, stand, aktiv=z.art))
     if z.art == "kontakt":                                   # seit 0.23: Formular mit Sicherheitsfrage, nie zwischenspeichern
         f = KT.leer(gesendet="gesendet" in werte)
         return Antwort(200, inhalt_html(z.art, k, stand, f=f).encode("utf-8"), **{"Cache-Control": "no-store"})
-    return _html(200, inhalt_html(z.art, k, stand))
+
+    # Seit 0.24 (Frontend- und Backend-Review, Messung 24.11.2026): fertige Seite je Adresse, Datenstand und Minute
+    # zwischenspeichern. Vorher rechnete jeder Aufruf alles neu (Startseite ≈ 0,4 s; 10 gleichzeitige ≈ 7,6 s).
+    # Der Inhalt ist innerhalb einer Minute derselbe; ein Statuswechsel (z. B. „Gespielt“) erscheint höchstens
+    # eine Minute später. Die Rechnung selbst bleibt unverändert.
+    def rechnen() -> Antwort:
+        if z.art == "start":
+            foto = f"{prefix}/bilder/{W.FOTO}" if (W.BILDER / W.FOTO).is_file() else None
+            return _html(200, start_html(start_daten(daten, zp), k, foto))
+        if z.art == "spieltag":
+            return _html(200, spieltag_html(spieltag_daten(daten, W.liga_aus_slug(z.liga), zp), k))
+        if z.art == "archiv":
+            seite = archiv_daten(daten, W.liga_aus_slug(z.liga), z.saison, z.nr, zp) if seo.saison_hat_seiten(z.saison) else None
+            if seite is None:
+                return _html(404, fehlt_html(k, stand))
+            return _html(200, archiv_html(seite, k))
+        if z.art == "spiel":
+            return _spiel(z, rest, daten, zp, k, stand, prefix, q)
+        if z.art == "cookie":                                    # Cookie-Einstellungen folgen mit 0.22
+            return _html(200, hinweis_html("folgt", k, stand, aktiv=z.art))
+        return _html(200, inhalt_html(z.art, k, stand))
+
+    foto_da = (W.BILDER / W.FOTO).is_file()
+    stand_daten = daten.dateistand() if hasattr(daten, "dateistand") else None     # Test-Attrappen haben keinen
+    schluessel = (id(daten), rest, query, stand_daten, zp.stand, zp.jetzt.replace(second=0, microsecond=0), foto_da,
+                  W.VORSCHAU)
+    return SEITEN.holen(schluessel, rechnen)
 
 
 def beantworten_post(pfad: str, inhalt: bytes, ip: str, daten: Daten = DATEN, senden=None) -> Antwort:
@@ -240,6 +284,9 @@ def _sitemap(rest: str, daten: Daten) -> Antwort:
 class Handler(BaseHTTPRequestHandler):
     server_version = "SoccerIntelligence"
     sys_version = ""
+    # seit 0.24 (Backend-Review A1/A2): Wer 20 Sekunden lang nichts schickt, wird getrennt – ein langsamer oder hängender
+    # Aufruf belegt so nicht dauerhaft einen Thread (die Seite selbst ist in Millisekunden bis 1 Sekunde fertig).
+    timeout = 20
 
     def _senden(self, kopf_nur: bool = False) -> None:
         teile = urlsplit(self.path)
@@ -266,10 +313,14 @@ class Handler(BaseHTTPRequestHandler):
         self._senden(kopf_nur=True)
 
     def do_POST(self) -> None:  # noqa: N802 - nur das Kontaktformular (seit 0.23)
+        # Länge streng prüfen (seit 0.24, Backend-Review A4): eine negative Angabe hätte bis zum Verbindungsende gelesen
         try:
-            laenge = min(int(self.headers.get("Content-Length") or 0), KT_MAX_BYTES + 1)
+            laenge = int(self.headers.get("Content-Length") or 0)
         except ValueError:
-            laenge = 0
+            laenge = -1
+        if not 0 <= laenge <= KT_MAX_BYTES:
+            self.send_error(413 if laenge > KT_MAX_BYTES else 400)
+            return
         inhalt = self.rfile.read(laenge) if laenge else b""
         # Absender-Adresse für die Anfragebremse: der letzte Eintrag stammt von Traefik (nicht vom Besucher fälschbar)
         weiter = [x.strip() for x in (self.headers.get("X-Forwarded-For") or "").split(",") if x.strip()]

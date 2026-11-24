@@ -125,6 +125,15 @@ if [ "$WEG" = github ]; then
   git log -1 --oneline | sed 's/^/   /'
 else
   schritt "3/6: Paket entpacken"
+  # Seit 0.24 (Backend-Review B): Einträge prüfen, bevor etwas entpackt wird. Python macht aus "../.env" einfach ".env"
+  # im Projektordner – ein Paket könnte so .env, die Daten, Backups oder .git überschreiben. Nur Programmdateien sind erlaubt.
+  python3 - "$PAKET" <<'PRUEFUNG' || stopp "Unerlaubter Eintrag im Paket (.env, Daten-, Import- oder Backup-Ordner, .git oder ein Pfad mit ..). Nichts entpackt."
+import sys, zipfile
+for n in zipfile.ZipFile(sys.argv[1]).namelist():
+    teile = n.replace("\\", "/").split("/")
+    if n.startswith("/") or ".." in teile or teile[0] in (".env", "data", "backup", "import", ".git") or teile[0].startswith(".env"):
+        print("   Unerlaubt:", n); sys.exit(1)
+PRUEFUNG
   python3 -m zipfile -e "$PAKET" .
   rm "$PAKET"
   if [ -f release_loeschen.txt ]; then

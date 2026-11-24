@@ -180,6 +180,12 @@ Regeln:
 - **Caching:** HTML `Cache-Control: public, max-age=300` (Vorschau und Fehlerseiten `no-store`); CSS, JS, Schriften und
   Icons 30 Tage; Excel 1 Tag; Weiterleitungen `no-store`. **Dateifehler:** Start-, Spieltag-, Archiv- und Spielseiten
   antworten mit **503**, `Retry-After: 600` und `no-store`; Inhaltsseiten bleiben mit 200 erreichbar.
+- **Seitenspeicher (seit 0.24, Frontend- und Backend-Review):** Der Dienst speichert jede fertige Seite (nur Status 200,
+  nicht das Kontaktformular) je Adresse, Datenstand der Dateien, Importstand und **Minute**. Ein Statuswechsel (z. B.
+  „Gespielt“ nach Anpfiff + 2 h) erscheint dadurch höchstens eine Minute später. Gleichzeitige Aufrufe derselben neuen
+  Seite rechnen nur einmal. Startseite: 0,37 s → 0,001 s; 10 gleichzeitige 7,6 s → 0,01 s (lokal gemessen). Während des
+  Datentauschs (`import/uebergabe.json`) bleibt der bisherige Datenstand. Zusätzlich: `Permissions-Policy`, Zeitlimit 20 s
+  je Verbindung, strenge Prüfung von `Content-Length`; Komprimierung und HSTS per Traefik-Label.
 - **Web-App-Manifest und Browserfarbe (seit 0.24, Entscheide Carsten 24.11.2026):** `/manifest.webmanifest` mit Name
   „Soccer Intelligence“, Kurzname „Soccer Intel“, `display: browser` (Zurück-Knopf des Browsers bleibt), Start `/`,
   Icons 192 und 512 px sowie „maskable“ 512 px (aus `favicon.svg` abgeleitet); `<meta name="theme-color" content="#0B3D2E">`.

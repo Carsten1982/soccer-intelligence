@@ -545,7 +545,7 @@ CHANGELOG.md              Änderungsprotokoll
 - [ ] Ablauf: Knopf „Run workflow“ auf GitHub zum Einspielen (GitHub als einzige Quelle und automatische Tests erledigt 09.11.2026)
 - [ ] Spielplan Premier League, Spieltag 1 (16.–20.08. statt gespielt 21.–24.08.): prüft Carsten
 - [ ] Name des bisherigen Datenanbieters dokumentieren (`02_Datenbasis.md`, Regelwerk Abschnitt 8, Punkt 7)
-- [ ] Öffentliche Website: Impressum und Datenschutz – Texte seit 0.21 auf der Vorschau (Betreiberangaben aus `.env`); juristische Prüfung DE/EN vor dem Livegang offen
+- [x] Öffentliche Website: Impressum und Datenschutz – juristische Prüfung erledigt (Carsten 24.11.2026); Impressum mit den Kontaktdaten von Carsten (aus `.env`)
 - [ ] Server: Meldung „1 updates could not be installed automatically“ (unattended-upgrades) prüfen. Kein Upgrade auf Ubuntu 26.04 vorerst. Seit 24.11.2026 zusätzlich „System restart required“: Neustart zu ruhiger Zeit (betrifft den ganzen Server), Entscheid Carsten.
 - [ ] **Nach dem Livegang prüfen: Komprimierung und HSTS** (Frontend-Review Punkte 1 und 19). Test am 24.11.2026: Browser ↔ Traefik spricht HTTP/2 (erledigt), HSTS fehlt; ob Traefik CSS/HTML komprimiert, liess sich wegen des Passwortschutzes der Vorschau nicht prüfen. Komprimierung und HSTS kommen per Label in 0.24; nach dem Livegang (ohne Passwort) prüfen mit `curl -s -D - -o /dev/null --compressed https://soccer-intelligence.com/statisch/site.css | grep -iE "^HTTP|content-encoding|content-length|strict-transport"` – erwartet `content-encoding: gzip` (oder `br`) und `strict-transport-security`.
 - [ ] Wo läuft der Chatbot? (nur zur Dokumentation)
