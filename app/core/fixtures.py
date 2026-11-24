@@ -16,7 +16,8 @@ import numbers
 import re
 import zipfile
 from dataclasses import dataclass, field
-from datetime import date, datetime, timezone
+from datetime import date, datetime, time, timedelta, timezone
+from zoneinfo import ZoneInfo
 from io import BytesIO
 from pathlib import Path
 
@@ -342,6 +343,53 @@ def _awarded_but_played(league: League, df: pd.DataFrame, db_games: pd.DataFrame
     return df, issues
 
 
+IMPORT_FERTIG = time(4, 30)        # Kontrolllauf um 04:00 plus Reserve: ab dann muss ein Ergebnis da sein
+OFFEN = (STATUS_POSTPONED, STATUS_CANCELLED, STATUS_ABANDONED, STATUS_SUSPENDED)
+
+
+def _missing_results(league: League, df: pd.DataFrame, db_games: pd.DataFrame | None, jetzt: datetime
+                     ) -> list[Issue]:
+    """Ergebnis fehlt nach dem Spieltag (seit 0.23, Entscheid Carsten 24.11.2026). Nur die neueste Saison.
+
+    - Regulärer Spieltag: Warnung erst, wenn sein letztes Spiel laut Spielplan vorbei ist und am Folgetag nach dem
+      Kontrolllauf (04:00) noch ein Ergebnis fehlt. Vorher läuft der Spieltag noch (Hinweis der Datenbank-Prüfung).
+    - Nachholspiel und vorgezogenes Spiel: Warnung am Folgetag des eigenen Termins nach 04:00.
+    - Verschoben, abgesagt, abgebrochen, ausgesetzt: nur Hinweis „wird nachgeholt“ (kein Fehler der Daten).
+    - Gewertete Spiele stehen nie in der Datenbank (R2) und werden nicht gemeldet."""
+    latest = df["saison"].max()
+    cur = df[df["saison"] == latest]
+    played = set()
+    if db_games is not None and not db_games.empty:
+        played = set(zip(db_games["Season"], db_games["homeTeam"], db_games["awayTeam"]))
+
+    def faellig(tag) -> bool:
+        return tag is not None and jetzt >= datetime.combine(tag + timedelta(days=1), IMPORT_FERTIG)
+
+    issues: list[Issue] = []
+    for md, g in cur.groupby("spieltag", sort=True):
+        regulaer = g[(g["status"] == STATUS_PLANNED) & ~g["hinweis"].isin(ALLOWED_HINTS)]
+        ende = max((d for d in regulaer["datum_von"] if d is not None), default=None)
+        for _, r in g.iterrows():
+            if (r["saison"], r["heim"], r["gast"]) in played or r["status"] == STATUS_AWARDED:
+                continue
+            label, zeile = _label(r["heim"], r["gast"], r["spieltag"]), int(r["excel_row"])
+            if r["status"] in OFFEN:
+                if faellig(r["datum_von"]):
+                    issues.append(Issue(HINWEIS, league.name, "Spiel ausstehend",
+                                        f"Saison {latest}, Spieltag {int(md)}: Spiel {r['status']}, wird nachgeholt",
+                                        match=label, excel_row=zeile))
+            elif r["hinweis"] in ALLOWED_HINTS:
+                if faellig(r["datum_von"]):
+                    issues.append(Issue(WARNUNG, league.name, "Ergebnis fehlt",
+                                        f"Saison {latest}, Spieltag {int(md)}: {r['hinweis']} vom {r['datum_von']:%d.%m.%Y} "
+                                        "ohne Ergebnis nach dem Import am Folgetag", match=label, excel_row=zeile))
+            elif faellig(ende):
+                issues.append(Issue(WARNUNG, league.name, "Ergebnis fehlt",
+                                    f"Saison {latest}, Spieltag {int(md)} ist seit {ende:%d.%m.%Y} beendet, das Ergebnis "
+                                    "fehlt auch nach dem Import am Folgetag", match=label, excel_row=zeile))
+    return issues
+
+
 # --- Hauptfunktion -------------------------------------------------------
 
 def load_fixtures(
@@ -349,13 +397,16 @@ def load_fixtures(
     leagues: list[League],
     db_leagues: dict[str, pd.DataFrame] | None = None,
     teams: list[Team] | None = None,
+    jetzt: datetime | None = None,
 ) -> FixturesLoad:
     """Liest den Spielplan für alle aktiven Ligen und prüft ihn.
 
     leagues     alle Ligen aus der Konfiguration (aktive und inaktive)
     db_leagues  eingelesene Datenbank je Liga (für Teamnamen und gespielte Begegnungen)
     teams       Teamliste (bekannte Teams ohne Datenbankeinträge, z. B. Aufsteiger)
+    jetzt       Ortszeit für „Ergebnis fehlt“ (Standard: jetzt in Europe/Zurich; seit 0.23)
     """
+    jetzt = jetzt or datetime.now(ZoneInfo("Europe/Zurich")).replace(tzinfo=None)
     path = Path(path)
     result = FixturesLoad(path=path, loaded_at=datetime.now(timezone.utc))
     db_leagues = db_leagues or {}
@@ -420,6 +471,8 @@ def load_fixtures(
             team_issues, notes = _team_checks(league, df, db_leagues.get(league.name), known_extra)
             result.issues += team_issues
             result.team_notes.update(notes)
+            if league.name in db_leagues:
+                result.issues += _missing_results(league, df, db_leagues.get(league.name), jetzt)
         result.leagues[league.name] = df
 
     return result

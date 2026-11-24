@@ -17,6 +17,8 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 - **Claude** · **Kontaktformular aktiv** (`website/kontakt.py`): Prüfung mit Fehlern je Feld (DE/EN), wechselnde Rechenaufgabe mit Prüfsumme, höchstens 3 Nachrichten pro Stunde, verstecktes Feld, Versand über `info@`, keine Speicherung, Danke-Seite.
 - **Claude** · **Testmails nach jedem Release** über alle drei Wege (`tools/einspielen.sh`, Schritt 5). Einrichten auf dem Server: `tools/mail_einrichten.sh` (`01`, 6.6). Schutzregel 1: cron-Zeile als einzige Ausnahme.
 - **Claude** · „Läufe heute“ nennt je geplantem Lauf die Partien (`laufplan.plan_mit_partien`, Test L7).
+- **Carsten** · 0.22 im Betrieb geprüft: Läufe nach dem Spiel, Kontrolllauf 04:00, Backups – alles in Ordnung (24.11.2026). Wünsche Dashboard: Warnung „Spieltag unvollständig“ erst nach dem Spieltag; Protokoll höchstens 20 Zeilen sichtbar; Schnappschüsse kurz erklären.
+- **Claude** · **Datenqualität:** „Spieltag unvollständig“ in der laufenden Saison nur noch Hinweis; neue Prüfung **„Ergebnis fehlt“** im Spielplan (`core/fixtures._missing_results`): Warnung erst, wenn der Spieltag laut Spielplan vorbei ist und am Folgetag nach dem Kontrolllauf (04:00) ein Ergebnis fehlt; Nachholspiele nach dem eigenen Termin; verschobene, abgesagte, abgebrochene und ausgesetzte Spiele nur Hinweis „Spiel ausstehend“ (Entscheid Carsten 24.11.2026). **Reiter Datenimport/API:** Protokoll scrollt nach rund 20 Zeilen (Kopfzeile bleibt stehen); Erklärung der Schnappschüsse in zwei Sätzen. Tests angepasst (Beispiel-Spielpläne mit festem Zeitpunkt) und ergänzt.
 - **Claude** · Tests B1–B8 (`test_betrieb_023.py`); W25 erlaubt die öffentliche Projektadresse. Doku: `01` (0, 5, 6.6), `08`, `09`, RELEASE.md.
 
 ## 20.11.2026 – Version 0.22 eingespielt

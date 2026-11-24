@@ -181,8 +181,9 @@ def db_2018():
 
 def test_new_database_loads_without_errors(db_2018):
     """Prüfbericht vom 10.11.2026: 0 Fehler, 24 Warnungen, 64 Hinweise; keine fehlende Saison. Seit 0.19.1 ist
-    „Schüsse < aufs Tor + daneben“ nur Hinweis (Carsten 18.11.2026): 23 dieser Warnungen sind jetzt Hinweise."""
-    assert (db_2018.count("Fehler"), db_2018.count("Warnung"), db_2018.count("Hinweis")) == (0, 1, 87)
+    „Schüsse < aufs Tor + daneben“ nur Hinweis (Carsten 18.11.2026): 23 dieser Warnungen sind jetzt Hinweise. Seit 0.23
+    ist „Spieltag unvollständig“ in der neuesten Saison ein Hinweis (Carsten 24.11.2026): die letzte Warnung."""
+    assert (db_2018.count("Fehler"), db_2018.count("Warnung"), db_2018.count("Hinweis")) == (0, 0, 88)
     assert sum(1 for i in db_2018.issues if i.check == "Schüsse < aufs Tor + daneben") == 23
     assert not [i for i in db_2018.issues if i.check == "Saison fehlt"]
     for name, df in db_2018.leagues.items():

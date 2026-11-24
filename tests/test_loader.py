@@ -347,7 +347,9 @@ def test_gameday_team_twice_is_warning(tmp_path, valid_sheets):
     valid_sheets["Bundesliga"].loc[1, "Gameday"] = 1
     db = load_database(write_workbook(tmp_path / "db.xlsx", valid_sheets))
     w = checks(db, WARNUNG)
-    assert "Team mehrfach im Spieltag" in w and "Spieltag unvollständig" in w
+    assert "Team mehrfach im Spieltag" in w
+    # Seit 0.23 (Carsten 24.11.2026): in der neuesten Saison nur Hinweis (Spieltag läuft noch oder Spiel verschoben)
+    assert "Spieltag unvollständig" in checks(db, HINWEIS) and "Spieltag unvollständig" not in w
 
 
 def test_shot_sum_is_only_a_hint(tmp_path, valid_sheets):

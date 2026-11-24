@@ -38,6 +38,8 @@
 - **Reiter Datenimport/API:**
   - neue Blöcke „Alarme“, „Server“ und „Laufzeiten“
   - in „Läufe heute“ stehen die Partien hinter „nach dem Spiel“ (dein Wunsch)
+  - das Protokoll zeigt rund 20 Zeilen, der Rest scrollt; die Schnappschüsse sind kurz erklärt
+- **Datenqualität:** „Spieltag unvollständig“ ist während der laufenden Saison nur noch ein Hinweis. Neu warnt „Ergebnis fehlt“, wenn ein Spieltag laut Spielplan vorbei ist und am Folgetag nach 04:00 noch ein Ergebnis fehlt. Verschobene Spiele sind nur ein Hinweis, bis ihr Nachholtermin vorbei ist.
 
 ## Einspielen
 
@@ -62,7 +64,7 @@ Das Skript fragt das Passwort des Postfachs `info@` verdeckt ab (wie bei Hosting
 ## Erwartungswerte
 
 - Git-Stand vorher: `1701bc6`.
-- Schritt 4: rund **715 bestanden, 16 übersprungen, 18 ausgelassen**, keine Fehler.
+- Schritt 4: rund **717 bestanden, 16 übersprungen, 18 ausgelassen**, keine Fehler.
 - Schritt 5: alle Container laufen, `/` = 200, `/dashboard/` = 200, `/vorschau/` = 401; Hinweis „nur 0 von 3 Testmails“ (beim ersten Mal).
 - Dashboard-Fusszeile: „Version 0.23 – E-Mail, Alarme und Überwachung“.
 - `mail_einrichten.sh`: „✅ Gespeichert in .env“, „✅ Neu gestartet“, „✅ Eingetragen: * * * * * …“ und drei Zeilen „✅ Testmail …: gesendet“.

@@ -46,6 +46,8 @@ table.di-t{border-collapse:collapse;width:100%;font-size:.82rem;color:#14213d;ma
 .t-g{background:#eef0f3;color:#5b6b84}.t-r{background:#fde8e8;color:#9b1c1c}
 .di-h{font-weight:700;font-size:.9rem;margin:.6rem 0 .1rem;color:#14213d}
 .di-note{color:#5b6b84;font-size:.8rem;margin:.2rem 0}
+.di-scroll{max-height:34rem;overflow-y:auto;border-bottom:1px solid #e3e9f1}
+.di-scroll table.di-t{margin:0}.di-scroll th{position:sticky;top:0;z-index:1}
 @media (max-width:800px){.di-st,.di-kp{grid-template-columns:1fr 1fr}}
 </style>"""
 TAG = {"wartet": "t-w", "übernommen": "t-ok", "übernommen (automatisch)": "t-ok", "verworfen": "t-b", "ersetzt": "t-g",
@@ -476,8 +478,10 @@ def history(reps: list[dict]) -> None:
                      num(len(r.get("korrekturen") or [])) if "korrekturen" in r else "–",
                      f"{num(important)} · {num(kickoff)}" if fx else "–",
                      f'{num(db.get("fehler"))} Fehler · {num(db.get("warnungen"))} Warnungen' if db else "–", tag])
-    st.markdown(_table(["Lauf", "Anlass", "Abfragen", "neue Spiele", "Korrekturen", "Spielplan (wichtig · Anstosszeiten)",
-                        "Prüfung", "Status"], rows, left=(0, 1, 7)), unsafe_allow_html=True)
+    # Seit 0.23 (Wunsch Carsten 24.11.2026): rund 20 Zeilen sichtbar, der Rest scrollt; Kopfzeile bleibt stehen.
+    st.markdown('<div class="di-scroll">' + _table(["Lauf", "Anlass", "Abfragen", "neue Spiele", "Korrekturen",
+                                                    "Spielplan (wichtig · Anstosszeiten)", "Prüfung", "Status"],
+                                                   rows, left=(0, 1, 7)) + "</div>", unsafe_allow_html=True)
     st.markdown('<p class="di-note">Seit 0.22 ohne Freigabe: Fehlerfreie Fassungen werden sofort übernommen. Fassungen '
                 'mit Fehlern oder neuen Warnungen warten auf Ihre Freigabe; kritische Spiele werden zurückgehalten und '
                 'warten oben auf Ihren Entscheid.</p>', unsafe_allow_html=True)
@@ -537,10 +541,16 @@ def betrieb_box(base: Path, now: datetime, abo: dict | None) -> str:
     return "".join(teile)
 
 
+SCHNAPPSCHUSS_ERKLAERUNG = (            # Wunsch Carsten 24.11.2026: Begriff kurz erklären (höchstens 2 Sätze)
+    '<p class="di-note">Ein Schnappschuss friert die Werte eines Spiels eine Stunde vor dem Anpfiff ein. So zeigen '
+    'gespielte Spiele immer die Werte von vor dem Spiel, auch wenn danach neue Ergebnisse dazukommen.</p>')
+
+
 def snapshot_box(stand: dict | None, now: datetime) -> str:
     """Stand des stündlichen Schnappschuss-Laufs (seit 0.20, core/schnappschuss.py): Werte je Spiel vor dem Anpfiff."""
     if not stand:
-        return ('<div class="di-h">Schnappschüsse (Werte vor dem Anpfiff)</div><p class="di-note">Noch kein Lauf. Der '
+        return ('<div class="di-h">Schnappschüsse (Werte vor dem Anpfiff)</div>' + SCHNAPPSCHUSS_ERKLAERUNG +
+                '<p class="di-note">Noch kein Lauf. Der '
                 'Container soccer-import legt sie stündlich an; sofort: <code>docker exec soccer-import python -m '
                 'importer.schnappschuss</code>.</p>')
     run = datetime.fromisoformat(stand["lauf"])
@@ -550,7 +560,7 @@ def snapshot_box(stand: dict | None, now: datetime) -> str:
     waiting = stand.get("wartend") or []
     rows = [[escape(league), num(c.get("neu")), num(c.get("vorhanden")), num(c.get("wartend"))]
             for league, c in (stand.get("ligen") or {}).items()]
-    text = (f'<div class="di-h">Schnappschüsse (Werte vor dem Anpfiff)</div>'
+    text = (f'<div class="di-h">Schnappschüsse (Werte vor dem Anpfiff)</div>{SCHNAPPSCHUSS_ERKLAERUNG}'
             f'<p class="di-note">Letzter Lauf <b class="{css}">{_when(stand["lauf"])} {sign}</b> · neu '
             f'{num(stand.get("neu"))} (davon nachträglich {num(stand.get("neu_nachtraeglich"))}) · erste Ergebnisse '
             f'{num(stand.get("ergebnisse_neu"))} · Dauer {stand.get("dauer_s", "–")} s · stündlich, nach jeder '
