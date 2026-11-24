@@ -43,7 +43,11 @@ SICHERHEIT = {
 }
 WURZEL = W.STATISCH / "wurzel"                  # Icons und og-image (im Livebetrieb im Hauptverzeichnis der Domain)
 WURZEL_DATEIEN = {"favicon.ico": "image/x-icon", "favicon.svg": "image/svg+xml", "favicon-64.png": "image/png",
-                  "apple-touch-icon.png": "image/png", "og-image.png": "image/png"}
+                  "apple-touch-icon.png": "image/png", "og-image.png": "image/png",
+                  # seit 0.24: Icons des Web-App-Manifests (aus favicon.svg abgeleitet, Entscheid Carsten 24.11.2026)
+                  "icon-192.png": "image/png", "icon-512.png": "image/png", "icon-maskable-512.png": "image/png"}
+THEME_FARBE = "#0B3D2E"                         # Markengrün (--gruen), auch <meta name="theme-color">
+HINTERGRUND = "#F4F7F2"                         # Seitenhintergrund (--bg)
 SEITE_CACHE = "public, max-age=300"             # Browser 5 Minuten (Beschluss 19.11.2026); Vorschau ohne Cache
 DATENSEITEN = ("start", "spieltag", "archiv", "spiel")
 
@@ -87,6 +91,20 @@ def _wurzel(name: str) -> Antwort:
     return Antwort(200, datei.read_bytes(), WURZEL_DATEIEN[name], **{"Cache-Control": "public, max-age=2592000"})
 
 
+def _manifest(prefix: str) -> Antwort:
+    """Web-App-Manifest (seit 0.24, Frontend-Review Punkt 10; Entscheid Carsten 24.11.2026): „Zum Home-Bildschirm“
+    mit Icon und Namen. display „browser“ statt „standalone“, damit der Zurück-Knopf des Browsers bleibt."""
+    daten = {"name": "Soccer Intelligence", "short_name": "Soccer Intel", "lang": "de",
+             "start_url": f"{prefix}/", "scope": f"{prefix}/", "display": "browser",
+             "theme_color": THEME_FARBE, "background_color": HINTERGRUND,
+             "icons": [{"src": f"{prefix}/icon-192.png", "sizes": "192x192", "type": "image/png"},
+                       {"src": f"{prefix}/icon-512.png", "sizes": "512x512", "type": "image/png"},
+                       {"src": f"{prefix}/icon-maskable-512.png", "sizes": "512x512", "type": "image/png",
+                        "purpose": "maskable"}]}
+    return Antwort(200, json.dumps(daten, ensure_ascii=False).encode("utf-8"), "application/manifest+json",
+                   **{"Cache-Control": "public, max-age=86400"})
+
+
 def beantworten(pfad: str, query: str, daten: Daten = DATEN) -> Antwort:
     """Antwort für einen Aufruf (ohne Netzwerk testbar)."""
     prefix = W.PREFIX.rstrip("/")
@@ -99,6 +117,8 @@ def beantworten(pfad: str, query: str, daten: Daten = DATEN) -> Antwort:
         return _datei(rest[len("/statisch/"):])
     if rest.lstrip("/") in WURZEL_DATEIEN:
         return _wurzel(rest.lstrip("/"))
+    if rest == "/manifest.webmanifest":
+        return _manifest(prefix)
     if rest == "/robots.txt":
         return Antwort(200, SM.robots().encode("utf-8"), "text/plain; charset=utf-8", **{"Cache-Control": "public, max-age=3600"})
     if rest == "/sitemap.xml" or rest.startswith("/sitemaps/"):

@@ -8,6 +8,8 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 ## 24.11.2026 – Version 0.24 (in Arbeit): Layout-Anpassungen und Qualitätsrunde
 
 - **Carsten** · Designanpassungen 24.11.2026 (Design-Datei Version 508): zwei Hinweistexte DE/EN.
+- **Carsten** · Entscheide zum Frontend-Review (ChatGPT): Spielseiten erst ab 6 von 8 bewerteten Kennzahlen indexierbar; Web-App-Manifest mit selbst abgeleiteten Icons; „Zahlen im Detail“ 44 px hoch; `SportsEvent` entfernen.
+- **Claude** · Frontend-Review geprüft und bewertet (Messung: Startseite 0,37 s je Aufruf, bei 10 gleichzeitigen 7,6 s; Touch-Ziele bis auf „Zahlen im Detail“ und ⓘ bereits ≥ 44 px). Umgesetzt: `index_min_kennzahlen = 6` (`website.toml`, `seo.py`), `SportsEvent` entfernt, `/manifest.webmanifest` mit Icons 192/512/maskable (`display: browser`), `theme-color`, Aufklapper 44 px. Tests W19 angepasst, W32 neu.
 - **Claude** · Startseite, „Wie lese ich das?“ – Signalqualität: „… in früheren Spielen als Prognose bestätigt haben. Die Einstufung erfolgt in drei Stufen: stark, mittel oder gering.“ (EN entsprechend). Spielseite, Erklärung zum Chip „Nicht eingestuft“: „Ein Blick auf vergangene Spiele zeigt: Solche Abweichungen haben wenig Aussagekraft für zukünftige Spielverläufe. Deshalb stufen wir sie nicht als relevantes Signal ein.“ (EN entsprechend). Die Legende der Spieltag-Seite und das Glossar bleiben vorerst unverändert (im Entwurf offen). Tests W31 und w15 ergänzt.
 
 ## 24.11.2026 – Version 0.23 eingespielt
