@@ -20,6 +20,10 @@ importer/laufplan.py) mit Wiederholung nach 1 Stunde (höchstens zwei); jede feh
 (automatisch_ab = Einspieldatum); Backups gestaffelt statt „die letzten 30“; jeder Lauf schreibt eine Zeile ins
 Ereignisprotokoll /import/ereignisse.jsonl (Grundlage für Alarme und Statusmail ab 0.23).
 
+Seit 0.23 (docs/09_Betrieb_EMail.md): jede Minute die Daten-Alarme (betrieb/pruefungen.py, Mails über alert@,
+höchstens 3 je Alarm), ein Lebenszeichen für das Prüfskript des Servers (/import/lebenszeichen) und montags um 06:00
+die Statusmail (betrieb/status.py).
+
 Aufruf: python -m importer.dienst            Dauerbetrieb im Container
         python -m importer.dienst --jetzt    sofort einen Lauf (z. B. nach dem Einspielen)
 """
@@ -347,8 +351,13 @@ def main(argv: list[str]) -> None:
         print("Lauf", rep["lauf"], "->", rep["status"], rep.get("meldung", ""), flush=True)
         return
     print("soccer-import gestartet", datetime.now(tz).isoformat(timespec="seconds"), flush=True)
+    letzte_pruefung = None
     while True:
         now = datetime.now(tz)
+        lebenszeichen(base, now)
+        if letzte_pruefung is None or (now - letzte_pruefung).total_seconds() >= 60:
+            letzte_pruefung = now
+            betrieb_pruefen(base, data_dir, now)
         process_requests(base, data_dir, E.BACKUP_DIR, now)
         anlass = naechster(base, data_dir, now)
         if anlass:
@@ -358,6 +367,69 @@ def main(argv: list[str]) -> None:
         if schnappschuss.due(load_state(base), now):
             snap_hour(base, data_dir, now)
         time.sleep(30)
+
+
+def lebenszeichen(base: Path, now: datetime) -> None:
+    """Für das Prüfskript des Servers: Der Dienst lebt (seit 0.23)."""
+    try:
+        (base / "lebenszeichen").write_text(now.isoformat(timespec="seconds"), encoding="utf-8")
+    except OSError:
+        pass
+
+
+def fehlende_namen(data_dir: Path) -> list[str]:
+    """Vereine der neuesten Saison im Spielplan ohne Anzeigenamen der Website (für die Statusmail)."""
+    import openpyxl
+    from website import namen
+    paare = set()
+    wb = openpyxl.load_workbook(data_dir / settings.FIXTURES_FILENAME, read_only=True)
+    try:
+        for ws in wb.worksheets:
+            rows = list(ws.iter_rows(values_only=True))
+            if not rows:
+                continue
+            col = {h: i for i, h in enumerate(rows[0])}
+            saisons = [r[col["Saison"]] for r in rows[1:] if r[col["Saison"]]]
+            if not saisons:
+                continue
+            neu = max(saisons)
+            for r in rows[1:]:
+                if r[col["Saison"]] == neu:
+                    paare |= {(ws.title, r[col["Heimmannschaft"]]), (ws.title, r[col["Gastmannschaft"]])}
+    finally:
+        wb.close()
+    return [f"{liga}: {name}" for liga, name in namen.fehlende(paare)]
+
+
+def betrieb_pruefen(base: Path, data_dir: Path, now: datetime, senden=None) -> None:
+    """Daten-Alarme prüfen und melden; montags 06:00 die Statusmail (seit 0.23). Fehler hier stoppen den Dienst nie."""
+    from betrieb import alarme, mail, pruefungen, status
+    senden = senden or (lambda betreff, text: mail.senden("alert", betreff, text))
+    local = now.replace(tzinfo=None, microsecond=0)
+    protokoll = lambda e: alarme.ereignis(base / EVENTS, e)      # noqa: E731
+    try:
+        alarme.verarbeiten(base / "alarme.json", pruefungen.befunde(base, data_dir, local), local, senden, protokoll)
+    except Exception:  # noqa: BLE001
+        traceback.print_exc()
+    try:
+        state = load_state(base)
+        versuch = state.get("statusmail_versuch")
+        if status.faellig(state, local) and (not versuch or (local - datetime.fromisoformat(versuch)).total_seconds() >= 1800):
+            state["statusmail_versuch"] = local.isoformat()          # bei gestörtem Versand höchstens alle 30 Minuten
+            save_state(base, state)
+            try:
+                namen_fehlen = fehlende_namen(data_dir)
+            except Exception:  # noqa: BLE001 - Spielplan nicht lesbar: Statusmail trotzdem
+                namen_fehlen = []
+            betreff, text = status.text(base, data_dir, E.BACKUP_DIR, local, namen_fehlen)
+            ok, meldung = senden(betreff, text)
+            protokoll({"zeit": local.isoformat(), "art": "statusmail", "ok": ok, "meldung": meldung})
+            if ok or meldung == mail.NICHT_EINGERICHTET:
+                state = load_state(base)
+                state["letzte_statusmail"] = "{}-{:02d}".format(*local.isocalendar()[:2])
+                save_state(base, state)
+    except Exception:  # noqa: BLE001
+        traceback.print_exc()
 
 
 def snap_hour(base: Path, data_dir: Path, now: datetime) -> dict:

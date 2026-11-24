@@ -1,6 +1,6 @@
 # Soccer Intelligence – Technisches Setup und Betrieb
 
-**Stand:** 20.11.2026 · **Verantwortlich:** Carsten Thiele · **Mitwirkende:** ChatGPT (Server-Setup, Review), Claude (Daten, Architektur, Code)
+**Stand:** 24.11.2026 · **Verantwortlich:** Carsten Thiele · **Mitwirkende:** ChatGPT (Server-Setup, Review), Claude (Daten, Architektur, Code)
 
 Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abläufe und Architektur. Fachliche Regeln stehen in `02`–`06`, Änderungen im `CHANGELOG.md`, das aktuelle Release in `RELEASE.md`.
 
@@ -8,9 +8,9 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 
 ## 0. Stand und Versionen
 
-**In Betrieb:** Version 0.21.2 (seit 20.11.2026) – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit Auffälligkeit und Signalqualität stark / mittel / gering (23 Schwellen), Top Anomalien, Datenqualität, Sensitivitätsanalyse, Datenimport über API-Football mit Schnappschuss je Spiel; Vorschau weiterer Spieltage ab heute + 5; Website-Vorschau unter `/vorschau` nach den Entwürfen vom 20.11. in Deutsch und Englisch (Archiv je Spieltag, Methodik mit Excel-Download, Glossar, Kontakt ohne Versand, Impressum, Datenschutz), vorbereitet für Suchmaschinen (noch nichts im Index, `index_ab` leer).
+**In Betrieb:** Version 0.22 (seit 20.11.2026) – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit Auffälligkeit und Signalqualität stark / mittel / gering (23 Schwellen), Top Anomalien, Datenqualität, Sensitivitätsanalyse, Datenimport über API-Football mit Schnappschuss je Spiel; Vorschau weiterer Spieltage ab heute + 5; Website-Vorschau unter `/vorschau` nach den Entwürfen vom 20.11. in Deutsch und Englisch (Archiv je Spieltag, Methodik mit Excel-Download, Glossar, Kontakt ohne Versand, Impressum, Datenschutz), vorbereitet für Suchmaschinen (noch nichts im Index, `index_ab` leer).
 
-**Als Nächstes:** Version 0.22 einspielen (Daten nach jedem Spiel, ohne Freigabe). Danach 0.23 E-Mail und Überwachung (Postfächer `info@` und `alert@` bei Hostinger, Carsten richtet sie während 0.22 ein; Alarme sofort, Server-Überwachung Festplatte/Arbeitsspeicher/CPU/Container, wöchentliche Statusmail, Kontaktformular-Versand), 0.24 Cookie-Hinweis und Google Analytics. Offen beim Design-Chat: Briefings nennen noch 7 statt 5 Tage Vorschau; „Athletic Bilbao“ im Glossar nachtragen.
+**Als Nächstes:** Version 0.23 einspielen (E-Mail, Alarme, Statusmail, Server-Überwachung, Kontaktformular, Datenqualität „Ergebnis fehlt“, Designrunde 24.11. mit Spielseite 2k final; danach einmalig `tools/mail_einrichten.sh`, Abschnitt 6.6). Danach 0.24 Cookie-Hinweis und Google Analytics. Design-Chat: Rückmeldungen 0.22 und zur Rechenlogik/Grenzwert übergeben (24.11.2026).
 
 **Als Nächstes – Releaseplan bis zum Livegang (Freigabe Carsten 19.11.2026):**
 
@@ -19,7 +19,7 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 | **0.20 Fundament** | Rechenlogik, Datenregeln, Dashboard | Umbenennung Signalqualität stark/mittel/gering; Schnappschuss je Spiel (stündlich, versioniert, nachträglich für laufende Saison und Vorsaison); Statusmodell (Zu wenig Daten, AWD-Absicherung, Gespielt nach Anpfiff + 2 h, kein Nachrücken in den Top Anomalien, „Werte ab …“ auf allen Seiten, Sonderspiel-Nummer und Zählform); 48-Stunden-Grenze; Dashboard angepasst | keine |
 | **0.21 Neue Website** | Templates, Sprachen, Adressen, SEO | Templates T1–T7, T9–T11 nach den Entwürfen; DE/EN mit Anzeigenamen je Sprache; Adressen `/de/`, `/en/`, 301, Canonical, hreflang, 404, 503; Indexierungsregeln, robots.txt, Sitemap; Titles/Descriptions/Social/JSON-LD; Tabs ohne JS, Fokus, Kontraste, axe-core; Caching; Excel-Download Methodik | Texte Archiv/Glossar, offene Glossar-Vorschläge |
 | **0.22 Daten nach jedem Spiel** | Import ohne Freigabe | Lauf nach jedem Spiel (Anpfiff + 2¼ h) mit Wiederholung, Kontrolllauf 04:00, Backups gestaffelt, Ereignisprotokoll (`06`, 10.2; Zuschnitt Carsten 20.11.2026) | – |
-| **0.23 E-Mail & Überwachung** | Alarme, Statusmail, Kontakt | Postfächer `info@`/`alert@` (Hostinger), Alarme sofort (Import, Kontingent, Schnappschuss, Datei-Prüfung), Server-Überwachung (Festplatte, Arbeitsspeicher, CPU, eigene Container; Warnung/Kritisch), wöchentliche Statusmail, Kontaktformular-Versand | Postfächer und Zugangsdaten in `.env` |
+| **0.23 E-Mail & Überwachung** | Alarme, Statusmail, Kontakt | Postfach `info@` mit Alias `alert@` (Hostinger), Alarme sofort (Import, Kontingent, Schnappschuss, Datei-Prüfung), Server-Überwachung (Festplatte, Arbeitsspeicher, CPU, eigene Container; Warnung/Kritisch), wöchentliche Statusmail, Kontaktformular-Versand | Postfächer und Zugangsdaten in `.env` |
 | **0.24 Einwilligung** | Cookies, Analytics | Cookie-Hinweis und Cookie-Einstellungen; Tag Manager und GA4 nach Zustimmung; Search Console | GA4-/GTM-IDs |
 | **1.0 Qualität & Livegang** | Prüfung, Korrekturen, Umschalten | Qualitätschecks (Compound Engineering, Web Quality Skills, Lighthouse, axe mit echten Daten); Befunde beheben; Domain umschalten, `/` → `/de/`, Vorschau-Passwort weg, `index_ab` setzen, Sitemap einreichen | Impressum mit Projektadresse, juristische Prüfung DE/EN, Nutzungsrechte API-Football, Hosting-Angabe |
 
@@ -27,7 +27,8 @@ Danach: **Prognose gegen Ergebnis** auf der Spielseite (je Kennzahl Wert vor dem
 
 | Version | Etappe | Inhalt | Eingespielt | Git | Tests |
 |---|---|---|---|---|---|
-| 0.22 | Daten nach jedem Spiel | Lauf nach jedem Spiel (Anpfiff + 2¼ h) mit Wiederholung, Übernahme ohne Freigabe (kritische Spiele einzeln zurückgehalten), Kontrolllauf 04:00, Backups gestaffelt, Ereignisprotokoll; Reiter Datenimport/API mit „Läufe heute“; Aufsteiger-Namen, Athletic Bilbao, Glossar freigegeben, Startseite ohne Datenstand-Zeile | – | – | – |
+| 0.23 | E-Mail und Überwachung | Mailversand über Hostinger (alert@, info@), Daten-Alarme (Import, Kontingent, Schnappschuss, Datei-Prüfung, Freigabe, Entscheid, Statistik, Laufzeiten), höchstens 3 Mails je Alarm, Statusmail Montag 06:00, Server-Prüfskript (cron, jede Minute), Laufzeiten VPS/Domain/Postfach, Kontaktformular aktiv, Testmails nach jedem Release, Läufe heute mit Partien | – | – | – |
+| 0.22 | Daten nach jedem Spiel | Lauf nach jedem Spiel (Anpfiff + 2¼ h) mit Wiederholung, Übernahme ohne Freigabe (kritische Spiele einzeln zurückgehalten), Kontrolllauf 04:00, Backups gestaffelt, Ereignisprotokoll; Reiter Datenimport/API mit „Läufe heute“; Aufsteiger-Namen, Athletic Bilbao, Glossar freigegeben, Startseite ohne Datenstand-Zeile | 20.11.2026 | `1701bc6` | 699 |
 | 0.21.2 | Entwürfe 20.11., zweite Lieferung | Spielseite: grüne Schaltfläche „Alle Spiele des Spieltags“, Textlink zur Methodik, ohne Zeitzonen-Hinweis; Spieltag-Kopf ohne „Aktueller Datenstand“ und niedriger; Startseite: SEO-Box eigener Block, Chip neben der Kennzahl; Methodik-Schaltfläche mit Umbruch nur mobil | 20.11.2026 | `9efe682` | 664 |
 | 0.21.1 | Entwürfe 20.11. | Kräftigere Grüntöne, Spielseite ohne „Weitere Spiele“, Methodik-Einstieg als Karten, mobil einzeilige Navigation und Tabellen ohne Scrollbalken; Vorschau weiterer Spieltage heute + 5 statt + 6; Entwurf Abfrageplan (`06`, 10.2) | 20.11.2026 | `273b969` | 697 |
 | 0.21 | Neue Website | Website-Vorschau nach den Entwürfen P1, Deutsch/Englisch, Adressen `/de/` `/en/` mit 301/302/404, Archiv je Spieltag, Methodik mit Excel-Download, Glossar, Kontakt, Impressum, Datenschutz, 404; Index-Regeln, Sitemap, robots.txt, JSON-LD; Caching, 503; axe-core ohne Befund; Anzeigenamen je Sprache | 20.11.2026 | `006a150` | 696 |
@@ -232,7 +233,7 @@ Erwartet: genau die drei Versionen oben. Weicht etwas ab → Ursache klären, be
 
 ## 5. Schutzregeln (verbindlich)
 
-1. Nur im Ordner `/docker/football-dashboard/` arbeiten.
+1. Nur im Ordner `/docker/football-dashboard/` arbeiten. Einzige Ausnahme (seit 0.23, Entscheid Carsten 20.11.2026, F1): eine Zeile im Zeitplan (`crontab`) von root für das Prüfskript `tools/ueberwachen.py` (Abschnitt 6.6).
 2. `article-generator`, Chatbot, n8n und Traefik nicht verändern oder neu starten.
 3. Kein `docker compose down`, keine globalen Docker-Befehle, keine Änderungen an gemeinsamen Netzwerken.
 4. Traefik-Labels und Ports nicht ändern (nur mit eigener Freigabe). Letzte Freigabe: Etappe E, 31.10.2026.
@@ -438,6 +439,42 @@ Lädt alle Datenbank-Backups des laufenden Monats in den aktuellen Ordner; die n
 
 **Rückweg nach einer übernommenen Fassung:** wie Abschnitt 6.2, Schritt 5, mit den Dateien `backup/*_vor_import.xlsx`
 (Datenbank und Spielplan gemeinsam zurückkopieren).
+
+---
+
+### 6.6 Mailversand und Server-Überwachung (seit Version 0.23)
+
+Regeln und Inhalte: `09_Betrieb_EMail.md`. Bei Hostinger: ein Postfach `info@soccer-intelligence.com` (Kontaktformular,
+Impressum, Versand aller Mails) und `alert@soccer-intelligence.com` als Alias darauf (Empfänger der Alarme); das
+Postfach leitet an die private Adresse weiter, die nur bei Hostinger steht.
+
+**Einrichten** (einmalig nach dem Einspielen von 0.23; ebenso zum Ändern eines Passworts):
+```bash
+bash /docker/football-dashboard/tools/mail_einrichten.sh
+```
+Fragt das Passwort des Postfachs `info@` verdeckt ab (leer = bisheriges behalten; `alert@` ist ein Alias und braucht
+keins), schreibt es mit Server, Port, den Adressen und `SI_KONTAKT_EMAIL=info@…` (Impressum) nach `.env` (vorher Kopie nach `backup/`), startet
+`soccer-import` und `soccer-vorschau` neu, fragt nach dem Eintrag des Prüfskripts in den Zeitplan (`j`) und schickt drei
+Testmails.
+
+**Ab dann automatisch:** Alarme sofort (höchstens 3 Mails je Alarm), Statusmail jeden Montag um 06:00, nach jedem
+Release drei Testmails (Einspiel-Skript, Schritt 5). Der Reiter Datenimport/API zeigt Alarme, Server und Laufzeiten.
+
+**Testmail von Hand:**
+```bash
+docker exec soccer-import python -m betrieb.mail --test alert
+```
+```bash
+python3 /docker/football-dashboard/tools/ueberwachen.py --test
+```
+
+**Prüfskript aus dem Zeitplan nehmen** (nur diese eine Zeile):
+```bash
+crontab -l | grep -v "tools/ueberwachen.py" | crontab -
+```
+
+**Laufzeiten nachtragen** (nach einer Verlängerung bei Hostinger): Datum in `app/config/laufzeiten.toml` ändern
+(über GitHub wie Code).
 
 ---
 

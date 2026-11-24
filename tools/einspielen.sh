@@ -196,9 +196,29 @@ else
 fi
 rm -f "$OFFEN"
 
+# Testmails über alle drei Versandwege (seit 0.23, Wunsch Carsten 20.11.2026, docs/09, Abschnitt 2.1).
+# Eine gescheiterte Testmail stoppt das Einspielen nicht, wird aber gemeldet.
+RELEASE_TEXT="$(sed -n 's/^APP_VERSION = "\(.*\)"/\1/p' app/core/settings.py | head -1) ($(git rev-parse --short HEAD))"
+MAILS=0
+info "Testmails über alle drei Versandwege:"
+set +e
+docker exec soccer-import python -m betrieb.mail --test alert --release "$RELEASE_TEXT" --weg "Container soccer-import (an alert@)" 2>&1 | sed 's/^/   /'
+[ "${PIPESTATUS[0]}" -eq 0 ] && MAILS=$((MAILS + 1))
+docker exec soccer-vorschau python -m betrieb.mail --test info --release "$RELEASE_TEXT" --weg "Container soccer-vorschau (an info@)" 2>&1 | sed 's/^/   /'
+[ "${PIPESTATUS[0]}" -eq 0 ] && MAILS=$((MAILS + 1))
+python3 tools/ueberwachen.py --test --release "$RELEASE_TEXT" 2>&1 | sed 's/^/   /'
+[ "${PIPESTATUS[0]}" -eq 0 ] && MAILS=$((MAILS + 1))
+set -e
+if [ "$MAILS" -eq 3 ]; then
+  ok "3 Testmails gesendet – bitte gleich im Posteingang prüfen."
+else
+  info "Hinweis: nur $MAILS von 3 Testmails gesendet (Mailversand eingerichtet? 01, Abschnitt 6.6). Der neue Stand läuft trotzdem."
+fi
+
 # ── 6 Abschluss ───────────────────────────────────────────────────────────────────────────────
 schritt "6/6: Prüfung im Browser und Abschluss"
 info "Bitte jetzt im Browser prüfen, was in RELEASE.md unter „Im Browser prüfen“ steht."
+[ "$MAILS" -gt 0 ] && info "Und: Sind die $MAILS Testmails angekommen (Betreff „Test nach Release …“)?"
 if [ "$WEG" = github ]; then
   read -rp "   Alles in Ordnung? (j/n): " ANTWORT
   case "$ANTWORT" in

@@ -11,6 +11,13 @@ Festlegungen Carsten 17.11.2026:
       „zu wenig Daten“ (bis 0.19.1 „nicht gewertet“), wenn alle Kennzahlen vorläufig sind (F2).
 - Q5  Gespieltes Spiel: Endstand bzw. „Gespielt“ statt Anstoss, Werte wie vor dem Spiel.
 
+Seit 0.23 (Entwurf „2k final“, Beschlüsse 25–32 vom 24.11.2026): jede Kennzahl hat einen Fall A–D
+- A Schwelle überschritten (Signalqualität), B Schwelle in dieser Richtung vorhanden, nicht erreicht, C für diese
+  Richtung keine Schwelle in der Liga, D zu wenig Daten. Der Fall kommt aus der Schwellendatei je Kennzahl und Richtung
+  (Punkt für die Entwicklung 9), nicht aus der Abweichung allein.
+- Grenzwert = Ligadurchschnitt (bei „Über 2,5 Tore“ die Marke 2,5) × (1 ± Schwelle), exakt gerechnet, kaufmännisch
+  auf zwei Stellen; gezeigt in Richtung der Abweichung (Entscheid Carsten 24.11.2026).
+
 Seit 0.20 (Entscheidungsprotokoll 19.11.2026, Nr. 2, 2a, 4a): gespielt ab Anpfiff + 2 Stunden; ab dem Anstoss die
 Werte des Schnappschusses (Hinweis, wenn sie nachträglich berechnet wurden oder das Ergebnis korrigiert wurde); vor
 dem Anstoss statt der Kennzahlen „Werte ab …“, solange ein Vorspiel aussteht.
@@ -18,10 +25,12 @@ dem Anstoss statt der Kennzahlen „Werte ab …“, solange ein Vorspiel ausste
 
 from __future__ import annotations
 
+from fractions import Fraction
+
 from core import anzeige as A
 from core import schnappschuss as S
 from core.fixtures import INACTIVE_STATUS
-from core.kpis import LEVELS, RANK, MatchKpis
+from core.kpis import LEVELS, RANK, SAMPLE, MatchKpis, round_display
 from core.top import TOP_KPIS
 
 from . import adressen as AD
@@ -49,8 +58,13 @@ def kennzahl(key: str, r) -> dict:
         stufe = r.anomalie                     # Signalqualität stark / mittel / gering (seit 0.20)
     else:
         stufe = "normal"
+    signal = _signal(r, abw)
+    fall = "D" if vorl else "A" if stufe in LEVELS else "B" if signal is not None else "C"
     return {
         "kpi": key, "icon": ICONS[key],
+        "fall": fall,
+        "grenzwert": _grenzwert(key, r, abw, signal),
+        "schwelle_ganz": None if signal is None else _ganz(signal.schwelle),
         "abweichung": abw,
         "betrag": abs(abw) if abw is not None else 0.0,
         "richtung": None if abw is None else ("hoch" if abw >= 0 else "tief"),
@@ -66,13 +80,43 @@ def kennzahl(key: str, r) -> dict:
     }
 
 
-def _schwelle(r, abw) -> float | None:
-    """Schwelle der Liga in Richtung der Abweichung (positiv: über +x %, negativ: unter −x %); None ohne Schwelle."""
+def _signal(r, abw):
+    """Schwelle (Signal) der Liga in Richtung der Abweichung; None, wenn es in dieser Richtung keine gibt."""
     schwellen = getattr(r, "schwellen", None)
     if schwellen is None or abw is None:
         return None
-    signal = schwellen.positiv if abw >= 0 else schwellen.negativ
+    return schwellen.positiv if abw >= 0 else schwellen.negativ
+
+
+def _schwelle(r, abw) -> float | None:
+    """Schwelle der Liga in Richtung der Abweichung (positiv: über +x %, negativ: unter −x %); None ohne Schwelle."""
+    signal = _signal(r, abw)
     return float(signal.schwelle) if signal is not None else None
+
+
+def _ganz(wert) -> int | float:
+    """Schwelle für den Satz: ganze Zahl wie in der Schwellendatei (35, nicht 35,00)."""
+    f = float(wert)
+    return int(f) if f == int(f) else f
+
+
+def _grenzwert(key: str, r, abw, signal) -> float | None:
+    """Grenzwert in Richtung der Abweichung: Vergleichswert × (1 ± Schwelle / 100), exakt, auf zwei Stellen."""
+    if signal is None or r is None:
+        return None
+    ref = getattr(r, "referenz", None)
+    if key == "kpi03":
+        basis = Fraction(MARKE_UEBER25)
+    elif ref is not None and getattr(ref, "wert", None) is not None:
+        basis = Fraction(ref.wert)                                  # exakt aus dem Rechenkern
+    elif ref is not None and getattr(ref, "wert_rund", None) is not None:
+        basis = Fraction(str(ref.wert_rund))                        # Rückfall: gerundeter Wert
+    else:
+        basis = None
+    if basis is None:
+        return None
+    faktor = 1 + Fraction(str(signal.schwelle)) / 100 * (1 if abw >= 0 else -1)
+    return float(round_display(basis * faktor))
 
 
 def form(ft) -> list[str]:
@@ -116,6 +160,14 @@ def spiel_daten(daten: Daten, spiel_id: int, zp: Zeitpunkt) -> dict | None:
     gewertet = [k for k in kennzahlen if k["stufe"] != "zu_wenig_daten"]
     groesste = max(gewertet, key=lambda k: k["betrag"]) if gewertet else None
 
+    # „Zu wenig Daten“ nennt das Team bzw. die Teams mit weniger als 10 Spielen (Beschluss 24, Glossar 20a/20b)
+    neu = []
+    if kpis is not None:
+        r0 = next((getattr(kpis, k, None) for k in TOP_KPIS if getattr(kpis, k, None) is not None), None)
+        if r0 is not None:
+            neu = [t.team for t in (r0.heim, r0.auswaerts)
+                   if getattr(t, "spiele", None) is not None and t.spiele < SAMPLE and getattr(t, "team", None)]
+
     sicht = A.upcoming(b.fx.leagues[liga], zp.jetzt, zp.stand)
     im_fenster = any(int(row.reihenfolge) in set(sec.games["reihenfolge"].astype(int)) for sec in sicht.sections)
     return {
@@ -142,6 +194,7 @@ def spiel_daten(daten: Daten, spiel_id: int, zp: Zeitpunkt) -> dict | None:
         "nachtraeglich": zustand == "gespielt" and werte.quelle in (S.LATE, S.WAITING),
         "korrigiert": zustand == "gespielt" and werte.korrigiert,
         "ohne_werte": ohne_werte,
+        "neu_in_liga": neu,
         "auffaellig": auffaellig,
         "uebrige": uebrige,
         "anzahl_gewertet": len(gewertet),

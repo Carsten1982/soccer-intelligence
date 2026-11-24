@@ -57,9 +57,12 @@ def db_frame(teams=("A", "B", "C", "D"), season="2025/2026"):
     return pd.DataFrame(rows)
 
 
-def load(path, db=None, teams=None, leagues=LEAGUES):
+JETZT = datetime(2026, 8, 20, 12, 0)      # vor den Terminen der Beispiel-Spielpläne (Prüfung „Ergebnis fehlt“, 0.23)
+
+
+def load(path, db=None, teams=None, leagues=LEAGUES, jetzt=JETZT):
     db = db if db is not None else {"Bundesliga": db_frame(), "Premier League": db_frame()}
-    return load_fixtures(path, leagues, db, teams or [])
+    return load_fixtures(path, leagues, db, teams or [], jetzt=jetzt)
 
 
 def checks(fx, level):
@@ -380,3 +383,40 @@ def test_selection_across_seasons(tmp_path):
     assert params_for(prev, sel.current) == {"spieltag": "34", "saison": "2025-26"}
     again = select_matchday(ov, {"spieltag": "34", "saison": "2025-26"})
     assert again.selected == prev
+
+
+# --- Ergebnis fehlt erst nach dem Spieltag (seit 0.23, Entscheid Carsten 24.11.2026) ----------------------------------
+
+def _plan_mit_status(tmp_path):
+    kopf = HEADER + ["Status", "Hinweis"]
+    rows = [["2026/2027", 1, D(2026, 8, 28), D(2026, 8, 28), "A", "B", None, None],
+            ["2026/2027", 1, D(2026, 8, 30), D(2026, 8, 30), "C", "D", None, None],
+            ["2026/2027", 2, D(2026, 9, 4), D(2026, 9, 4), "B", "C", "verschoben", None],
+            ["2026/2027", 2, D(2026, 9, 20), D(2026, 9, 20), "D", "A", None, "Nachholspiel"]]
+    path = write_plan(tmp_path / "s.xlsx", {"Bundesliga": rows, "Premier League": plan_rows()}, header=kopf)
+    gespielt = pd.concat([db_frame(), pd.DataFrame([{"Season": "2026/2027", "homeTeam": "A", "awayTeam": "B"}])])
+    return path, {"Bundesliga": gespielt, "Premier League": db_frame()}
+
+
+def _fehlt(fx):
+    return sorted((i.level, i.check, i.match) for i in fx.issues
+                  if i.sheet == "Bundesliga" and i.check in ("Ergebnis fehlt", "Spiel ausstehend"))
+
+
+def test_missing_result_only_after_matchday_and_next_import(tmp_path):
+    path, db = _plan_mit_status(tmp_path)
+    assert _fehlt(load(path, db, jetzt=datetime(2026, 8, 30, 22, 0))) == []            # Spieltag läuft noch
+    assert _fehlt(load(path, db, jetzt=datetime(2026, 8, 31, 4, 15))) == []            # Import am Folgetag läuft
+    fx = load(path, db, jetzt=datetime(2026, 8, 31, 5, 0))
+    assert [(lv, c) for lv, c, _ in _fehlt(fx)] == [(WARNUNG, "Ergebnis fehlt")]       # nur C – D, A – B ist da
+    assert "C" in _fehlt(fx)[0][2] and "D" in _fehlt(fx)[0][2]
+
+
+def test_postponed_is_hint_and_catchup_waits_for_its_own_date(tmp_path):
+    path, db = _plan_mit_status(tmp_path)
+    fx = load(path, db, jetzt=datetime(2026, 9, 10, 12, 0))
+    stufen = {(lv, c) for lv, c, _ in _fehlt(fx)}
+    assert (HINWEIS, "Spiel ausstehend") in stufen                                     # verschoben: nur Hinweis
+    assert sum(1 for lv, c, m in _fehlt(fx) if c == "Ergebnis fehlt") == 1             # Nachholspiel noch nicht fällig
+    fx = load(path, db, jetzt=datetime(2026, 9, 21, 5, 0))
+    assert sum(1 for lv, c, m in _fehlt(fx) if c == "Ergebnis fehlt") == 2             # jetzt auch das Nachholspiel

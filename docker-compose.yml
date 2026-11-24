@@ -56,10 +56,16 @@ services:
     volumes:
       - ./data:/data                              # schreibt neue Fassungen erst nach Freigabe (Tausch in einem Schritt)
       - ./import:/import                          # Rohdaten, Läufe, Berichte, Anfragen
-      - ./backup:/backup                          # ersetzte Fassungen mit Datum (die letzten 30)
+      - ./backup:/backup                          # ersetzte Fassungen mit Datum (seit 0.22 gestaffelt aufbewahrt)
     environment:
       - API_FOOTBALL_KEY=${API_FOOTBALL_KEY:-}
       - TZ=Europe/Zurich
+      # Mailversand für Alarme und Statusmail (seit 0.23, docs/09): Zugangsdaten des Postfachs NUR in .env, nie in Git
+      - SI_SMTP_HOST=${SI_SMTP_HOST:-}
+      - SI_SMTP_PORT=${SI_SMTP_PORT:-}
+      - SI_SMTP_USER=${SI_SMTP_USER:-}
+      - SI_SMTP_PASSWORT=${SI_SMTP_PASSWORT:-}
+      - SI_ALARM_AN=${SI_ALARM_AN:-}
 
   soccer-vorschau:
     # Vorschau der öffentlichen Website (seit 0.17, docs/08_Website.md): erzeugt die Seiten bei jedem Aufruf neu,
@@ -72,10 +78,17 @@ services:
     volumes:
       - ./data:/data:ro
       - ./import:/import:ro
+      - ./import/meldungen:/meldungen               # seit 0.23: nur hier schreibt die Website (Versand gescheitert)
       - ./website-bilder:/bilder:ro                 # Foto der Startseite (seit 0.18), nur auf dem Server, nicht in Git
     environment:
       - TZ=Europe/Zurich
       - SI_VORSCHAU_PORT=8080
+      # Kontaktformular (seit 0.23, docs/09, Abschnitt 6): Zugangsdaten des Postfachs NUR in .env, nie in Git
+      - SI_SMTP_HOST=${SI_SMTP_HOST:-}
+      - SI_SMTP_PORT=${SI_SMTP_PORT:-}
+      - SI_SMTP_USER=${SI_SMTP_USER:-}
+      - SI_SMTP_PASSWORT=${SI_SMTP_PASSWORT:-}
+      - SI_KONTAKT_AN=${SI_KONTAKT_AN:-}
       # Betreiberangaben für Impressum und Kontakt (seit 0.21): NUR in .env auf dem Server, nie in Git.
       # Adresse mit „|“ getrennt (Strasse|PLZ Ort|Land). Fehlen sie, zeigt die Seite einen Platzhalter.
       - SI_IMPRESSUM_NAME=${SI_IMPRESSUM_NAME:-}

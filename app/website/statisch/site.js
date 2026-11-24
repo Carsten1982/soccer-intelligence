@@ -65,3 +65,26 @@ document.querySelectorAll('[data-tiefe]').forEach(function (nav) {
     });
   });
 });
+
+// Seit 0.23 (Entwurf 2k final, Beschluss 29): „Nicht eingestuft ⓘ“ und „keine ⓘ“ klappen den Erklärsatz auf. Ohne
+// Skript steht der Satz offen da; mit Skript ist er zu, bis man den Knopf antippt (aria-expanded).
+document.querySelectorAll('[data-aufklapp]').forEach(function (knopf) {
+  var ziel = document.getElementById(knopf.getAttribute('data-aufklapp'));
+  if (!ziel) { return; }
+  ziel.hidden = true;
+  knopf.setAttribute('aria-expanded', 'false');
+  knopf.addEventListener('click', function () {
+    var offen = knopf.getAttribute('aria-expanded') === 'true';
+    knopf.setAttribute('aria-expanded', offen ? 'false' : 'true');
+    ziel.hidden = offen;
+  });
+});
+
+// Seit 0.23 (Template-Briefing T5): Das Kontaktformular funktioniert ohne Skript; mit Skript wird der Knopf nach dem
+// Absenden gesperrt, damit eine Nachricht nicht doppelt geht.
+document.querySelectorAll('form[data-ein-klick]').forEach(function (form) {
+  form.addEventListener('submit', function () {
+    var knopf = form.querySelector('button[type="submit"]');
+    if (knopf) { window.setTimeout(function () { knopf.disabled = true; }, 0); }
+  });
+});

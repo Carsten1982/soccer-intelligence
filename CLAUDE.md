@@ -33,6 +33,7 @@ Schritt kurz erklären, was gemacht wurde.
 | docs/06_Datenlieferung.md | Datenlieferung über API-Football: Feldzuordnung, Tagesbetrieb, Regeln des Ergebnis-Imports (10.1), Entscheidungen |
 | docs/07_Spielplan_Anzeige.md | Spielplan aus der API (Status, Termin, Nachholspiele, Zuordnung) und Anzeige kommender Spieltage (Spezifikation v2.1) |
 | docs/08_Website.md | Öffentliche Website: Entscheidungen, Technik, Seiten, Zeitreise, Annahmen, Testfälle |
+| docs/09_Betrieb_EMail.md | E-Mail, Alarme, Statusmail, Server-Überwachung, Laufzeiten, Versand des Kontaktformulars (ab 0.23) |
 | docs/tests/test_kpi*.md | Bestätigte Testfälle mit erwarteten Ergebnissen (JSON) – Referenz für die Korrektheit |
 | docs/tests/pruefprotokoll_*.md | Prüfprotokolle grösserer Etappen (Gegenrechnung, Vollvergleich) |
 | CHANGELOG.md | Änderungsprotokoll: jede Änderung mit Datum und wer |

@@ -189,8 +189,8 @@
   "kennzahl": {
     "kpi02": {
       "name": "Erwartete Tore",
-      "hoch": "Überdurchschnittlich viele Tore erwartet",
-      "tief": "Unterdurchschnittlich wenige Tore erwartet"
+      "hoch": "Mehr Tore erwartet",
+      "tief": "Weniger Tore erwartet"
     },
     "kpi03": {
       "name": "Über 2,5 Tore",
@@ -199,33 +199,33 @@
     },
     "kpi04": {
       "name": "Gelbe Karten",
-      "hoch": "Überdurchschnittlich viele gelbe Karten",
-      "tief": "Unterdurchschnittlich wenige gelbe Karten"
+      "hoch": "Mehr gelbe Karten erwartet",
+      "tief": "Weniger gelbe Karten erwartet"
     },
     "kpi05": {
       "name": "Ecken",
-      "hoch": "Erhöhtes Eckballaufkommen",
-      "tief": "Wenige Ecken erwartet"
+      "hoch": "Mehr Ecken erwartet",
+      "tief": "Weniger Ecken erwartet"
     },
     "kpi06": {
       "name": "Erwartete Tore 1. Halbzeit",
-      "hoch": "Viele Tore in der 1. Halbzeit",
-      "tief": "Wenige Tore in der 1. Halbzeit"
+      "hoch": "Mehr Tore in der 1. Halbzeit erwartet",
+      "tief": "Weniger Tore in der 1. Halbzeit erwartet"
     },
     "kpi07": {
       "name": "Erwartete Tore 2. Halbzeit",
-      "hoch": "Viele Tore in der 2. Halbzeit",
-      "tief": "Wenige Tore in der 2. Halbzeit"
+      "hoch": "Mehr Tore in der 2. Halbzeit erwartet",
+      "tief": "Weniger Tore in der 2. Halbzeit erwartet"
     },
     "kpi08": {
       "name": "Beide Teams treffen",
-      "hoch": "Beide Teams treffen wahrscheinlich",
-      "tief": "Beide Teams treffen eher nicht"
+      "hoch": "Tore beider Teams häufiger erwartet",
+      "tief": "Tore beider Teams seltener erwartet"
     },
     "kpi09": {
       "name": "Erwartete Schüsse aufs Tor",
-      "hoch": "Viele Schüsse aufs Tor",
-      "tief": "Wenige Schüsse aufs Tor"
+      "hoch": "Mehr Schüsse aufs Tor erwartet",
+      "tief": "Weniger Schüsse aufs Tor erwartet"
     }
   },
   "lesen": {
@@ -262,7 +262,7 @@
     "zu_wenig_daten_text": "Für dieses Spiel liegen nicht genug Daten für eine Bewertung vor.",
     "zu_wenig_daten_leer_text": "Für dieses Spiel liegen nicht genug Daten für eine Bewertung vor.",
     "hinweis_zu_wenig_daten_titel": "Zu wenig Daten:",
-    "hinweis_zu_wenig_daten": "Für dieses Spiel liegen nicht genug Daten für eine Bewertung vor.",
+    "hinweis_zu_wenig_daten": "Die statistische Datengrundlage für dieses Spiel ist zu schwach. Die Werte siehst du trotzdem, wir stufen sie aber nicht als Abweichung ein.",
     "hinweis_zu_wenig_daten_leer": "Für dieses Spiel liegen nicht genug Daten für eine Bewertung vor.",
     "hinweis_nachholspiel_titel": "Nachholspiel:",
     "hinweis_nachholspiel": "Dieses Spiel gehört zu einem früheren Spieltag und wird am {datum} nachgeholt.",
@@ -274,18 +274,14 @@
     "status_titel": "Status",
     "status_text": "Für dieses Spiel gibt es keine Werte.",
     "auffaelligkeiten": "Auffälligkeiten",
-    "normalbereich": "Nicht auffällig",
+    "normalbereich": "Ohne Auffälligkeit",
     "kennzahlen": "Kennzahlen",
     "zahlen_detail": "Zahlen im Detail",
     "zahlen_detail_zu": "Zahlen im Detail zuklappen: {name}",
     "zuklappen": "Zuklappen",
     "erwartungswert": "Erwartungswert",
-    "je_mannschaft": "Je Mannschaft",
     "mittelwert": "Mittelwert beider Teams",
-    "ligaschnitt": "Ligaschnitt",
-    "vergleichswert_marke": "Vergleichswert (Marke)",
     "abweichung": "Abweichung",
-    "aufteilung": "{name}: {heim} {wert_heim}, {gast} {wert_gast}",
     "methodik": "Wie entstehen diese Werte?",
     "alle_spiele": "Alle Spiele des Spieltags",
     "nicht_gefunden": "Dieses Spiel gibt es nicht.",
@@ -298,7 +294,6 @@
     "werte_folgen": "Werte folgen, sobald das Ergebnis vom {datum} übernommen ist.",
     "werte_wartet": "Die Werte werden nachträglich mit den Daten vor dem Spiel berechnet, sobald das Ergebnis des vorherigen Ligaspiels übernommen ist.",
     "h1": "{heim} – {gast}: Statistiken und Analyse",
-    "schwelle": "Schwelle",
     "schwelle_keine": "keine",
     "schwelle_ueber": "über {wert}",
     "schwelle_unter": "unter {wert}",
@@ -310,7 +305,35 @@
       "U": "U",
       "N": "N"
     },
-    "keine_text_gewertet": "Keine der {n} gewerteten Kennzahlen überschreitet ihre Schwelle. Die größte Abweichung: {name} {wert}."
+    "keine_text_gewertet": "Keine der {n} gewerteten Kennzahlen überschreitet ihre Schwelle. Die größte Abweichung: {name} {wert}.",
+    "chip_keine": "Keine Auffälligkeit",
+    "chip_nicht_eingestuft": "Nicht eingestuft",
+    "chip_zu_wenig_daten": "Zu wenig Daten",
+    "chip_info": "Erklärung anzeigen",
+    "c_notiz": "Vergangene Spiele zeigen: Solche Abweichungen haben sich in dieser Liga nicht zuverlässig bestätigt. Darum markieren wir sie nicht als auffällig.",
+    "keine_bewertung": "Keine Bewertung möglich.",
+    "d_letzte10": "Durchschnitt der letzten 10 Spiele",
+    "d_letzte10_gelb": "Gelbe Karten der Mannschaft pro Spiel · Durchschnitt der letzten 10 Spiele",
+    "d_summe": "Summe beider Teams",
+    "d_erwartung_tore": "Erwartete Tore pro Spiel",
+    "d_erwartung_gelb": "Erwartete gelbe Karten im Spiel",
+    "d_erwartung_quote": "Erwartete Quote",
+    "d_liga_spiel": "Ligadurchschnitt pro Spiel",
+    "d_liga": "Ligadurchschnitt",
+    "d_vergleich": "Vergleichswert",
+    "d_schwelle": "Auffälligkeitsschwelle",
+    "balken_vergleich": "Vergleichswert",
+    "satz_a_hoch": "Statistisch auffällig. Schwelle: mehr als {schwelle} % über {bezug}.",
+    "satz_a_tief": "Statistisch auffällig. Schwelle: mehr als {schwelle} % unter {bezug}.",
+    "satz_b_hoch": "Nicht erreicht. Schwelle: mehr als {schwelle} % über {bezug}.",
+    "satz_b_tief": "Nicht erreicht. Schwelle: mehr als {schwelle} % unter {bezug}.",
+    "bezug_liga": "dem Ligadurchschnitt",
+    "bezug_marke": "dem Vergleichswert",
+    "zu_wenig_daten_neu": "Da {team} neu in der Liga ist, reicht die Datenbasis für eine Bewertung noch nicht aus.",
+    "zu_wenig_daten_neu_zwei": "Da {team1} und {team2} neu in der Liga sind, reicht die Datenbasis für eine Bewertung noch nicht aus.",
+    "hinweis_zu_wenig_daten_neu": "Für dieses Spiel liegen noch keine Werte vor, weil {team} neu in der Liga ist.",
+    "hinweis_zu_wenig_daten_neu_zwei": "Für dieses Spiel liegen noch keine Werte vor, weil {team1} und {team2} neu in der Liga sind.",
+    "prozent_zusatz": " (in %)"
   },
   "start": {
     "h1_vorne": "Fußballspiele",
@@ -398,7 +421,8 @@
     "seo_3": "So erhalten Fußballfans und Tipper bereits vor dem Anpfiff einen datenbasierten Überblick über interessante Spiele.",
     "seo_3_fett": "Wir bieten transparente Statistiken, jedoch keine Wettberatung oder Gewinnprognosen.",
     "seo_4": "Mehr zu Berechnung und Bewertung findest du auf der",
-    "seo_4_link": "Methodik-Seite"
+    "seo_4_link": "Methodik-Seite",
+    "endstand": "Endstand"
   },
   "liga_im": {
     "bundesliga": "Bundesliga",
@@ -475,8 +499,7 @@
   "inhalt": {
     "email": "E-Mail",
     "adresse_folgt": "[Adresse wird auf dem Server eingetragen]",
-    "email_folgt": "[Projektadresse wird auf dem Server eingetragen]",
-    "kontakt_folgt": "Der Versand wird mit dem nächsten Release eingerichtet. Bis dahin ist das Formular noch nicht aktiv."
+    "email_folgt": "[Projektadresse wird auf dem Server eingetragen]"
   },
   "methodik": {
     "tiefe_titel": "Wie tief möchtest du einsteigen?",
@@ -501,7 +524,7 @@
     "spalte": {
       "kennzahl": "Kennzahl",
       "richtung": "Richtung",
-      "schwelle": "Schwelle",
+      "schwelle": "Schwelle (vom Ligadurchschnitt)",
       "signal": "Signalqualität",
       "liga": "Liga",
       "schwellen": "Schwellen"
@@ -563,6 +586,24 @@
       "mehrwert": "Trefferquote minus Vergleichswert.",
       "spanne_links": "Spanne des Mehrwerts (95-%-Intervall nach Wilson), linker und rechter Rand. Je weniger Spiele, desto breiter die Spanne.",
       "saisons_positiv": "In wie vielen der ausgewerteten Saisons der Mehrwert positiv war."
+    }
+  },
+  "formular": {
+    "frage": "Sicherheitsfrage: Was ergibt {aufgabe}?",
+    "gesperrt": "Der Versand ist gerade nicht eingerichtet. Bis dahin ist das Formular noch nicht aktiv.",
+    "gesendet": "Danke, deine Nachricht ist angekommen.",
+    "versand_fehler": "Die Nachricht konnte gerade nicht gesendet werden. Bitte versuch es später noch einmal oder schreib an info@soccer-intelligence.com.",
+    "zu_viele": "Du hast gerade mehrere Nachrichten gesendet. Bitte versuch es in einer Stunde noch einmal.",
+    "fehler_hinweis": "Bitte prüfe die markierten Felder.",
+    "fehler": {
+      "email_fehlt": "Bitte gib deine E-Mail-Adresse ein.",
+      "email_ungueltig": "Diese E-Mail-Adresse sieht nicht vollständig aus.",
+      "nachricht_fehlt": "Bitte schreib eine Nachricht.",
+      "nachricht_kurz": "Deine Nachricht ist etwas kurz – bitte mindestens 10 Zeichen.",
+      "nachricht_lang": "Deine Nachricht ist zu lang – bitte höchstens 5.000 Zeichen.",
+      "name_lang": "Bitte höchstens 100 Zeichen.",
+      "einwilligung": "Bitte bestätige, dass du die Datenschutzerklärung gelesen hast.",
+      "antwort": "Das Ergebnis stimmt leider nicht. Bitte versuch es noch einmal."
     }
   }
 }

@@ -272,8 +272,25 @@ def _zeitpunkt(seite: dict, lang: str) -> str:
     return T.t("spiel.zeitpunkt_uhr", lang, tag=d, uhr=seite["anstoss"]) if seite.get("anstoss") else d
 
 
-def spiel_kern(seite: dict, lang: str = W.SPRACHE) -> dict:
-    """Kernaussage im Scoreboard (Entwurf Spiel_P1, Übergabe 7.3)."""
+def _neu_text(schluessel: str, namen: list[str], lang: str) -> str | None:
+    """„… weil X neu in der Liga ist“ bzw. mit zwei Teams (seit 0.23, Glossar 20a/20b)."""
+    if len(namen) == 1:
+        return T.t(schluessel, lang, team=namen[0])
+    if len(namen) == 2:
+        return T.t(schluessel + "_zwei", lang, team1=namen[0], team2=namen[1])
+    return None
+
+
+def zu_wenig_hinweis(seite: dict, lang: str, namen: list[str]) -> str:
+    """Hinweisbox „Zu wenig Daten:“ (Entwurf 2k): ohne Werte mit dem neuen Team, sonst der allgemeine Satz."""
+    if seite["ohne_werte"]:
+        return _neu_text("spiel.hinweis_zu_wenig_daten_neu", namen, lang) or T.t("spiel.hinweis_zu_wenig_daten_leer", lang)
+    return T.t("spiel.hinweis_zu_wenig_daten", lang)
+
+
+def spiel_kern(seite: dict, lang: str = W.SPRACHE, neu: list[str] | None = None) -> dict:
+    """Kernaussage im Scoreboard (Entwurf Spiel_P1, Übergabe 7.3; seit 0.23 Entwurf 2k: „Zu wenig Daten“ nennt das
+    neue Team, bei „Beide Teams treffen“ der Zusatz „(in %)“, auf dem Handy ausgeblendet)."""
     def tt(s, **w):
         return T.t(s, lang, **w)
 
@@ -292,11 +309,12 @@ def spiel_kern(seite: dict, lang: str = W.SPRACHE) -> dict:
         return {"label": tt("spiel.werte_label"), "wert": "", "richtung": "", "titel": titel, "text": text}
     if seite["bewertung"] == "zu_wenig_daten":
         return {"label": tt("spiel.bewertung"), "wert": "", "richtung": "", "titel": tt("spiel.zu_wenig_daten"),
-                "text": tt("spiel.zu_wenig_daten_text")}
+                "text": _neu_text("spiel.zu_wenig_daten_neu", neu or [], lang) or tt("spiel.zu_wenig_daten_text")}
     if seite["auffaellig"]:
         top = seite["auffaellig"][0]
         return {"label": tt("spiel.auffaelligstes"), "wert": F.prozent(top["abweichung"], lang), "richtung": top["richtung"],
-                "titel": tt(f"kennzahl.{top['kpi']}.name"), "text": tt(f"kennzahl.{top['kpi']}.{top['richtung']}")}
+                "titel": tt(f"kennzahl.{top['kpi']}.name"), "text": tt(f"kennzahl.{top['kpi']}.{top['richtung']}"),
+                "zusatz": tt("spiel.prozent_zusatz") if top.get("prozent") else ""}
     g = seite["groesste"]
     schluessel = "spiel.keine_text_eins" if seite["anzahl_gewertet"] == 1 else "spiel.keine_text"
     if seite["anzahl_gewertet"] not in (1, 8):
@@ -350,8 +368,10 @@ def spiel_html(seite: dict, k: Kontext) -> str:
         jsonld.append(seo.sportsevent(seite, heim, gast, k.absolut(), lang))
     og_titel = f"{heim} – {gast}" if seite["bewertung"] == "werte_ab" else None
     kopf = _kopf(k, titel, beschreibung, index=index, jsonld=jsonld, og_titel=og_titel)
+    neu = [team(seite["liga"], n, lang) for n in seite.get("neu_in_liga") or []]
     return _rendern("spiel.html", k, kopf, seite.get("stand"), seite=seite, aktiv="spieltag",
-                    held=spiel_kern(seite, lang), notizen=spiel_notizen(seite, lang), wann=wann,
+                    held=spiel_kern(seite, lang, neu), notizen=spiel_notizen(seite, lang), wann=wann,
+                    zu_wenig_hinweis=zu_wenig_hinweis(seite, lang, neu),
                     heim_name=heim, gast_name=gast, zurueck_url=zurueck,
                     h1=T.t("spiel.h1", lang, heim=heim, gast=gast))
 
@@ -376,6 +396,9 @@ def inhalt_html(art: str, k: Kontext, stand_iso: str | None = None, **werte) -> 
     if art == "methodik" and "m" not in werte:              # Zahlen aus der Schwellendatei (website/methodik.py)
         from . import methodik as MT
         werte["m"] = MT.daten(k.lang)
+    if art == "kontakt" and "f" not in werte:              # Formular (seit 0.23, website/kontakt.py)
+        from . import kontakt as KT
+        werte["f"] = KT.leer()
     return _rendern("inhalt.html", k, kopf, stand_iso, art=art, teil=teil, aktiv=art,
                     betreiber={"name": W.BETREIBER_NAME, "adresse": W.BETREIBER_ADRESSE, "email": W.KONTAKT_EMAIL},
                     **werte)

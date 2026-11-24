@@ -171,10 +171,15 @@ def check_gamedays(sheet: str, df: pd.DataFrame) -> list[Issue]:
         issues += row_issues(WARNUNG, sheet, "Gameday ausserhalb Bereich", out,
                              f"Gameday ausserhalb 1–{max_gd} (Saison {season}, {n} Teams)")
         counts = gd.value_counts()
+        latest = season == df["Season"].max()
         for g, c in sorted(counts.items()):
             if c != n // 2:
-                issues.append(Issue(WARNUNG, sheet, "Spieltag unvollständig",
-                                    f"Saison {season}, Spieltag {int(g)}: {c} statt {n // 2} Spiele"))
+                # Seit 0.23 (Carsten 24.11.2026): In der laufenden Saison nur ein Hinweis – der Spieltag läuft noch oder
+                # ein Spiel ist verschoben. Ob nach dem Spieltag ein Ergebnis fehlt, prüft der Spielplan („Ergebnis
+                # fehlt“, core/fixtures.py), weil nur er die Termine kennt.
+                issues.append(Issue(HINWEIS if latest else WARNUNG, sheet, "Spieltag unvollständig",
+                                    f"Saison {season}, Spieltag {int(g)}: {c} statt {n // 2} Spiele"
+                                    + (" (läuft noch oder Spiel verschoben)" if latest else "")))
         long = pd.concat([s[["Gameday", "homeTeam"]].rename(columns={"homeTeam": "team"}),
                           s[["Gameday", "awayTeam"]].rename(columns={"awayTeam": "team"})])
         dup = long[long.duplicated(["Gameday", "team"])]

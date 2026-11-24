@@ -48,7 +48,9 @@
           <span class="mc-text">
             <span class="mc-liga">{% if r.sonderspiel %}{{ t('liga.' ~ r.liga_key) }} · {{ t('chip.' ~ r.sonderspiel ~ '_nr', n=r.spieltag) }}{% else %}{{ t('start.ranking_zeile', liga=t('liga.' ~ r.liga_key), n=r.spieltag) }}{% endif %}{% if not r.gespielt %}<span class="mc-day"> · {{ termin(r) }}</span>{% endif %}</span>
             <span class="mc-paar">{{ team(r.liga, r.heim) }} – {{ team(r.liga, r.gast) }}</span>
-            {% if r.gespielt %}<span class="mc-status">{{ t('chip.gespielt_ergebnis', ergebnis=ergebnis_kurz(r.ergebnis)) if r.ergebnis else t('chip.gespielt') }}</span>{% endif %}
+            {#- Seit 0.23 (Entwurf 24.11., Beschluss 24, Entscheid Carsten): Endstand als gut lesbare Marke; vor dem
+                Ergebnis weiter „Gespielt“ (nicht „Endstand folgt“, Beschluss 2a). -#}
+            {% if r.gespielt %}<span class="mc-status">{% if r.ergebnis %}{{ t('start.endstand') }} <span class="mc-endstand">{{ ergebnis(r.ergebnis) }}</span>{% else %}{{ t('chip.gespielt') }}{% endif %}</span>{% endif %}
           </span>
         </span>
         <span class="mc-right">

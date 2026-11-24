@@ -189,8 +189,8 @@
   "kennzahl": {
     "kpi02": {
       "name": "Expected total goals",
-      "hoch": "Above-average number of goals expected",
-      "tief": "Below-average number of goals expected"
+      "hoch": "More goals expected",
+      "tief": "Fewer goals expected"
     },
     "kpi03": {
       "name": "Over 2.5 goals",
@@ -199,33 +199,33 @@
     },
     "kpi04": {
       "name": "Yellow cards",
-      "hoch": "Above-average number of yellow cards",
-      "tief": "Below-average number of yellow cards"
+      "hoch": "More yellow cards expected",
+      "tief": "Fewer yellow cards expected"
     },
     "kpi05": {
       "name": "Corners",
-      "hoch": "Increased number of corners",
-      "tief": "Few corners expected"
+      "hoch": "More corners expected",
+      "tief": "Fewer corners expected"
     },
     "kpi06": {
       "name": "Expected total goals in the first half",
-      "hoch": "Many goals in the first half",
-      "tief": "Few goals in the first half"
+      "hoch": "More first-half goals expected",
+      "tief": "Fewer first-half goals expected"
     },
     "kpi07": {
       "name": "Expected total goals in the second half",
-      "hoch": "Many goals in the second half",
-      "tief": "Few goals in the second half"
+      "hoch": "More second-half goals expected",
+      "tief": "Fewer second-half goals expected"
     },
     "kpi08": {
       "name": "Both teams to score",
-      "hoch": "Higher likelihood of both teams scoring",
-      "tief": "Lower likelihood of both teams scoring"
+      "hoch": "Both teams expected to score more often",
+      "tief": "Both teams expected to score less often"
     },
     "kpi09": {
       "name": "Expected shots on target",
-      "hoch": "Many shots on target",
-      "tief": "Few shots on target"
+      "hoch": "More shots on target expected",
+      "tief": "Fewer shots on target expected"
     }
   },
   "lesen": {
@@ -262,7 +262,7 @@
     "zu_wenig_daten_text": "There is not enough data to rate this match.",
     "zu_wenig_daten_leer_text": "There is not enough data to rate this match.",
     "hinweis_zu_wenig_daten_titel": "Not enough data:",
-    "hinweis_zu_wenig_daten": "There is not enough data to rate this match.",
+    "hinweis_zu_wenig_daten": "The statistical data for this match is too limited. You can still see the values, but we do not classify them as deviations.",
     "hinweis_zu_wenig_daten_leer": "There is not enough data to rate this match.",
     "hinweis_nachholspiel_titel": "Rescheduled match:",
     "hinweis_nachholspiel": "This match belongs to an earlier matchday and is being played on {datum}.",
@@ -274,18 +274,14 @@
     "status_titel": "Status",
     "status_text": "There are no values for this match.",
     "auffaelligkeiten": "Statistical anomalies",
-    "normalbereich": "No anomalies",
+    "normalbereich": "No anomaly flagged",
     "kennzahlen": "Metrics",
     "zahlen_detail": "Detailed breakdown",
     "zahlen_detail_zu": "Collapse detailed breakdown: {name}",
     "zuklappen": "Collapse",
     "erwartungswert": "Expected value",
-    "je_mannschaft": "Per team",
     "mittelwert": "average of both teams",
-    "ligaschnitt": "League average",
-    "vergleichswert_marke": "Reference value (marker)",
     "abweichung": "Deviation",
-    "aufteilung": "{name}: {heim} {wert_heim}, {gast} {wert_gast}",
     "methodik": "How are these values calculated?",
     "alle_spiele": "All matches on this matchday",
     "nicht_gefunden": "This match does not exist.",
@@ -298,7 +294,6 @@
     "werte_folgen": "Values will follow once the result from {datum} has been processed.",
     "werte_wartet": "The values will be calculated afterwards using the data available before the match, once the result of the previous league match has been processed.",
     "h1": "{heim} vs {gast}: Statistics and Analysis",
-    "schwelle": "Threshold",
     "schwelle_keine": "none",
     "schwelle_ueber": "above {wert}",
     "schwelle_unter": "below {wert}",
@@ -310,7 +305,35 @@
       "U": "D",
       "N": "L"
     },
-    "keine_text_gewertet": "None of the {n} rated metrics crosses its threshold. Largest deviation: {name} {wert}."
+    "keine_text_gewertet": "None of the {n} rated metrics crosses its threshold. Largest deviation: {name} {wert}.",
+    "chip_keine": "No anomaly",
+    "chip_nicht_eingestuft": "Not assessed",
+    "chip_zu_wenig_daten": "Not enough data",
+    "chip_info": "Show explanation",
+    "c_notiz": "Past matches show that such deviations have not been reliably confirmed in this league. That is why we do not flag them as statistical anomalies.",
+    "keine_bewertung": "No assessment possible.",
+    "d_letzte10": "Average of the last 10 matches",
+    "d_letzte10_gelb": "Yellow cards per team per match · average of the last 10 matches",
+    "d_summe": "Total of both teams",
+    "d_erwartung_tore": "Expected total goals per match",
+    "d_erwartung_gelb": "Expected yellow cards in the match",
+    "d_erwartung_quote": "Expected rate",
+    "d_liga_spiel": "League average per match",
+    "d_liga": "League average",
+    "d_vergleich": "Reference value",
+    "d_schwelle": "Anomaly threshold",
+    "balken_vergleich": "Reference value",
+    "satz_a_hoch": "Statistical anomaly. Threshold: more than {schwelle}% above {bezug}.",
+    "satz_a_tief": "Statistical anomaly. Threshold: more than {schwelle}% below {bezug}.",
+    "satz_b_hoch": "Not reached. Threshold: more than {schwelle}% above {bezug}.",
+    "satz_b_tief": "Not reached. Threshold: more than {schwelle}% below {bezug}.",
+    "bezug_liga": "the league average",
+    "bezug_marke": "the reference value",
+    "zu_wenig_daten_neu": "As {team} is new to the league, there is not yet enough data for an assessment.",
+    "zu_wenig_daten_neu_zwei": "As {team1} and {team2} are new to the league, there is not yet enough data for an assessment.",
+    "hinweis_zu_wenig_daten_neu": "There are no values for this match yet because {team} is new to the league.",
+    "hinweis_zu_wenig_daten_neu_zwei": "There are no values for this match yet because {team1} and {team2} are new to the league.",
+    "prozent_zusatz": " (%)"
   },
   "start": {
     "h1_vorne": "Football,",
@@ -398,7 +421,8 @@
     "seo_3": "This gives football fans and tipsters a data-based overview of interesting matches before kick-off.",
     "seo_3_fett": "We provide transparent statistics, but no betting advice or forecasts of potential winnings.",
     "seo_4": "You can find more about the calculation and rating on the",
-    "seo_4_link": "methodology page"
+    "seo_4_link": "methodology page",
+    "endstand": "Final score"
   },
   "liga_im": {
     "bundesliga": "the Bundesliga",
@@ -475,8 +499,7 @@
   "inhalt": {
     "email": "Email",
     "adresse_folgt": "[address to be added on the server]",
-    "email_folgt": "[project address to be added on the server]",
-    "kontakt_folgt": "Sending will be set up with the next release. Until then the form is not yet active."
+    "email_folgt": "[project address to be added on the server]"
   },
   "methodik": {
     "tiefe_titel": "How much detail would you like?",
@@ -501,7 +524,7 @@
     "spalte": {
       "kennzahl": "Metric",
       "richtung": "Direction",
-      "schwelle": "Threshold",
+      "schwelle": "Threshold (relative to league average)",
       "signal": "Signal quality",
       "liga": "League",
       "schwellen": "Thresholds"
@@ -563,6 +586,24 @@
       "mehrwert": "Success rate minus baseline.",
       "spanne_links": "Range of the uplift (95% confidence interval using the Wilson method), lower and upper limit. The fewer matches, the wider the range.",
       "saisons_positiv": "In how many of the analysed seasons the uplift was positive."
+    }
+  },
+  "formular": {
+    "frage": "Security question: What is {aufgabe}?",
+    "gesperrt": "Sending is not set up at the moment. Until then the form is not yet active.",
+    "gesendet": "Thank you, your message has arrived.",
+    "versand_fehler": "Your message could not be sent just now. Please try again later or write to info@soccer-intelligence.com.",
+    "zu_viele": "You have just sent several messages. Please try again in an hour.",
+    "fehler_hinweis": "Please check the highlighted fields.",
+    "fehler": {
+      "email_fehlt": "Please enter your email address.",
+      "email_ungueltig": "This email address doesn't look complete.",
+      "nachricht_fehlt": "Please write a message.",
+      "nachricht_kurz": "Your message is a little short – please use at least 10 characters.",
+      "nachricht_lang": "Your message is too long – please use no more than 5,000 characters.",
+      "name_lang": "Please use no more than 100 characters.",
+      "einwilligung": "Please confirm that you have read the privacy policy.",
+      "antwort": "That answer isn't right. Please try again."
     }
   }
 }

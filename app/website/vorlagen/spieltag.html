@@ -49,12 +49,12 @@
       {% endfor %}
     </div>
     {% endif %}
-    {{ legende() }}
     {% for tab in seite.tabs %}
     <section id="tab-{{ loop.index }}" data-panel aria-label="{{ t('spieltag.nummer', n=tab.spieltag) }}">
       {% if mehrere %}<h3 class="tab-titel" data-tabtitel>{{ t('spieltag.nummer', n=tab.spieltag) }}</h3>{% endif %}
       <p class="zusammenfassung">{{ zusammenfassung(tab) }}</p>
       {% if tab.auffaellig == 0 and tab.bewertet > 0 %}<div class="liste-notiz" role="note">{{ t('spieltag.keine_abweichungen') }}</div>{% endif %}
+      {{ legende() }}{#- seit 0.23 (Beschluss 24): „Wie lese ich das?“ direkt über der ersten Kachel -#}
       <ul class="partien">
         {% for s in tab.spiele %}<li>{{ kachel(s) }}</li>{% endfor %}
       </ul>

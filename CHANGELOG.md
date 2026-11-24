@@ -5,6 +5,29 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 24.11.2026 – Version 0.23: E-Mail, Alarme, Überwachung und Designrunde
+
+- **Carsten** · Prüfung 0.22 (Punkte 1–6 in Ordnung); Wunsch: In „Läufe heute“ die Partie nennen. Postfächer `info@` und `alert@` eingerichtet (Weiterleitung an die private Adresse). Entscheide F1–F7 zu `docs/09` (cron-Eintrag ja, vier Container, höchstens 3 Mails je Alarm, Statusmail Montag 06:00, Laufzeiten VPS 22.06.2027, Domain 23.10.2027, Postfach 20.11.2028, alle automatisch). Wunsch: nach jedem Release Testmails über alle Wege.
+- **Claude** · Spezifikation `docs/09_Betrieb_EMail.md` v0.4 (neu, in CLAUDE.md als Quelle eingetragen).
+- **Claude** · **Mailversand** (`betrieb/mail.py`): SMTP SSL über Hostinger mit **einem** Postfach (`info@`; `alert@` ist ein Alias – Rückfrage Carsten 20.11.2026): Anmeldung und Absender immer `info@` (Name „Soccer Intelligence Alarm“ bzw. „… Kontakt“), Alarme an `alert@`, Kontakt an `info@`; Zugangsdaten nur aus `.env` (`SI_SMTP_USER`, `SI_SMTP_PASSWORT`), Passwort nie in Meldungen.
+- **Claude** · **Alarme** (`betrieb/alarme.py`, `betrieb/pruefungen.py`): Import fehlgeschlagen, API-Kontingent, Schnappschuss, Datei-Prüfung, Fassung wartet, Entscheid offen, Statistik fehlt dauerhaft, Laufzeiten, Kontaktformular gescheitert; je Alarmart höchstens eine Mail pro Stunde, Stufe steigt sofort, Erinnerung nach 24 h, „Behoben“, höchstens 3 Mails je Alarm. Jede Minute im Dienst `soccer-import`, dazu Lebenszeichen.
+- **Claude** · **Statusmail** Montag 06:00 (`betrieb/status.py`): Läufe, Alarme, Server, Backups (Erinnerung Monatssicherung), Laufzeiten, Hinweise.
+- **Claude** · **Server-Prüfskript** `tools/ueberwachen.py` (cron, jede Minute, nur lesen): Festplatte, Arbeitsspeicher, CPU, unsere vier Container, Website erreichbar, Lebenszeichen des Imports; versendet selbst.
+- **Claude** · **Laufzeiten** `app/config/laufzeiten.toml` und Block im Reiter Datenimport/API; dazu Blöcke **Alarme** und **Server**.
+- **Claude** · **Kontaktformular aktiv** (`website/kontakt.py`): Prüfung mit Fehlern je Feld (DE/EN), wechselnde Rechenaufgabe mit Prüfsumme, höchstens 3 Nachrichten pro Stunde, verstecktes Feld, Versand über `info@`, keine Speicherung, Danke-Seite.
+- **Claude** · **Testmails nach jedem Release** über alle drei Wege (`tools/einspielen.sh`, Schritt 5). Einrichten auf dem Server: `tools/mail_einrichten.sh` (`01`, 6.6). Schutzregel 1: cron-Zeile als einzige Ausnahme.
+- **Claude** · „Läufe heute“ nennt je geplantem Lauf die Partien (`laufplan.plan_mit_partien`, Test L7).
+- **Carsten** · 0.22 im Betrieb geprüft: Läufe nach dem Spiel, Kontrolllauf 04:00, Backups – alles in Ordnung (24.11.2026). Wünsche Dashboard: Warnung „Spieltag unvollständig“ erst nach dem Spieltag; Protokoll höchstens 20 Zeilen sichtbar; Schnappschüsse kurz erklären.
+- **Claude** · **Datenqualität:** „Spieltag unvollständig“ in der laufenden Saison nur noch Hinweis; neue Prüfung **„Ergebnis fehlt“** im Spielplan (`core/fixtures._missing_results`): Warnung erst, wenn der Spieltag laut Spielplan vorbei ist und am Folgetag nach dem Kontrolllauf (04:00) ein Ergebnis fehlt; Nachholspiele nach dem eigenen Termin; verschobene, abgesagte, abgebrochene und ausgesetzte Spiele nur Hinweis „Spiel ausstehend“ (Entscheid Carsten 24.11.2026). **Reiter Datenimport/API:** Protokoll scrollt nach rund 20 Zeilen (Kopfzeile bleibt stehen); Erklärung der Schnappschüsse in zwei Sätzen. Tests angepasst (Beispiel-Spielpläne mit festem Zeitpunkt) und ergänzt.
+- **Carsten** · Rechenlogik bestätigt (Mittelwert beider Teams, bei Gelben Karten Summe; Schwelle immer relativ zum Ligadurchschnitt) und Entscheid Grenzwert bei allen acht Kennzahlen im Detail (24.11.2026). Designanpassungen 24.11. geliefert (Spiel_P1 „2k final“ und übrige Seiten); Rückfragen beantwortet: Startseite „Endstand“ mit Marke, vor dem Ergebnis „Gespielt“; Methodik-Schaltfläche wie bisher; drei Glossartexte und Texte des Kontaktformulars freigegeben.
+- **Claude** · **Spielseite nach 2k final** (`website/spiel.py`, `vorlagen/spiel.html`): Karten A–D, Gruppen „Auffälligkeiten“ / „Ohne Auffälligkeit“, Detail in vier Blöcken mit Grenzwert (exakt mit Brüchen, kaufmännisch gerundet), Schwellensatz, Kurzaussagen je Kennzahl, Hinweis nennt neue Mannschaft. **Übrige Seiten:** Endstand-Marke im Ranking, Legende je Reiter auf der Spieltag-Seite, Kopf auf dem Handy mit Sprachwahl rechts, Ligawahl ab 900 px einzeilig, Methodik-Texte und Spalte „Schwelle (vom Ligadurchschnitt)“, Glossartexte (Gespielt, Werte ab, Datenstand), Kontaktformular gegen doppeltes Absenden. Tests W30, w14/w15 angepasst.
+- **Claude** · Tests B1–B8 (`test_betrieb_023.py`); W25 erlaubt die öffentliche Projektadresse. Doku: `01` (0, 5, 6.6), `08`, `09`, RELEASE.md.
+
+## 20.11.2026 – Version 0.22 eingespielt
+
+- **Carsten** · Version 0.22 eingespielt (`1701bc6`, Pull Request #24; Tests grün). Die Verbindung zum Server brach während Schritt 4 ab, der Lauf ging in `tmux` weiter. E-Mail-Postfächer `info@` und `alert@` eingerichtet (Weiterleitung an die private Adresse); Laufzeiten: Postfach bis 20.11.2028, Domain bis 23.10.2027 (für 0.23).
+- **Claude** · Stand nachgetragen (`01`, Abschnitt 0 und Versionstabelle).
+
 ## 20.11.2026 – Version 0.22: Daten nach jedem Spiel
 
 - **Carsten** · Beschlüsse B1–B5 und F1–F3 (`06`, 10.2): Lauf nach jedem Spiel (Anpfiff + 2¼ h) mit Ergebnis und allen Statistiken, keine Freigabe mehr, Kontrolllauf 04:00, Wiederholung nach 1 Stunde (höchstens zwei), Backups gestaffelt; kritische Spiele einzeln zurückhalten. Freigaben aus 0.21: Glossar, Archivtexte, Namen der 12 Aufsteiger; „Auffällige Spiele je Spieltag“ weglassen. Wünsche: „Athletic Bilbao“, Startseite ohne Datenstand-Zeile. Zuschnitt: 0.23 E-Mail und Überwachung, 0.24 Cookie-Hinweis und Google Analytics.

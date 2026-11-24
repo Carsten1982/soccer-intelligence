@@ -1,70 +1,95 @@
-# Release: Version 0.22 – Daten nach jedem Spiel
+# Release: Version 0.23 – E-Mail, Alarme, Überwachung und Designrunde
 
-**Stand:** 20.11.2026 · Version 0.22 · Spezifikation `docs/06_Datenlieferung.md`, Abschnitt 10.2 (Beschlüsse Carsten 20.11.2026: B1–B5, F1–F3)
+**Stand:** 24.11.2026 · Version 0.23 · Spezifikation `docs/09_Betrieb_EMail.md` (Entscheide Carsten 20.11.2026: M1–M9, F1–F7) · Designanpassungen 24.11.2026 (`docs/08_Website.md`, 7.1)
 
-**Commit:** Version 0.22: Daten nach jedem Spiel
+**Commit:** Version 0.23: E-Mail, Alarme, Überwachung und Designrunde
 
 ## Was ändert sich?
 
-- **Lauf nach jedem Spiel:** Je Anstosszeit holt der Import bei **Anpfiff + 2¼ Stunden** Endstand, Status und alle Statistiken der beendeten Spiele. Läufe, die weniger als 30 Minuten auseinanderliegen, werden zusammengelegt; am Samstag 21.11. sind es 8 Läufe.
-- **Keine Freigabe mehr:** Jede fehlerfreie Fassung wird sofort übernommen, mit Backup vorher.
-  - Nur eine Fassung mit **Fehlern oder neuen Warnungen** wartet im Reiter Datenimport/API auf „Übernehmen“ oder „Verwerfen“.
-  - **Kritische Spiele** werden einzeln zurückgehalten und warten auf deinen Entscheid; alles andere wird übernommen. Kritisch heisst: Endstand passt nicht zu den Toren, späte Korrektur, Zuordnung.
-- **Wiederholung:** Scheitert ein Lauf oder fehlen danach noch Werte, folgt 1 Stunde später eine Wiederholung, höchstens zwei.
-- **Kontrolllauf** täglich um 04:00 wie bisher, montags über die ganze Saison.
-- **Backups gestaffelt:** alle der letzten 14 Tage, je Woche das letzte (8 Wochen), je Monat das letzte (12 Monate), je Saison das letzte dauerhaft. Bisher waren es die letzten 30.
+- **Alarme per Mail** an `alert@` (Alias auf das Postfach `info@`, Absender „Soccer Intelligence Alarm“), über die Weiterleitung bei dir:
+  - Import fehlgeschlagen
+  - API-Kontingent
+  - Schnappschuss
+  - Datei-Prüfung („Daten werden geprüft“)
+  - neue Daten warten auf Freigabe
+  - Entscheid offen
+  - Statistik fehlt dauerhaft
+  - Laufzeit endet
+  - Kontaktformular gescheitert
+
+  Höchstens eine Mail pro Stunde je Alarmart, höchstens 3 Mails je Alarm, dazu „Behoben“, solange die 3 nicht aufgebraucht sind.
+- **Server-Überwachung:** Ein Prüfskript läuft jede Minute auf dem Server und prüft:
+  - Festplatte, Arbeitsspeicher, CPU
+  - unsere vier Container
+  - ob die Website erreichbar ist
+  - ob der Import-Dienst lebt
+
+  Die Schwellen sind deine (Warnung / Kritisch).
+- **Statusmail jeden Montag um 06:00:** Läufe, Alarme, Server, Backups, Laufzeiten; am ersten Montag im Monat die Erinnerung an die Monatssicherung.
+- **Laufzeiten im Dashboard:** VPS bis 22.06.2027, Domain bis 23.10.2027, Postfach bis 20.11.2028, API-Abo aus der API. Die Farbe zeigt, wie viel Zeit bleibt.
+- **Kontaktformular aktiv:**
+  - Versand über `info@`.
+  - Fehler werden je Feld angezeigt.
+  - Die Rechenaufgabe wechselt.
+  - Höchstens 3 Nachrichten pro Stunde je Absender.
+  - Nichts wird gespeichert.
+- **Impressum** zeigt die Projektadresse `info@soccer-intelligence.com` (nach dem Einrichten).
+- **Nach jedem Release** schickt das Einspiel-Skript über alle drei Wege eine Testmail (dein Wunsch).
 - **Reiter Datenimport/API:**
-  - Neuer Block „Läufe heute“ mit gelaufenen und geplanten Läufen.
-  - Im Protokoll eine Spalte „Anlass“.
-  - In der Statusleiste der nächste Lauf mit Anlass.
-- **Website:**
-  - Anzeigenamen der 12 Aufsteiger, wie freigegeben.
-  - „Athletic Bilbao“ statt „Athletic Club“; die Adressen bleiben gleich.
-  - Startseite ohne „Aktueller Datenstand“ unter den Top-Spielen.
-  - Glossar freigegeben.
-- **Für 0.23 vorbereitet:** Jeder Lauf schreibt eine Zeile ins Ereignisprotokoll (`import/ereignisse.jsonl`). Daraus entstehen später Alarme und Statusmail.
+  - neue Blöcke „Alarme“, „Server“ und „Laufzeiten“
+  - in „Läufe heute“ stehen die Partien hinter „nach dem Spiel“ (dein Wunsch)
+  - das Protokoll zeigt rund 20 Zeilen, der Rest scrollt; die Schnappschüsse sind kurz erklärt
+- **Datenqualität:** „Spieltag unvollständig“ ist während der laufenden Saison nur noch ein Hinweis. Neu warnt „Ergebnis fehlt“, wenn ein Spieltag laut Spielplan vorbei ist und am Folgetag nach 04:00 noch ein Ergebnis fehlt. Verschobene Spiele sind nur ein Hinweis, bis ihr Nachholtermin vorbei ist.
+- **Website (Designrunde 24.11.):**
+  - Spielseite nach „2k final“: Karten „Auffällig“ (Signalqualität), „Keine Auffälligkeit“, „Nicht eingestuft ⓘ“, „Zu wenig Daten“; Gruppen „Auffälligkeiten“ und „Ohne Auffälligkeit“.
+  - „Zahlen im Detail“ in vier Blöcken, neu mit dem **Grenzwert** (z. B. „auffällig unter 41,60 %“) bei allen acht Kennzahlen; ohne Schwelle in dieser Richtung ein Hinweis.
+  - Startseite: gespielte Spiele „Endstand“ mit weisser Marke „2 : 1“, vorher „Gespielt“.
+  - Spieltag-Seite: Legende in jedem Reiter vor den Kacheln. Handy: Sprachwahl rechts im Kopf.
+  - Methodik: Spalte „Schwelle (vom Ligadurchschnitt)“ und neue Einleitung; Glossar: drei freigegebene Texte.
+  - Kontaktformular lässt sich nicht doppelt absenden.
 
 ## Einspielen
 
+Zuerst wie immer:
+
 ```bash
-tmux new -s release022
+tmux new -s release023
 ```
 
 ```bash
 bash /docker/football-dashboard/tools/einspielen.sh github
 ```
 
-Später wieder verbinden mit `tmux attach -t release022`. **Während der Tests keine Tasten drücken.** Am Ende `j`, danach `exit`.
+Beim ersten Mal meldet Schritt 5 „nur 0 von 3 Testmails gesendet“. Das ist richtig, der Versand ist noch nicht eingerichtet. Danach **einmalig** den Mailversand einrichten:
 
-**Bitte vor dem Zusammenführen warten, bis der Testlauf im Pull Request grün ist.**
+```bash
+bash /docker/football-dashboard/tools/mail_einrichten.sh
+```
+
+Das Skript fragt das Passwort des Postfachs `info@` verdeckt ab (wie bei Hostinger festgelegt; `alert@` ist ein Alias und braucht keins), trägt alles in `.env` ein und startet die zwei betroffenen Container neu. Dann fragt es, ob das Prüfskript in den Zeitplan des Servers kommt: mit `j` bestätigen. Zum Schluss schickt es drei Testmails.
 
 ## Erwartungswerte
 
-- Git-Stand vorher: `9efe682`.
-- Schritt 4: rund **683 bestanden, 16 übersprungen, 18 ausgelassen**, keine Fehler.
-- Schritt 5: alle Container laufen, `/` = 200, `/dashboard/` = 200, `/vorschau/` = 401.
-- Dashboard-Fusszeile: „Version 0.22 – Daten nach jedem Spiel“.
-- Ein Lauf nach dem Spiel braucht rund 15–30 Abfragen. Am Samstag sind es zusammen rund 150–250, unter der eigenen Grenze von 500.
+- Git-Stand vorher: `1701bc6`.
+- Schritt 4: rund **740 bestanden**, einige übersprungen und ausgelassen, keine Fehler.
+- Schritt 5: alle Container laufen, `/` = 200, `/dashboard/` = 200, `/vorschau/` = 401; Hinweis „nur 0 von 3 Testmails“ (beim ersten Mal).
+- Dashboard-Fusszeile: „Version 0.23 – E-Mail, Alarme und Überwachung“.
+- `mail_einrichten.sh`: „✅ Gespeichert in .env“, „✅ Neu gestartet“, „✅ Eingetragen: * * * * * …“ und drei Zeilen „✅ Testmail …: gesendet“.
 
 ## Im Browser prüfen
 
-1. **Reiter Datenimport/API** gleich nach dem Einspielen:
-   - Betriebsart „automatisch – nach jedem Spiel und um 04:00, ohne Freigabe“.
-   - „nächster“ mit Uhrzeit und Anlass.
-   - Block „Läufe heute“ mit den geplanten Läufen: je Anstosszeit des Tages ein Lauf 2¼ Stunden später (Anpfiff 20:30 → Lauf 22:45).
-2. **Nach dem ersten Spiel des Abends**, etwa 2¼ Stunden nach Anpfiff plus einige Minuten:
-   - Im Protokoll eine Zeile „nach dem Spiel“ mit Status „übernommen (automatisch)“.
-   - Auf der Spieltag-Seite (Dashboard und Website) der Endstand des Spiels, ohne Warten bis 04:00.
-3. **Am nächsten Morgen:**
-   - Im Protokoll ein „Kontrolllauf“ um 04:00.
-   - Im Ordner `backup/` neue Dateien `…_vor_import.xlsx`. Nachsehen, nur lesend:
-
-   ```bash
-   ls -lt /docker/football-dashboard/backup | head
-   ```
-4. **Website:**
-   - Athletic Bilbao bei einem LaLiga-Spiel.
-   - Ein Aufsteiger mit dem neuen Namen, zum Beispiel „FC Schalke 04“ bzw. „Schalke 04“ auf Englisch.
-   - Startseite ohne „Aktueller Datenstand“ unter den Top-Spielen.
-5. **Erscheint „Ihre Entscheidung“**, einen der beiden Knöpfe wählen. Der Entscheid wirkt ab dem nächsten Lauf.
-6. Sag mir, ob alles passt. Parallel richtest du die zwei Postfächer für 0.23 ein.
+1. **Posteingang (Yahoo):** drei Mails „[Soccer Intelligence] Testmail – …“ (Container soccer-import an alert@, Container soccer-vorschau an info@, Prüfskript auf dem Server an alert@). Bitte auch im Spam-Ordner nachsehen.
+2. **Dashboard, Reiter Datenimport/API:**
+   - Block „Alarme“: „Mailversand: funktioniert“. Das erscheint erst, wenn eine Alarm-Mail verschickt wurde; vorher steht „noch keine Mail“.
+   - Block „Server“: Messwerte, nach einer Minute ohne roten Hinweis.
+   - Block „Laufzeiten“: VPS, Domain, Postfach, API-Abo.
+   - „Läufe heute“ mit Partien.
+3. **Kontaktformular** (`/vorschau/de/kontakt/`):
+   - Absenden ohne Angaben: rote Fehler je Feld.
+   - Dann richtig ausfüllen und senden: „Danke, deine Nachricht ist angekommen.“ und eine Mail „Kontaktformular: …“ im Posteingang. Mit „Antworten“ geht die Antwort an die eingegebene Adresse.
+4. **Impressum:** zeigt `info@soccer-intelligence.com`.
+5. **Am Montag um 06:00** kommt die erste Statusmail „Wochenstatus KW …“.
+6. **Spielseite** (z. B. ein Spiel mit Auffälligkeit über die Spieltag-Seite, auch auf dem Handy): Karten wie im Entwurf 2k, „Zahlen im Detail“ aufklappen – vierte Zeile Grenzwert; bei „Nicht eingestuft“ das ⓘ antippen.
+7. **Startseite:** ein gespieltes Spiel im Ranking zeigt „Endstand“ und die weisse Marke.
+8. **Spieltag-Seite:** Legende steht in jedem Reiter direkt vor den Kacheln.
+9. Sag mir, ob alles passt.

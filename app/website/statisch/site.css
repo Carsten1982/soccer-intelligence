@@ -87,6 +87,8 @@ a.knopf-akzent:hover, a.knopf-dunkel:hover { text-decoration: none; }
 .ligawahl .name { display: block; font-family: var(--titel); font-weight: 700; font-size: 18px; line-height: 1.15; }
 .ligawahl .info { display: block; margin-top: 2px; font-size: 14px; font-weight: 500; color: var(--hell2); }
 .ligawahl a[aria-current="page"] .info { color: #2C4A3A; }
+.ligawahl a { height: 100%; box-sizing: border-box; }       /* 0.23: gleich hohe Liga-Boxen */
+@media (min-width: 900px) { .ligawahl .name { white-space: nowrap; font-size: 17px; } .ligawahl a { padding-left: 14px; padding-right: 12px; } }
 
 /* Abschnitte und Überschriften */
 .abschnitt-start { padding-top: clamp(44px, 7vw, 80px); }
@@ -163,6 +165,7 @@ details.lesen[open] > summary svg { transform: rotate(180deg); }
 .cta-band p { margin: 8px 0 0; font-size: 17px; line-height: 1.5; }
 .abschnitt-fan { padding: clamp(48px, 7vw, 88px) 0 0; }
 .abschnitt-seo { padding-bottom: clamp(48px, 7vw, 88px); }
+@media (max-width: 520px) { .pct-zusatz { display: none; } }   /* Hero Spielseite: „(in %)“ nur auf grossen Bildschirmen */
 .fan { display: flex; flex-wrap: wrap; align-items: center; gap: 20px 28px; background: #fff; border: 1px solid var(--rand); border-radius: 20px; padding: clamp(20px, 4vw, 32px); }
 .fan img, .fan .foto-platz { flex: 0 0 auto; width: 115px; height: 115px; border-radius: 50%; object-fit: cover; display: block; }
 .fan .foto-platz { display: inline-flex; align-items: center; justify-content: center; background: var(--hinweis); color: var(--text3); }
@@ -209,7 +212,7 @@ a.kachel:hover { text-decoration: none; border-color: var(--gruen); }
 .kachel .chips { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 .kchip { display: inline-flex; align-items: center; min-height: 28px; padding: 0 12px; border-radius: 8px; font-size: 14px; font-weight: 600; text-align: center; }
 .kchip--status { background: transparent; color: #5B6B61; border: 1.5px dashed #8A978F; }
-.kchip--ergebnis { background: transparent; color: #5B6B61; border: 1.5px solid #8A978F; }
+.kchip--ergebnis { background: transparent; color: #4A5B50; border: 1.5px solid #8A978F; }
 .kpfeil { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; width: 36px; height: 36px; background: #EEF1EE; color: var(--text2); }
 .kpfeil--dunkel { width: 40px; height: 40px; background: var(--gruen); color: var(--akzent); }
 .kachel--status .kpfeil, .kachel--gespielt .kpfeil { background: #DDE3DE; color: var(--grau-text); }
@@ -258,9 +261,32 @@ a.kachel:hover { text-decoration: none; border-color: var(--gruen); }
 .karte .wertzeile { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 14px; margin-top: 14px; }
 .karte .gross { font-family: var(--titel); font-weight: 700; font-size: 44px; line-height: 1; }
 .karte .satz { font-size: 16px; font-weight: 600; line-height: 1.3; color: var(--text); }
+/* Seit 0.23 (Entwurf 2k final, Beschlüsse 25–32): gleiche Karte für alle Fälle, grüne Karten rund 15 % niedriger. */
+.karte .oben { padding: 10px 16px 6px; }
+.karte .kopf-k { flex-wrap: wrap; gap: 6px 10px; }
+.karte .ikon { width: 34px; height: 34px; }
+.karte .ikon.normal { width: 36px; height: 36px; }
+.karte .wertzeile { gap: 0 10px; margin-top: 4px; }
+.karte .gross { font-size: 28px; }
+.karte .satz { flex: 1 1 140px; min-width: 0; font-size: 15px; line-height: 1.25; }
+.karte--ohne { background: #fff; box-shadow: none; }
+.karte--ohne .gross { font-size: 24px; }
+.karte .balken-mit-text { margin: 6px 0 22px; }
+.pfeil-wert { vertical-align: -3px; margin-right: 6px; }
+.q-chip.q-ohne { background: #EEF1EE; color: #4A5B50; border-color: #D3DED5; }
+button.q-chip { cursor: pointer; font-family: inherit; }
+.q-chip svg, .wert-info svg { width: 16px; height: 16px; margin-left: 6px; flex: 0 0 auto; }
+.c-notiz { margin: 8px 0 0; padding: 8px 10px; border-radius: 10px; background: #EEF1EE; border: 1px solid #D3DED5; font-size: 14px; line-height: 1.4; color: #3E5247; }
+.zahlen .c-notiz { margin-top: 6px; }
+.wert-info { display: inline-flex; align-items: center; min-height: 32px; padding: 0; background: none; border: 0; cursor: pointer; font-family: var(--titel); font-weight: 700; font-size: 18px; color: var(--text); }
+.wert-info svg { width: 18px; height: 18px; margin-left: 8px; color: #4A5B50; }
+.zahlen .block > .klein:first-child { margin: 0 0 4px; }
+.zahlen .block > .zeile + .klein { margin-top: 2px; }
 details.detail > summary { list-style: none; cursor: pointer; }
 details.detail > summary::-webkit-details-marker { display: none; }
-.karte details.detail > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; padding: 0 18px; background: #EEF5EF; border-top: 1px solid var(--rand); color: var(--gruen); font-size: 16px; font-weight: 600; }
+.karte details.detail > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 36px; padding: 0 16px; background: #EEF5EF; border-top: 1px solid var(--rand); color: var(--gruen); font-size: 15px; font-weight: 600; }
+.karte--ohne details.detail > summary { background: #F1F4F1; }
+.karte details.detail > summary .chev { width: 30px; height: 30px; }
 .chev { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid var(--gruen); background: var(--gruen); color: var(--akzent); transition: transform .15s; }
 .chev.klein { width: 36px; height: 36px; }
 details.detail[open] > summary .chev { background: #fff; color: var(--gruen); transform: rotate(180deg); }
@@ -385,7 +411,9 @@ a.mc-card:hover { text-decoration: none; border-color: var(--gruen); }
 .mc-bar { position: relative; flex: 1 1 0; min-width: 60px; }
 .mc-arrow { grid-area: arrow; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: var(--gruen); }
 /* Gespielt (seit 0.20): weniger Farbe, nicht weniger Kontrast */
-.mc-card--gespielt { background: #F4F7F2; }
+.mc-card--gespielt { background: #ECEFEC; }
+.mc-card--gespielt .mc-status { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 13px; font-weight: 600; color: #3E5247; }
+.mc-endstand { display: inline-flex; align-items: center; min-height: 28px; padding: 0 10px; border-radius: 8px; background: #fff; border: 1.5px solid #8FA597; font-family: var(--titel); font-size: 19px; font-weight: 700; line-height: 1; color: var(--gruen); }
 .mc-card--gespielt .mc-liga, .mc-card--gespielt .mc-paar, .mc-card--gespielt .mc-kpi { color: #5B6B61; }
 .mc-card--gespielt .mc-rang { background: #5B6B61; color: #fff; }
 .mc-card--gespielt .mc-right { filter: grayscale(1); }
@@ -463,6 +491,12 @@ a.mc-card:hover { text-decoration: none; border-color: var(--gruen); }
 .feld.haken label a { font-weight: 600; color: var(--text); }
 .versteckt { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
 .formular { position: relative; }
+.formular .feld-fehler { margin: 8px 0 0; font-size: 15px; font-weight: 600; line-height: 1.4; color: #A3352A; }
+.feld input[aria-invalid="true"], .feld textarea[aria-invalid="true"] { border-color: #A3352A; border-width: 2px; }
+.feld.haken input[aria-invalid="true"] { outline: 2px solid #A3352A; outline-offset: 2px; }
+.formular-meldung { margin: 14px 0 0; padding: 12px 16px; border-radius: 14px; font-size: 16px; font-weight: 600; line-height: 1.45; }
+.formular-meldung.ok { background: #DAEADF; color: #1F4A33; border: 1px solid #8FB59D; }
+.formular-meldung.fehler { background: #FBEAE7; color: #8A2A20; border: 1px solid #E8B0A8; }
 .formular .knopf-voll { margin-top: 24px; min-height: 56px; padding: 10px 32px; font-size: 18px; }
 /* Schaltflächen der Inhalts- und Fehlerseiten */
 .knopfreihe { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
@@ -603,7 +637,7 @@ a.knopf-voll:hover, a.knopf-rand:hover { text-decoration: none; }
 .sprache-kurz { display: none; }
 @media (max-width: 640px) { .fuss nav { margin-top: 14px; } }
 @media (max-width: 520px) {
-  .kopf-rechts { flex-wrap: nowrap; gap: 0 4px; }
+  .kopf-rechts { flex-wrap: nowrap; gap: 0 4px; width: 100%; justify-content: space-between; }   /* 0.23: Sprache rechtsbündig */
   .kopf nav { flex-wrap: nowrap; gap: 0; }
   .kopf nav a { padding: 0 7px; font-size: 15px; }
   .sprachmenue > summary { padding: 0 10px; gap: 6px; font-size: 14px; }
