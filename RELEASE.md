@@ -1,8 +1,8 @@
-# Release: Version 0.23 – E-Mail, Alarme und Überwachung
+# Release: Version 0.23 – E-Mail, Alarme, Überwachung und Designrunde
 
-**Stand:** 20.11.2026 · Version 0.23 · Spezifikation `docs/09_Betrieb_EMail.md` (Entscheide Carsten 20.11.2026: M1–M9, F1–F7)
+**Stand:** 24.11.2026 · Version 0.23 · Spezifikation `docs/09_Betrieb_EMail.md` (Entscheide Carsten 20.11.2026: M1–M9, F1–F7) · Designanpassungen 24.11.2026 (`docs/08_Website.md`, 7.1)
 
-**Commit:** Version 0.23: E-Mail, Alarme und Überwachung
+**Commit:** Version 0.23: E-Mail, Alarme, Überwachung und Designrunde
 
 ## Was ändert sich?
 
@@ -40,6 +40,13 @@
   - in „Läufe heute“ stehen die Partien hinter „nach dem Spiel“ (dein Wunsch)
   - das Protokoll zeigt rund 20 Zeilen, der Rest scrollt; die Schnappschüsse sind kurz erklärt
 - **Datenqualität:** „Spieltag unvollständig“ ist während der laufenden Saison nur noch ein Hinweis. Neu warnt „Ergebnis fehlt“, wenn ein Spieltag laut Spielplan vorbei ist und am Folgetag nach 04:00 noch ein Ergebnis fehlt. Verschobene Spiele sind nur ein Hinweis, bis ihr Nachholtermin vorbei ist.
+- **Website (Designrunde 24.11.):**
+  - Spielseite nach „2k final“: Karten „Auffällig“ (Signalqualität), „Keine Auffälligkeit“, „Nicht eingestuft ⓘ“, „Zu wenig Daten“; Gruppen „Auffälligkeiten“ und „Ohne Auffälligkeit“.
+  - „Zahlen im Detail“ in vier Blöcken, neu mit dem **Grenzwert** (z. B. „auffällig unter 41,60 %“) bei allen acht Kennzahlen; ohne Schwelle in dieser Richtung ein Hinweis.
+  - Startseite: gespielte Spiele „Endstand“ mit weisser Marke „2 : 1“, vorher „Gespielt“.
+  - Spieltag-Seite: Legende in jedem Reiter vor den Kacheln. Handy: Sprachwahl rechts im Kopf.
+  - Methodik: Spalte „Schwelle (vom Ligadurchschnitt)“ und neue Einleitung; Glossar: drei freigegebene Texte.
+  - Kontaktformular lässt sich nicht doppelt absenden.
 
 ## Einspielen
 
@@ -64,7 +71,7 @@ Das Skript fragt das Passwort des Postfachs `info@` verdeckt ab (wie bei Hosting
 ## Erwartungswerte
 
 - Git-Stand vorher: `1701bc6`.
-- Schritt 4: rund **717 bestanden, 16 übersprungen, 18 ausgelassen**, keine Fehler.
+- Schritt 4: rund **740 bestanden**, einige übersprungen und ausgelassen, keine Fehler.
 - Schritt 5: alle Container laufen, `/` = 200, `/dashboard/` = 200, `/vorschau/` = 401; Hinweis „nur 0 von 3 Testmails“ (beim ersten Mal).
 - Dashboard-Fusszeile: „Version 0.23 – E-Mail, Alarme und Überwachung“.
 - `mail_einrichten.sh`: „✅ Gespeichert in .env“, „✅ Neu gestartet“, „✅ Eingetragen: * * * * * …“ und drei Zeilen „✅ Testmail …: gesendet“.
@@ -82,4 +89,7 @@ Das Skript fragt das Passwort des Postfachs `info@` verdeckt ab (wie bei Hosting
    - Dann richtig ausfüllen und senden: „Danke, deine Nachricht ist angekommen.“ und eine Mail „Kontaktformular: …“ im Posteingang. Mit „Antworten“ geht die Antwort an die eingegebene Adresse.
 4. **Impressum:** zeigt `info@soccer-intelligence.com`.
 5. **Am Montag um 06:00** kommt die erste Statusmail „Wochenstatus KW …“.
-6. Sag mir, ob alles passt.
+6. **Spielseite** (z. B. ein Spiel mit Auffälligkeit über die Spieltag-Seite, auch auf dem Handy): Karten wie im Entwurf 2k, „Zahlen im Detail“ aufklappen – vierte Zeile Grenzwert; bei „Nicht eingestuft“ das ⓘ antippen.
+7. **Startseite:** ein gespieltes Spiel im Ranking zeigt „Endstand“ und die weisse Marke.
+8. **Spieltag-Seite:** Legende steht in jedem Reiter direkt vor den Kacheln.
+9. Sag mir, ob alles passt.

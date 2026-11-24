@@ -14,7 +14,7 @@
 {% macro kopf() %}<h1>Kontakt</h1><p>Fragen, Wünsche oder Verbesserungsvorschläge? Schreib mir, ich freue mich auf deine Nachricht.</p>{% endmacro %}
 
 {% macro rumpf() %}
-<form class="inhaltskarte formular" method="post" action="{{ link('kontakt') }}" novalidate>
+<form class="inhaltskarte formular" method="post" action="{{ link('kontakt') }}" novalidate data-ein-klick>
   <h2>Deine Nachricht</h2>
   {{ formular_meldung(f) }}
   <p class="klein">Felder mit * sind Pflichtfelder.</p>

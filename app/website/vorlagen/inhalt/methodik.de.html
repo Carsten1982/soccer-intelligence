@@ -12,15 +12,15 @@
 <section class="ebene" id="ebene1" aria-labelledby="ebene1-titel" data-ebene="1">
   <span class="ebene-marke">Ebene 1 · Kurz erklärt</span>
   <h2 class="ebene-titel" id="ebene1-titel">Das Prinzip auf einen Blick</h2>
-  <p>Wir suchen bei anstehenden Fußballspielen nach <b>auffälligen Werten</b>, etwa bei Toren, Ecken oder gelben Karten.</p>
-  <p>Dafür vergleichen wir die erwarteten Werte mit dem Ligadurchschnitt und prüfen, ob sich solche Auffälligkeiten in der Vergangenheit bestätigt haben. Daraus entsteht die <b>Signalqualität</b>: stark, mittel oder gering.</p>
+  <p>Soccer Intelligence untersucht anstehende Fußballspiele auf <b>statistische Auffälligkeiten</b>. Dafür vergleichen wir erwartete Werte – etwa bei Toren, Ecken oder gelben Karten – mit dem Durchschnitt der jeweiligen Liga.</p>
+  <p>Weicht ein Wert deutlich ab, prüfen wir anhand historischer Spieldaten, wie aussagekräftig solche Auffälligkeiten bisher waren. Daraus leiten wir die <b>Signalqualität</b> ab: stark, mittel oder gering.</p>
   {{ schritte([
     ("Abweichung finden", "Wir vergleichen die erwarteten Werte eines Spiels mit dem Ligadurchschnitt. Weicht ein Wert deutlich ab, ist das Spiel auffällig."),
     ("Vergleich mit der Vergangenheit", "Wir schauen, wie oft sich solche Auffälligkeiten in früheren Spielen bestätigt haben."),
     ("Signalqualität vergeben", "Je besser eine Auffälligkeit in der Vergangenheit abgeschnitten hat, desto höher die Signalqualität: stark, mittel oder gering."),
   ]) }}
   <h3>Was bedeutet die Signalqualität?</h3>
-  {{ stufen_karten({"stark": "Hat sich früher deutlich bestätigt.", "mittel": "Hat sich früher solide bestätigt.", "gering": "Hat sich früher etwas öfter bestätigt als normal."}) }}
+  {{ stufen_karten({"stark": "Hat sich in der Vergangenheit deutlich bestätigt.", "mittel": "Hat sich in der Vergangenheit solide bestätigt.", "gering": "Hat sich in der Vergangenheit nur leicht bestätigt."}) }}
   <h4>Worauf basiert unsere Signalqualität?</h4>
   <p>Sie basiert auf {{ m.saisons_wort }} ausgewerteten Saisons, {{ m.kombinationen }} historisch bewährten Kombinationen und deren gemessenem Mehrwert.</p>
   <ul class="grundlage">

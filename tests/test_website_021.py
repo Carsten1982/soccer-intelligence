@@ -13,6 +13,7 @@ import re
 import tomllib
 from datetime import date, datetime
 from decimal import Decimal
+from fractions import Fraction
 from pathlib import Path
 
 import pytest
@@ -484,3 +485,69 @@ def test_w29_start_without_data_line_and_athletic_bilbao(dienst):
     for lang in ("de", "en"):
         assert namen.anzeige("LaLiga", "Athletic Club", lang) == "Athletic Bilbao"
     assert AD.slug("Athletic Club") == "athletic-club"
+
+
+# --- W30 Spielseite nach Entwurf „2k final“ (0.23, Beschlüsse 25–32 vom 24.11.2026) ------------------------------------
+
+def _k(abw, anomalie="", vorl=False, pos=None, neg=None, ref=Fraction(64), prozent=False):
+    from decimal import Decimal as D
+    from types import SimpleNamespace as N
+    sig = lambda s: None if s is None else N(schwelle=D(str(s)))                     # noqa: E731
+    return N(anomalie=anomalie, abweichung_rund=None if abw is None else D(str(abw)), vorlaeufig=vorl,
+             hauptwert_rund=D("40"), heim=N(wert_rund=D("38")), auswaerts=N(wert_rund=D("42")),
+             referenz=N(wert=ref, wert_rund=D(str(float(ref)))), prozent=prozent,
+             schwellen=N(positiv=sig(pos), negativ=sig(neg)))
+
+
+def test_w30_cases_and_limit_value():
+    """Fall A–D aus der Schwellendatei je Richtung; Grenzwert = Ligadurchschnitt × (1 ± Schwelle), exakt gerundet."""
+    from website.spiel import kennzahl
+    a = kennzahl("kpi08", _k(-38.35, "stark", neg=35, prozent=True))
+    assert (a["fall"], a["grenzwert"], a["schwelle_ganz"]) == ("A", 41.6, 35)          # 64 × 0,65 = 41,60
+    b = kennzahl("kpi09", _k(-8.4, neg=10, ref=Fraction(10)))
+    assert (b["fall"], b["grenzwert"]) == ("B", 9.0)
+    c = kennzahl("kpi02", _k(9.07, neg=20))                                            # nur Schwelle für „weniger“
+    assert (c["fall"], c["grenzwert"], c["schwelle_ganz"]) == ("C", None, None)
+    d = kennzahl("kpi06", _k(5.18, vorl=True, pos=10))
+    assert d["fall"] == "D"
+    m = kennzahl("kpi03", _k(34.0, pos=35))                                            # feste Marke 2,5
+    assert (m["fall"], m["grenzwert"]) == ("B", 3.38)                                  # 2,5 × 1,35 = 3,375 → 3,38
+    gerundet = kennzahl("kpi05", _k(1.0, pos=15, ref=Fraction(943, 100)))
+    assert gerundet["grenzwert"] == 10.84                                              # 9,43 × 1,15 = 10,8445 → 10,84
+
+
+def test_w30_page_cards_chip_button_and_texts(monkeypatch):
+    from website import seiten, spiel
+    s = {"seite": "spiel", "id": 1, "liga": "bundesliga", "liga_key": "bundesliga", "slug": "a-b-1", "saison": "2026/2027",
+         "spieltag": 12, "heim": "A", "gast": "B", "datum": "2026-11-28", "anstoss": "15:30", "termin": "bestaetigt",
+         "status": None, "sonderspiel": None, "zustand": "offen", "ergebnis": None, "form_heim": ["-"] * 5,
+         "form_gast": ["-"] * 5, "bewertung": "auffaellig", "werte_ab": None, "ergebnis_vom": None, "nachtraeglich": False,
+         "korrigiert": False, "ohne_werte": False, "neu_in_liga": [], "anzahl_gewertet": 3, "im_fenster": True,
+         "anstoss_zeit": "2026-11-28T15:30", "heim_id": None, "gast_id": None, "jetzt": "2026-11-25T10:00",
+         "stand": None, "zeitreise": False}
+    a = spiel.kennzahl("kpi08", _k(-38.35, "stark", neg=35, prozent=True))
+    b = spiel.kennzahl("kpi09", _k(-8.4, neg=10, ref=Fraction(10)))
+    c = spiel.kennzahl("kpi02", _k(9.07, neg=20))
+    s.update(auffaellig=[a], uebrige=[c, b], groesste=a)
+    html = seiten.spiel_html(s, seiten.Kontext())
+    for text in ("Auffälligkeiten", "Ohne Auffälligkeit", "Beide Teams treffen (in %)",
+                 '<span class="pct-zusatz"> (in %)</span>', "Tore beider Teams seltener erwartet",
+                 "unter 41,60 %", "Statistisch auffällig. Schwelle: mehr als 35 % unter dem Ligadurchschnitt.",
+                 "Keine Auffälligkeit", "unter 9,00", "Nicht erreicht. Schwelle: mehr als 10 % unter dem Ligadurchschnitt.",
+                 "Nicht eingestuft", 'aria-controls="c-kpi02"', 'id="c-kpi02" data-aufklapp-ziel', "Mehr Tore erwartet",
+                 "Erwartete Quote", "Ligadurchschnitt pro Spiel", "Auffälligkeitsschwelle", t("spiel.c_notiz")):
+        assert text in html, text
+    assert "Nicht auffällig" not in html and "Abweichung</span>" not in html          # Abweichung nicht wiederholt
+    en = seiten.spiel_html(s, seiten.Kontext(lang="en"))
+    for text in ("No anomaly flagged", "Not assessed", "below 41.60%", "Expected rate",
+                 "Statistical anomaly. Threshold: more than 35% below the league average."):
+        assert text in en, text
+
+
+def test_w30_not_enough_data_names_the_new_team():
+    from website import seiten
+    seite = {"bewertung": "zu_wenig_daten", "ohne_werte": True, "status": None}
+    assert seiten.spiel_kern(seite, "de", ["SV Elversberg"])["text"] == \
+        "Da SV Elversberg neu in der Liga ist, reicht die Datenbasis für eine Bewertung noch nicht aus."
+    assert seiten.zu_wenig_hinweis(seite, "en", ["SV Elversberg", "Hull City"]) == \
+        "There are no values for this match yet because SV Elversberg and Hull City are new to the league."

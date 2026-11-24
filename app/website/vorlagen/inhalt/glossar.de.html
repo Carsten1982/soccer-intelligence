@@ -56,7 +56,7 @@
 <section class="ebene" id="spielstatus" aria-labelledby="spielstatus-titel">
   <h2 class="ebene-titel" id="spielstatus-titel">Spielstatus</h2>
   <dl class="begriffe">
-    {% call begriff("Gespielt") %}Ab zwei Stunden nach dem Anpfiff ist ein Spiel ausgegraut und als gespielt markiert. Der Endstand folgt mit der nächsten Datenaktualisierung. Die Werte bleiben die vor dem Spiel berechneten.{% endcall %}
+    {% call begriff("Gespielt") %}Ab zwei Stunden nach dem Anpfiff ist ein Spiel ausgegraut und als gespielt markiert. Der Endstand folgt mit der nächsten Datenaktualisierung, meist kurz danach. Die Werte bleiben die vor dem Spiel berechneten.{% endcall %}
     {% call begriff("Endstand") %}Das Ergebnis nach dem Abpfiff, zum Beispiel „Gespielt · 2:1“.{% endcall %}
     {% call begriff("Nachholspiel") %}Ein Spiel eines früheren Spieltags, das später nachgeholt wird.{% endcall %}
     {% call begriff("Vorgezogen") %}Ein Spiel eines späteren Spieltags, das früher gespielt wird.{% endcall %}
@@ -66,14 +66,14 @@
     {% call begriff("Ausgesetzt") %}Das Spiel wurde unterbrochen und wird möglicherweise fortgesetzt. Ist es zu Ende gespielt, erscheint es wie jedes gespielte Spiel.{% endcall %}
     {% call begriff("Am grünen Tisch gewertet") %}Das Ergebnis wurde von der zuständigen Stelle festgelegt, ohne dass das Spiel gespielt wurde. Bei diesem Status und bei „Verschoben“, „Abgesagt“, „Abgebrochen“ und „Ausgesetzt“ zeigt die Seite keine Werte und keine Bewertung.{% endcall %}
     {% call begriff("Zu wenig Daten") %}Die Daten reichen für eine Bewertung nicht aus, etwa weil alle Kennzahlen vorläufig sind. Ist nur eine Kennzahl betroffen, bleibt das Spiel bewertet; diese Kennzahl steht dann ohne Stufe im Normalbereich.{% endcall %}
-    {% call begriff("Werte ab …") %}Die Werte erscheinen, sobald beide Teams ihr vorheriges Ligaspiel gespielt haben und das Ergebnis übernommen ist, meist am Tag nach dem vorherigen Spieltag.{% endcall %}
+    {% call begriff("Werte ab …") %}Die Werte erscheinen, sobald beide Teams ihr vorheriges Ligaspiel gespielt haben und das Ergebnis übernommen ist, meist noch am Abend ihres vorherigen Spiels.{% endcall %}
   </dl>
 </section>
 
 <section class="ebene" id="datenstand" aria-labelledby="datenstand-titel">
   <h2 class="ebene-titel" id="datenstand-titel">Datenstand und Zeiten</h2>
   <dl class="begriffe">
-    {% call begriff("Datenstand") %}Der Zeitpunkt der letzten Aktualisierung. Die Daten werden einmal täglich um 4:00 Uhr aktualisiert.{% endcall %}
+    {% call begriff("Datenstand") %}Der Zeitpunkt der letzten Aktualisierung. Die Daten werden nach jedem Spiel aktualisiert, rund 2¼ Stunden nach dem Anpfiff, und jede Nacht um 4:00 Uhr nochmals vollständig abgeglichen.{% endcall %}
     {% call begriff("Spielplan zuletzt aktualisiert") %}Dieser Hinweis erscheint, wenn die letzte erfolgreiche Aktualisierung mehr als 48 Stunden zurückliegt. Neue Spiele und Termine fehlen dann eventuell.{% endcall %}
     {% call begriff("Spielpause, Winterpause, Sommerpause") %}Zeiten, in denen in einer Liga keine Spiele stattfinden. Die Seite nennt dann den nächsten Spieltag oder den Saisonstart.{% endcall %}
     {% call begriff("Anstoßzeiten") %}Alle Anstoßzeiten in mitteleuropäischer Zeit (MEZ/MESZ).{% endcall %}

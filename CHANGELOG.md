@@ -5,7 +5,7 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
-## 20.11.2026 – Version 0.23: E-Mail, Alarme und Überwachung
+## 24.11.2026 – Version 0.23: E-Mail, Alarme, Überwachung und Designrunde
 
 - **Carsten** · Prüfung 0.22 (Punkte 1–6 in Ordnung); Wunsch: In „Läufe heute“ die Partie nennen. Postfächer `info@` und `alert@` eingerichtet (Weiterleitung an die private Adresse). Entscheide F1–F7 zu `docs/09` (cron-Eintrag ja, vier Container, höchstens 3 Mails je Alarm, Statusmail Montag 06:00, Laufzeiten VPS 22.06.2027, Domain 23.10.2027, Postfach 20.11.2028, alle automatisch). Wunsch: nach jedem Release Testmails über alle Wege.
 - **Claude** · Spezifikation `docs/09_Betrieb_EMail.md` v0.4 (neu, in CLAUDE.md als Quelle eingetragen).
@@ -19,6 +19,8 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 - **Claude** · „Läufe heute“ nennt je geplantem Lauf die Partien (`laufplan.plan_mit_partien`, Test L7).
 - **Carsten** · 0.22 im Betrieb geprüft: Läufe nach dem Spiel, Kontrolllauf 04:00, Backups – alles in Ordnung (24.11.2026). Wünsche Dashboard: Warnung „Spieltag unvollständig“ erst nach dem Spieltag; Protokoll höchstens 20 Zeilen sichtbar; Schnappschüsse kurz erklären.
 - **Claude** · **Datenqualität:** „Spieltag unvollständig“ in der laufenden Saison nur noch Hinweis; neue Prüfung **„Ergebnis fehlt“** im Spielplan (`core/fixtures._missing_results`): Warnung erst, wenn der Spieltag laut Spielplan vorbei ist und am Folgetag nach dem Kontrolllauf (04:00) ein Ergebnis fehlt; Nachholspiele nach dem eigenen Termin; verschobene, abgesagte, abgebrochene und ausgesetzte Spiele nur Hinweis „Spiel ausstehend“ (Entscheid Carsten 24.11.2026). **Reiter Datenimport/API:** Protokoll scrollt nach rund 20 Zeilen (Kopfzeile bleibt stehen); Erklärung der Schnappschüsse in zwei Sätzen. Tests angepasst (Beispiel-Spielpläne mit festem Zeitpunkt) und ergänzt.
+- **Carsten** · Rechenlogik bestätigt (Mittelwert beider Teams, bei Gelben Karten Summe; Schwelle immer relativ zum Ligadurchschnitt) und Entscheid Grenzwert bei allen acht Kennzahlen im Detail (24.11.2026). Designanpassungen 24.11. geliefert (Spiel_P1 „2k final“ und übrige Seiten); Rückfragen beantwortet: Startseite „Endstand“ mit Marke, vor dem Ergebnis „Gespielt“; Methodik-Schaltfläche wie bisher; drei Glossartexte und Texte des Kontaktformulars freigegeben.
+- **Claude** · **Spielseite nach 2k final** (`website/spiel.py`, `vorlagen/spiel.html`): Karten A–D, Gruppen „Auffälligkeiten“ / „Ohne Auffälligkeit“, Detail in vier Blöcken mit Grenzwert (exakt mit Brüchen, kaufmännisch gerundet), Schwellensatz, Kurzaussagen je Kennzahl, Hinweis nennt neue Mannschaft. **Übrige Seiten:** Endstand-Marke im Ranking, Legende je Reiter auf der Spieltag-Seite, Kopf auf dem Handy mit Sprachwahl rechts, Ligawahl ab 900 px einzeilig, Methodik-Texte und Spalte „Schwelle (vom Ligadurchschnitt)“, Glossartexte (Gespielt, Werte ab, Datenstand), Kontaktformular gegen doppeltes Absenden. Tests W30, w14/w15 angepasst.
 - **Claude** · Tests B1–B8 (`test_betrieb_023.py`); W25 erlaubt die öffentliche Projektadresse. Doku: `01` (0, 5, 6.6), `08`, `09`, RELEASE.md.
 
 ## 20.11.2026 – Version 0.22 eingespielt

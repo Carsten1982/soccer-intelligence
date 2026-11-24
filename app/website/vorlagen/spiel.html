@@ -8,26 +8,71 @@
 <div class="sb-form">{% for f in reihe %}<span class="form-{{ f }}" title="{{ t('spiel.form.' ~ f) }}">{{ '–' if f == '-' else t('spiel.form_kurz.' ~ f) }}</span>{% endfor %}</div>
 {%- endmacro %}
 
-{% macro schwelle(k) -%}
-{%- if k.abweichung is none %}–{% elif k.schwelle is none %}{{ t('spiel.schwelle_keine') }}{% elif k.richtung == 'hoch' %}{{ t('spiel.schwelle_ueber', wert=prozent(k.schwelle)) }}{% else %}{{ t('spiel.schwelle_unter', wert=prozent(k.schwelle)|replace('+', '−')) }}{% endif -%}
+{% macro kname(k) -%}
+{{ t('kennzahl.' ~ k.kpi ~ '.name') }}{% if k.prozent %}{{ t('spiel.prozent_zusatz') }}{% endif %}
+{%- endmacro %}
+
+{% macro chip(k) -%}
+{#- Fall A Signalqualität, B „Keine Auffälligkeit“, C „Nicht eingestuft ⓘ“ (echter Knopf, klappt den Erklärsatz in der
+    Karte auf), D „Zu wenig Daten“ (seit 0.23, Entwurf 2k final, Beschluss 27/29). -#}
+{%- if k.fall == 'A' %}{{ q_chip(k.stufe) }}
+{%- elif k.fall == 'C' %}<button type="button" class="q-chip q-ohne chip-info" aria-expanded="true" aria-controls="c-{{ k.kpi }}" data-aufklapp="c-{{ k.kpi }}">{{ t('spiel.chip_nicht_eingestuft') }}{{ info_icon() }}<span class="unsichtbar"> – {{ t('spiel.chip_info') }}</span></button>
+{%- elif k.fall == 'D' %}<span class="q-chip q-ohne">{{ t('spiel.chip_zu_wenig_daten') }}</span>
+{%- else %}<span class="q-chip q-ohne">{{ t('spiel.chip_keine') }}</span>{% endif %}
+{%- endmacro %}
+
+{% macro grenzwert(k) -%}
+{%- if k.abweichung is none %}–{% elif k.grenzwert is none %}{{ t('spiel.schwelle_keine') }}{% elif k.richtung == 'hoch' %}{{ t('spiel.schwelle_ueber', wert=zahl(k.grenzwert, k)) }}{% else %}{{ t('spiel.schwelle_unter', wert=zahl(k.grenzwert, k)) }}{% endif -%}
 {%- endmacro %}
 
 {% macro zahlen(k) -%}
+{#- „Zahlen im Detail“ (seit 0.23): vier Blöcke, Abweichung und Signalqualität werden nicht wiederholt (Beschluss 25/30). -#}
 <div class="zahlen">
   <div class="block">
-    <div class="zeile"><span>{{ t('spiel.erwartungswert') }}</span><b>{{ zahl(k.erwartung, k) }}</b></div>
-    {% if not k.summe %}<div class="klein">{{ t('spiel.je_mannschaft') }} · {{ t('spiel.mittelwert') }}</div>{% endif %}
+    <div class="klein">{{ t('spiel.d_letzte10_gelb') if k.summe else t('spiel.d_letzte10') }}</div>
     <div class="zeile team"><span><i class="farbpunkt" aria-hidden="true"></i>{{ heim_name }}</span><b>{{ zahl(k.heim, k) }}</b></div>
-    <div class="zeile team"><span><i class="farbpunkt gast" aria-hidden="true"></i>{{ gast_name }}</span><b>{% if k.summe and k.gast is not none %}+ {% endif %}{{ zahl(k.gast, k) }}</b></div>
-    {% if k.summe and k.heim is not none and k.gast is not none %}
-    {% set anteil = aufteilung(k) %}
-    <div class="aufteilung" role="img" aria-label="{{ t('spiel.aufteilung', name=t('kennzahl.' ~ k.kpi ~ '.name'), heim=heim_name, gast=gast_name, wert_heim=zahl(k.heim, k), wert_gast=zahl(k.gast, k)) }}"><span class="w{{ anteil }}"></span><span class="gast w{{ 100 - anteil }}"></span></div>
+    <div class="zeile team"><span><i class="farbpunkt gast" aria-hidden="true"></i>{{ gast_name }}</span><b>{{ zahl(k.gast, k) }}</b></div>
+  </div>
+  <div class="block">
+    <div class="zeile"><span>{{ t('spiel.d_erwartung_quote') if k.prozent else t('spiel.d_erwartung_gelb') if k.summe else t('spiel.d_erwartung_tore') if k.kpi in ('kpi02', 'kpi03', 'kpi06', 'kpi07') else t('spiel.erwartungswert') }}</span><b>{{ zahl(k.erwartung, k) }}</b></div>
+    <div class="klein">{{ t('spiel.d_summe') if k.summe else t('spiel.mittelwert') }}</div>
+  </div>
+  <div class="zeile trenn"><span>{{ t('spiel.d_vergleich') if k.vergleich_art == 'marke' else t('spiel.d_liga') if k.prozent else t('spiel.d_liga_spiel') }}</span><b>{{ zahl(k.vergleich, k) }}</b></div>
+  <div class="block">
+    {% if k.fall == 'C' %}
+    <div class="zeile"><span>{{ t('spiel.d_schwelle') }}</span><button type="button" class="wert-info" aria-expanded="true" aria-controls="cd-{{ k.kpi }}" data-aufklapp="cd-{{ k.kpi }}">{{ t('spiel.schwelle_keine') }}{{ info_icon() }}<span class="unsichtbar"> – {{ t('spiel.chip_info') }}</span></button></div>
+    <p class="klein c-notiz" id="cd-{{ k.kpi }}" data-aufklapp-ziel>{{ t('spiel.c_notiz') }}</p>
+    {% else %}
+    <div class="zeile"><span>{{ t('spiel.d_schwelle') }}</span><b>{{ grenzwert(k) }}</b></div>
+    {% if k.fall == 'D' %}<p class="klein">{{ t('spiel.keine_bewertung') }}</p>
+    {% elif k.schwelle_ganz is not none %}<p class="klein">{{ t('spiel.satz_' ~ ('a' if k.fall == 'A' else 'b') ~ '_' ~ k.richtung, schwelle=k.schwelle_ganz, bezug=t('spiel.bezug_marke') if k.vergleich_art == 'marke' else t('spiel.bezug_liga')) }}</p>{% endif %}
     {% endif %}
   </div>
-  <div class="zeile trenn"><span>{{ t('spiel.vergleichswert_marke') if k.vergleich_art == 'marke' else t('spiel.ligaschnitt') }}</span><b>{{ zahl(k.vergleich, k) }}</b></div>
-  <div class="zeile trenn"><span>{{ t('spiel.schwelle') }}</span><b>{{ schwelle(k) }}</b></div>
-  <div class="zeile trenn"><span>{{ t('spiel.abweichung') }}</span><b class="{{ 'farbe-' ~ k.richtung if k.stufe in ('stark', 'mittel', 'gering') else '' }}">{{ prozent(k.abweichung) }}{% if k.abweichung is not none %} · {{ t('stufe_detail.' ~ k.stufe) }}{% endif %}</b></div>
-  <button type="button" class="zuklappen" data-zuklappen hidden aria-label="{{ t('spiel.zahlen_detail_zu', name=t('kennzahl.' ~ k.kpi ~ '.name')) }}">{{ t('spiel.zuklappen') }}{{ chevron() }}</button>
+  <button type="button" class="zuklappen" data-zuklappen hidden aria-label="{{ t('spiel.zahlen_detail_zu', name=kname(k)) }}">{{ t('spiel.zuklappen') }}{{ chevron() }}</button>
+</div>
+{%- endmacro %}
+
+{% macro karte(k) -%}
+{#- Eine Kennzahl-Karte, gleich aufgebaut für alle Fälle (seit 0.23, Beschluss 25): Name, Chip, Abweichung mit Pfeil
+    und Kurzaussage, Balken, „Zahlen im Detail“. Fall A grün mit Streifen, sonst weiss. -#}
+<div class="karte {{ 'karte--' ~ k.stufe if k.fall == 'A' else 'karte--ohne' }}">
+  <div class="oben">
+    <div class="kopf-k">
+      <span class="ikon{{ '' if k.fall == 'A' else ' normal' }}"><svg class="icon" width="22" height="22" aria-hidden="true"><use href="#ic-{{ k.icon }}"/></svg></span>
+      <h3 class="name">{{ kname(k) }}</h3>
+      {{ chip(k) }}
+    </div>
+    <div class="wertzeile">
+      <span class="gross {{ ('farbe-' ~ k.richtung) if k.fall == 'A' else ('normal-' ~ k.richtung) if k.richtung and k.fall != 'D' else '' }}">{% if k.richtung %}<svg class="pfeil-wert" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ 'M12 19V5M6 11l6-6 6 6' if k.richtung == 'hoch' else 'M12 5v14M6 13l6 6 6-6' }}"/></svg>{% endif %}{{ prozent(k.abweichung) }}</span>
+      <span class="satz">{{ t('spiel.keine_bewertung') if k.fall == 'D' or not k.richtung else t('kennzahl.' ~ k.kpi ~ '.' ~ k.richtung) }}</span>
+    </div>
+    {% if k.fall == 'C' %}<p class="c-notiz" id="c-{{ k.kpi }}" data-aufklapp-ziel>{{ t('spiel.c_notiz') }}</p>{% endif %}
+    <span class="balken-mit-text">{{ balken(balken_daten(k), 'b10') }}<span class="mc-avg">{{ t('spiel.balken_vergleich') if k.vergleich_art == 'marke' else t('lesen.ligaschnitt_kurz') }}</span></span>
+  </div>
+  <details class="detail">
+    <summary aria-label="{{ t('spiel.zahlen_detail') }}: {{ kname(k) }}"><span>{{ t('spiel.zahlen_detail') }}</span><span class="chev">{{ chevron() }}</span></summary>
+    {{ zahlen(k) }}
+  </details>
 </div>
 {%- endmacro %}
 
@@ -69,7 +114,7 @@
         <div class="sb-label">{{ held.label }}</div>
         <div class="sb-zeile">
           {% if held.wert %}<div class="sb-gross {{ held.richtung }}">{{ held.wert }}</div>{% endif %}
-          <div class="sb-gross">{{ held.titel }}</div>
+          <div class="sb-gross">{{ held.titel }}{% if held.get('zusatz') %}<span class="pct-zusatz">{{ held.zusatz }}</span>{% endif %}</div>
         </div>
         <div class="sb-sub">{{ held.text }}</div>
       </div>
@@ -90,33 +135,14 @@
     <details class="lesen">{{ lesen_knopf() }}{{ lesen_ligaschnitt() }}</details>
   </div>
   <div class="karten">
-    {% for k in seite.auffaellig %}
-    <div class="karte karte--{{ k.stufe }}">
-      <div class="oben">
-        <div class="kopf-k">
-          <span class="ikon"><svg class="icon" width="22" height="22" aria-hidden="true"><use href="#ic-{{ k.icon }}"/></svg></span>
-          <h3 class="name">{{ t('kennzahl.' ~ k.kpi ~ '.name') }}</h3>
-          {{ q_chip(k.stufe) }}
-        </div>
-        <div class="wertzeile">
-          <span class="gross farbe-{{ k.richtung }}">{{ prozent(k.abweichung) }}</span>
-          <span class="satz">{{ t('kennzahl.' ~ k.kpi ~ '.' ~ k.richtung) }}</span>
-        </div>
-        <span class="balken-mit-text">{{ balken(balken_daten(k), 'b10') }}<span class="mc-avg">{{ t('lesen.ligaschnitt_kurz') }}</span></span>
-      </div>
-      <details class="detail">
-        <summary aria-label="{{ t('spiel.zahlen_detail') }}: {{ t('kennzahl.' ~ k.kpi ~ '.name') }}"><span>{{ t('spiel.zahlen_detail') }}</span><span class="chev">{{ chevron() }}</span></summary>
-        {{ zahlen(k) }}
-      </details>
-    </div>
-    {% endfor %}
+    {% for k in seite.auffaellig %}{{ karte(k) }}{% endfor %}
   </div>
 </div>
 {% endif %}
 
 {% if seite.bewertung == 'zu_wenig_daten' %}
 <div class="eng abschnitt-notiz">
-  <div class="notiz" role="note">{{ info_icon() }}<p><b>{{ t('spiel.hinweis_zu_wenig_daten_titel') }}</b> {{ t('spiel.hinweis_zu_wenig_daten_leer') if seite.ohne_werte else t('spiel.hinweis_zu_wenig_daten') }}</p></div>
+  <div class="notiz" role="note">{{ info_icon() }}<p><b>{{ t('spiel.hinweis_zu_wenig_daten_titel') }}</b> {{ zu_wenig_hinweis }}</p></div>
 </div>
 {% endif %}
 
@@ -126,21 +152,8 @@
     <h2 class="h2-klein">{{ t('spiel.kennzahlen') if seite.bewertung == 'zu_wenig_daten' else t('spiel.normalbereich') }}</h2>
     <details class="lesen">{{ lesen_knopf() }}{{ lesen_ligaschnitt() }}</details>
   </div>
-  <div class="normal-liste">
-    {% for k in seite.uebrige %}
-    <details class="detail">
-      <summary class="normal-zeile" aria-label="{{ t('spiel.zahlen_detail') }}: {{ t('kennzahl.' ~ k.kpi ~ '.name') }}">
-        <span class="oben">
-          <span class="ikon normal"><svg class="icon" width="20" height="20" aria-hidden="true"><use href="#ic-{{ k.icon }}"/></svg></span>
-          <span class="name">{{ t('kennzahl.' ~ k.kpi ~ '.name') }}{% if k.stufe == 'zu_wenig_daten' and seite.bewertung != 'zu_wenig_daten' %} <span class="vermerk">· {{ t('stufe.zu_wenig_daten') }}</span>{% endif %}</span>
-          <span class="wert {{ 'normal-' ~ k.richtung if k.richtung and k.stufe == 'normal' else '' }}">{{ prozent(k.abweichung) }}</span>
-          <span class="chev klein">{{ chevron() }}</span>
-        </span>
-        <span class="unten">{{ balken(balken_daten(k), 'b8') }}</span>
-      </summary>
-      {{ zahlen(k) }}
-    </details>
-    {% endfor %}
+  <div class="karten">
+    {% for k in seite.uebrige %}{{ karte(k) }}{% endfor %}
   </div>
 </div>
 {% endif %}

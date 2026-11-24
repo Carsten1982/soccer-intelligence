@@ -258,6 +258,17 @@ Heim, „gegen“, Gast, Termin („Sa 14.11. · 15:30“, „Sa 14.11. · Zeit 
 7. Status-Spiele (verschoben, abgesagt …): nur Scoreboard und Kernaussage, keine Kennzahlen (wie die graue Kachel, F5).
 8. Seit 0.21.2: grüne Schaltfläche „Alle Spiele des Spieltags“, darunter der unterstrichene Textlink „Wie entstehen diese Werte?“ (Methodik); kein Zeitzonen-Hinweis auf der Spielseite.
 
+**Seit 0.23 (Entwurf Spiel_P1 „2k final“, Beschlüsse Carsten 24.11.2026):** einheitliche Karten in vier Fällen –
+**A** auffällig (Chip Signalqualität), **B** „Keine Auffälligkeit“, **C** „Nicht eingestuft ⓘ“ (Schaltfläche klappt
+eine kurze Erklärung auf, ohne JavaScript immer sichtbar), **D** „Zu wenig Daten“ mit „Keine Bewertung möglich.“.
+Gruppen „Auffälligkeiten“ und „Ohne Auffälligkeit“ (bei zu wenig Daten „Kennzahlen“; der Hinweis nennt die neue
+Mannschaft). „Zahlen im Detail“ in vier Blöcken: letzte 10 Ligaspiele je Team (Gelbe Karten: Summe beider Teams, sonst
+Mittelwert), Ligadurchschnitt pro Spiel bzw. Marke 2,5, Abweichung, **Grenzwert** = Vergleichswert × (1 ± Schwelle/100),
+exakt gerechnet und kaufmännisch auf zwei Stellen, in der Richtung der Abweichung; ohne Schwelle in dieser Richtung
+„in dieser Richtung keine Schwelle in der Liga“. Satz zur Schwelle mit ganzer Zahl („mehr als 35 % unter dem
+Ligadurchschnitt“). Kurzaussagen je Kennzahl „Mehr/Weniger … erwartet“. Bei „Beide Teams treffen“ steht „(in %)“ in der
+Kernaussage, bis 520 px ausgeblendet. Rechenlogik unverändert (Regelwerk, Abschnitt 8).
+
 Werte unverändert aus dem Rechenkern (F6): Erwartungswert = `hauptwert`, Teamwerte = `heim`/`auswaerts`, Ligaschnitt = `referenz`, Abweichung = `abweichung` (gerundet), Stufe aus `schwellen.toml`; KPI 08 in Prozent.
 
 ### 7.2 Startseite (Entwurf 1d, ergänzend 1b; Übergabe Abschnitt 5)
@@ -295,7 +306,7 @@ Computer einzeilig, bis 520 px höchstens 300 px breit mit festem Umbruch nach d
 - **Startseite, Spieltag, Spielseite** nach den Entwürfen P1 vom 19.11.2026 (Main_P1, Spieltag_P1, Spiel_P1): Ranking als
   Karten mit Signalqualität (drei Balken), Kacheln je Stufe (stark/mittel/gering mit farbigem Streifen), Legende mit
   „Wie lese ich das?“, Zeitzonen-Hinweis, „Weitere Spiele dieses Spieltags“ auf der Spielseite; Endstand auf Kacheln und
-  im Ranking kompakt „Gespielt · 2:1“, auf der Spielseite „Endstand 2 : 1“.
+  im Ranking kompakt „Gespielt · 2:1“, auf der Spielseite „Endstand 2 : 1“. Seit 0.23 im Ranking der Startseite „Endstand“ mit weisser Marke „2 : 1“ (vor dem Ergebnis weiter „Gespielt“), Karte hellgrau; auf der Spieltag-Seite steht die Legende in jedem Reiter nach der Zusammenfassung, vor den Kacheln; Methodik-Spalte „Schwelle (vom Ligadurchschnitt)“; Kopf bis 520 px mit der Sprachwahl rechts (Entscheide Carsten 24.11.2026).
 - **Methodik** (Entwurf Methodik_10): drei Ebenen mit Sprungmarken (`#ebene1` bis `#ebene3`), ohne JavaScript alle
   sichtbar. Zahlen aus `schwellen.toml`: Saisons, bewährte Kombinationen (von 8 Kennzahlen × 4 Ligen × 2 Richtungen),
   Aufteilung stark/mittel/gering, Tabelle je Liga (Kennzahl, Richtung, Schwelle, Signalqualität) und Übersicht. Das
@@ -500,4 +511,5 @@ Computer einzeilig, bis 520 px höchstens 300 px breit mit festem Umbruch nach d
 | 0.21.1 | Entwürfe 20.11. (Farben, Spielseite, Methodik-Karten, Handy) und Vorschau 5 Tage |
 | 0.21.2 | Zweite Lieferung der Entwürfe 20.11.: Spielseite, Spieltag-Kopf, Startseite (SEO-Box, Ranking-Karte), Methodik-Schaltfläche |
 | 0.22 | Startseite ohne Datenstand-Zeile; Anzeigenamen der 12 Aufsteiger und Athletic Bilbao; Glossar und Archivtexte freigegeben |
-| später | 0.23 Kontakt-Versand und E-Mail-Alarme; 0.24 Cookie-Wahl, GA4; 1.0 Qualität und Livegang |
+| 0.23 | Kontaktformular aktiv; Spielseite nach Entwurf 2k final (Karten A–D, Grenzwert im Detail), Endstand-Marke im Ranking, Legende je Reiter, Glossartexte zu den Läufen nach jedem Spiel freigegeben |
+| später | 0.24 Cookie-Wahl, GA4; 1.0 Qualität und Livegang |

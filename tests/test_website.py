@@ -469,12 +469,14 @@ def test_w14_values_q1_q2_q4(partien):
     assert k05["stufe"] == "zu_wenig_daten" and s["anzahl_gewertet"] == 7
     assert [k["kpi"] for k in s["uebrige"]][0] == "kpi05"                           # nach Betrag (70 > 8 > 5)
     html = seiten.spiel_html(s, seiten.Kontext())
+    # seit 0.23 (Entwurf 2k final): einheitliche Karten, Detail mit vier Blöcken, Chip „Zu wenig Daten“ statt Vermerk
     for text in ("Auffälligstes Merkmal", "+44,00 %", "Über 2,5 Tore", "Mehr als 2,5 Tore erwartet",
-                 "Vergleichswert (Marke)", "<b>2,50</b>", "Je Mannschaft · Mittelwert beider Teams", "+ 2,20",
-                 'class="w39"', 'class="gast w61"', t("spiel.normalbereich"), '<span class="vermerk">· ', "50,00 %",
-                 "54,35 %", "Sa 21.11. · 15:30", "Bundesliga · 10. Spieltag"):
+                 "<span>Vergleichswert</span><b>2,50</b>", "Gelbe Karten der Mannschaft pro Spiel", "Summe beider Teams",
+                 "Erwartete gelbe Karten im Spiel", t("spiel.normalbereich"), t("spiel.chip_zu_wenig_daten"),
+                 "50,00 %", "54,35 %", "Sa 21.11. · 15:30", "Bundesliga · 10. Spieltag"):
         assert text in html, text
-    assert html.count("Je Mannschaft") == 7                                          # alle ausser Gelbe Karten
+    assert html.count("Mittelwert beider Teams") == 7                                # alle ausser Gelbe Karten (Summe)
+    assert "Je Mannschaft" not in html and 'class="vermerk"' not in html and 'class="aufteilung"' not in html
     assert "Weniger als 2,5 Tore" not in html and t("spiel.hinweis_zu_wenig_daten_titel") not in html
 
 
@@ -630,7 +632,7 @@ def test_w15_ranking_like_dashboard():
     html = seiten.start_html(s, seiten.Kontext())
     assert html.count("mc-card--gespielt") == 1 and '<span class="mc-status">Gespielt</span>' in html
     s = start.start_daten(_start_daten(ergebnisse={(S, "A", "B"): (2, 1)}), zp("2026-11-21T16:00"))
-    assert s["ranking"][1]["ergebnis"] == [2, 1] and "Gespielt · 2:1" in seiten.start_html(s, seiten.Kontext())
+    assert s["ranking"][1]["ergebnis"] == [2, 1] and "Endstand <span class=\"mc-endstand\">2 : 1</span>" in seiten.start_html(s, seiten.Kontext())  # seit 0.23
 
 
 @pytest.mark.parametrize("plaene, now, alter, art, tage, liga, texte", [

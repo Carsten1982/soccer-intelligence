@@ -55,7 +55,7 @@
 <section class="ebene" id="spielstatus" aria-labelledby="spielstatus-titel">
   <h2 class="ebene-titel" id="spielstatus-titel">Match status</h2>
   <dl class="begriffe">
-    {% call begriff("Played") %}From two hours after kick-off, a match is greyed out and marked as played. The final score follows with the next data update. The values remain those calculated before the match.{% endcall %}
+    {% call begriff("Played") %}From two hours after kick-off, a match is greyed out and marked as played. The final score follows with the next data update, usually shortly afterwards. The values remain those calculated before the match.{% endcall %}
     {% call begriff("Final score") %}The result after the final whistle, for example "Played · 2:1".{% endcall %}
     {% call begriff("Rescheduled match") %}A match from an earlier matchday that is played later.{% endcall %}
     {% call begriff("Brought forward") %}A match from a later matchday that is played earlier.{% endcall %}
@@ -65,14 +65,14 @@
     {% call begriff("Suspended") %}The match has been stopped and may be resumed. Once it is finished, the page shows it like any played match.{% endcall %}
     {% call begriff("Result awarded") %}The result has been awarded by the relevant authority without the match being played. For this status and for Postponed, Cancelled, Abandoned and Suspended, the page shows no values and no rating.{% endcall %}
     {% call begriff("Not enough data") %}There is not enough data to rate the match, for example because all metrics are provisional. If only one metric is affected, the match stays rated; that metric is listed without a level under the normal range.{% endcall %}
-    {% call begriff("Values from …") %}The values appear once both teams have played their previous league match and its result has been processed, usually the day after the previous matchday.{% endcall %}
+    {% call begriff("Values from …") %}The values appear once both teams have played their previous league match and its result has been processed, usually on the evening of their previous match.{% endcall %}
   </dl>
 </section>
 
 <section class="ebene" id="datenstand" aria-labelledby="datenstand-titel">
   <h2 class="ebene-titel" id="datenstand-titel">Data and times</h2>
   <dl class="begriffe">
-    {% call begriff("Data as of") %}The time of the last update. The data is updated once a day at 04:00.{% endcall %}
+    {% call begriff("Data as of") %}The time of the last update. The data is updated after every match, around 2¼ hours after kick-off, and fully checked again every night at 04:00.{% endcall %}
     {% call begriff("Fixture list last updated") %}This notice appears if the last successful update is more than 48 hours old. New matches or changes to match dates may then not yet be reflected.{% endcall %}
     {% call begriff("Break, winter break, summer break") %}Periods in which no matches are played in a league. The page then shows the next matchday or the start of the season.{% endcall %}
     {% call begriff("Kick-off times") %}All kick-off times in Central European Time (CET/CEST).{% endcall %}
