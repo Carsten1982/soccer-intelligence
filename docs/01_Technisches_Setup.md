@@ -8,9 +8,9 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 
 ## 0. Stand und Versionen
 
-**In Betrieb:** Version 0.22 (seit 20.11.2026) – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit Auffälligkeit und Signalqualität stark / mittel / gering (23 Schwellen), Top Anomalien, Datenqualität, Sensitivitätsanalyse, Datenimport über API-Football mit Schnappschuss je Spiel; Vorschau weiterer Spieltage ab heute + 5; Website-Vorschau unter `/vorschau` nach den Entwürfen vom 20.11. in Deutsch und Englisch (Archiv je Spieltag, Methodik mit Excel-Download, Glossar, Kontakt ohne Versand, Impressum, Datenschutz), vorbereitet für Suchmaschinen (noch nichts im Index, `index_ab` leer).
+**In Betrieb:** Version 0.23 (seit 24.11.2026, `efcc976`; Mailversand eingerichtet, Testmails über alle drei Wege angekommen, Prüfskript im Zeitplan) – E-Mail-Alarme, Statusmail, Server-Überwachung, Kontaktformular aktiv; Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit Auffälligkeit und Signalqualität stark / mittel / gering (23 Schwellen), Top Anomalien, Datenqualität, Sensitivitätsanalyse, Datenimport über API-Football mit Schnappschuss je Spiel; Vorschau weiterer Spieltage ab heute + 5; Website-Vorschau unter `/vorschau` nach den Entwürfen vom 20.11. in Deutsch und Englisch (Archiv je Spieltag, Methodik mit Excel-Download, Glossar, Kontakt ohne Versand, Impressum, Datenschutz), vorbereitet für Suchmaschinen (noch nichts im Index, `index_ab` leer).
 
-**Als Nächstes:** Version 0.23 einspielen (E-Mail, Alarme, Statusmail, Server-Überwachung, Kontaktformular, Datenqualität „Ergebnis fehlt“, Designrunde 24.11. mit Spielseite 2k final; danach einmalig `tools/mail_einrichten.sh`, Abschnitt 6.6). Danach 0.24 Cookie-Hinweis und Google Analytics. Design-Chat: Rückmeldungen 0.22 und zur Rechenlogik/Grenzwert übergeben (24.11.2026).
+**Als Nächstes:** Prüfung 0.23 im Browser (RELEASE.md) und erste Statusmail am Montag 06:00; danach 0.24 Cookie-Hinweis und Google Analytics.
 
 **Als Nächstes – Releaseplan bis zum Livegang (Freigabe Carsten 19.11.2026):**
 

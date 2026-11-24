@@ -5,6 +5,11 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 24.11.2026 – Version 0.23 eingespielt
+
+- **Carsten** · Version 0.23 eingespielt (`efcc976`, Pull Request #25; Tests grün). `tools/mail_einrichten.sh` ausgeführt: Zugangsdaten in `.env`, zwei Container neu gestartet, Prüfskript im Zeitplan des Servers (cron), drei Testmails angekommen.
+- **Claude** · Stand nachgetragen (`01`, Abschnitt 0).
+
 ## 24.11.2026 – Version 0.23: E-Mail, Alarme, Überwachung und Designrunde
 
 - **Carsten** · Prüfung 0.22 (Punkte 1–6 in Ordnung); Wunsch: In „Läufe heute“ die Partie nennen. Postfächer `info@` und `alert@` eingerichtet (Weiterleitung an die private Adresse). Entscheide F1–F7 zu `docs/09` (cron-Eintrag ja, vier Container, höchstens 3 Mails je Alarm, Statusmail Montag 06:00, Laufzeiten VPS 22.06.2027, Domain 23.10.2027, Postfach 20.11.2028, alle automatisch). Wunsch: nach jedem Release Testmails über alle Wege.
