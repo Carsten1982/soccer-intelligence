@@ -113,9 +113,9 @@ def test_a5_ergebnisseite_de_en():
     for text in ('<span class="a-tore">2 : 1</span>', "Halbzeit 1 : 0", "Erwartet und tatsächlich",
                  '<th scope="col" class="a-zahl" role="columnheader">Ligadurchschnitt</th>', "✓</span> Bestätigt",
                  "✗</span> Nicht bestätigt", ">Ja<", "Wird nachgeliefert", "Signalqualität stark",
-                 "Vergleichswert statt Ligadurchschnitt: feste Marke 2,5.", "Statistisch auffällig ab",
+                 "Kein Ligadurchschnitt – feste Marke 2,5.", "Statistisch auffällig ab",
                  "Vor dem Spiel gilt ein Wert in der Bundesliga ab dieser Abweichung", "über 3,60", "keine Schwelle",
-                 "Feste Marke 2,5 statt Ligadurchschnitt", 'aria-controls="a-box" data-aufklapp="a-box"',
+                 'aria-controls="a-box" data-aufklapp="a-box"',
                  "Einige Statistikwerte liegen noch nicht vor.", "64 %", "Ohne Auffälligkeit"):
         assert text in html, text
     assert "Auffälligstes Merkmal" not in html and 'class="karte' not in html            # keine Karten
@@ -162,3 +162,30 @@ def test_a7_gespielt_ohne_endstand():
     seite = spiel.spiel_daten(d, 9, zp("2026-11-21T10:00"))
     assert seite["ansicht"] == "erwartung"
     assert "Gespielt · Endstand folgt" in seiten.spiel_html(seite, seiten.Kontext())
+
+
+def test_a8_design_550():
+    """0.26 (Beschlüsse 53–58): Link „Frühere Spieltage ansehen“ (Spieltag − 1, am 1. Spieltag keiner), zwei getrennte
+    Tabellen, Hinweis nur bei Ausnahmen, Chips rechtsbündig, Satz „für kommende Spiele“."""
+    from datetime import date
+    from test_website import BL, FakeDaten, game, plan, zp
+    fx = plan(game(10, date(2026, 11, 22), "15:30", "C", "D"))
+    fx["api_id"] = [10]
+    s = spieltag.spieltag_daten(FakeDaten({"Bundesliga": fx}, {}, {}), BL, zp("2026-11-21T10:00"))
+    assert s["frueher"]["nr"] == 9
+    html = seiten.spieltag_html(s, seiten.Kontext())
+    assert "Frühere Spieltage ansehen" in html and "/de/spieltag/bundesliga/2026-27/9/" in html
+    fx1 = plan(game(1, date(2026, 11, 22), "15:30", "C", "D"))
+    fx1["api_id"] = [11]
+    s1 = spieltag.spieltag_daten(FakeDaten({"Bundesliga": fx1}, {}, {}), BL, zp("2026-11-21T10:00"))
+    assert s1["frueher"] is None and "Frühere Spieltage ansehen" not in seiten.spieltag_html(s1, seiten.Kontext())
+    a = _kennzahl("kpi02", 30.0, "stark", pos=20)
+    a.update(ist=4, ergebnis=AW.BESTAETIGT)
+    c = _kennzahl("kpi05", 5.0, ref=Fraction(9))
+    c.update(ist=10, ergebnis=None)
+    html = seiten.spiel_html(_seite(auffaellig=[a], uebrige=[c], groesste=a), seiten.Kontext())
+    assert html.count('<table class="a-tabelle"') == 2                       # zwei Karten
+    assert "Hinweis:" not in html and "Die Werte wurden mit den Daten vor dem Spiel berechnet." not in html
+    css = (spiel.W.STATISCH / "site.css").read_text(encoding="utf-8")
+    assert ".karte .kopf-k > .q-chip { margin-left: auto; }" in css
+    assert t("spiel.c_notiz", liga_in="in der Bundesliga").endswith("kein verlässlicher Hinweis für kommende Spiele.")

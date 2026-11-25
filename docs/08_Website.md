@@ -301,6 +301,13 @@ Kachel mit Meta-Zeile, Toren je Team, Bilanz („2 von 3 bestätigt“, alle bes
 fehlt ein Wert „Bewertung folgt“, ohne Endstand „Endstand folgt“), gespielte Spiele am Ende; die Kopfzeile zählt alle Spiele
 mit Auffälligkeit, auch gespielte; Legende „Gespielte Spiele“. Archiv unverändert (nächstes Release).
 
+**Seit 0.26 (Design 550, Beschlüsse 53–58, Entscheide Carsten 25.11.2026):** Spieltag-Seite mit Link „Frühere Spieltage
+ansehen“ zur Archivseite des Spieltags vor dem ersten Tab (am 1. Spieltag kein Link); Archivseiten zeigen gespielte Spiele
+mit der neuen Kachel (Tore, Bilanz), nur Pfeile zum Blättern. Auswertung: Hinweisfeld nur bei Ausnahmen („Hinweis:“,
+„Nachholspiel:“), zwei getrennte Tabellen, Zeile „Kein Ligadurchschnitt – feste Marke 2,5.“, Regelzeile „… über der Marke
+2,5“. Spielseite: „kein verlässlicher Hinweis für kommende Spiele“, Chips immer rechtsbündig, lange Teamnamen umbrechen
+nur zwischen Wörtern bzw. mit Trennstrich. Betreiberangaben mit `tools/impressum_einrichten.sh` (nur `.env`).
+
 Werte unverändert aus dem Rechenkern (F6): Erwartungswert = `hauptwert`, Teamwerte = `heim`/`auswaerts`, Ligaschnitt = `referenz`, Abweichung = `abweichung` (gerundet), Stufe aus `schwellen.toml`; KPI 08 in Prozent.
 
 ### 7.2 Startseite (Entwurf 1d, ergänzend 1b; Übergabe Abschnitt 5)

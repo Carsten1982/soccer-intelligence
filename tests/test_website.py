@@ -511,7 +511,7 @@ def test_w14_played_q5(partien, tmp_path, monkeypatch):
     html = seiten.spiel_html(s, seiten.Kontext())
     # seit 0.25: mit Endstand die Auswertung (Release_08): Spielstand gross, „Endstand“ nur für Screenreader
     assert s["ansicht"] == "auswertung" and '<span class="a-tore">2 : 1</span>' in html
-    assert "Gespielt:</b> Werte nachträglich mit den Daten vor dem Spiel berechnet." in html
+    assert "Hinweis:</b> Werte nachträglich mit den Daten vor dem Spiel berechnet." in html   # seit 0.26: nur bei Ausnahmen
 
     partien.import_dir = tmp_path                                                    # mit Schnappschuss (andere Werte)
     snap = SN.Snapshot(match(kpi02=kpi(HIGH, 77)), datetime(2026, 11, 20, 19, 30), False, {})
@@ -520,11 +520,11 @@ def test_w14_played_q5(partien, tmp_path, monkeypatch):
     html = seiten.spiel_html(s, seiten.Kontext())
     assert not s["nachtraeglich"] and s["bewertung"] == "auffaellig" and t("spiel.a_titel") in html
     assert t("spiel.a_nachgeliefert") in html                                       # ohne Datenbankzeile: Werte fehlen
-    assert "Gespielt:</b> Die Werte wurden mit den Daten vor dem Spiel berechnet." in html
+    assert "Die Werte wurden mit den Daten vor dem Spiel berechnet." not in html          # seit 0.26 gestrichen (Beschluss 54)
     assert "korrigiert" not in html
     SN.write_once(SN.result_path(tmp_path, "bundesliga", S, 105), {"ergebnis": [1, 1]})   # zuerst 1:1 übernommen
     s = spiel.spiel_daten(partien, 105, zp("2026-11-21T10:00"))
-    assert s["korrigiert"] and "berechnet. Ergebnis oder Statistik nachträglich korrigiert." in seiten.spiel_html(s, seiten.Kontext())
+    assert s["korrigiert"] and "Hinweis:</b> Ergebnis oder Statistik nachträglich korrigiert." in seiten.spiel_html(s, seiten.Kontext())
 
     s = spiel.spiel_daten(partien, 101, zp("2026-11-21T16:00"))       # läuft: bis Anpfiff + 2 h normal, mit Werten
     assert s["zustand"] == "offen" and s["bewertung"] == "auffaellig"

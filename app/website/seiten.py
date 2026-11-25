@@ -345,39 +345,46 @@ def spiel_notizen(seite: dict, lang: str = W.SPRACHE) -> list[dict]:
                                datum=_zeitpunkt(seite, lang))})
     if seite.get("ansicht") == "auswertung":           # seit 0.25 (Release_08, Abschnitt 5): Auswertung nach dem Spiel
         return _auswertung_notizen(seite, lang, out)
-    if seite["zustand"] == "gespielt" and seite["bewertung"] not in ("status", "werte_ab"):
+    # Gespielt, Endstand folgt (seit 0.26, Release_08 17.3): nur „Gespielt: Die Auswertung erscheint …“
+    if seite["zustand"] == "gespielt" and seite["bewertung"] != "status" and not seite.get("ergebnis"):
+        out.append({"titel": tt("spiel.hinweis_gespielt_titel"), "text": tt("spiel.hinweis_endstand_folgt")})
+        if seite.get("nachtraeglich") and seite["bewertung"] != "werte_ab":
+            out.append({"titel": tt("spiel.hinweis_titel"), "text": tt("spiel.hinweis_nachtraeglich")})
+    elif seite["zustand"] == "gespielt" and seite["bewertung"] not in ("status", "werte_ab"):
         text = tt("spiel.hinweis_nachtraeglich") if seite.get("nachtraeglich") else tt("spiel.hinweis_gespielt")
         if seite.get("korrigiert"):
             text += " " + tt("spiel.hinweis_korrigiert") + "."
         out.append({"titel": tt("spiel.hinweis_gespielt_titel"), "text": text})
-    if seite["zustand"] == "gespielt" and seite["bewertung"] != "status" and not seite.get("ergebnis"):
-        out.append({"titel": tt("spiel.chip_endstand_folgt"), "text": tt("spiel.hinweis_endstand_folgt")})
     return out
 
 
 def _auswertung_notizen(seite: dict, lang: str, vorher: list[dict]) -> list[dict]:
-    """Ein Hinweisfeld oben (Release_08, Abschnitt 2.4 und 5): gespielt, nachträglich berechnet, korrigiert,
-    Statistik fehlt, ohne Erwartungswerte, zu wenig Daten; beim Nachholspiel das Datum."""
+    """Seit 0.26 (Beschluss 54, Release_08 17.3): Hinweisfeld nur bei Ausnahmen – „Hinweis:“ (nachträglich berechnet,
+    korrigiert, Statistik fehlt, ohne Erwartungswerte, zu wenig Daten) und „Nachholspiel:“. Im Normalfall keins."""
     def tt(s, **w):
         return T.t(s, lang, **w)
 
-    teile = []
+    out = []
     if seite["sonderspiel"] == "nachholspiel":
-        teile.append(tt("spiel.a_hinweis_nachholspiel", datum=F.datum_kurz(date.fromisoformat(seite["datum"]), lang)))
+        out.append({"titel": tt("spiel.hinweis_nachholspiel_titel"),
+                    "text": tt("spiel.a_hinweis_nachholspiel", datum=F.datum_kurz(date.fromisoformat(seite["datum"]), lang))})
     elif vorher:
-        teile.append(vorher[0]["text"])
+        out.append(vorher[0])                              # vorgezogen
+    teile = []
     neu = [team(seite["liga"], n, lang) for n in seite.get("neu_in_liga") or []]
     if seite.get("ohne_werte"):
         teile.append(tt("spiel.a_hinweis_ohne", team=" / ".join(neu)) if neu else tt("spiel.a_hinweis_ohne_allg"))
-    else:
-        teile.append(tt("spiel.hinweis_nachtraeglich") if seite.get("nachtraeglich") else tt("spiel.hinweis_gespielt"))
-        if seite["bewertung"] == "zu_wenig_daten" and neu:
-            teile.append(tt("spiel.a_hinweis_wenig", team=" / ".join(neu)))
+    elif seite["bewertung"] == "zu_wenig_daten" and neu:
+        teile.append(tt("spiel.a_hinweis_wenig", team=" / ".join(neu)))
+    if seite.get("nachtraeglich") and not seite.get("ohne_werte"):
+        teile.append(tt("spiel.hinweis_nachtraeglich"))
     if seite.get("korrigiert"):
         teile.append(tt("spiel.hinweis_korrigiert") + ".")
     if seite.get("statistik_fehlt"):
         teile.append(tt("spiel.a_hinweis_statistik"))
-    return [{"titel": tt("spiel.hinweis_gespielt_titel"), "text": " ".join(teile)}]
+    if teile:
+        out.append({"titel": tt("spiel.hinweis_titel"), "text": " ".join(teile)})
+    return out
 
 
 def spiel_html(seite: dict, k: Kontext) -> str:

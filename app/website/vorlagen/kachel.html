@@ -5,7 +5,7 @@
 
 {% macro kachel_gespielt(s) -%}
 {#- Seit 0.25 (Release_08, Abschnitt 16): gespielte Kachel der Spieltag-Seite – Meta-Zeile, Teams untereinander mit
-    Toren rechts, Bilanz der Auffälligkeiten, Pfeil. Ganze Kachel führt zur Auswertung. Archiv folgt im nächsten Release. -#}
+    Toren rechts, Bilanz der Auffälligkeiten, Pfeil. Ganze Kachel führt zur Auswertung. Seit 0.26 auch im Archiv. -#}
 {% set b = s.get('bilanz') or {} %}
 <a class="kachel kachel--gespielt kg" href="{{ link('spiel', liga=seite.liga, slug=s.slug) }}">
   <span class="kg-inhalt">
@@ -24,7 +24,7 @@
 {%- endmacro %}
 
 {% macro kachel(s, archiv=false) -%}
-{% if s.art == 'gespielt' and not archiv and s.link %}{{ kachel_gespielt(s) }}{% else %}
+{% if s.art == 'gespielt' and s.link %}{{ kachel_gespielt(s) }}{% else %}
 {% set q = s.qualitaet if (archiv and s.art == 'gespielt') else s.art %}
 {% set auffaellig = q in ('stark', 'mittel', 'gering') %}
 {% set klasse = 'kachel--gespielt' if (s.art == 'gespielt' and not archiv) else ('kachel--' ~ q if auffaellig else ('kachel--status' if s.art in ('status', 'zu_wenig_daten') else '')) %}

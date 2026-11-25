@@ -123,11 +123,9 @@
       <li><b>{{ t('spiel.a_leg_ok_titel') }}</b> {{ t('spiel.a_leg_ok') }}</li>
     </ul></div></details>
   </div>
-  <table class="a-tabelle" role="table">
-    <caption class="unsichtbar">{{ t('spiel.a_titel') }}</caption>
-    {% if seite.auffaellig %}{{ a_gruppe(t('spiel.auffaelligkeiten'), seite.auffaellig) }}{% endif %}
-    {% if seite.uebrige %}{{ a_gruppe(t('spiel.normalbereich') if seite.auffaellig else t('spiel.kennzahlen'), seite.uebrige) }}{% endif %}
-  </table>
+  {#- Seit 0.26 (Beschluss 55): je Gruppe eine eigene Tabelle (Karte) -#}
+  {% if seite.auffaellig %}<table class="a-tabelle" role="table"><caption class="unsichtbar">{{ t('spiel.a_titel') }}: {{ t('spiel.auffaelligkeiten') }}</caption>{{ a_gruppe(t('spiel.auffaelligkeiten'), seite.auffaellig) }}</table>{% endif %}
+  {% if seite.uebrige %}{% set g2 = t('spiel.normalbereich') if seite.auffaellig else t('spiel.kennzahlen') %}<table class="a-tabelle" role="table"><caption class="unsichtbar">{{ t('spiel.a_titel') }}: {{ g2 }}</caption>{{ a_gruppe(g2, seite.uebrige) }}</table>{% endif %}
   {% set box = alle|rejectattr('erwartung', 'none')|rejectattr('fall', 'equalto', 'D')|list %}
   {% if box %}
   <div class="a-box">

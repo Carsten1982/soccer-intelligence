@@ -5,6 +5,11 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 25.11.2026 – Version 0.26: Frühere Spieltage und Feinschliff
+
+- **Carsten** · Gesamtpaket Design Version 550 (Beschlüsse 53–58). Entscheide: am 1. Spieltag kein Link zu früheren Spieltagen; Archiv-Kacheln schon jetzt neu; nur Pfeile zum Blättern; Box-Regel „… über der Marke 2,5“; Vorschau bleibt als Testumgebung, Website live in eigenem Container; `index_ab` = Tag des Livegang-Releases; www nach dem Livegang prüfen. Impressumsdaten genannt (kommen nur in `.env`, nie in Git).
+- **Claude** · Link „Frühere Spieltage ansehen“ (`spieltag.py`, `spieltag.html`), Archiv mit Bilanz-Kacheln, Hinweisfeld der Auswertung nur bei Ausnahmen, zwei Tabellen, Texte („für“, „Kein Ligadurchschnitt – feste Marke 2,5.“, „der Marke 2,5“), Chips rechtsbündig, Teamnamen mit Trennung und ausgewogenem Umbruch; `tools/impressum_einrichten.sh`. Tests A8 und angepasste W-Tests.
+
 ## 25.11.2026 – Version 0.25 eingespielt
 
 - **Carsten** · Version 0.25 eingespielt (`9b84183`, Pull Requests #27 und #28; Tests grün, drei Testmails). Erster Anlauf in Schritt 4 gestoppt (Befund A7), die Website lief bis dahin mit 0.24.

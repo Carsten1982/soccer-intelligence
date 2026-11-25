@@ -93,7 +93,8 @@
     "endstand_folgt": "Endstand folgt",
     "endstand_sr": "Endstand {ergebnis}",
     "erklaerung_gespielt_titel": "Gespielte Spiele:",
-    "erklaerung_gespielt": "Zeigen den Endstand und wie viele Auffälligkeiten sich bestätigt haben. Tippe auf die Kachel, um die Auswertung zu sehen."
+    "erklaerung_gespielt": "Zeigen den Endstand und wie viele Auffälligkeiten sich bestätigt haben. Tippe auf die Kachel, um die Auswertung zu sehen.",
+    "frueher": "Frühere Spieltage ansehen"
   },
   "stufe": {
     "stark": "Signalqualität stark",
@@ -316,7 +317,7 @@
     "chip_keine": "Keine Auffälligkeit",
     "chip_nicht_eingestuft": "Nicht eingestuft",
     "chip_zu_wenig_daten": "Zu wenig Daten",
-    "c_notiz": "Diese Abweichung ist {liga_in} kein verlässlicher Hinweis auf kommende Spiele.",
+    "c_notiz": "Diese Abweichung ist {liga_in} kein verlässlicher Hinweis für kommende Spiele.",
     "keine_bewertung": "Keine Bewertung möglich.",
     "d_letzte10": "Durchschnitt der letzten 10 Spiele",
     "d_letzte10_gelb": "Gelbe Karten der Mannschaft pro Spiel · Durchschnitt der letzten 10 Spiele",
@@ -330,7 +331,7 @@
     "d_schwelle": "Statistisch auffällig ab",
     "balken_vergleich": "Vergleichswert",
     "bezug_liga": "dem Ligadurchschnitt",
-    "bezug_marke": "dem Vergleichswert",
+    "bezug_marke": "der Marke 2,5",
     "zu_wenig_daten_neu": "Da {team} neu in der Liga ist, reicht die Datenbasis für eine Bewertung noch nicht aus.",
     "zu_wenig_daten_neu_zwei": "Da {team1} und {team2} neu in der Liga sind, reicht die Datenbasis für eine Bewertung noch nicht aus.",
     "hinweis_zu_wenig_daten_neu": "Für dieses Spiel liegen noch keine Werte vor, weil {team} neu in der Liga ist.",
@@ -342,7 +343,7 @@
     "leg_keine_titel": "Keine Auffälligkeit:",
     "leg_keine": "Die Abweichung erreicht die Schwelle nicht. Sie gilt nicht als statistisch auffällig.",
     "leg_c_titel": "Nicht eingestuft:",
-    "leg_c": "Für diese Abweichung gibt es {liga_in} keine Schwelle. Sie ist kein verlässlicher Hinweis auf kommende Spiele.",
+    "leg_c": "Für diese Abweichung gibt es {liga_in} keine Schwelle. Sie ist kein verlässlicher Hinweis für kommende Spiele.",
     "chip_endstand_folgt": "Gespielt · Endstand folgt",
     "hinweis_endstand_folgt": "Die Auswertung erscheint, sobald der Endstand vorliegt. Bis dahin siehst du die Erwartungswerte.",
     "a_titel": "Erwartet und tatsächlich",
@@ -364,17 +365,18 @@
     "a_nein": "Nein",
     "a_halbzeit": "Halbzeit {ergebnis}",
     "a_endstand_sr": "Endstand {ergebnis}",
-    "a_marke_zeile": "Vergleichswert statt Ligadurchschnitt: feste Marke 2,5.",
+    "a_marke_zeile": "Kein Ligadurchschnitt – feste Marke 2,5.",
     "a_box_titel": "Statistisch auffällig ab",
     "a_box_satz": "Vor dem Spiel gilt ein Wert {liga_in} ab dieser Abweichung vom Ligadurchschnitt als statistisch auffällig.",
     "a_box_keine": "keine Schwelle",
-    "a_box_marke": "Feste Marke 2,5 statt Ligadurchschnitt",
+    "a_box_marke": "Kein Ligadurchschnitt – feste Marke 2,5.",
     "a_hinweis_statistik": "Einige Statistikwerte liegen noch nicht vor. Sie werden nachgeliefert.",
     "a_hinweis_ohne": "Für dieses Spiel gab es keine Erwartungswerte, weil {team} neu in der Liga ist. Du siehst nur die tatsächlichen Werte.",
     "a_hinweis_ohne_allg": "Für dieses Spiel gab es keine Erwartungswerte. Du siehst nur die tatsächlichen Werte.",
     "a_hinweis_wenig": "Von {team} liegen erst wenige Spiele vor. Deshalb gibt es keine Signalqualität und keine Bewertung.",
     "a_hinweis_nachholspiel": "Dieses Spiel gehörte zu einem früheren Spieltag und wurde am {datum} nachgeholt.",
-    "a_signal": "Signalqualität {stufe}"
+    "a_signal": "Signalqualität {stufe}",
+    "hinweis_titel": "Hinweis:"
   },
   "start": {
     "h1_vorne": "Fußballspiele",
