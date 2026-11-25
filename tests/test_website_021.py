@@ -144,7 +144,11 @@ def test_w19_index_rules():
     assert seo.archiv_indexierbar(date(2026, 12, 4), live) and not seo.archiv_indexierbar(date(2026, 11, 27), live)
     assert not seo.archiv_indexierbar(date(2026, 12, 4), vorher)
     konfig = tomllib.loads((APP / "config" / "website.toml").read_text(encoding="utf-8"))
-    assert konfig["index_ab"] == "" and konfig["seiten_ab_saison"] == "2025/2026"     # vor dem Livegang leer
+    assert konfig["index_ab"] == "2026-11-26T00:00" and konfig["seiten_ab_saison"] == "2025/2026"   # Livegang (0.27)
+    # seit 0.27 (Entscheid Carsten 25.11.2026): Archiv der laufenden Saison indexierbar, auch vor dem Livegang
+    assert seo.archiv_indexierbar(date(2026, 8, 22), live, "2026/2027", "2026/2027")
+    assert not seo.archiv_indexierbar(date(2026, 2, 1), live, "2025/2026", "2026/2027")
+    assert not seo.archiv_indexierbar(date(2026, 8, 22), vorher, "2026/2027", "2026/2027")
     assert konfig["index_min_kennzahlen"] == 6 and seo.konfig().index_min_kennzahlen == 6
 
 
@@ -591,3 +595,38 @@ def test_w32_frontend_review_024():
     assert not hasattr(seo, "sportsevent") and "SportsEvent" not in (APP / "website" / "seiten.py").read_text(encoding="utf-8").replace("# SportsEvent", "")
     css = (APP / "website" / "statisch" / "site.css").read_text(encoding="utf-8")
     assert re.search(r"\.karte details\.detail > summary \{[^}]*min-height: 44px", css)
+
+
+
+def test_w33_oeffentliche_website_ohne_zeitreise(monkeypatch):
+    """Seit 0.27 (Livegang): ohne Präfix keine Vorschau – kein noindex, Browser-Cache 5 Minuten, ?datum= wird ignoriert."""
+    monkeypatch.setattr(W, "PREFIX", "")
+    monkeypatch.setattr(W, "VORSCHAU", False)
+    a = vorschau.beantworten("/", "")
+    assert a.status in (301, 302) and a.kopf["Location"].endswith("/de/")
+    m = vorschau.beantworten("/de/methodik/", "datum=2026-08-01")
+    html = m.inhalt.decode()
+    assert m.status == 200 and m.kopf["Cache-Control"] == "public, max-age=300"
+    assert "noindex" not in html and "Zeitreise" not in html and "datum=" not in html
+    assert vorschau.beantworten("/robots.txt", "").status == 200
+
+
+def test_w19_sitemap_archiv_laufende_saison():
+    """0.27 (Entscheid Carsten 25.11.2026, 1a): Archivseiten der laufenden Saison sind in der Sitemap, auch Spieltage
+    vor dem Livegang (index_ab 26.11.2026); begonnen muss der Spieltag sein. Frühere Saisons: keine Archivseiten."""
+    fx = plan(rnd(30, date(2026, 5, 16), saison="2025/2026"), rnd(10, date(2026, 11, 20), date(2026, 11, 22)),
+              rnd(11, date(2026, 11, 27)))
+    fx["api_id"] = range(1, len(fx) + 1)
+
+    class Spaeter(FakeDaten):
+        def zeitpunkt(self):
+            return zp("2026-11-23T10:00")
+
+    d = Spaeter({"Bundesliga": fx}, {})
+    assert seo.konfig().index_ab == datetime(2026, 11, 26)
+    teil = SM.sitemap("/sitemaps/bundesliga-2026-27.xml", d)
+    assert "<loc>https://soccer-intelligence.com/de/spieltag/bundesliga/2026-27/10/</loc>" in teil
+    assert "<loc>https://soccer-intelligence.com/en/matchday/bundesliga/2026-27/10/</loc>" in teil
+    assert "/2026-27/11/" not in teil                                                 # noch nicht begonnen
+    alt = SM.sitemap("/sitemaps/bundesliga-2025-26.xml", d)
+    assert alt is not None and "/2025-26/" not in alt                                 # Vorsaison: kein Archiv

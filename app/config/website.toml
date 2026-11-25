@@ -7,6 +7,6 @@
 # index_min_kennzahlen  Spielseite nur indexierbar, wenn mindestens so viele der 8 Kennzahlen bewertet sind
 #                   (seit 0.24, Entscheid Carsten 24.11.2026 nach dem Frontend-Review: keine dünnen Seiten im Index).
 
-index_ab = ""
+index_ab = "2026-11-26T00:00"   # Livegang (Entscheid Carsten 25.11.2026)
 seiten_ab_saison = "2025/2026"
 index_min_kennzahlen = 6

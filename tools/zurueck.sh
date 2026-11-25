@@ -42,6 +42,12 @@ fi
 read -rp "   Wirklich zurück? (j/n): " ANTWORT
 case "$ANTWORT" in j|J|ja|Ja) ;; *) echo "Abgebrochen, nichts geändert."; exit 0;; esac
 
+# Seit 0.27 (Livegang): Kennt der alte Stand die öffentliche Website noch nicht, wird sie vorher gestoppt – dann
+# beantwortet wieder die Platzhalterseite die Adresse / (sie läuft im Hintergrund weiter).
+if grep -q "^  soccer-website:" docker-compose.yml && ! git show "$VORHER:docker-compose.yml" 2>/dev/null | grep -q "^  soccer-website:"; then
+  docker compose stop soccer-website >/dev/null 2>&1 && info "Öffentliche Website gestoppt – unter / erscheint wieder die Platzhalterseite."
+fi
+
 if [ "$MODUS" = zuruecksetzen ]; then
   git reset -q --hard "$VORHER"
   while IFS= read -r datei || [ -n "$datei" ]; do
@@ -60,7 +66,9 @@ ok "Code auf dem Stand vor dem Release ($(git log -1 --oneline))"
 
 # Datenimport (seit 0.14) und Vorschau (seit 0.17) mitbauen, wenn der alte Stand sie schon kennt; sonst nur ein
 # Hinweis (sie laufen weiter: die Vorschau bleibt hinter ihrem Passwort, der Import holt weiter Daten)
-if grep -q "^  soccer-vorschau:" docker-compose.yml; then
+if grep -q "^  soccer-website:" docker-compose.yml; then
+  docker compose up -d --build football-dashboard soccer-import soccer-vorschau soccer-website > "$BACKUP/zurueck_neubau.log" 2>&1 || stopp "Neubau fehlgeschlagen ($BACKUP/zurueck_neubau.log)."
+elif grep -q "^  soccer-vorschau:" docker-compose.yml; then
   docker compose up -d --build football-dashboard soccer-import soccer-vorschau > "$BACKUP/zurueck_neubau.log" 2>&1 || stopp "Neubau fehlgeschlagen ($BACKUP/zurueck_neubau.log)."
 elif grep -q "^  soccer-import:" docker-compose.yml; then
   docker compose up -d --build football-dashboard soccer-import > "$BACKUP/zurueck_neubau.log" 2>&1 || stopp "Neubau fehlgeschlagen ($BACKUP/zurueck_neubau.log)."
@@ -74,10 +82,11 @@ for _ in $(seq 1 15); do
   sleep 2
   P=$(curl -s -o /dev/null -w "%{http_code}" "$URL/" || true)
   D=$(curl -s -o /dev/null -w "%{http_code}" "$URL/dashboard/" || true)
-  [ "$P" = 200 ] && { [ "$D" = 200 ] || [ "$D" = 401 ]; } && break
+  { [ "$P" = 200 ] || [ "$P" = 301 ]; } && { [ "$D" = 200 ] || [ "$D" = 401 ]; } && break
 done
 # /dashboard/: 200 = Anmeldemaske (ab 0.15.2), 401 = Passwortabfrage des Browsers (bis 0.15.1)
-[ "$P" = 200 ] && { [ "$D" = 200 ] || [ "$D" = 401 ]; } || stopp "Nach dem Rückweg: / = $P, /dashboard/ = $D (erwartet 200 und 200 bzw. 401)."
-ok "Alter Stand läuft · / = 200 · /dashboard/ = $D"
+# / = 200 (Platzhalterseite) bzw. 301 (Website leitet dauerhaft auf /de/ weiter, seit 0.27)
+{ [ "$P" = 200 ] || [ "$P" = 301 ]; } && { [ "$D" = 200 ] || [ "$D" = 401 ]; } || stopp "Nach dem Rückweg: / = $P, /dashboard/ = $D (erwartet 200 bzw. 301 und 200 bzw. 401)."
+ok "Alter Stand läuft · / = $P · /dashboard/ = $D"
 exit 0
 }

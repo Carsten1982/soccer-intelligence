@@ -261,7 +261,8 @@ def archiv_html(seite: dict, k: Kontext) -> str:
     liga = T.t(f"liga.{seite['liga_key']}", k.lang)
     saison = seo.saison_kurz(seite["saison"])
     titel = T.t("seo.archiv_titel", k.lang, liga=liga, n=seite["spieltag"], saison=saison)
-    index = seo.archiv_indexierbar(date.fromisoformat(seite["beginn"]) if seite.get("beginn") else None)
+    index = seo.archiv_indexierbar(date.fromisoformat(seite["beginn"]) if seite.get("beginn") else None,
+                                   saison=seite.get("saison"), aktuell=seite.get("aktuelle_saison"))
     spieltag_url = W.DOMAIN + A.pfad(A.Ziel("spieltag", k.lang, liga=seite["liga"]))
     jsonld = [_bc(k, (liga, spieltag_url), (T.t("archiv.kopf", k.lang, liga=liga, n=seite["spieltag"], saison=saison),
                                              k.absolut())), seo.webseite(k.absolut(), titel, k.lang)]

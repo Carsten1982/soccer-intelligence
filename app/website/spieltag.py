@@ -266,6 +266,8 @@ def archiv_daten(daten: Daten, web: W.WebLiga, saison: str, nr: int, zp: Zeitpun
     spiele = fxp[(fxp["saison"] == saison) & (fxp["spieltag"] == int(nr))]
     if spiele.empty or spiele["datum_von"].min() > zp.jetzt.date():           # nur begonnene Spieltage
         return None
+    from . import seo
+    seite["aktuelle_saison"] = seo.laufende_saison(fxp)                      # für die Index-Regel (seit 0.27)
     regulaer = spiele[spiele["hinweis"] == ""]
     seite["beginn"] = (regulaer if len(regulaer) else spiele)["datum_von"].min().isoformat()
     ergebnisse = daten.ergebnisse(web.name, zp.bis)

@@ -16,6 +16,7 @@
 - **Das Dashboard ist der Datenlieferant (F6).** Die Website rechnet nichts Eigenes. Sie verwendet dieselben Funktionen wie das Dashboard: `core/anzeige.py` (welche Spiele wann erscheinen), `core/kpis.py` (Werte und Stufen), `core/top.py` (Ranking).
 - **Umfang jetzt:** Startseite, Spieltag, Matchdetail. Methodik, Impressum, Datenschutz und Showcase folgen später.
 - Bis zum Livegang nur als **Vorschau** unter `https://soccer-intelligence.com/vorschau`, mit Passwortabfrage (T3). Die Platzhalterseite unter `/` bleibt, bis Impressum und Datenschutz fertig und rechtlich geprüft sind.
+- **Seit 0.27 (Livegang 26.11.2026) öffentlich** unter `https://soccer-intelligence.com/` (Container `soccer-website`, Abschnitt 3). Die Vorschau bleibt mit Passwort unter `/vorschau` (mit Zeitreise, immer `noindex`).
 
 ## 2. Entscheidungen (Carsten, 16.11.2026)
 
@@ -67,7 +68,7 @@
 | Datenschnittstelle | Je Seite ein Datensatz mit **Codes statt Texten** (Abschnitt 5), als JSON abrufbar (`/vorschau/daten/…`). Daraus entsteht beim Livegang der statische Export |
 | Vorschau | Container `soccer-vorschau` (gleiches Programm-Abbild wie das Dashboard), kleiner Python-Webserver, erzeugt die Seiten bei jedem Aufruf neu (nötig für die Zeitreise). Nur lesend auf `data/`, `import/` und (seit 0.18) `website-bilder/` (Foto, Q6). Beim Start rechnet er Startseite und Spieltage einmal vor, damit schon der erste Aufruf schnell ist |
 | Zugang | Traefik-Router `Host(soccer-intelligence.com) && PathPrefix(/vorschau)` mit Passwortabfrage (BasicAuth, Hash in `.env` als `SOCCER_VORSCHAU_AUTH`), Anfragebremse, „noindex“ |
-| Livegang (1.0) | derselbe Dienst unter der Domain (Beschluss 19.11.2026: kein statischer Export; HTML bei jedem Aufruf, Browser-Zwischenspeicher 5 Minuten, Abschnitt 4.2) |
+| Livegang (seit 0.27) | derselbe Dienst unter der Domain (Beschluss 19.11.2026: kein statischer Export; HTML bei jedem Aufruf, Browser-Zwischenspeicher 5 Minuten, Abschnitt 4.2) als eigener Container `soccer-website`: gleiches Programm mit leerem Präfix (`SI_VORSCHAU_PREFIX=`), ohne Passwort, ohne Zeitreise (`?datum=` wird nicht beachtet), ohne Vorschau-Leiste und ohne `noindex`-Kopfzeile. Traefik-Router `Host(soccer-intelligence.com)` mit Priorität 40 und eigenen Middlewares (Anfragebremse, Komprimierung, HSTS; unabhängig von den Labels der anderen Container): gewinnt gegen die Platzhalterseite, `/dashboard` und `/vorschau` haben weiter eigene Router (höhere Priorität durch die längere Regel). Die Platzhalterseite läuft vorerst ungenutzt weiter (Rückweg: Website-Container stoppen, `01`, Abschnitt 6.7) |
 
 ## 4. Seiten und Adressen
 
@@ -168,6 +169,11 @@ Regeln:
 - **Vor dem Livegang** ist `index_ab` in `app/config/website.toml` leer: nichts aus den Spiel- und Archivseiten ist
   indexierbar, die Teile der Sitemap je Liga und Saison sind leer. Die Vorschau sendet immer `noindex, nofollow`; die
   Vorschau-Leiste zeigt, ob die Seite nach dem Livegang in den Index käme.
+- **Seit 0.27 (Livegang):** `index_ab = "2026-11-26T00:00"` (Entscheid Carsten 25.11.2026: Tag, an dem das Release
+  angestossen wird). **Archivseiten der laufenden Saison** sind je Liga indexierbar und in der Sitemap, auch die
+  Spieltage vor dem Livegang (Entscheid Carsten 25.11.2026, Punkt 1a); Archivseiten früherer Saisons bleiben
+  `noindex,follow` und ausserhalb der Sitemap. Die laufende Saison ist die neueste Saison im Spielplan der Liga.
+  Spielseiten folgen weiter ihrer eigenen Regel (Anstoss ab `index_ab`).
 - **Kopfbereich:** Title und Description je Seite (Spielseite je Zustand, Description höchstens 155 Zeichen: zuerst auf
   eine Kennzahl, dann ohne Signalqualität kürzen, notfalls am Wortende), `canonical`, `hreflang` de/en/x-default (= de),
   Open Graph (`og:locale` de_CH/en_GB, Bild `og-image.png`), Twitter-Karte, JSON-LD: Startseite Organization + WebSite,
@@ -251,7 +257,7 @@ Heim, „gegen“, Gast, Termin („Sa 14.11. · 15:30“, „Sa 14.11. · Zeit 
 - `?datum=2026-10-03` oder `?datum=2026-10-03T16:00` auf jeder Seite der Vorschau; ohne Uhrzeit gilt 08:00. Alle Links tragen das Datum weiter. Eine Leiste oben zeigt den Zeitpunkt und erlaubt die Eingabe.
 - Annahmen (Carsten, 16.11.2026): Der Import ist an diesem Tag um 04:00 gelaufen (kein „veraltet“, Datenstand = dieser Tag, vor 04:00 der Vortag). Ergebnisse gelten nur für Spiele **vor** dem Importtag; die KPI-Werte werden mit genau diesem Datenstand berechnet.
 - Grenzen: Spielplan = der heutige (spätere Verschiebungen sind schon eingetragen). Zeitraum = laufende Saison und Vorsaison.
-- Auf der öffentlichen Seite gibt es keine Zeitreise.
+- Auf der öffentlichen Seite gibt es keine Zeitreise (seit 0.27 geprüft, Test W33: `?datum=` wird ohne Vorschau-Präfix nicht beachtet).
 
 ## 7. Matchdetail und Startseite (seit 0.18)
 
@@ -396,6 +402,7 @@ Computer einzeilig, bis 520 px höchstens 300 px breit mit festem Umbruch nach d
 | W27 | Entwurfsrunde 20.11. (0.21.1) | Spielseite ohne „Weitere Spiele“, Spieltag ohne SEO-Satz, Methodik mit drei Karten und Ebenen, Farben, Sprachknopf mobil |
 | W28 | Entwürfe 20.11., zweite Lieferung (0.21.2) | Spielseite Schaltfläche/Textlink und kein Zeitzonen-Hinweis; Spieltag-Kopf ohne Datenstand; SEO-Box eigener Block; Chip neben Kennzahl; Weiter-Schaltfläche mit Umbruch nur mobil |
 | W29 | Wünsche 20.11. (0.22) | Startseite ohne „Aktueller Datenstand“; Athletic Club heisst „Athletic Bilbao“ (DE/EN), Adresse bleibt `athletic-club` |
+| W33 | Livegang (0.27) | ohne Präfix: `/` leitet auf `/de/`, Seiten ohne `noindex`, Browser-Zwischenspeicher 5 Minuten, keine Zeitreise; W19 mit `index_ab` 26.11.2026 und Archiv der laufenden Saison |
 | – | Browser (vor dem Release, nicht automatisch) | axe-core 4.10 auf allen Seitenarten DE/EN, 1280 und 390 px: keine Verstösse; 360 px ohne Querscrollen; Sprachmenü (Escape, Klick daneben), Tabs mit und ohne JavaScript, Download |
 
 ## 9. Annahmen (bitte in der Vorschau prüfen)
@@ -493,7 +500,8 @@ Computer einzeilig, bis 520 px höchstens 300 px breit mit festem Umbruch nach d
     (MEZ/MESZ).“ bzw. „All kick-off times in Central European Time (CET/CEST).“
   - **Archivseiten im Index:** indexierbar, wenn der Spieltag nach dem Livegang begonnen hat (Index-Fenster),
     unabhängig vom Status einzelner Spiele; davor begonnene Spieltage `noindex,follow`; nur indexierbare Archivseiten in
-    der Sitemap; Spielseiten folgen ihrer eigenen Regel.
+    der Sitemap; Spielseiten folgen ihrer eigenen Regel. *Seit 0.27 (Carsten 25.11.2026): alle Spieltage der laufenden
+    Saison, auch vor dem Livegang (Abschnitt 4.2).*
   - **Navigation:** verlinkt direkt auf `/de/spieltag/bundesliga/` bzw. `/en/matchday/bundesliga/`; die Weiterleitung
     `/de/spieltag/` (302) bleibt für eingetippte Adressen, ohne `hreflang` und Canonical.
   - **Index-Fenster kommender Spiele:** indexierbar, sobald das Spiel in einem Tab der Spieltag-Seite erscheint
@@ -551,4 +559,8 @@ Computer einzeilig, bis 520 px höchstens 300 px breit mit festem Umbruch nach d
 | 0.21.2 | Zweite Lieferung der Entwürfe 20.11.: Spielseite, Spieltag-Kopf, Startseite (SEO-Box, Ranking-Karte), Methodik-Schaltfläche |
 | 0.22 | Startseite ohne Datenstand-Zeile; Anzeigenamen der 12 Aufsteiger und Athletic Bilbao; Glossar und Archivtexte freigegeben |
 | 0.23 | Kontaktformular aktiv; Spielseite nach Entwurf 2k final (Karten A–D, Grenzwert im Detail), Endstand-Marke im Ranking, Legende je Reiter, Glossartexte zu den Läufen nach jedem Spiel freigegeben |
-| später | 0.24 Cookie-Wahl, GA4; 1.0 Qualität und Livegang |
+| 0.24 | Qualität: Seitenspeicher, Manifest und Icons, Index ab 6 von 8 Kennzahlen, ohne `SportsEvent`, Komprimierung und HSTS |
+| 0.25 | Auswertung nach dem Spiel (Spielseite und gespielte Kachel) |
+| 0.26 | Frühere Spieltage, Archiv mit Bilanz-Kacheln, Feinschliff, Impressum-Skript |
+| 0.27 | **Livegang** 26.11.2026: Website unter `/` (Container `soccer-website`), `index_ab` gesetzt, Archiv der laufenden Saison im Index, Texte zu „bestätigt“ (Methodik, Startseite, Glossar) |
+| später | 0.28 Cookie-Hinweis und Google Analytics 4 (erst nach Zustimmung); Search Console nach dem Livegang |

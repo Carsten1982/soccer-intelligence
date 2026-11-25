@@ -11,11 +11,11 @@
   <span class="ebene-marke">Level 1 · In brief</span>
   <h2 class="ebene-titel" id="ebene1-titel">The principle at a glance</h2>
   <p>Soccer Intelligence analyses upcoming football matches for <b>statistical anomalies</b>. To do this, we compare expected values – such as goals, corners and yellow cards – with the average for the respective league.</p>
-  <p>When a value differs significantly, we use historical match data to assess how meaningful similar anomalies have been in the past. Based on this, we determine the <b>signal quality</b>: High, Medium or Low.</p>
+  <p>When a value differs significantly from the league average, we use historical match data to check how often similar patterns were confirmed in previous games. In other words, we look at how often the actual match value was on the expected side of the league average. This helps us determine the <b>signal quality</b>: high, medium or low.</p>
   {{ schritte([
     ("Find the deviation", "We compare a match's expected values with the league average. If a value differs from the league average by more than the set threshold, the match is flagged as a standout match."),
-    ("Compare with past matches", "We check how often similar statistical anomalies were confirmed by actual match results in previous seasons."),
-    ("Assign the signal quality", "The more often an anomaly was confirmed in past matches, the higher its signal quality: High, Medium or Low."),
+    ("Compare with past matches", "We look at how often previous matches with similar patterns were actually above or below the league average – and whether this happened more often than in all matches."),
+    ("Assign the signal quality", "The more often a pattern was confirmed, and the more clearly this happened compared with all matches, the higher the signal quality: high, medium or low."),
   ]) }}
   <h3>What does signal quality mean?</h3>
   {{ stufen_karten({"stark": "Has been clearly confirmed in the past.", "mittel": "Has been moderately confirmed in the past.", "gering": "Has been only slightly confirmed in the past."}) }}
@@ -58,7 +58,7 @@
     </ol>
   </div>
   <h3>How is signal quality determined?</h3>
-  <p>The success rate shows how often the expected result actually occurred in past matches. The uplift shows how many percentage points higher this rate was compared with all matches.</p>
+  <p>The success rate shows how often the actual match value was on the expected side of the league average (for “Over 2.5 goals”: at least 3 goals or no more than 2 goals). The uplift shows how much more often this happened compared with all matches.</p>
   {{ regeln({"stark": "Success rate of at least 60% and uplift of at least +8 percentage points.", "mittel": "Success rate of at least 55% and uplift of at least +5 percentage points.", "gering": "Success rate of at least 50% and uplift of at least +5 percentage points."}) }}
   <p>For a signal to receive a rating, several conditions must be met: at least 50 matches must be available, the uplift must be at least +5 percentage points, and the advantage must appear in at least two thirds of the seasons. In the example, this was the case in all seven seasons.</p>
   <p class="liste-notiz gross" role="note"><b>Important:</b> Signal quality reflects past results. It is not a probability and does not guarantee what will happen in the next match.</p>

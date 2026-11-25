@@ -114,6 +114,51 @@ services:
       - "traefik.http.middlewares.soccervorschau-auth.basicauth.users=${SOCCER_VORSCHAU_AUTH:-}"
       - "traefik.http.services.soccervorschau.loadbalancer.server.port=8080"
 
+  soccer-website:
+    # Öffentliche Website (seit 0.27, Livegang 26.11.2026, docs/08_Website.md): dieselbe Software wie die Vorschau,
+    # aber unter / ohne Passwort, ohne Zeitreise und ohne Vorschau-Leiste (SI_VORSCHAU_PREFIX leer). Die Vorschau bleibt
+    # als Testumgebung unter /vorschau. Liest data/ und import/ nur. Kein Port nach aussen.
+    # Vorrang vor der Platzhalterseite über die Router-Priorität 40 (die Regeln für /dashboard und /vorschau sind
+    # länger und gewinnen weiter). Rückweg auf die Platzhalterseite: docker compose stop soccer-website (01, 6.7).
+    build:
+      context: /docker/football-dashboard
+    container_name: soccer-website
+    mem_limit: 1g
+    restart: unless-stopped
+    security_opt: ["no-new-privileges:true"]
+    command: ["python", "-m", "website.vorschau"]
+    volumes:
+      - ./data:/data:ro
+      - ./import:/import:ro
+      - ./import/meldungen:/meldungen               # Kontaktformular: Meldung, wenn der Versand scheitert
+      - ./website-bilder:/bilder:ro
+    environment:
+      - TZ=Europe/Zurich
+      - SI_VORSCHAU_PORT=8080
+      - SI_VORSCHAU_PREFIX=
+      - SI_SMTP_HOST=${SI_SMTP_HOST:-}
+      - SI_SMTP_PORT=${SI_SMTP_PORT:-}
+      - SI_SMTP_USER=${SI_SMTP_USER:-}
+      - SI_SMTP_PASSWORT=${SI_SMTP_PASSWORT:-}
+      - SI_KONTAKT_AN=${SI_KONTAKT_AN:-}
+      - SI_IMPRESSUM_NAME=${SI_IMPRESSUM_NAME:-}
+      - SI_IMPRESSUM_ADRESSE=${SI_IMPRESSUM_ADRESSE:-}
+      - SI_KONTAKT_EMAIL=${SI_KONTAKT_EMAIL:-}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.soccerweb.rule=Host(`soccer-intelligence.com`)"
+      - "traefik.http.routers.soccerweb.priority=40"
+      - "traefik.http.routers.soccerweb.entrypoints=websecure"
+      - "traefik.http.routers.soccerweb.tls.certresolver=letsencrypt"
+      # Eigene Middlewares (gleiche Werte wie Dashboard/Vorschau): Die Website hängt nicht an den Labels anderer
+      # Container – sonst fiele sie beim Neubau oder Stopp von Dashboard/Vorschau kurz auf die Platzhalterseite zurück.
+      - "traefik.http.routers.soccerweb.middlewares=soccerweb-ratelimit,soccerweb-compress,soccerweb-hsts"
+      - "traefik.http.middlewares.soccerweb-ratelimit.ratelimit.average=30"
+      - "traefik.http.middlewares.soccerweb-ratelimit.ratelimit.burst=100"
+      - "traefik.http.middlewares.soccerweb-compress.compress=true"
+      - "traefik.http.middlewares.soccerweb-hsts.headers.stsSeconds=31536000"
+      - "traefik.http.services.soccerweb.loadbalancer.server.port=8080"
+
   soccer-placeholder:
     image: nginx:1.27-alpine
     container_name: soccer-placeholder

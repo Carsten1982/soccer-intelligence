@@ -7,6 +7,8 @@ letzte Messwerte des Servers (server.json), Backups, Laufzeiten, offene Entschei
 from __future__ import annotations
 
 import json
+import re
+import urllib.request
 from collections import Counter
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -15,6 +17,26 @@ from . import alarme, laufzeiten, pruefungen
 
 STUNDE = 6
 ANLASS = {"kontrolle": "Kontrolllauf", "spiel": "nach dem Spiel", "wiederholung": "Wiederholung"}
+
+
+SITEMAP = "https://soccer-intelligence.com/sitemap.xml"
+
+
+def _laden(url: str) -> str:
+    with urllib.request.urlopen(url, timeout=20) as r:          # nur lesen, öffentliche Adresse
+        return r.read().decode("utf-8", "replace")
+
+
+def sitemap_zeile(holen=_laden, url: str = SITEMAP) -> str:
+    """Seit 0.27 (Wunsch Carsten 25.11.2026): Ist die Sitemap erreichbar und wie viele Seiten nennt sie?
+    Die Sitemap entsteht bei jedem Abruf neu aus den Daten; hier wird nur nachgesehen."""
+    try:
+        index = holen(url)
+        teile = re.findall(r"<loc>([^<]+)</loc>", index)
+        seiten = sum(len(re.findall(r"<url>", holen(t))) for t in teile)
+    except Exception as exc:  # noqa: BLE001 - jede Störung als Hinweis in der Mail
+        return f"- Sitemap nicht erreichbar ({type(exc).__name__}). Bitte {url} im Browser prüfen."
+    return f"- Website und Sitemap erreichbar: {seiten} Seiten in {len(teile)} Teil-Sitemaps."
 
 
 def faellig(state: dict, now: datetime) -> bool:
@@ -42,7 +64,8 @@ def _mb(n: int) -> str:
     return f"{n / 1_000_000:.1f} MB"
 
 
-def text(base: Path, data_dir: Path, backup_dir: Path, now: datetime, fehlende_namen: list[str] | None = None) -> tuple[str, str]:
+def text(base: Path, data_dir: Path, backup_dir: Path, now: datetime, fehlende_namen: list[str] | None = None,
+         website: str | None = None) -> tuple[str, str]:
     """Betreff und Text der Statusmail."""
     base, now = Path(base), now.replace(tzinfo=None, microsecond=0)
     seit = now - timedelta(days=7)
@@ -95,6 +118,9 @@ def text(base: Path, data_dir: Path, backup_dir: Path, now: datetime, fehlende_n
     else:
         zeilen.append("- Keine Messwerte (Prüfskript tools/ueberwachen.py im Zeitplan des Servers eingetragen?).")
     zeilen.append("")
+
+    if website:                                          # seit 0.27: Sitemap-Zeile (vom Dienst übergeben)
+        zeilen += ["WEBSITE", website, ""]
 
     zeilen.append("BACKUPS")
     dateien = sorted(Path(backup_dir).glob("Database-Soccer-Intelligence_*_vor_import.xlsx")) if Path(backup_dir).exists() else []
