@@ -5,6 +5,11 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 25.11.2026 – Version 0.25 eingespielt
+
+- **Carsten** · Version 0.25 eingespielt (`9b84183`, Pull Requests #27 und #28; Tests grün, drei Testmails). Erster Anlauf in Schritt 4 gestoppt (Befund A7), die Website lief bis dahin mit 0.24.
+- **Claude** · Stand nachgetragen (`01`, Abschnitt 0).
+
 ## 25.11.2026 – Version 0.25: Auswertung nach dem Spiel
 
 - **Carsten / Claude** · Erstes Einspielen gestoppt in Schritt 4 (Test mit echten Daten `test_w13_real_files_all_leagues`): Kachel eines gespielten Spiels **ohne Endstand** brach ab (`bilanz` fehlte). Behoben (`kachel.html`, `spieltag.py`: Bilanz immer gesetzt, „Endstand folgt“), Test A7 ergänzt. Der laufende Stand (0.24) war nicht betroffen.
