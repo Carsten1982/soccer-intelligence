@@ -5,6 +5,11 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 25.11.2026 – Version 0.26 eingespielt
+
+- **Carsten** · Version 0.26 eingespielt (`94d32f7`, Pull Request #29; Tests grün, drei Testmails).
+- **Claude** · Stand nachgetragen (`01`, Abschnitt 0).
+
 ## 25.11.2026 – Version 0.26: Frühere Spieltage und Feinschliff
 
 - **Carsten** · Gesamtpaket Design Version 550 (Beschlüsse 53–58). Entscheide: am 1. Spieltag kein Link zu früheren Spieltagen; Archiv-Kacheln schon jetzt neu; nur Pfeile zum Blättern; Box-Regel „… über der Marke 2,5“; Vorschau bleibt als Testumgebung, Website live in eigenem Container; `index_ab` = Tag des Livegang-Releases; www nach dem Livegang prüfen. Impressumsdaten genannt (kommen nur in `.env`, nie in Git).
