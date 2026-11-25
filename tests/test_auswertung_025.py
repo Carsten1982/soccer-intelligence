@@ -144,3 +144,21 @@ def test_a6_bilanz():
     assert spieltag.bilanz(kpis, None) == {"n": 2, "ok": 0, "folgt": 2}                   # Werte fehlen noch
     assert spieltag.bilanz(None, None) == {"n": 0, "ok": 0, "folgt": 0}
     assert t("spieltag.bilanz", ok=2, n=3) == "2 von 3 bestätigt"
+
+
+def test_a7_gespielt_ohne_endstand():
+    """Befund beim Einspielen 25.11.2026 (Test mit echten Daten): gespielt, aber noch ohne Endstand – die Kachel zeigt
+    „Endstand folgt“ statt abzubrechen; die Spielseite bleibt in der Erwartungsansicht mit Hinweis."""
+    from test_website import BL, FakeDaten, game, plan, zp
+    from datetime import date
+    fx = plan(game(10, date(2026, 11, 20), "20:30", "A", "B"), game(10, date(2026, 11, 22), "15:30", "C", "D"))
+    fx["api_id"] = [9, 10]
+    d = FakeDaten({"Bundesliga": fx}, {}, {})
+    s = spieltag.spieltag_daten(d, BL, zp("2026-11-21T10:00"))
+    eintrag = next(x for x in s["tabs"][0]["spiele"] if x["heim"] == "A")
+    assert eintrag["art"] == "gespielt" and eintrag["ergebnis"] is None and eintrag["bilanz"] is None
+    html = seiten.spieltag_html(s, seiten.Kontext())
+    assert "Endstand folgt" in html and "kg-tor" not in html
+    seite = spiel.spiel_daten(d, 9, zp("2026-11-21T10:00"))
+    assert seite["ansicht"] == "erwartung"
+    assert "Gespielt · Endstand folgt" in seiten.spiel_html(seite, seiten.Kontext())

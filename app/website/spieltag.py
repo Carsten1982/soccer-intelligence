@@ -219,6 +219,7 @@ def spieltag_daten(daten: Daten, web: W.WebLiga, zp: Zeitpunkt) -> dict:
             if gate is None and werte.quelle == S.WAITING:              # Schnappschuss wartet auf ein Vorspiel
                 gate = A.Gate("Werte folgen nachträglich")
             eintrag = spiel_eintrag(g, werte.kpis, zp.jetzt, ergebnisse, b.team_ids, web.name, gate)
+            eintrag["bilanz"] = None                       # ohne Endstand keine Bilanz („Endstand folgt“)
             if eintrag["art"] == "gespielt" and eintrag["ergebnis"]:        # seit 0.25: Bilanz auf der Kachel
                 eintrag["bilanz"] = bilanz(werte.kpis, spielzeile(daten, web.name, g.saison, g.heim, g.gast, zp.bis))
             spiele.append(eintrag)

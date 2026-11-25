@@ -6,7 +6,7 @@
 {% macro kachel_gespielt(s) -%}
 {#- Seit 0.25 (Release_08, Abschnitt 16): gespielte Kachel der Spieltag-Seite – Meta-Zeile, Teams untereinander mit
     Toren rechts, Bilanz der Auffälligkeiten, Pfeil. Ganze Kachel führt zur Auswertung. Archiv folgt im nächsten Release. -#}
-{% set b = s.bilanz or {} %}
+{% set b = s.get('bilanz') or {} %}
 <a class="kachel kachel--gespielt kg" href="{{ link('spiel', liga=seite.liga, slug=s.slug) }}">
   <span class="kg-inhalt">
     <span class="kg-meta">{{ termin(s) }} · {{ t('chip.gespielt') }}{% if s.sonderspiel %} · {{ t('chip.' ~ s.sonderspiel ~ '_nr', n=s.spieltag) }}{% endif %}</span>
