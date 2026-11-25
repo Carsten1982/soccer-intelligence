@@ -395,7 +395,7 @@
     "vergleichen_titel": "We compare",
     "vergleichen": "How many goals, cards or corners can be expected? We compare the values of every upcoming match with the average of its league.",
     "markieren_titel": "We highlight",
-    "markieren": "Clear deviations are highlighted. Using historical matches, we check how often similar statistical anomalies were confirmed. We explain the methodology",
+    "markieren": "Clear deviations are highlighted. Using historical matches, we check how often the same pattern occurred – in other words, how often the actual match value was also above or below the league average. We explain the methodology",
     "markieren_link": "on the methodology page",
     "entscheiden_titel": "You decide",
     "entscheiden": "Whether for a chat with friends or for your own tip: you can see at a glance which matches stand out statistically and where a closer look is worthwhile.",

@@ -13,11 +13,11 @@
   <span class="ebene-marke">Ebene 1 · Kurz erklärt</span>
   <h2 class="ebene-titel" id="ebene1-titel">Das Prinzip auf einen Blick</h2>
   <p>Soccer Intelligence untersucht anstehende Fußballspiele auf <b>statistische Auffälligkeiten</b>. Dafür vergleichen wir erwartete Werte – etwa bei Toren, Ecken oder gelben Karten – mit dem Durchschnitt der jeweiligen Liga.</p>
-  <p>Weicht ein Wert deutlich ab, prüfen wir anhand historischer Spieldaten, wie aussagekräftig solche Auffälligkeiten bisher waren. Daraus leiten wir die <b>Signalqualität</b> ab: stark, mittel oder gering.</p>
+  <p>Weicht ein Wert deutlich ab, prüfen wir anhand historischer Spieldaten, wie häufig sich diese Auffälligkeit bestätigt hat – also wie oft der tatsächliche Spielwert ebenfalls über oder unter dem Ligadurchschnitt lag. Daraus leiten wir die <b>Signalqualität</b> ab: stark, mittel oder gering.</p>
   {{ schritte([
     ("Abweichung finden", "Wir vergleichen die erwarteten Werte eines Spiels mit dem Ligadurchschnitt. Weicht ein Wert deutlich ab, ist das Spiel auffällig."),
-    ("Vergleich mit der Vergangenheit", "Wir schauen, wie oft sich solche Auffälligkeiten in früheren Spielen bestätigt haben."),
-    ("Signalqualität vergeben", "Je besser eine Auffälligkeit in der Vergangenheit abgeschnitten hat, desto höher die Signalqualität: stark, mittel oder gering."),
+    ("Vergleich mit der Vergangenheit", "Wir schauen, wie oft frühere Spiele mit einer solchen Auffälligkeit tatsächlich über bzw. unter dem Ligadurchschnitt lagen – und ob das häufiger war als bei allen Spielen."),
+    ("Signalqualität vergeben", "Je häufiger sich eine Auffälligkeit bestätigt hat und je deutlicher sie dabei über dem Durchschnitt aller Spiele lag, desto höher die Signalqualität: stark, mittel oder gering."),
   ]) }}
   <h3>Was bedeutet die Signalqualität?</h3>
   {{ stufen_karten({"stark": "Hat sich in der Vergangenheit deutlich bestätigt.", "mittel": "Hat sich in der Vergangenheit solide bestätigt.", "gering": "Hat sich in der Vergangenheit nur leicht bestätigt."}) }}
@@ -60,7 +60,7 @@
     </ol>
   </div>
   <h3>Wie wird die Signalqualität bestimmt?</h3>
-  <p>Die Trefferquote zeigt, wie oft das erwartete Ergebnis tatsächlich eingetreten ist. Der Mehrwert zeigt, wie viel häufiger das im Vergleich zu allen Spielen passiert ist.</p>
+  <p>Die Trefferquote zeigt, wie oft das Spiel tatsächlich auf der erwarteten Seite des Ligadurchschnitts lag (bei „Über 2,5 Tore“: mindestens 3 bzw. höchstens 2 Tore). Der Mehrwert zeigt, wie viel häufiger das im Vergleich zu allen Spielen passiert ist.</p>
   {{ regeln({"stark": "Trefferquote ab 60 % und Mehrwert ab +8 Prozentpunkten", "mittel": "Trefferquote ab 55 % und Mehrwert ab +5 Prozentpunkten", "gering": "Trefferquote ab 50 % und Mehrwert ab +5 Prozentpunkten"}) }}
   <p>Damit ein Signal eine Einstufung erhält, müssen mehrere Bedingungen erfüllt sein: Mindestens 50 Spiele müssen vorliegen, der Mehrwert muss mindestens 5 Prozentpunkte betragen und der Vorteil muss sich in mindestens zwei Dritteln der Saisons zeigen. Im Beispiel war das in allen sieben Saisons der Fall.</p>
   <p class="liste-notiz gross" role="note"><b>Wichtig:</b> Die Signalqualität ist die Bilanz der Vergangenheit. Sie ist keine Wahrscheinlichkeit und keine Garantie für das nächste Spiel.</p>

@@ -5,6 +5,11 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 25.11.2026 – Version 0.27 (in Arbeit): Livegang
+
+- **Carsten** · Texte „bestätigt“ präzisiert (Vergleich mit dem Ligadurchschnitt): Einleitung der Methodik im eigenen Wortlaut (DE und EN), übrige Stellen nach Vorschlag Claude freigegeben.
+- **Claude** · Methodik Ebene 1 (Einleitung, Schritte 2 und 3) und Ebene 2 (Trefferquote), Startseite („Deutliche Abweichungen werden markiert …“), Glossar: neuer Begriff „Bestätigt / Nicht bestätigt“, „Trefferquote“ angeglichen – Deutsch und Englisch.
+
 ## 25.11.2026 – Version 0.26 eingespielt
 
 - **Carsten** · Version 0.26 eingespielt (`94d32f7`, Pull Request #29; Tests grün, drei Testmails).

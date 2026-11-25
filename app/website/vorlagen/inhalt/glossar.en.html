@@ -29,7 +29,8 @@
     {% call begriff("Threshold") %}The limit from which a deviation counts as a statistical anomaly. Each league has at most one threshold per metric and direction. Where none is set, the metric is never flagged. The thresholds are recalculated once per season.{% endcall %}
     {% call begriff("Direction") %}Whether a value is above or below the league average. Each direction has its own threshold.{% endcall %}
     {% call begriff("Signal quality") %}This shows how often similar statistical anomalies in earlier matches were confirmed as a forecast. The rating has three levels: high, medium or low. It is not a probability and does not guarantee what will happen in the next match.{% endcall %}
-    {% call begriff("Success rate") %}The share of past matches above the threshold in which the expected result actually occurred.{% endcall %}
+    {% call begriff("Confirmed / Not confirmed") %}After the match, an anomaly is confirmed if the actual match value was also above or below the league average, in the direction flagged before the match. For “Over 2.5 goals”, 3 goals or more or 2 goals or fewer count; for “Both teams to score”, Yes or No. A value exactly at the league average does not count as confirmed.{% endcall %}
+    {% call begriff("Success rate") %}The share of past matches above the threshold whose actual match value was also above or below the league average.{% endcall %}
     {% call begriff("Baseline") %}The same share across all matches in the league, regardless of the threshold (the normal rate).{% endcall %}
     {% call begriff("Uplift") %}How many percentage points higher the success rate is compared with all matches.{% endcall %}
     {% call begriff("Range") %}The range in which the uplift is likely to lie based on the available data (95% confidence interval using the Wilson method). The fewer matches, the wider the range. It measures the uncertainty in the data and does not guarantee anything about future matches.{% endcall %}
