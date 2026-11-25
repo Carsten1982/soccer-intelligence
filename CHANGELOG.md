@@ -5,6 +5,11 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 25.11.2026 – Version 0.25: Auswertung nach dem Spiel
+
+- **Carsten** · Designpaket „Auswertung“ (Release_00/01b/07/08/09, Entwürfe Version 544). Entscheide: neue gespielte Kachel nach Entwurf; Spaltenköpfe bis 360 px kleiner; Kopfzeile zählt alle Spiele mit Auffälligkeit; fehlen Werte, Bilanz „Bewertung folgt“; Releaseplan: 0.25 Auswertung, 0.26 Livegang, 0.27 Cookie-Hinweis und Analytics, Archivseiten im Release danach.
+- **Claude** · **Auswertung nach dem Spiel** (`core/auswertung.py`, `website/spiel.py`, `vorlagen/spiel.html`): gleiche Adresse, mit Endstand Tabelle Erwartet/Tatsächlich, Bestätigung nach Regelwerk 11.1 (Test A2: identisch mit der Sensitivitätsanalyse), Halbzeit, Box „Statistisch auffällig ab“, Hinweise, Description. **Statistik-Korrektur:** Import hält erste Ist-Werte fest (`core/schnappschuss.record_stats`, `*.ist.json`). **Spieltag:** neue gespielte Kachel mit Toren und Bilanz, gespielte Spiele am Ende, Zählung aller Spiele mit Auffälligkeit, Legende „Gespielte Spiele“. **Spielseite vor dem Spiel** nach Release_08 Abschnitt 9 (Fall C ohne ⓘ, Liga im Satz, graue Regelzeile, „Erwarteter Anteil“, „Beide Teams treffen“ ohne Nachkommastellen). Startseiten-Satz, Methodik „Nicht eingestuft“, Signalqualität-Satz in Legende und Glossar. Tests A1–A6 (`test_auswertung_025.py`), bestehende Tests angepasst. axe ohne Befund (DE/EN, 390 und 1280 px).
+
 ## 25.11.2026 – Version 0.24 eingespielt
 
 - **Carsten** · Entscheide zur Auswertung nach dem Spiel (Fragen des Design-Chats): „bestätigt/eingetroffen“ nach Regelwerk 11.1 (Vergleich mit dem Ligadurchschnitt, nicht mit dem Grenzwert; Design wird daraufhin geprüft); Hinweis „nachträglich korrigiert“ auch bei geänderten Statistiken, immer die korrekten Werte; Liga im Satz „in der La Liga“ (EN „in La Liga“).

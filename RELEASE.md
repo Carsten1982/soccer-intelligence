@@ -1,46 +1,41 @@
-# Release: Version 0.24 – Qualität und Sicherheit
+# Release: Version 0.25 – Auswertung nach dem Spiel
 
-**Stand:** 24.11.2026 · Version 0.24 · Designanpassungen 24.11.2026 (Version 508) · Reviews Front- und Backend (Prüfprotokoll `docs/tests/pruefprotokoll_0.24_reviews.md`)
+**Stand:** 25.11.2026 · Version 0.25 · Design-Spezifikation Release_08 (Entwürfe Version 544), Entscheide Carsten 25.11.2026
 
-**Commit:** Version 0.24: Qualität und Sicherheit
+**Commit:** Version 0.25: Auswertung nach dem Spiel
 
 ## Was ändert sich?
 
-- **Startseite, „Wie lese ich das?“:** neuer Satz zur Signalqualität („… in früheren Spielen als Prognose bestätigt …“), Deutsch und Englisch.
-- **Spielseite, Chip „Nicht eingestuft ⓘ“:** neue Erklärung („Ein Blick auf vergangene Spiele zeigt: …“), Deutsch und Englisch.
-- **Suchmaschinen:** Spielseiten kommen erst in den Index, wenn mindestens 6 der 8 Kennzahlen bewertet sind (gilt ab dem Livegang). Die Auszeichnung `SportsEvent` entfällt.
-- **Handy:** Die Seite lässt sich mit eigenem Icon „zum Home-Bildschirm hinzufügen“ (Web-App-Manifest), die Browserleiste wird grün (`theme-color`), „Zahlen im Detail“ ist mit 44 px leichter anzutippen.
-- **Schneller bei vielen Besuchern:** Die Website speichert fertige Seiten je Minute. Die Startseite kommt in rund 0,001 s statt 0,4 s; 10 gleichzeitige Besucher warten nicht mehr bis zu 7,6 s.
-- **Sicherheit (Backend-Review):** Zeitlimit und strenge Längenprüfung im Website-Dienst, Sperre nach Fehlversuchen im Dashboard nicht mehr umgehbar, Kontakt-Bremse ohne Lücke, kein gemischter Datenstand während des Tauschs, ZIP-Weg entfernt (nur noch `einspielen.sh github`), `no-new-privileges` und Speichergrenzen für unsere Container, `requests` 2.32.5.
-- **Traefik-Labels (nur unsere Container):** Komprimierung und HSTS. Prüfung erst nach dem Livegang (`01`, Abschnitt 8).
-- Bewertung beider Reviews: `docs/tests/pruefprotokoll_0.24_reviews.md`.
+- **Ergebnisseite:** Sobald ein Spiel einen Endstand hat, zeigt seine Spielseite (gleiche Adresse) die Auswertung: grosser Spielstand mit Halbzeit, Tabelle „Erwartet und tatsächlich“ (Ligadurchschnitt · Erwartungswert · Tatsächlich), bei Auffälligkeiten „✓ Bestätigt“ / „✗ Nicht bestätigt“ / „Bewertung folgt“ und die Signalqualität, darunter die Box „Statistisch auffällig ab“.
+- **Regel:** Bestätigt, wenn der tatsächliche Wert in der erwarteten Richtung über bzw. unter dem Ligadurchschnitt liegt (Regelwerk 11.1, wie die Sensitivitätsanalyse). „Über 2,5 Tore“: mindestens 3 bzw. höchstens 2 Tore; „Beide Teams treffen“: Ja bzw. Nein.
+- **Korrekturen:** Ändert sich nach dem Spiel eine Statistik, steht „Ergebnis oder Statistik nachträglich korrigiert“; es gelten immer die aktuellen Werte.
+- **Spieltag-Seite:** gespielte Spiele am Ende der Liste, mit Toren je Team und Bilanz („2 von 3 bestätigt“, „Keine Auffälligkeiten“, „Bewertung folgt“, „Endstand folgt“). Antippen öffnet die Ergebnisseite.
+- **Spielseite vor dem Spiel:** „Statistisch auffällig ab“, „nicht definiert“, graue Regelzeile, „Nicht eingestuft“ mit Satz „Diese Abweichung ist in der Bundesliga kein verlässlicher Hinweis …“ (ohne ⓘ), „Beide Teams treffen“ ohne Nachkommastellen („35 %“).
+- **Texte:** neuer Startseiten-Satz, Methodik „Nicht eingestuft“, Signalqualität-Satz in der Spieltag-Legende und im Glossar.
 
 ## Einspielen
 
-Wie immer in tmux:
-
 ```bash
-tmux new -s release024
+tmux new -s release025
 ```
 
 ```bash
 bash /docker/football-dashboard/tools/einspielen.sh github
 ```
 
-Neu: Es gibt nur noch den Weg über GitHub (der ZIP-Weg ist entfernt). Ohne Angabe gilt ebenfalls `github`.
-
 ## Erwartungswerte
 
-- Git-Stand vorher: `efcc976`.
-- Schritt 4: rund **740 bestanden**, einige übersprungen und ausgelassen, keine Fehler (hier ohne echte Daten: 742 bestanden, 18 übersprungen).
+- Git-Stand vorher: `acf1c60` (oder der Stand nach den Doku-Commits).
+- Schritt 4: rund **750 bestanden**, keine Fehler (hier ohne echte Daten: 749 bestanden, 18 übersprungen).
 - Schritt 5: alle Container laufen, `/` = 200, `/dashboard/` = 200, `/vorschau/` = 401; drei Testmails.
-- Dashboard-Fusszeile: „Version 0.24 – Qualität und Sicherheit“.
+- Dashboard-Fusszeile: „Version 0.25 – Auswertung nach dem Spiel“.
 
 ## Im Browser prüfen
 
-1. Startseite (DE/EN): „Wie lese ich das?“ aufklappen – neuer Satz bei „Signalqualität“.
-2. Spielseite mit einer Karte „Nicht eingestuft ⓘ“: ⓘ antippen – neuer Erklärsatz.
-3. Handy: Spielseite – „Zahlen im Detail“ etwas höher; Browserleiste grün (Android). Im Browser-Menü „Zum Startbildschirm“: Icon mit den drei Balken, Name „Soccer Intel“.
-4. **Komprimierung und HSTS** (Computer, Chrome): Vorschau öffnen, **F12** → Reiter „Netzwerk“ → **Strg+F5** (ohne Zwischenspeicher neu laden) → `site.css` anklicken → Antwort-Header. Erwartet: `content-encoding: gzip` (oder `br`) und `strict-transport-security: max-age=31536000`. Vorher (24.11.): beides fehlte, `content-length: 61064`.
-5. **Tempo:** Startseite und Spieltag-Seite mehrmals schnell hintereinander aufrufen – sie sollten sofort da sein.
-6. Sag mir, ob alles passt.
+1. **Spieltag-Seite** einer Liga mit gespielten Spielen (z. B. am Wochenende): gespielte Kacheln am Ende, mit Toren und Bilanz; Kopfzeile zählt alle Spiele mit Auffälligkeit.
+2. **Gespielte Kachel antippen:** Ergebnisseite mit Spielstand, „Halbzeit …“, Tabelle, ✓/✗; Box „Statistisch auffällig ab“ auf- und zuklappen. Auch auf Englisch.
+3. **Kommendes Spiel öffnen:** „Zahlen im Detail“ – „Statistisch auffällig ab“, graue Regelzeile; bei „Nicht eingestuft“ der neue Satz direkt in der Karte; „Beide Teams treffen“ als „… %“ ohne Nachkommastellen.
+4. **Startseite:** neuer Satz unter „Fußballspiele durchleuchtet.“; gespielte Top-Spiele führen zur Ergebnisseite.
+5. **Handy:** Ergebnisseite bei 360–412 px ohne Querscrollen, Teamnamen brechen nur zwischen Wörtern um.
+6. **Aus 0.24 offen:** Komprimierung und HSTS (F12 → Netzwerk → Strg+F5 → `site.css`: `content-encoding` und `strict-transport-security`), Tempo auf dem Handy mit gutem Netz.
+7. Sag mir, ob alles passt.

@@ -111,6 +111,8 @@ def spiel_beschreibung(seite: dict, heim: str, gast: str, lang: str) -> str:
     datum = F.datum_voll(date.fromisoformat(seite["datum"]), lang)
     werte = dict(heim=heim, gast=gast, liga=liga, spieltag=spieltag, n=seite["spieltag"], datum=datum)
     bewertung = seite["bewertung"]
+    if seite.get("ansicht") == "auswertung" and bewertung != "status":   # seit 0.25 (Release_08, Abschnitt 12)
+        return _kuerzen(t("seo.spiel_auswertung", lang, ergebnis=F.ergebnis(*seite["ergebnis"]), **werte))
     if bewertung == "status":
         if seite.get("status") == "verschoben":
             return _kuerzen(t("seo.spiel_verschoben", lang, **werte))

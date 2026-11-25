@@ -177,7 +177,12 @@ def _werte(k: Kontext) -> dict:
         "lang": lang, "sprachen": W.SPRACHEN, "sprachname": W.SPRACHNAME,
         "t": lambda s, **w: T.t(s, lang, **w), "tn": lambda s, n, **w: T.tn(s, n, lang, **w),
         "prozent": lambda v: F.prozent(v, lang),
-        "zahl": lambda v, kk=None: F.zahl(v, lang, "%" if kk and kk.get("prozent") else ""),
+        # „Beide Teams treffen“ ohne Nachkommastellen (seit 0.25, Beschluss 48); genau=True für den Grenzwert
+        "zahl": lambda v, kk=None, genau=False: F.zahl(v, lang, "%" if kk and kk.get("prozent") else "",
+                                                       0 if kk and kk.get("prozent") and not genau else 2),
+        "liga_in": lambda key: T.t(f"liga_in.{key}", lang),          # „in der Bundesliga“ (seit 0.25, Beschluss 44)
+        "liga_in_gross": lambda key: (lambda x: x[:1].upper() + x[1:])(T.t(f"liga_in.{key}", lang)),
+        "ergebnis_text": lambda e: F.ergebnis(*e) if e else "",
         "tag": iso(F.tag), "datum_kurz": iso(F.datum_kurz), "tag_monat": iso(F.tag_monat), "datum_voll": iso(F.datum_voll),
         "zeitraum": lambda von, bis: F.zeitraum(date.fromisoformat(von), date.fromisoformat(bis), lang),
         "ergebnis": lambda e: F.ergebnis(*e), "ergebnis_kurz": lambda e: F.ergebnis_kurz(*e),
@@ -338,12 +343,41 @@ def spiel_notizen(seite: dict, lang: str = W.SPRACHE) -> list[dict]:
         out.append({"titel": tt("spiel.hinweis_vorgezogen_titel"),
                     "text": tt("spiel.hinweis_vorgezogen", spieltag=tt("spieltag.nummer", n=seite["spieltag"]),
                                datum=_zeitpunkt(seite, lang))})
+    if seite.get("ansicht") == "auswertung":           # seit 0.25 (Release_08, Abschnitt 5): Auswertung nach dem Spiel
+        return _auswertung_notizen(seite, lang, out)
     if seite["zustand"] == "gespielt" and seite["bewertung"] not in ("status", "werte_ab"):
         text = tt("spiel.hinweis_nachtraeglich") if seite.get("nachtraeglich") else tt("spiel.hinweis_gespielt")
         if seite.get("korrigiert"):
             text += " " + tt("spiel.hinweis_korrigiert") + "."
         out.append({"titel": tt("spiel.hinweis_gespielt_titel"), "text": text})
+    if seite["zustand"] == "gespielt" and seite["bewertung"] != "status" and not seite.get("ergebnis"):
+        out.append({"titel": tt("spiel.chip_endstand_folgt"), "text": tt("spiel.hinweis_endstand_folgt")})
     return out
+
+
+def _auswertung_notizen(seite: dict, lang: str, vorher: list[dict]) -> list[dict]:
+    """Ein Hinweisfeld oben (Release_08, Abschnitt 2.4 und 5): gespielt, nachträglich berechnet, korrigiert,
+    Statistik fehlt, ohne Erwartungswerte, zu wenig Daten; beim Nachholspiel das Datum."""
+    def tt(s, **w):
+        return T.t(s, lang, **w)
+
+    teile = []
+    if seite["sonderspiel"] == "nachholspiel":
+        teile.append(tt("spiel.a_hinweis_nachholspiel", datum=F.datum_kurz(date.fromisoformat(seite["datum"]), lang)))
+    elif vorher:
+        teile.append(vorher[0]["text"])
+    neu = [team(seite["liga"], n, lang) for n in seite.get("neu_in_liga") or []]
+    if seite.get("ohne_werte"):
+        teile.append(tt("spiel.a_hinweis_ohne", team=" / ".join(neu)) if neu else tt("spiel.a_hinweis_ohne_allg"))
+    else:
+        teile.append(tt("spiel.hinweis_nachtraeglich") if seite.get("nachtraeglich") else tt("spiel.hinweis_gespielt"))
+        if seite["bewertung"] == "zu_wenig_daten" and neu:
+            teile.append(tt("spiel.a_hinweis_wenig", team=" / ".join(neu)))
+    if seite.get("korrigiert"):
+        teile.append(tt("spiel.hinweis_korrigiert") + ".")
+    if seite.get("statistik_fehlt"):
+        teile.append(tt("spiel.a_hinweis_statistik"))
+    return [{"titel": tt("spiel.hinweis_gespielt_titel"), "text": " ".join(teile)}]
 
 
 def spiel_html(seite: dict, k: Kontext) -> str:
@@ -351,7 +385,9 @@ def spiel_html(seite: dict, k: Kontext) -> str:
     k = k.mit(ziel=A.Ziel("spiel", lang, liga=seite["liga"], spiel_id=seite["id"], slug=seite["slug"]))
     heim, gast = team(seite["liga"], seite["heim"], lang), team(seite["liga"], seite["gast"], lang)
     liga = T.t(f"liga.{seite['liga_key']}", lang)
-    if seite["zustand"] == "gespielt" and seite["bewertung"] != "status":
+    if seite.get("ansicht") == "auswertung":              # seit 0.25: Anstoss oben, Spielstand gross in der Mitte
+        wann = termin(seite, lang)
+    elif seite["zustand"] == "gespielt" and seite["bewertung"] != "status":
         wann = T.t("spiel.endstand", lang, ergebnis=F.ergebnis(*seite["ergebnis"])) if seite["ergebnis"] else \
             T.t("chip.gespielt", lang)
     else:

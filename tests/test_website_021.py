@@ -404,9 +404,12 @@ def test_w26_compact_score_on_tiles_and_long_on_match_page():
     fx["api_id"] = [9, 10]
     d = FakeDaten({"Bundesliga": fx}, {}, {(S, "A", "B"): (2, 1)})
     z = zp("2026-11-21T10:00")
-    assert "Gespielt · 2:1" in seiten.spieltag_html(spieltag.spieltag_daten(d, BL, z), seiten.Kontext())
+    # seit 0.25 (Release_08, 16.2): gespielte Kachel mit Toren je Team, „Endstand 2 : 1“ für Screenreader
+    kachel = seiten.spieltag_html(spieltag.spieltag_daten(d, BL, z), seiten.Kontext())
+    assert '<b class="kg-tor" aria-hidden="true">2</b>' in kachel and "Endstand 2 : 1" in kachel
+    assert "Fr 20.11. · 20:30 · Gespielt" in kachel and "Keine Auffälligkeiten" in kachel
     html = seiten.spiel_html(spiel.spiel_daten(d, 9, z), seiten.Kontext(lang="en"))
-    assert "Final score 2 : 1" in html
+    assert '<span class="a-tore">2 : 1</span>' in html and "Final score" in html      # Auswertung (Screenreader)
 
 
 # --- W27 Entwurfsrunde 20.11.2026 (0.21.1) ------------------------------------------------------------------------------
@@ -536,15 +539,18 @@ def test_w30_page_cards_chip_button_and_texts(monkeypatch):
     html = seiten.spiel_html(s, seiten.Kontext())
     for text in ("Auffälligkeiten", "Ohne Auffälligkeit", "Beide Teams treffen (in %)",
                  '<span class="pct-zusatz"> (in %)</span>', "Tore beider Teams seltener erwartet",
-                 "unter 41,60 %", "Statistisch auffällig. Schwelle: mehr als 35 % unter dem Ligadurchschnitt.",
-                 "Keine Auffälligkeit", "unter 9,00", "Nicht erreicht. Schwelle: mehr als 10 % unter dem Ligadurchschnitt.",
-                 "Nicht eingestuft", 'aria-controls="c-kpi02"', 'id="c-kpi02" data-aufklapp-ziel', "Mehr Tore erwartet",
-                 "Erwartete Quote", "Ligadurchschnitt pro Spiel", "Auffälligkeitsschwelle", t("spiel.c_notiz")):
+                 "unter 41,60 %", "mehr als 35 % unter dem Ligadurchschnitt",
+                 "Keine Auffälligkeit", "unter 9,00", "mehr als 10 % unter dem Ligadurchschnitt",
+                 "Nicht eingestuft", "Mehr Tore erwartet", "Diese Abweichung ist in der Bundesliga kein verlässlicher",
+                 "Erwarteter Anteil", "Ligadurchschnitt pro Spiel", "Statistisch auffällig ab",
+                 "Anteil der letzten 10 Ligaspiele, in denen beide Teams trafen", "nicht definiert",
+                 "Für diese Abweichung gibt es in der Bundesliga keine Schwelle."):   # seit 0.25 (Release_08, 9)
         assert text in html, text
     assert "Nicht auffällig" not in html and "Abweichung</span>" not in html          # Abweichung nicht wiederholt
+    assert 'data-aufklapp="c-kpi02"' not in html and "Statistisch auffällig. Schwelle" not in html  # seit 0.25 ohne ⓘ
     en = seiten.spiel_html(s, seiten.Kontext(lang="en"))
-    for text in ("No anomaly flagged", "Not assessed", "below 41.60%", "Expected rate",
-                 "Statistical anomaly. Threshold: more than 35% below the league average."):
+    for text in ("No anomaly flagged", "Not assessed", "below 41.60%", "Expected percentage",
+                 "more than 35% below the league average", "In the Bundesliga, this deviation is not a reliable guide"):
         assert text in en, text
 
 
@@ -563,8 +569,9 @@ def test_w31_hinweistexte_design_508():
     en = json.loads((APP / "website" / "texte" / "en.json").read_text(encoding="utf-8"))
     assert de["lesen"]["signal"].startswith("Sie zeigt, wie häufig sich vergleichbare Auffälligkeiten in früheren Spielen als Prognose")
     assert en["lesen"]["signal"].endswith("The rating has three levels: high, medium or low.")
-    assert de["spiel"]["c_notiz"].endswith("Deshalb stufen wir sie nicht als relevantes Signal ein.")
-    assert en["spiel"]["c_notiz"].startswith("A look at past matches shows that such deviations say little")
+    # Fall-C-Satz seit 0.25 ersetzt (Release_08, Abschnitt 9; Liga als Feld je Liga und Sprache, Beschluss 44)
+    assert de["spiel"]["c_notiz"] == "Diese Abweichung ist {liga_in} kein verlässlicher Hinweis auf kommende Spiele."
+    assert de["liga_in"]["la_liga"] == "in der La Liga" and en["liga_in"]["serie_a"] == "in Serie A"
 
 
 def test_w32_frontend_review_024():

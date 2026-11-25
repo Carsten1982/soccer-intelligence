@@ -280,6 +280,27 @@ exakt gerechnet und kaufmännisch auf zwei Stellen, in der Richtung der Abweichu
 Ligadurchschnitt“). Kurzaussagen je Kennzahl „Mehr/Weniger … erwartet“. Bei „Beide Teams treffen“ steht „(in %)“ in der
 Kernaussage, bis 520 px ausgeblendet. Rechenlogik unverändert (Regelwerk, Abschnitt 8).
 
+**Seit 0.25 – Auswertung nach dem Spiel** (Entwurf `Auswertung_D`, Design-Spezifikation Release_08 vom 25.11.2026,
+Beschlüsse 35–52, Entscheide Carsten 25.11.2026): Sobald der **Endstand** vorliegt, zeigt dieselbe Adresse die Auswertung
+statt der Erwartungsansicht. Scoreboard mit grossem Spielstand und „Halbzeit 1 : 0“ (ohne Formkurve und Kernaussage),
+ein Hinweisfeld (gespielt, nachträglich berechnet, korrigiert, Statistik fehlt, ohne Erwartungswerte, zu wenig Daten,
+Nachholspiel), Tabelle „Erwartet und tatsächlich“ (echte `<table>` mit Rollen; Gruppen „Auffälligkeiten“ und „Ohne
+Auffälligkeit“ bzw. „Kennzahlen“; Spalten Ligadurchschnitt · Erwartungswert · Tatsächlich; ab 700 px Chips, darunter
+Symbol + Text und graue Zeile; bis 360 px kleinere Spaltenköpfe), Box „Statistisch auffällig ab“ (Knopf mit
+`aria-expanded`, geschlossen; Grenzwert in Richtung der Abweichung, „nicht definiert“, bei „Über 2,5 Tore“ ohne Schwelle
+„keine Schwelle“). **Bestätigt** nach Regelwerk 11.1 (Vergleich mit dem Ligadurchschnitt vor dem Spiel, strikt;
+„Über 2,5 Tore“ mindestens 3 / höchstens 2; „Beide Teams treffen“ Ja/Nein; fehlt der Wert: „Bewertung folgt“), nur Fall A.
+Erwartungswerte aus dem Schnappschuss, tatsächliche Werte immer aktuell; der Import hält die zuerst bekannten Ist-Werte
+fest (`<API-ID>.ist.json`), weicht ein Wert später ab, steht „Ergebnis oder Statistik nachträglich korrigiert“.
+Description „{Heim} – {Gast} ({Liga}, {Spieltag}, {Datum}): Endstand 2 : 1. Unsere Erwartungswerte im Vergleich …“.
+Spielseite vor dem Spiel (Release_08, Abschnitt 9): „Statistisch auffällig ab“, „nicht definiert“, graue Regelzeile statt
+Erklärsätzen, Fall C ohne ⓘ mit Satz „Diese Abweichung ist in der {Liga} kein verlässlicher Hinweis …“ (Liga als Feld je
+Liga und Sprache, DE „in der La Liga“), Legende „Keine Auffälligkeit / Nicht eingestuft“, „Erwarteter Anteil“,
+„Beide Teams treffen“ ohne Nachkommastellen (Grenzwert weiter zwei Stellen). **Spieltag-Seite** (Release_08, 16): gespielte
+Kachel mit Meta-Zeile, Toren je Team, Bilanz („2 von 3 bestätigt“, alle bestätigt grün mit ✓, „Keine Auffälligkeiten“,
+fehlt ein Wert „Bewertung folgt“, ohne Endstand „Endstand folgt“), gespielte Spiele am Ende; die Kopfzeile zählt alle Spiele
+mit Auffälligkeit, auch gespielte; Legende „Gespielte Spiele“. Archiv unverändert (nächstes Release).
+
 Werte unverändert aus dem Rechenkern (F6): Erwartungswert = `hauptwert`, Teamwerte = `heim`/`auswaerts`, Ligaschnitt = `referenz`, Abweichung = `abweichung` (gerundet), Stufe aus `schwellen.toml`; KPI 08 in Prozent.
 
 ### 7.2 Startseite (Entwurf 1d, ergänzend 1b; Übergabe Abschnitt 5)

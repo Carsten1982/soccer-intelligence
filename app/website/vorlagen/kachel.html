@@ -3,7 +3,28 @@
     Ganze Kachel ist ein Link, ausser bei ausschliessendem Status (F8). Einbinden „with context“. -#}
 {% from "teile.html" import pfeil_rechts, q_chip with context %}
 
+{% macro kachel_gespielt(s) -%}
+{#- Seit 0.25 (Release_08, Abschnitt 16): gespielte Kachel der Spieltag-Seite – Meta-Zeile, Teams untereinander mit
+    Toren rechts, Bilanz der Auffälligkeiten, Pfeil. Ganze Kachel führt zur Auswertung. Archiv folgt im nächsten Release. -#}
+{% set b = s.bilanz or {} %}
+<a class="kachel kachel--gespielt kg" href="{{ link('spiel', liga=seite.liga, slug=s.slug) }}">
+  <span class="kg-inhalt">
+    <span class="kg-meta">{{ termin(s) }} · {{ t('chip.gespielt') }}{% if s.sonderspiel %} · {{ t('chip.' ~ s.sonderspiel ~ '_nr', n=s.spieltag) }}{% endif %}</span>
+    <span class="kg-team"><span class="kg-name">{{ team(seite.liga, s.heim) }}</span>{% if s.ergebnis %}<b class="kg-tor" aria-hidden="true">{{ s.ergebnis[0] }}</b>{% endif %}</span>
+    <span class="kg-team"><span class="kg-name">{{ team(seite.liga, s.gast) }}</span>{% if s.ergebnis %}<b class="kg-tor" aria-hidden="true">{{ s.ergebnis[1] }}</b>{% endif %}</span>
+    {% if s.ergebnis %}<span class="unsichtbar">{{ t('spieltag.endstand_sr', ergebnis=ergebnis_text(s.ergebnis)) }}</span>{% endif %}
+    {% if not s.ergebnis %}<span class="kg-bilanz kg-grau">{{ t('spieltag.endstand_folgt') }}</span>
+    {% elif b.folgt %}<span class="kg-bilanz kg-grau">{{ t('spieltag.bewertung_folgt') }}</span>
+    {% elif not b.n %}<span class="kg-bilanz">{{ t('spieltag.keine_auffaelligkeiten') }}</span>
+    {% elif b.ok == b.n %}<span class="kg-bilanz kg-alle"><span aria-hidden="true">✓</span> {{ t('spieltag.bilanz', ok=b.ok, n=b.n) }}</span>
+    {% else %}<span class="kg-bilanz">{{ t('spieltag.bilanz', ok=b.ok, n=b.n) }}</span>{% endif %}
+  </span>
+  <span class="kpfeil" aria-hidden="true">{{ pfeil_rechts() }}</span>
+</a>
+{%- endmacro %}
+
 {% macro kachel(s, archiv=false) -%}
+{% if s.art == 'gespielt' and not archiv and s.link %}{{ kachel_gespielt(s) }}{% else %}
 {% set q = s.qualitaet if (archiv and s.art == 'gespielt') else s.art %}
 {% set auffaellig = q in ('stark', 'mittel', 'gering') %}
 {% set klasse = 'kachel--gespielt' if (s.art == 'gespielt' and not archiv) else ('kachel--' ~ q if auffaellig else ('kachel--status' if s.art in ('status', 'zu_wenig_daten') else '')) %}
@@ -31,9 +52,10 @@
 {% else %}
 <div class="kachel {{ klasse }}">{{ innen }}</div>
 {% endif %}
+{% endif %}
 {%- endmacro %}
 
-{% macro legende() -%}
+{% macro legende(gespielt=false) -%}
 <div class="legende">
   <span class="leg-sig">
     <span class="leg-titel">{{ t('spieltag.legende_titel') }}</span>
@@ -46,6 +68,7 @@
       <li><b>{{ t('spieltag.erklaerung_gruen_titel') }}</b> {{ t('spieltag.erklaerung_gruen') }}</li>
       <li><b>{{ t('spieltag.erklaerung_stufe_titel') }}</b> {{ t('spieltag.erklaerung_stufe') }}</li>
       <li><b>{{ t('spieltag.erklaerung_weiss_titel') }}</b> {{ t('spieltag.erklaerung_weiss') }}</li>
+      {% if gespielt %}<li><b>{{ t('spieltag.erklaerung_gespielt_titel') }}</b> {{ t('spieltag.erklaerung_gespielt') }}</li>{% endif %}
     </ul></div>
   </details>
 </div>

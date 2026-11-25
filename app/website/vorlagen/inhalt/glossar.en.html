@@ -28,7 +28,7 @@
     {% call begriff("Deviation") %}How far the expected value differs from the league average, expressed as a percentage and rounded to two decimal places. A plus sign means above average, a minus sign below average.{% endcall %}
     {% call begriff("Threshold") %}The limit from which a deviation counts as a statistical anomaly. Each league has at most one threshold per metric and direction. Where none is set, the metric is never flagged. The thresholds are recalculated once per season.{% endcall %}
     {% call begriff("Direction") %}Whether a value is above or below the league average. Each direction has its own threshold.{% endcall %}
-    {% call begriff("Signal quality") %}This shows how often similar statistical anomalies were confirmed by actual match results in previous seasons. The rating has three levels: high, medium and low. It is not a probability and does not guarantee what will happen in the next match.{% endcall %}
+    {% call begriff("Signal quality") %}This shows how often similar statistical anomalies in earlier matches were confirmed as a forecast. The rating has three levels: high, medium or low. It is not a probability and does not guarantee what will happen in the next match.{% endcall %}
     {% call begriff("Success rate") %}The share of past matches above the threshold in which the expected result actually occurred.{% endcall %}
     {% call begriff("Baseline") %}The same share across all matches in the league, regardless of the threshold (the normal rate).{% endcall %}
     {% call begriff("Uplift") %}How many percentage points higher the success rate is compared with all matches.{% endcall %}

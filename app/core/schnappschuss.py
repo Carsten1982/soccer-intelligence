@@ -173,6 +173,45 @@ def first_result(base: Path, league_url: str, saison: str, api_id) -> tuple[int,
         return None
 
 
+def stats_path(base: Path, league_url: str, saison: str, api_id: int) -> Path:
+    """Seit 0.25: die zuerst bekannten tatsächlichen Werte je Kennzahl (für „Statistik nachträglich korrigiert“)."""
+    return folder(base, league_url, saison) / f"{int(api_id)}.ist.json"
+
+
+def first_stats(base: Path, league_url: str, saison: str, api_id) -> dict:
+    """Zuerst bekannte tatsächliche Werte {kpi: Wert}; leer, wenn es noch keine gibt."""
+    if api_id is None or api_id != api_id:
+        return {}
+    try:
+        data = json.loads(stats_path(base, league_url, saison, api_id).read_text(encoding="utf-8"))
+        return {str(k): v for k, v in (data.get("werte") or {}).items() if v is not None}
+    except (OSError, ValueError, AttributeError, TypeError):
+        return {}
+
+
+def record_stats(base: Path, league_url: str, saison: str, api_id, werte: dict, now: datetime) -> bool:
+    """Neu bekannte Werte festhalten (seit 0.25, Beschluss 42). Ein schon festgehaltener Wert wird nie überschrieben;
+    ein bisher fehlender kommt dazu, sobald er da ist. Schreibt nur bei einer Änderung, in einem Schritt (os.replace).
+    True, wenn etwas dazukam."""
+    bisher = first_stats(base, league_url, saison, api_id)
+    neu = {k: int(v) for k, v in werte.items() if v is not None and k not in bisher}
+    if not neu:
+        return False
+    path = stats_path(base, league_url, saison, api_id)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    tmp.write_text(json.dumps({"werte": {**bisher, **neu}, "geaendert": now.isoformat(timespec="seconds")},
+                              ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    os.replace(tmp, path)
+    return True
+
+
+def stats_corrected(base: Path, league_url: str, saison: str, api_id, werte: dict) -> bool:
+    """Weicht ein aktueller tatsächlicher Wert vom zuerst festgehaltenen ab? Fehlt er jetzt, zählt das nicht."""
+    erst = first_stats(base, league_url, saison, api_id)
+    return any(k in erst and v is not None and int(v) != int(erst[k]) for k, v in werte.items())
+
+
 def corrected(base: Path, league_url: str, saison: str, api_id, score: tuple[int, int] | None) -> bool:
     """Weicht das Ergebnis der Datenbank vom zuerst festgehaltenen ab?"""
     first = first_result(base, league_url, saison, api_id)
