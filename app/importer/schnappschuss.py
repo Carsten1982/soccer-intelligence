@@ -19,11 +19,12 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from core import anzeige as A
+from core import auswertung as AW
 from core import schnappschuss as S
 from core import settings
 from core.config import load_leagues, load_teams
 from core.fixtures import load_fixtures
-from core.kpis import Match, compute_match, prepare_league
+from core.kpis import KPI_KEYS, Match, compute_match, prepare_league
 from core.loader import load_database
 from core.thresholds import load_thresholds
 
@@ -60,6 +61,7 @@ def run(base: Path, data_dir: Path, now: datetime) -> dict:
                 continue
             prepared = prepare_league(df)
             fxp, results = A.prepare(fixtures), A.results_index(prepared)
+            zeilen = {(g.season, g.home, g.away): g for g in prepared.itertuples(index=False)}   # für die Ist-Werte
             count = {"neu": 0, "vorhanden": 0, "wartend": 0}
             for row in S.candidates(fxp, local).itertuples():
                 api_id = S.api_id_of(row)
@@ -69,6 +71,10 @@ def run(base: Path, data_dir: Path, now: datetime) -> dict:
                     if S.write_once(S.result_path(base, league.url, row.saison, api_id),
                                     {"ergebnis": list(score), "erfasst": local.isoformat(timespec="seconds")}):
                         stand["ergebnisse_neu"] += 1
+                    g = zeilen.get((row.saison, row.heim, row.gast))  # seit 0.25: erste Ist-Werte je Kennzahl
+                    if g is not None:
+                        S.record_stats(base, league.url, row.saison, api_id,
+                                       {k: AW.ist_wert(k, g) for k in KPI_KEYS}, local)
                 if path.exists():
                     count["vorhanden"] += 1
                     continue

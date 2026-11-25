@@ -638,7 +638,7 @@ Verglichen wird der **tatsächliche Wert im Spiel** mit der **Ligareferenz, die 
 | 08 | beide treffen (100 %) oder nicht (0 %) | Ligareferenz BTTS-Quote, also: positiv = beide treffen, negativ = nicht beide |
 | 09 | Schüsse aufs Tor beider Teams | Ligareferenz Schüsse aufs Tor |
 
-Fehlt der Wert im Spiel oder ist er keine ganze Zahl, zählt das Spiel für diesen KPI nicht (Abschnitt 1). Hinweis: Weil die Werte ganze Zahlen sind, ist „über der Referenz“ unterschiedlich leicht zu erreichen (bei 3,07 Toren braucht es mindestens 4). Darum wird immer mit der Grundquote aller Spiele verglichen (11.3).
+Fehlt der Wert im Spiel oder ist er keine ganze Zahl, zählt das Spiel für diesen KPI nicht (Abschnitt 1). **Seit 0.25 gilt dieselbe Regel für „Bestätigt / Nicht bestätigt“ auf der Website** (Auswertung nach dem Spiel; `app/core/auswertung.py`, Test A2 prüft die Gleichheit mit der Sensitivitätsanalyse; Beschluss Carsten 25.11.2026: Vergleich mit dem Ligadurchschnitt, nicht mit dem Grenzwert). Hinweis: Weil die Werte ganze Zahlen sind, ist „über der Referenz“ unterschiedlich leicht zu erreichen (bei 3,07 Toren braucht es mindestens 4). Darum wird immer mit der Grundquote aller Spiele verglichen (11.3).
 
 ### 11.2 Grundlage, Schwellen und Häufigkeit
 

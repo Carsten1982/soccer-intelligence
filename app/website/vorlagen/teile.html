@@ -48,12 +48,16 @@
 <span class="balken {{ groesse }}" aria-hidden="true"><span class="spur">{% if b.breite %}<span class="fuell {{ b.richtung }} {{ b.klasse }} w{{ b.breite }}"></span>{% endif %}{% if b.kappe %}<span class="kappe {{ b.richtung }}"></span>{% endif %}</span><span class="mitte"></span></span>
 {%- endmacro %}
 
-{% macro lesen_ligaschnitt() -%}
+{% macro lesen_ligaschnitt(signal=true, keine=false, c=false, liga_key=none) -%}
+{#- Seit 0.25 (Release_08, Abschnitt 9): in der Gruppe „Ohne Auffälligkeit“ statt „Signalqualität“ die Einträge
+    „Keine Auffälligkeit“ und „Nicht eingestuft“, je nur wenn eine solche Karte vorkommt. -#}
 <div class="hinweisbox"><ul>
   <li><b>{{ t('lesen.abweichung_titel') }}</b> {{ t('lesen.abweichung') }}</li>
   <li><b>{{ t('lesen.ligaschnitt_titel') }}</b> {{ t('lesen.ligaschnitt') }}</li>
   <li><b>{{ t('lesen.richtung_titel') }}</b> {{ t('lesen.richtung') }}</li>
-  <li><b>{{ t('lesen.signal_titel') }}</b> {{ t('lesen.signal') }}</li>
+  {% if signal %}<li><b>{{ t('lesen.signal_titel') }}</b> {{ t('lesen.signal') }}</li>{% endif %}
+  {% if keine %}<li><b>{{ t('spiel.leg_keine_titel') }}</b> {{ t('spiel.leg_keine') }}</li>{% endif %}
+  {% if c %}<li><b>{{ t('spiel.leg_c_titel') }}</b> {{ t('spiel.leg_c', liga_in=liga_in(liga_key)) }}</li>{% endif %}
 </ul></div>
 {%- endmacro %}
 

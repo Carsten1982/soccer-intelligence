@@ -13,7 +13,7 @@ Vorzeichen. Deutsch mit Komma und Leerzeichen vor „%“ („+47,36 %“), Engl
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 MINUS = "−"
 STRICH = "–"          # Halbgeviertstrich für Zeiträume
@@ -112,10 +112,15 @@ def prozent(wert, lang: str = "de") -> str:
     return _f(lang)["prozent"].format(zahl=zeichen + zahl_text)
 
 
-def zahl(wert, lang: str = "de", einheit: str = "") -> str:
-    """„3,40“ / „3.40“ bzw. „64,00 %“ / „64.00%“ (zwei Nachkommastellen); None -> „–“."""
+def zahl(wert, lang: str = "de", einheit: str = "", stellen: int = 2) -> str:
+    """„3,40“ / „3.40“ bzw. „64,00 %“ / „64.00%“ (zwei Nachkommastellen); None -> „–“.
+    stellen=0 (seit 0.25, „Beide Teams treffen“, Beschluss 48): „35 %“, kaufmännisch gerundet."""
     if wert is None:
         return STRICH
+    if stellen == 0:
+        d = Decimal(str(wert)).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+        text = f"{d:.0f}".replace("-", MINUS)
+        return _f(lang)["prozent"].format(zahl=text) if einheit == "%" else text
     d = Decimal(str(wert)).quantize(Decimal("0.01"))
     text = f"{d:.2f}".replace(".", _f(lang)["komma"]).replace("-", MINUS)
     return _f(lang)["prozent"].format(zahl=text) if einheit == "%" else text

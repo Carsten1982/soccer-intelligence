@@ -170,14 +170,14 @@ def test_w3_w4_sorting_counting_catchup_mixed_in():
     s = spieltag.spieltag_daten(FakeDaten({"Bundesliga": fx}, kpis, {(S, "A", "B"): (2, 1)}), BL,
                                 zp("2026-11-21T10:00"))
     tab = s["tabs"][0]
-    # Seit 0.18 nach Entwurf 3d: Nachholspiel mitsortiert (O leicht vor C leicht: 22 > 18); nicht gewertet, Status
-    # und gespielt in einer Gruppe nach Anstoss (A Fr 20:30, I So 15:30, K So 17:30)
+    # Seit 0.18 nach Entwurf 3d: Nachholspiel mitsortiert (O leicht vor C leicht: 22 > 18); nicht gewertet und Status
+    # in einer Gruppe nach Anstoss (I So 15:30, K So 17:30); seit 0.25 (Release_08, 16.5) gespielte Spiele am Ende
     assert [(x["heim"], x["art"]) for x in tab["spiele"]] == [
-        ("G", "stark"), ("E", "stark"), ("O", "mittel"), ("C", "mittel"), ("M", "ohne"), ("A", "gespielt"),
-        ("I", "status"), ("K", "zu_wenig_daten")]
+        ("G", "stark"), ("E", "stark"), ("O", "mittel"), ("C", "mittel"), ("M", "ohne"),
+        ("I", "status"), ("K", "zu_wenig_daten"), ("A", "gespielt")]
     assert (tab["partien"], tab["auffaellig"], tab["sonderspiele"]) == (7, 4, {"nachholspiel": 1, "vorgezogen": 0})
-    assert tab["spiele"][5]["ergebnis"] == [2, 1] and tab["spiele"][2]["sonderspiel"] == "nachholspiel"
-    assert not tab["spiele"][6]["link"]                                                   # verschoben: kein Link
+    assert tab["spiele"][7]["ergebnis"] == [2, 1] and tab["spiele"][2]["sonderspiel"] == "nachholspiel"
+    assert not tab["spiele"][5]["link"] and tab["gespielt"]                                # verschoben: kein Link
     html = seiten.spieltag_html(s, seiten.Kontext())
     assert "10. Spieltag · 20.11. – 22.11.2026 · 7 Spiele + 1 Nachholspiel · 4 auffällige Spiele" in html   # 0.20
     assert "Nachholspiel · Spieltag 1" in html
@@ -473,7 +473,7 @@ def test_w14_values_q1_q2_q4(partien):
     for text in ("Auffälligstes Merkmal", "+44,00 %", "Über 2,5 Tore", "Mehr als 2,5 Tore erwartet",
                  "<span>Vergleichswert</span><b>2,50</b>", "Gelbe Karten der Mannschaft pro Spiel", "Summe beider Teams",
                  "Erwartete gelbe Karten im Spiel", t("spiel.normalbereich"), t("spiel.chip_zu_wenig_daten"),
-                 "50,00 %", "54,35 %", "Sa 21.11. · 15:30", "Bundesliga · 10. Spieltag"):
+                 "50 %", "54 %", "Sa 21.11. · 15:30", "Bundesliga · 10. Spieltag"):   # seit 0.25: „Beide Teams treffen“ ohne Nachkommastellen
         assert text in html, text
     assert html.count("Mittelwert beider Teams") == 7                                # alle ausser Gelbe Karten (Summe)
     assert "Je Mannschaft" not in html and 'class="vermerk"' not in html and 'class="aufteilung"' not in html
@@ -509,19 +509,22 @@ def test_w14_played_q5(partien, tmp_path, monkeypatch):
     s = spiel.spiel_daten(partien, 105, zp("2026-11-21T10:00"))                      # ohne Schnappschuss
     assert s["zustand"] == "gespielt" and s["ergebnis"] == [2, 1] and s["nachtraeglich"] and not s["korrigiert"]
     html = seiten.spiel_html(s, seiten.Kontext())
-    assert "Endstand 2 : 1" in html and "Gespielt:</b> Werte nachträglich mit den Daten vor dem Spiel berechnet." in html
+    # seit 0.25: mit Endstand die Auswertung (Release_08): Spielstand gross, „Endstand“ nur für Screenreader
+    assert s["ansicht"] == "auswertung" and '<span class="a-tore">2 : 1</span>' in html
+    assert "Gespielt:</b> Werte nachträglich mit den Daten vor dem Spiel berechnet." in html
 
     partien.import_dir = tmp_path                                                    # mit Schnappschuss (andere Werte)
     snap = SN.Snapshot(match(kpi02=kpi(HIGH, 77)), datetime(2026, 11, 20, 19, 30), False, {})
     monkeypatch.setattr(SN, "read", lambda base, url, saison, api_id: snap if int(api_id) == 105 else None)
     s = spiel.spiel_daten(partien, 105, zp("2026-11-21T10:00"))
     html = seiten.spiel_html(s, seiten.Kontext())
-    assert not s["nachtraeglich"] and s["bewertung"] == "auffaellig" and "+77,00 %" in html
+    assert not s["nachtraeglich"] and s["bewertung"] == "auffaellig" and t("spiel.a_titel") in html
+    assert t("spiel.a_nachgeliefert") in html                                       # ohne Datenbankzeile: Werte fehlen
     assert "Gespielt:</b> Die Werte wurden mit den Daten vor dem Spiel berechnet." in html
     assert "korrigiert" not in html
     SN.write_once(SN.result_path(tmp_path, "bundesliga", S, 105), {"ergebnis": [1, 1]})   # zuerst 1:1 übernommen
     s = spiel.spiel_daten(partien, 105, zp("2026-11-21T10:00"))
-    assert s["korrigiert"] and "berechnet. Ergebnis nachträglich korrigiert." in seiten.spiel_html(s, seiten.Kontext())
+    assert s["korrigiert"] and "berechnet. Ergebnis oder Statistik nachträglich korrigiert." in seiten.spiel_html(s, seiten.Kontext())
 
     s = spiel.spiel_daten(partien, 101, zp("2026-11-21T16:00"))       # läuft: bis Anpfiff + 2 h normal, mit Werten
     assert s["zustand"] == "offen" and s["bewertung"] == "auffaellig"

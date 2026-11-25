@@ -80,6 +80,7 @@
     <li><b>Baseline:</b> The league average across the 20 matchdays before the match. For Over 2.5 goals, the fixed reference value is 2.5.</li>
     <li><b>Deviation:</b> The expected value compared with the baseline, expressed as a percentage and rounded to two decimal places.</li>
     <li><b>Statistical anomaly:</b> A deviation that is strictly greater than the threshold. A value exactly at the threshold (15.00%) does not count. A value of 15.01% does.</li>
+    <li><b>Not assessed:</b> Combinations without a proven threshold have no threshold. We show the deviation but do not rate it. The match page then shows “Not assessed”.</li>
     <li><b>Provisional (P):</b> If a team has played fewer than 10 matches, for example because it has just been promoted, we still show the value. However, it is never flagged as a statistical anomaly.</li>
   </ul>
   {% endcall %}

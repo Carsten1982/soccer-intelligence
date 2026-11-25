@@ -28,6 +28,7 @@ from __future__ import annotations
 from fractions import Fraction
 
 from core import anzeige as A
+from core import auswertung as AW
 from core import schnappschuss as S
 from core.fixtures import INACTIVE_STATUS
 from core.kpis import LEVELS, RANK, SAMPLE, MatchKpis, round_display
@@ -36,7 +37,7 @@ from core.top import TOP_KPIS
 from . import adressen as AD
 from . import einstellungen as W
 from .daten import Daten, Zeitpunkt
-from .spieltag import SONDERSPIEL, _termin
+from .spieltag import SONDERSPIEL, _termin, spielzeile
 
 # Kennzahlen in der festen Reihenfolge des Datensatzes (Übergabe 4.3) mit Symbol des Entwurfs
 ICONS = {"kpi02": "bars", "kpi03": "target", "kpi04": "card", "kpi05": "flag", "kpi06": "clock", "kpi07": "clock2",
@@ -77,6 +78,8 @@ def kennzahl(key: str, r) -> dict:
         "summe": key == "kpi04",                       # Q1: nur Gelbe Karten sind eine Summe der Teamwerte
         "prozent": bool(getattr(r, "prozent", False)),
         "schwelle": _schwelle(r, abw),                 # seit 0.21 (Entwurf Spiel_P1): Schwelle in Richtung der Abweichung
+        "hat_schwelle": bool(getattr(r, "schwellen", None) is not None
+                             and (r.schwellen.positiv is not None or r.schwellen.negativ is not None)),
     }
 
 
@@ -151,8 +154,18 @@ def spiel_daten(daten: Daten, spiel_id: int, zp: Zeitpunkt) -> dict | None:
         zustand = "offen"
 
     kennzahlen = [kennzahl(k, getattr(kpis, k, None) if kpis is not None else None) for k in TOP_KPIS]
-    if zustand == "status" or ohne:             # verschoben, abgesagt … bzw. noch ohne Werte (wie Kachel, F5)
+    # Seit 0.25 (Release_08, Beschluss 35): Liegt der Endstand vor, zeigt die Seite die Auswertung (gleiche Adresse).
+    auswertung = zustand == "gespielt" and score is not None
+    if ohne:                                    # ohne Erwartungswerte (Werte ab …, Schnappschuss wartet)
+        kennzahlen = [kennzahl(k, None) for k in TOP_KPIS] if auswertung else []
+    if zustand == "status":                     # verschoben, abgesagt …: nie Werte (wie Kachel, F5)
         kennzahlen = []
+    spiel = spielzeile(daten, liga, row.saison, row.heim, row.gast, zp.bis) if auswertung else None
+    for k in kennzahlen:
+        r = getattr(kpis, k["kpi"], None) if kpis is not None and not ohne else None
+        k["ist"] = AW.ist_wert(k["kpi"], spiel) if spiel is not None else None
+        ref = getattr(getattr(r, "referenz", None), "wert", None)
+        k["ergebnis"] = AW.bewertung(k["kpi"], k["richtung"], k["ist"], ref) if auswertung and k["fall"] == "A" else None
     ohne_werte = all(k["erwartung"] is None for k in kennzahlen)
     zu_wenig_daten = all(k["stufe"] == "zu_wenig_daten" for k in kennzahlen)
     auffaellig = sorted((k for k in kennzahlen if k["stufe"] in LEVELS), key=lambda k: (-RANK[k["stufe"]], -k["betrag"]))
@@ -167,6 +180,21 @@ def spiel_daten(daten: Daten, spiel_id: int, zp: Zeitpunkt) -> dict | None:
         if r0 is not None:
             neu = [t.team for t in (r0.heim, r0.auswaerts)
                    if getattr(t, "spiele", None) is not None and t.spiele < SAMPLE and getattr(t, "team", None)]
+
+    halbzeit = None
+    if spiel is not None:
+        try:
+            halbzeit = [int(spiel.h1h), int(spiel.h1a)] if spiel.h1h == spiel.h1h and spiel.h1a == spiel.h1a else None
+        except (AttributeError, TypeError, ValueError):
+            halbzeit = None
+    korrigiert = zustand == "gespielt" and werte.korrigiert
+    if auswertung and not korrigiert:          # seit 0.25 (Beschluss 42): auch geänderte Statistik melden
+        league = b.leagues.get(liga)
+        korrigiert = league is not None and hasattr(daten, "import_dir") and S.stats_corrected(
+            daten.import_dir, league.url, row.saison, S.api_id_of(row), {k["kpi"]: k["ist"] for k in kennzahlen})
+    bewertet = [k for k in auffaellig if k.get("ergebnis")]
+    bilanz = {"n": len(bewertet), "ok": sum(k["ergebnis"] == AW.BESTAETIGT for k in bewertet),
+              "folgt": sum(k["ergebnis"] == AW.FOLGT for k in bewertet)}
 
     sicht = A.upcoming(b.fx.leagues[liga], zp.jetzt, zp.stand)
     im_fenster = any(int(row.reihenfolge) in set(sec.games["reihenfolge"].astype(int)) for sec in sicht.sections)
@@ -192,7 +220,11 @@ def spiel_daten(daten: Daten, spiel_id: int, zp: Zeitpunkt) -> dict | None:
         "werte_ab": gate.ab.isoformat() if gate is not None and gate.ab else None,
         "ergebnis_vom": gate.ergebnis_vom.isoformat() if gate is not None and gate.ergebnis_vom else None,
         "nachtraeglich": zustand == "gespielt" and werte.quelle in (S.LATE, S.WAITING),
-        "korrigiert": zustand == "gespielt" and werte.korrigiert,
+        "korrigiert": korrigiert,
+        "ansicht": "auswertung" if auswertung else "erwartung",
+        "halbzeit": halbzeit,
+        "statistik_fehlt": auswertung and any(k["ist"] is None for k in kennzahlen),
+        "bilanz": bilanz,
         "ohne_werte": ohne_werte,
         "neu_in_liga": neu,
         "auffaellig": auffaellig,

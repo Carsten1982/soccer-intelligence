@@ -210,6 +210,15 @@ class Daten:
         return self._merken(("ergebnisse", self._schluessel, liga, bis),
                             lambda: results_index(self.prepared(liga, bis)))
 
+    def spielzeile(self, liga: str, saison: str, heim: str, gast: str, bis: date | None):
+        """Zeile der aufbereiteten Datenbank eines gespielten Spiels (Tore, Halbzeit, Statistiken) oder None.
+        Seit 0.25 für die Auswertung nach dem Spiel; bei der Zeitreise nur Spiele vor `bis`."""
+        self.bestand()
+        index = self._merken(("zeilen", self._schluessel, liga, bis), lambda: {
+            (g.season, g.home, g.away): g for g in (self.prepared(liga, bis).itertuples(index=False)
+                                                   if self.prepared(liga, bis) is not None else [])})
+        return index.get((saison, heim, gast))
+
     def werte(self, liga: str, row, zp: Zeitpunkt):
         """Die Werte, die die Seiten für ein Spiel zeigen (seit 0.20, core/schnappschuss.shown_values): vor dem
         Anstoss die aktuell berechneten, ab dem Anstoss der Schnappschuss bzw. die nachträgliche Berechnung.

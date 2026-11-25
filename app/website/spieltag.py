@@ -21,6 +21,7 @@ from __future__ import annotations
 from datetime import date
 
 from core import anzeige as A
+from core import auswertung as AW
 from core import schnappschuss as S
 from core.fixtures import HINT_CATCHUP, HINT_EARLY, INACTIVE_STATUS, TERMIN_PROVISIONAL, TERMIN_TIME_OPEN
 from core.kpis import LEVELS, RANK, MatchKpis
@@ -73,6 +74,30 @@ def qualitaet(kpis: MatchKpis | None) -> dict:
         return {**out, "art": r.anomalie, "staerkste": {"kpi": k, "abweichung": float(r.abweichung_rund)}}
     k, r = max(gewertet, key=lambda kr: abs(kr[1].abweichung_rund))
     return {**out, "staerkste": {"kpi": k, "abweichung": float(r.abweichung_rund)}}
+
+
+def spielzeile(daten, liga: str, saison: str, heim: str, gast: str, bis):
+    """Datenbankzeile eines gespielten Spiels (Daten.spielzeile); None, wenn es keine gibt (auch bei Test-Attrappen)."""
+    holen = getattr(daten, "spielzeile", None)
+    return holen(liga, saison, heim, gast, bis) if holen is not None else None
+
+
+def bilanz(kpis: MatchKpis | None, spiel) -> dict:
+    """Bilanz eines gespielten Spiels (seit 0.25, Release_08 Abschnitt 16.3): n = Auffälligkeiten vor dem Spiel
+    (Fall A, Werte des Schnappschusses), ok = davon bestätigt nach Regelwerk 11.1 (core/auswertung), folgt = Ist-Wert
+    fehlt noch. Gleiche Auswahl wie die Gruppe „Auffälligkeiten“ der Spielseite."""
+    n = ok = folgt = 0
+    for key in TOP_KPIS:
+        r = getattr(kpis, key, None) if kpis is not None else None
+        if r is None or r.vorlaeufig or r.abweichung_rund is None or r.anomalie not in LEVELS:
+            continue
+        richtung = "hoch" if r.abweichung_rund >= 0 else "tief"
+        ist = AW.ist_wert(key, spiel) if spiel is not None else None
+        e = AW.bewertung(key, richtung, ist, getattr(r.referenz, "wert", None) if r.referenz else None)
+        n += 1
+        ok += e == AW.BESTAETIGT
+        folgt += e == AW.FOLGT
+    return {"n": n, "ok": ok, "folgt": folgt}
 
 
 def _termin(row) -> str:
@@ -193,13 +218,20 @@ def spieltag_daten(daten: Daten, web: W.WebLiga, zp: Zeitpunkt) -> dict:
             gate = A.values_from(fxp, g, zp.jetzt, ergebnisse)
             if gate is None and werte.quelle == S.WAITING:              # Schnappschuss wartet auf ein Vorspiel
                 gate = A.Gate("Werte folgen nachträglich")
-            spiele.append(spiel_eintrag(g, werte.kpis, zp.jetzt, ergebnisse, b.team_ids, web.name, gate))
+            eintrag = spiel_eintrag(g, werte.kpis, zp.jetzt, ergebnisse, b.team_ids, web.name, gate)
+            if eintrag["art"] == "gespielt" and eintrag["ergebnis"]:        # seit 0.25: Bilanz auf der Kachel
+                eintrag["bilanz"] = bilanz(werte.kpis, spielzeile(daten, web.name, g.saison, g.heim, g.gast, zp.bis))
+            spiele.append(eintrag)
         spiele = sortieren(spiele)
+        # Seit 0.25 (Release_08, 16.5): gespielte Spiele am Ende der Liste, nach Anstoss (Archiv unverändert)
+        spiele = [s for s in spiele if s["art"] != "gespielt"] + [s for s in spiele if s["art"] == "gespielt"]
         for s in spiele:
             s.pop("_sort")
         tab["spiele"] = spiele
         tab["partien"] = sum(1 for s in spiele if not s["sonderspiel"])
-        tab["auffaellig"] = sum(1 for s in spiele if s["art"] in AUFFAELLIG)
+        # Seit 0.25 (Entscheid Carsten 25.11.2026): alle Spiele mit Auffälligkeit vor dem Spiel, auch gespielte
+        tab["auffaellig"] = sum(1 for s in spiele if s["art"] in AUFFAELLIG or s["qualitaet"] in AUFFAELLIG)
+        tab["gespielt"] = any(s["art"] == "gespielt" for s in spiele)
         tab["bewertet"] = sum(1 for s in spiele if s["art"] in (*AUFFAELLIG, "ohne"))
         tab["sonderspiele"] = {"nachholspiel": sum(1 for s in spiele if s["sonderspiel"] == "nachholspiel"),
                                "vorgezogen": sum(1 for s in spiele if s["sonderspiel"] == "vorgezogen")}
