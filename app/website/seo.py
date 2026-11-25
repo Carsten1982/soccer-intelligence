@@ -77,10 +77,22 @@ def spiel_indexierbar(seite: dict, k: Konfig | None = None) -> bool:
     return seite["anzahl_gewertet"] >= max(1, k.index_min_kennzahlen)
 
 
-def archiv_indexierbar(beginn: date | None, k: Konfig | None = None) -> bool:
-    """Archivseite: indexierbar, wenn der Spieltag nach dem Livegang begonnen hat (unabhängig von einzelnen Spielen)."""
+def laufende_saison(plan) -> str:
+    """Laufende Saison einer Liga = neueste Saison in ihrem Spielplan (seit 0.27, Index-Regel der Archivseiten)."""
+    return str(plan["saison"].max())
+
+
+def archiv_indexierbar(beginn: date | None, k: Konfig | None = None, saison: str | None = None,
+                       aktuell: str | None = None) -> bool:
+    """Archivseite: nach dem Livegang indexierbar, wenn sie zur **laufenden Saison** ihrer Liga gehört (seit 0.27,
+    Entscheid Carsten 25.11.2026: auch Spieltage vor dem Livegang); ältere Saisons nicht. Ohne Saisonangabe wie bis
+    0.26: Spieltag hat nach dem Livegang begonnen."""
     k = k or konfig()
-    return k.index_ab is not None and beginn is not None and beginn >= k.index_ab.date()
+    if k.index_ab is None:
+        return False
+    if saison is not None and aktuell is not None:
+        return saison == aktuell
+    return beginn is not None and beginn >= k.index_ab.date()
 
 
 # --- Title und Description ------------------------------------------------------------------------------------

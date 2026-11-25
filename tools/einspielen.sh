@@ -120,16 +120,18 @@ grep -v "notice\]" "$BACKUP/tests.log" | tail -6 | sed 's/^/   /'
 ok "Tests bestanden: $(grep -Eo '[0-9]+ passed(, [0-9]+ skipped)?' "$BACKUP/tests.log" | tail -1)"
 
 # ── 5 Neubau und Prüfung ──────────────────────────────────────────────────────────────────────
-schritt "5/6: Neubau (football-dashboard, soccer-import, soccer-vorschau) und Prüfung"
-docker compose up -d --build football-dashboard soccer-import soccer-vorschau > "$BACKUP/neubau.log" 2>&1 || {
+schritt "5/6: Neubau (football-dashboard, soccer-import, soccer-vorschau, soccer-website) und Prüfung"
+docker compose up -d --build football-dashboard soccer-import soccer-vorschau soccer-website > "$BACKUP/neubau.log" 2>&1 || {
   tail -15 "$BACKUP/neubau.log" | sed 's/^/   /'; stopp "Neubau fehlgeschlagen."; }
-PLATZHALTER="" DASHBOARD="" VORSCHAU=""
+# Seit 0.27 (Livegang): / leitet dauerhaft auf /de/ weiter (301), /de/ ist die Startseite der Website
+START="" SEITE="" DASHBOARD="" VORSCHAU=""
 for _ in $(seq 1 15); do
   sleep 2
-  PLATZHALTER=$(curl -s -o /dev/null -w "%{http_code}" "$URL/" || true)
+  START=$(curl -s -o /dev/null -w "%{http_code}" "$URL/" || true)
+  SEITE=$(curl -s -o /dev/null -w "%{http_code}" "$URL/de/" || true)
   DASHBOARD=$(curl -s -o /dev/null -w "%{http_code}" "$URL/dashboard/" || true)
   VORSCHAU=$(curl -s -o /dev/null -w "%{http_code}" "$URL/vorschau/" || true)
-  [ "$PLATZHALTER" = 200 ] && [ "$DASHBOARD" = 200 ] && break
+  [ "$SEITE" = 200 ] && [ "$DASHBOARD" = 200 ] && break
 done
 docker ps --format "table {{.Names}}\t{{.Status}}" | sed 's/^/   /'
 docker logs football-dashboard --tail 4 2>&1 | sed 's/^/   /'
@@ -139,9 +141,12 @@ IMPORT=$(docker inspect -f '{{.State.Running}}' soccer-import 2>/dev/null || ech
 [ "$IMPORT" = true ] || stopp "Container soccer-import läuft nicht (Datenimport)."
 WEBSEITE=$(docker inspect -f '{{.State.Running}}' soccer-vorschau 2>/dev/null || echo false)
 [ "$WEBSEITE" = true ] || stopp "Container soccer-vorschau läuft nicht (Vorschau der Website, seit 0.17)."
-[ "$PLATZHALTER" = 200 ] || stopp "Platzhalterseite antwortet mit $PLATZHALTER statt 200."
+OEFFENTLICH=$(docker inspect -f '{{.State.Running}}' soccer-website 2>/dev/null || echo false)
+[ "$OEFFENTLICH" = true ] || stopp "Container soccer-website läuft nicht (öffentliche Website, seit 0.27)."
+case "$START" in 200|301) ;; *) stopp "Die Startadresse / antwortet mit $START statt 301 (Weiterleitung auf /de/).";; esac
+[ "$SEITE" = 200 ] || stopp "Die Website /de/ antwortet mit $SEITE statt 200."
 [ "$DASHBOARD" = 200 ] || stopp "Dashboard antwortet mit $DASHBOARD statt 200 (Anmeldemaske, seit 0.15.2)."
-ok "Container laufen (Dashboard, Import, Vorschau) · / = 200 · /dashboard/ = 200 (Anmeldemaske)"
+ok "Container laufen (Dashboard, Import, Vorschau, Website) · / = $START · /de/ = 200 · /dashboard/ = 200 (Anmeldemaske)"
 if [ "$VORSCHAU" = 401 ]; then
   ok "/vorschau/ = 401 (Passwortabfrage der Vorschau)"
 else

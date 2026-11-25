@@ -6,7 +6,8 @@
 - Jeder Eintrag nennt mit xhtml:link beide Sprachfassungen und x-default (Deutsch). Absolute Adressen auf der Domain.
 - Aufgenommen wird nur, was indexierbar ist: dieselben Funktionen wie für das robots-Tag der Seite (seo.py), damit
   Seite und Sitemap nie auseinanderlaufen. Nicht enthalten: Cookie-Einstellungen, 404, alle noindex-Seiten.
-- Vor dem Livegang (index_ab leer) enthalten die Teile je Liga und Saison darum keine Einträge.
+- Vor dem Livegang (index_ab leer) enthalten die Teile je Liga und Saison darum keine Einträge. Seit 0.27 (Livegang)
+  stehen im Teil der laufenden Saison alle begonnenen Spieltage (Archiv), in früheren Saisons keine Archivseiten.
 """
 
 from __future__ import annotations
@@ -87,9 +88,13 @@ def _liga_saison(name: str, daten) -> list[A.Ziel]:
     plan = daten.spielplan(web.name)
     spiele = plan[(plan["saison"] == saison) & (plan["anstoss_zeit"] >= k.index_ab)]
     ziele = []
-    for nr in sorted({int(x) for x in spiele["spieltag"]}):
+    # Archiv: seit 0.27 alle begonnenen Spieltage der laufenden Saison (auch vor dem Livegang), ältere Saisons nicht
+    # (dort wird das Archiv gar nicht erst berechnet)
+    nummern = plan.loc[plan["saison"] == saison, "spieltag"] if saison == seo.laufende_saison(plan) else []
+    for nr in sorted({int(x) for x in nummern}):
         seite = archiv_daten(daten, web, saison, nr, zp)
-        if seite is not None and seo.archiv_indexierbar(date.fromisoformat(seite["beginn"]), k):
+        if seite is not None and seo.archiv_indexierbar(date.fromisoformat(seite["beginn"]), k, saison,
+                                                        seite.get("aktuelle_saison")):
             ziele.append(A.Ziel("archiv", liga=web.slug, saison=saison, nr=nr))
     for row in spiele.itertuples():
         if row.api_id is None or row.api_id != row.api_id:

@@ -32,9 +32,15 @@ sys.path.insert(0, str(PROJEKT / "app"))
 
 from betrieb import alarme, mail  # noqa: E402
 
-CONTAINER = ("football-dashboard", "soccer-import", "soccer-vorschau", "soccer-placeholder")
+# Seit 0.27 (Livegang): die öffentliche Website statt der Platzhalterseite (die darf später abgeschaltet werden)
+CONTAINER = ("football-dashboard", "soccer-import", "soccer-vorschau", "soccer-website")
 URL = "https://soccer-intelligence.com"
-ADRESSEN = {"/": (200,), "/dashboard/": (200,), "/vorschau/": (200, 401)}
+ADRESSEN = {"/de/": (200,), "/sitemap.xml": (200,), "/dashboard/": (200,), "/vorschau/": (200, 401)}   # seit 0.27 Website und Sitemap
+# Übergang zum Livegang (0.27): Solange der Container soccer-website noch nie angelegt wurde ("fehlt"), ist die Website
+# noch nicht live – dann wird wie bis 0.26 geprüft (Platzhalterseite unter /, ohne Website-Container). So kommen beim
+# Einspielen von 0.27 keine Alarme, bevor der Livegang-Befehl gelaufen ist. Ein gestoppter Container ist nicht "fehlt".
+WEBSITE = "soccer-website"
+ADRESSEN_VOR_LIVEGANG = {"/": (200,), "/dashboard/": (200,), "/vorschau/": (200, 401)}
 ENV_SCHLUESSEL = ("SI_SMTP_HOST", "SI_SMTP_PORT", "SI_SMTP_USER", "SI_SMTP_PASSWORT", "SI_ALARM_AN")
 
 # Schwellen (Entscheid Carsten 20.11.2026, M4): (Prozent, Minuten)
@@ -152,6 +158,8 @@ def auswerten(m: dict, zustand: dict, now: datetime) -> list[alarme.Befund]:
 
     verlauf = zustand.setdefault("neustarts", {})
     for name, info in m["container"].items():
+        if name == WEBSITE and info["status"] == "fehlt":
+            continue                                    # vor dem Livegang (Übergang 0.27)
         punkte = [p for p in verlauf.get(name, [])
                   if now - datetime.fromisoformat(p[0]) <= timedelta(minutes=NEUSTARTS[1])]
         if info["neustarts"] is not None:
@@ -170,7 +178,8 @@ def auswerten(m: dict, zustand: dict, now: datetime) -> list[alarme.Befund]:
                                      f"{anstieg} Neustarts in {NEUSTARTS[1]} Minuten. Letzte Meldungen: docker logs "
                                      f"{name} --tail 50"))
 
-    falsch = {a: s for a, s in m["website"].items() if s not in ADRESSEN[a]}
+    erwartet = {**ADRESSEN, **ADRESSEN_VOR_LIVEGANG}
+    falsch = {a: s for a, s in m["website"].items() if s not in erwartet[a]}
     if _seit(zustand, "website", bool(falsch), now) >= WEBSITE_AUS:
         out.append(alarme.Befund("website", "kritisch", "Website nicht erreichbar",
                                  "Seit über 5 Minuten antworten diese Adressen nicht wie erwartet: "
@@ -195,8 +204,9 @@ def messen(projekt: Path, zustand: dict, now: datetime) -> dict:
     jetzt = cpu_zaehler()
     m = {"zeit": now.isoformat(), "festplatte": festplatte(projekt), "speicher": speicher(),
          "cpu": cpu_prozent(zustand.get("cpu_zaehler"), jetzt),
-         "container": {n: docker_inspect(n) for n in CONTAINER},
-         "website": {a: http_status(URL + a) for a in ADRESSEN}}
+         "container": {n: docker_inspect(n) for n in CONTAINER}}
+    live = m["container"][WEBSITE]["status"] != "fehlt"
+    m["website"] = {a: http_status(URL + a) for a in (ADRESSEN if live else ADRESSEN_VOR_LIVEGANG)}
     zustand["cpu_zaehler"] = list(jetzt)
     leben = projekt / "import" / "lebenszeichen"
     m["lebenszeichen_min"] = round((now.timestamp() - leben.stat().st_mtime) / 60, 1) if leben.exists() else None

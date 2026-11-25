@@ -151,7 +151,7 @@ def test_password_script_hash_matches_app():
 # --- Einspiel-Skripte (seit 09.11.2026): nur unser Container, nie data/ ---------------------------------------
 
 SCRIPTS = [ROOT / "tools" / "einspielen.sh", ROOT / "tools" / "zurueck.sh"]
-OUR_SERVICES = {"football-dashboard", "soccer-import", "soccer-vorschau"}      # seit 0.17 auch die Vorschau
+OUR_SERVICES = {"football-dashboard", "soccer-import", "soccer-vorschau", "soccer-website"}   # seit 0.27 die Website
 
 
 @pytest.mark.parametrize("script", SCRIPTS, ids=lambda p: p.name)
@@ -163,7 +163,9 @@ def test_release_scripts_touch_only_our_container(script):
         assert forbidden not in code, f"{script.name}: verboten: {forbidden}"
     assert "set -euo pipefail" in code                               # bricht bei jedem Fehler ab
     for line in code.splitlines():
-        if "docker compose" in line:
+        if "docker compose stop" in line:                          # seit 0.27: Rückweg stoppt nur die eigene Website
+            assert set(line.split("docker compose stop", 1)[1].split(">")[0].split()) <= OUR_SERVICES, line
+        elif "docker compose" in line:
             assert "up -d --build football-dashboard" in line, line     # nur unsere Services (seit 0.14 auch Import)
             assert set(line.split("--build", 1)[1].split(">")[0].split()) <= OUR_SERVICES, line
         if "docker " in line and "inspect" in line or "docker logs" in line:
@@ -191,3 +193,43 @@ def test_automatische_tests_auf_github():
     assert "python -m pytest -q -p no:cacheprovider tests" in wf
     assert "permissions:\n  contents: read" in wf                     # nur lesen
     assert "secrets." not in wf and "ssh" not in wf.lower()           # kein Zugang zum Server
+
+
+def test_skripte_erwarten_die_weiterleitung_der_website(monkeypatch):
+    """Fehler gefunden in 0.27 vor dem Einspielen: zurueck.sh erwartete für / den Code 302, die Website leitet aber
+    dauerhaft (301) auf /de/ weiter – der Rückweg wäre fälschlich gestoppt. Skripte und Website müssen übereinstimmen."""
+    import sys
+    sys.path.insert(0, str(ROOT / "app"))
+    from website import einstellungen as W
+    from website import vorschau
+    monkeypatch.setattr(W, "PREFIX", "")
+    monkeypatch.setattr(W, "VORSCHAU", False)
+    code = str(vorschau.beantworten("/", "").status)
+    assert code == "301"
+    assert f'[ "$P" = {code} ]' in (ROOT / "tools" / "zurueck.sh").read_text(encoding="utf-8")
+    assert f"200|{code})" in (ROOT / "tools" / "einspielen.sh").read_text(encoding="utf-8")
+
+
+def test_website_container_livegang():
+    """0.27: Website als eigener Container unter / – ohne Passwort, ohne noindex, eigene Middlewares (hängt nicht an den
+    Labels von Dashboard oder Vorschau), Vorrang vor der Platzhalterseite, Daten nur lesend."""
+    compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+    block = compose.split("\n  soccer-website:\n", 1)[1].split("\n  soccer-placeholder:\n", 1)[0]
+    zeilen = [z.strip() for z in block.splitlines() if not z.strip().startswith("#")]
+    assert "- SI_VORSCHAU_PREFIX=" in zeilen and "container_name: soccer-website" in zeilen
+    assert '- "traefik.http.routers.soccerweb.rule=Host(`soccer-intelligence.com`)"' in zeilen   # ganze Domain
+    assert '- "traefik.http.routers.soccerweb.priority=40"' in zeilen
+    mw = next(z for z in zeilen if "routers.soccerweb.middlewares=" in z).split("=", 1)[1].strip('"').split(",")
+    assert mw == ["soccerweb-ratelimit", "soccerweb-compress", "soccerweb-hsts"]
+    for name in mw:                                                  # in diesem Container selbst definiert
+        assert any(f"traefik.http.middlewares.{name}." in z for z in zeilen), name
+    assert "noindex" not in block and "basicauth" not in block and "SOCCER_VORSCHAU_AUTH" not in block
+    assert "- ./data:/data:ro" in zeilen and "- ./import:/import:ro" in zeilen and "ports:" not in block
+    # gleiche Werte wie die gemeinsamen Middlewares von Dashboard und Vorschau
+    for alt, neu in (("soccerintel-ratelimit.ratelimit.average=30", "soccerweb-ratelimit.ratelimit.average=30"),
+                     ("soccerintel-ratelimit.ratelimit.burst=100", "soccerweb-ratelimit.ratelimit.burst=100"),
+                     ("soccerintel-hsts.headers.stsSeconds=31536000", "soccerweb-hsts.headers.stsSeconds=31536000")):
+        assert alt in compose and neu in block
+    # Priorität 40 schlägt die Platzhalterseite (Traefik: Länge der Regel), aber nicht /dashboard und /vorschau
+    regel = lambda router: re.search(rf"routers\.{re.escape(router)}\.rule=([^\"]+)\"", compose).group(1)
+    assert len(regel("soccer-placeholder")) < 40 < min(len(regel("soccer")), len(regel("soccervorschau")))

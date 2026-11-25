@@ -162,7 +162,8 @@ def beantworten(pfad: str, query: str, daten: Daten = DATEN) -> Antwort:
         return Antwort(200, foto.read_bytes(), "image/jpeg", **{"Cache-Control": "public, max-age=3600"})
 
     werte = parse_qs(query)
-    datum = (werte.get("datum") or [None])[0] or None
+    # Zeitreise (?datum=) nur in der Vorschau; die öffentliche Website zeigt immer den echten Stand (seit 0.27, Livegang)
+    datum = ((werte.get("datum") or [None])[0] or None) if W.VORSCHAU else None
     echt = daten.zeitpunkt()
     zp, ungueltig = zeitreise(datum, echt)
     k = Kontext(datum=None if ungueltig else datum, ungueltig=ungueltig, jetzt=zp.jetzt, zeitreise=zp.zeitreise,

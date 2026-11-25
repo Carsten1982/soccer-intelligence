@@ -421,7 +421,7 @@ def betrieb_pruefen(base: Path, data_dir: Path, now: datetime, senden=None) -> N
                 namen_fehlen = fehlende_namen(data_dir)
             except Exception:  # noqa: BLE001 - Spielplan nicht lesbar: Statusmail trotzdem
                 namen_fehlen = []
-            betreff, text = status.text(base, data_dir, E.BACKUP_DIR, local, namen_fehlen)
+            betreff, text = status.text(base, data_dir, E.BACKUP_DIR, local, namen_fehlen, status.sitemap_zeile())
             ok, meldung = senden(betreff, text)
             protokoll({"zeit": local.isoformat(), "art": "statusmail", "ok": ok, "meldung": meldung})
             if ok or meldung == mail.NICHT_EINGERICHTET:

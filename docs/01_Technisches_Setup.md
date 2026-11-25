@@ -1,6 +1,6 @@
 # Soccer Intelligence – Technisches Setup und Betrieb
 
-**Stand:** 24.11.2026 · **Verantwortlich:** Carsten Thiele · **Mitwirkende:** ChatGPT (Server-Setup, Review), Claude (Daten, Architektur, Code)
+**Stand:** 25.11.2026 · **Verantwortlich:** Carsten Thiele · **Mitwirkende:** ChatGPT (Server-Setup, Review), Claude (Daten, Architektur, Code)
 
 Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abläufe und Architektur. Fachliche Regeln stehen in `02`–`06`, Änderungen im `CHANGELOG.md`, das aktuelle Release in `RELEASE.md`.
 
@@ -10,7 +10,7 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 
 **In Betrieb:** Version 0.26 (seit 25.11.2026, `94d32f7`) – frühere Spieltage, Archiv mit Bilanz-Kacheln; Auswertung nach dem Spiel (Ergebnisseite, gespielte Kachel mit Bilanz); Seitenspeicher, Absicherungen nach den Reviews, Komprimierung und HSTS; E-Mail-Alarme, Statusmail, Server-Überwachung, Kontaktformular aktiv; Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit Auffälligkeit und Signalqualität stark / mittel / gering (23 Schwellen), Top Anomalien, Datenqualität, Sensitivitätsanalyse, Datenimport über API-Football mit Schnappschuss je Spiel; Vorschau weiterer Spieltage ab heute + 5; Website-Vorschau unter `/vorschau` nach den Entwürfen vom 20.11. in Deutsch und Englisch (Archiv je Spieltag, Methodik mit Excel-Download, Glossar, Kontakt ohne Versand, Impressum, Datenschutz), vorbereitet für Suchmaschinen (noch nichts im Index, `index_ab` leer).
 
-**Als Nächstes:** Impressum mit `tools/impressum_einrichten.sh` eintragen, 0.26 im Browser prüfen; dann 0.27 **Livegang** (Website unter `/` in eigenem Container, Vorschau bleibt unter `/vorschau` mit Passwort; `index_ab` = Tag, an dem das Release angestossen wird; Platzhalter abschalten), danach Cookie-Hinweis und Google Analytics.
+**Als Nächstes:** Version 0.27 einspielen = **Livegang am 26.11.2026** in drei Schritten (Abschnitt 6.7): Impressum mit `tools/impressum_einrichten.sh` (PLZ **und Ort**), einspielen, Livegang-Befehl. Inhalt: Website unter `/` im eigenen Container `soccer-website`, Vorschau bleibt unter `/vorschau` mit Passwort; `index_ab` = 26.11.2026; Archiv der laufenden Saison im Index; Platzhalterseite läuft ungenutzt weiter als Rückweg; Statusmail meldet die Sitemap; Texte zu „bestätigt“. Nach dem Livegang: Google Search Console (Bestätigung über DNS-Eintrag bei Hostinger, Sitemap einreichen), Komprimierung/HSTS und `www` prüfen; robots.txt und Sitemap einmal pro Woche prüfen. Danach 0.28 Cookie-Hinweis und Google Analytics 4 (direkt, ohne Tag Manager; erst nach Zustimmung).
 
 **Als Nächstes – Releaseplan bis zum Livegang (Freigabe Carsten 19.11.2026):**
 
@@ -133,9 +133,10 @@ Ausbaustufen:
 | Container | Zweck | Gehört zu uns? |
 |---|---|---|
 | `football-dashboard` | Soccer Intelligence (Streamlit), unter `/dashboard` | **ja** |
-| `soccer-placeholder` | Platzhalterseite unter `/` (nginx, statisch), seit Etappe E | **ja** |
+| `soccer-placeholder` | Platzhalterseite unter `/` (nginx, statisch), seit Etappe E; seit 0.27 ungenutzt (Rückweg, Abschnitt 6.7) | **ja** |
 | `soccer-import` | Datenimport über API-Football (täglich 04:00, bis 0.14 Montag bis Freitag), seit Version 0.14; kein Zugang von aussen | **ja** |
 | `soccer-vorschau` | Vorschau der öffentlichen Website unter `/vorschau` mit Passwortabfrage, seit Version 0.17 (`08_Website.md`) | **ja** |
+| `soccer-website` | Öffentliche Website unter `/` (gleiches Programm wie die Vorschau, ohne Passwort und Zeitreise), seit Version 0.27 | **ja** |
 | `article-generator` | Artikeltext-Generator | nein – nicht anfassen |
 | `n8n-wxit-n8n-1` | n8n Automatisierung | nein – nicht anfassen |
 | `traefik-traefik-1` | Webserver / HTTPS für alle Anwendungen | nein – nicht anfassen |
@@ -144,7 +145,9 @@ Ausbaustufen:
 ### So kommt die Website ins Internet
 
 ```
-Besucher → https://soccer-intelligence.com/            → Traefik → soccer-placeholder (nginx, öffentlich)
+Besucher → https://soccer-intelligence.com/            → Traefik (Anfragebremse, Komprimierung, HSTS, seit 0.27)
+                                                                  → soccer-website (Python, Port 8080, nur intern)
+           (bis 0.26 und als Rückweg: soccer-placeholder, nginx)
 Besucher → https://soccer-intelligence.com/dashboard…  → Traefik (Anfragebremse je Adresse)
                                                                   → football-dashboard (Streamlit, Port 8501, Anmeldemaske)
 Besucher → https://soccer-intelligence.com/vorschau…   → Traefik (Passwortabfrage, Anfragebremse, seit 0.17)
@@ -152,8 +155,8 @@ Besucher → https://soccer-intelligence.com/vorschau…   → Traefik (Passwort
 ```
 
 - Traefik läuft im Host-Netzwerk, erledigt HTTPS/Zertifikat und findet beide Container automatisch über ihre Docker-Labels.
-- Bei gleicher Domain gewinnt die längere Regel: Alles unter `/dashboard` geht zum Dashboard, alles andere zur Platzhalterseite.
-- Antworten des Dashboards und der Vorschau tragen den Hinweis `X-Robots-Tag: noindex, nofollow` (Suchmaschinen sollen nichts aufnehmen). `robots.txt` der Platzhalterseite sperrt `/dashboard` und `/vorschau` zusätzlich.
+- Bei gleicher Domain gewinnt die längere Regel: Alles unter `/dashboard` geht zum Dashboard, alles unter `/vorschau` zur Vorschau, alles andere zur Platzhalterseite. **Seit 0.27** hat der Router der Website die feste Priorität 40: Sie gewinnt gegen die Platzhalterseite (Priorität = Länge der Regel, rund 30), verliert aber gegen `/dashboard` und `/vorschau` (längere Regeln, über 50). Läuft `soccer-website` nicht, antwortet wieder die Platzhalterseite.
+- Antworten des Dashboards und der Vorschau tragen den Hinweis `X-Robots-Tag: noindex, nofollow` (Suchmaschinen sollen nichts aufnehmen). `robots.txt` der Platzhalterseite sperrt `/dashboard` und `/vorschau` zusätzlich. Die Website (seit 0.27) sendet kein `noindex`-Label; welche Seiten in den Index dürfen, steht je Seite (`08_Website.md`, Abschnitt 4.2), ihre `robots.txt` verweist auf die Sitemap.
 - Die Vorschau (seit 0.17) ist nur mit der Passwortabfrage des Browsers erreichbar (Traefik BasicAuth, bcrypt-Hash in `.env` als `SOCCER_VORSCHAU_AUTH`, setzen: Abschnitt 6.3). Fehlt der Eintrag, ist `/vorschau` nicht erreichbar.
 
 - Port 8501 ist nur lokal gebunden (`127.0.0.1`), also von aussen nicht direkt erreichbar.
@@ -269,7 +272,7 @@ Erwartet: genau die drei Versionen oben. Weicht etwas ab → Ursache klären, be
    Nach einem Verbindungsabbruch: neu anmelden und `tmux attach -t einspielen` (der Lauf geht dort weiter); fertig: `exit`.
    Wurde der Lauf trotzdem nach dem Holen abgebrochen, merkt sich das Skript das (`backup/EINSPIELEN_OFFEN`) und macht beim nächsten Aufruf mit Tests und Neubau weiter, statt „Nichts Neues“ zu melden.
    Bringt ein Release eine neue Fassung von `einspielen.sh` selbst mit, gilt sie erst ab dem **nächsten** Aufruf: Der laufende Aufruf arbeitet mit der Fassung zu Ende, mit der er gestartet wurde (so liefen beim ersten Einspielen von 0.15.2 noch alle Tests).
-   Das Skript zeigt, was neu ist, macht ein Backup, übernimmt genau den Stand von GitHub (nur „fast-forward“, kein eigener Commit), testet mit den echten Excel-Dateien (seit 0.15.2 nur die schnellen Tests, rund 8 Minuten; die langsamen laufen bei jedem Pull Request auf GitHub), baut nur `football-dashboard` und `soccer-import` neu und prüft `200`/`200` (Platzhalter, Anmeldemaske). Danach im Browser prüfen, was in `RELEASE.md` steht, und mit `j` bestätigen.
+   Das Skript zeigt, was neu ist, macht ein Backup, übernimmt genau den Stand von GitHub (nur „fast-forward“, kein eigener Commit), testet mit den echten Excel-Dateien (seit 0.15.2 nur die schnellen Tests, rund 8 Minuten; die langsamen laufen bei jedem Pull Request auf GitHub), baut nur die eigenen Container neu (`football-dashboard`, `soccer-import`, `soccer-vorschau`, seit 0.27 `soccer-website`) und prüft die Adressen (seit 0.27: `/` = Weiterleitung, `/de/` = 200, Anmeldemaske = 200). Danach im Browser prüfen, was in `RELEASE.md` steht, und mit `j` bestätigen.
 
 Das Skript stoppt, wenn auf dem Server etwas geändert wurde, das nicht auf GitHub ist (`git status` nicht leer oder eigene Commits). Bei einem Fehler hält es an, setzt nichts selbst zurück und nennt den Rückweg. Protokolle (Tests, Neubau) liegen im Backup-Ordner. Die automatischen Tests auf GitHub laufen ohne die Excel-Dateien aus `data/` (die liegen nur auf dem Server); dafür prüfen sie auch die Einspiel-Skripte in einem Probelauf (`tests/test_einspielen.py`, im Test-Container auf dem Server übersprungen, weil dort `git` fehlt).
 
@@ -303,11 +306,11 @@ können. Ist GitHub nicht erreichbar, wird gewartet.
    ```
 4. **Aktivieren** (nur unsere Container) und **prüfen**:
    ```bash
-   cd /docker/football-dashboard && docker compose up -d --build football-dashboard soccer-import soccer-vorschau && sleep 5 && docker ps --format "table {{.Names}}\t{{.Status}}" && curl -s -o /dev/null -w "%{http_code}\n" https://soccer-intelligence.com/dashboard/
+   cd /docker/football-dashboard && docker compose up -d --build football-dashboard soccer-import soccer-vorschau soccer-website && sleep 5 && docker ps --format "table {{.Names}}\t{{.Status}}" && curl -s -o /dev/null -w "%{http_code}\n" https://soccer-intelligence.com/dashboard/
    ```
 5. **Im Browser** prüfen, was in `RELEASE.md` steht, und die Git-Nummer an Claude schicken.
 
-Rückweg ohne Skript: `cd /docker/football-dashboard && git reset --hard <Git-Stand vorher> && docker compose up -d --build football-dashboard soccer-import soccer-vorschau` (danach ist der Server hinter GitHub; mit Claude klären).
+Rückweg ohne Skript: `cd /docker/football-dashboard && git reset --hard <Git-Stand vorher> && docker compose up -d --build football-dashboard soccer-import soccer-vorschau` (danach ist der Server hinter GitHub; mit Claude klären). Zurück vor 0.27: vorher `docker compose stop soccer-website` (Abschnitt 6.7).
 
 ### 6.2 Neue Excel-Datei aufspielen
 
@@ -474,6 +477,46 @@ crontab -l | grep -v "tools/ueberwachen.py" | crontab -
 **Laufzeiten nachtragen** (nach einer Verlängerung bei Hostinger): Datum in `app/config/laufzeiten.toml` ändern
 (über GitHub wie Code).
 
+### 6.7 Livegang und Rückweg (seit Version 0.27)
+
+**Livegang** (26.11.2026, Entscheid Carsten 25.11.2026) in drei Schritten:
+
+1. **Betreiberangaben** eintragen (sonst steht im Impressum ein Platzhalter):
+   ```bash
+   bash /docker/football-dashboard/tools/impressum_einrichten.sh
+   ```
+2. **0.27 einspielen** wie immer (Abschnitt 6.1). Dabei läuft noch das Einspiel-Skript von 0.26 (eine neue Fassung gilt
+   erst ab dem nächsten Aufruf); es kennt den neuen Container nicht. Die Website ist danach noch nicht live, `/` zeigt
+   weiter die Platzhalterseite. Die Überwachung prüft so lange wie bisher (der Container `soccer-website` fehlt noch).
+3. **Livegang-Befehl** (einmalig; ab dem nächsten Release baut `einspielen.sh` den Container selbst mit):
+   ```bash
+   cd /docker/football-dashboard && docker compose up -d --build soccer-website
+   ```
+   Sobald der Container läuft (rund 1 Minute, er rechnet beim Start die Seiten vor), beantwortet er
+   `https://soccer-intelligence.com/` (dauerhafte Weiterleitung auf `/de/`). Die Platzhalterseite bekommt keine
+   Anfragen mehr, läuft aber weiter. Dashboard und Vorschau bleiben, wo sie sind.
+
+**Prüfen nach dem Livegang** (nur lesend; erwartet `301`, `200`, `200`, `200`, `401`):
+```bash
+for u in / /de/ /sitemap.xml /dashboard/ /vorschau/; do printf "%-14s %s
+" "$u" "$(curl -s -o /dev/null -w "%{http_code}" "https://soccer-intelligence.com$u")"; done
+```
+
+**Rückweg** (Website ist fehlerhaft, Platzhalterseite soll wieder antworten; nur unser Container):
+```bash
+cd /docker/football-dashboard && docker compose stop soccer-website
+```
+Nach wenigen Sekunden zeigt `/` wieder die Platzhalterseite. Wieder einschalten: `docker compose up -d soccer-website`.
+Solange der Container gestoppt ist, meldet die Überwachung nach 5 Minuten „Container soccer-website nicht verfügbar“
+und „Website nicht erreichbar“ (gewollt: die Website ist nicht live; höchstens 3 Mails je Alarm).
+`tools/zurueck.sh` macht das beim Rückweg vor 0.27 selbst.
+
+**Platzhalterseite stoppen** (später, wenn die Website einige Tage stabil läuft; Entscheid Carsten):
+```bash
+cd /docker/football-dashboard && docker compose stop soccer-placeholder
+```
+Danach gibt es keinen Rückweg auf die Platzhalterseite mehr ohne sie wieder zu starten (`docker compose up -d soccer-placeholder`).
+
 ---
 
 ## 7. Architektur
@@ -544,6 +587,8 @@ CHANGELOG.md              Änderungsprotokoll
 - [ ] Name des bisherigen Datenanbieters dokumentieren (`02_Datenbasis.md`, Regelwerk Abschnitt 8, Punkt 7)
 - [x] Öffentliche Website: Impressum und Datenschutz – juristische Prüfung erledigt (Carsten 24.11.2026); Impressum mit den Kontaktdaten von Carsten (aus `.env`)
 - [ ] Server: Meldung „1 updates could not be installed automatically“ (unattended-upgrades) prüfen. Kein Upgrade auf Ubuntu 26.04 vorerst. Seit 24.11.2026 zusätzlich „System restart required“: Neustart zu ruhiger Zeit (betrifft den ganzen Server), Entscheid Carsten.
+- [ ] **Nach dem Livegang (0.27): Google Search Console** – Domain bestätigen (TXT-Eintrag im DNS bei Hostinger), Sitemap `https://soccer-intelligence.com/sitemap.xml` einreichen; danach **einmal pro Woche** robots.txt und Sitemap prüfen (Statusmail meldet die Sitemap seit 0.27; Wunsch Carsten 25.11.2026).
+- [ ] **0.28 Einwilligung und Google Analytics 4** (Entscheid Carsten 25.11.2026): GA4 direkt (ohne Tag Manager), Cookie-Hinweis und Cookie-Einstellungen nach den Entwürfen; vor der Zustimmung geht nichts an Google (automatischer Test). Mess-ID `G-9XH0LGQLQ7` (öffentliche Kennung, steht später in jeder Seite; geliefert 25.11.2026); die mitgeschickten Tag-Manager-Container (`GTM-…`) werden nicht verwendet. Aufbewahrung: Wunsch 12 Monate, GA4 bietet 2 oder 14 Monate – mit Carsten klären, Datenschutz-Text prüfen.
 - [ ] **Nach dem Livegang: `www.soccer-intelligence.com` prüfen** (DNS-Eintrag bei Hostinger vorhanden? Wenn ja: Weiterleitung auf die Adresse ohne www). Entscheid Carsten 25.11.2026.
 - [ ] **Nach dem Livegang: Container ohne root** (Backend-Review C, Entscheid Carsten 24.11.2026). Eigener Benutzer im
   `Dockerfile`; dafür auf dem Server einmalig die Besitzer von `data/`, `import/`, `backup/` (und `website-bilder/`) ändern.

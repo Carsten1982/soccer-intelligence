@@ -249,7 +249,7 @@ def test_b5_service_sends_status_mail_once(tmp_path, monkeypatch):
 def _m(**werte):
     m = {"festplatte": 50.0, "speicher": 40.0, "cpu": 10.0, "lebenszeichen_min": 1.0,
          "container": {n: {"status": "running", "neustarts": 0, "health": ""} for n in U.CONTAINER},
-         "website": {"/": 200, "/dashboard/": 200, "/vorschau/": 401}}
+         "website": {"/de/": 200, "/sitemap.xml": 200, "/dashboard/": 200, "/vorschau/": 401}}
     m.update(werte)
     return m
 
@@ -285,12 +285,35 @@ def test_b6_containers_website_heartbeat():
         b = U.auswerten(m, z, T0 + timedelta(minutes=i * 2))
     assert [(x.schluessel, x.stufe) for x in b] == [("container:soccer-import", "warnung")]
     z = {}
-    aus = _m(website={"/": None, "/dashboard/": 502, "/vorschau/": 401})
+    aus = _m(website={"/de/": None, "/sitemap.xml": 200, "/dashboard/": 502, "/vorschau/": 401})
     assert U.auswerten(aus, z, T0) == []
     assert U.auswerten(aus, z, T0 + timedelta(minutes=5))[0].schluessel == "website"
-    assert U.auswerten(_m(website={"/": 200, "/dashboard/": 200, "/vorschau/": 200}), {}, T0) == []   # nach dem Livegang
+    assert U.auswerten(_m(website={"/de/": 200, "/sitemap.xml": 200, "/dashboard/": 200, "/vorschau/": 200}), {}, T0) == []
     assert U.auswerten(_m(lebenszeichen_min=29.0), {}, T0) == []
     assert U.auswerten(_m(lebenszeichen_min=31.0), {}, T0)[0].schluessel == "lebenszeichen"
+
+
+def test_b6_uebergang_zum_livegang(monkeypatch):
+    """0.27: Fehlt der Container soccer-website (noch nie angelegt), wird wie bis 0.26 geprüft – kein Alarm beim
+    Einspielen vor dem Livegang-Befehl. Ein gestoppter Website-Container (Rückweg) meldet sich dagegen."""
+    vor = _m(website={"/": 200, "/dashboard/": 200, "/vorschau/": 401})
+    vor["container"]["soccer-website"] = {"status": "fehlt", "neustarts": None, "health": ""}
+    z = {}
+    assert U.auswerten(vor, z, T0) == [] and U.auswerten(vor, z, T0 + timedelta(minutes=10)) == []
+    gestoppt = _m(website={"/de/": 404, "/sitemap.xml": 404, "/dashboard/": 200, "/vorschau/": 401})
+    gestoppt["container"]["soccer-website"] = {"status": "exited", "neustarts": 0, "health": ""}
+    z = {}
+    U.auswerten(gestoppt, z, T0)
+    assert {b.schluessel for b in U.auswerten(gestoppt, z, T0 + timedelta(minutes=6))} == {"container:soccer-website", "website"}
+    # Messen: vor dem Livegang nur die alten Adressen, danach /de/ und die Sitemap
+    gefragt = []
+    monkeypatch.setattr(U, "http_status", lambda url: gefragt.append(url.removeprefix(U.URL)) or 200)
+    monkeypatch.setattr(U, "docker_inspect", lambda n: {"status": "fehlt" if n == "soccer-website" else "running",
+                                                       "neustarts": 0, "health": ""})
+    assert U.messen(U.PROJEKT, {}, T0)["website"] == {"/": 200, "/dashboard/": 200, "/vorschau/": 200}
+    gefragt.clear()
+    monkeypatch.setattr(U, "docker_inspect", lambda n: {"status": "running", "neustarts": 0, "health": ""})
+    assert set(U.messen(U.PROJEKT, {}, T0)["website"]) == {"/de/", "/sitemap.xml", "/dashboard/", "/vorschau/"}
 
 
 def test_b6_proc_values_and_env_reads_only_mail_keys(tmp_path):
@@ -425,3 +448,18 @@ def test_b8_setup_script_touches_only_mail_keys_and_one_cron_line():
     assert 'grep -qF "tools/ueberwachen.py"' in s and "docker compose up -d soccer-import soccer-vorschau" in s
     assert "docker compose down" not in s and "yahoo" not in s.lower()
     assert set(re.findall(r"[\w.+-]+@[\w-]+\.[\w.-]+", s)) == {"alert@soccer-intelligence.com", "info@soccer-intelligence.com"}
+
+
+
+def test_b9_statusmail_sitemap_zeile():
+    """Seit 0.27: Zeile „Website und Sitemap erreichbar: n Seiten“ in der Statusmail (ohne Netz geprüft)."""
+    from betrieb import status
+    dateien = {"https://x/sitemap.xml": "<sitemapindex><sitemap><loc>https://x/a.xml</loc></sitemap>"
+                                        "<sitemap><loc>https://x/b.xml</loc></sitemap></sitemapindex>",
+               "https://x/a.xml": "<urlset><url><loc>1</loc></url><url><loc>2</loc></url></urlset>",
+               "https://x/b.xml": "<urlset><url><loc>3</loc></url></urlset>"}
+    assert status.sitemap_zeile(dateien.__getitem__, "https://x/sitemap.xml") == \
+        "- Website und Sitemap erreichbar: 3 Seiten in 2 Teil-Sitemaps."
+    def kaputt(url):
+        raise OSError("weg")
+    assert "Sitemap nicht erreichbar (OSError)" in status.sitemap_zeile(kaputt, "https://x/sitemap.xml")

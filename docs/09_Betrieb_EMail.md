@@ -84,8 +84,8 @@ der Mailversand noch nicht eingerichtet, sagt das Skript das und schickt nichts.
 | Festplatte | über 85 % belegt | über 95 % belegt | Partition mit `/docker/football-dashboard/` |
 | Arbeitsspeicher | über 90 % während 15 Minuten | über 95 % während 5 Minuten | verfügbarer Speicher (`MemAvailable`) |
 | CPU | über 90 % während 30 Minuten | – | Auslastung aller Kerne |
-| Container | mehr als 3 Neustarts in 10 Minuten | länger als 5 Minuten nicht verfügbar (gestoppt oder „unhealthy“) | `football-dashboard`, `soccer-import`, `soccer-vorschau`, `soccer-placeholder` |
-| Website erreichbar | – | länger als 5 Minuten nicht erreichbar: `/` nicht 200, `/dashboard/` nicht 200, `/vorschau/` nicht 401 | Abruf von aussen über Traefik (deckt auch einen Ausfall von Traefik ab, ohne ihn anzufassen) |
+| Container | mehr als 3 Neustarts in 10 Minuten | länger als 5 Minuten nicht verfügbar (gestoppt oder „unhealthy“) | `football-dashboard`, `soccer-import`, `soccer-vorschau`, `soccer-website` (seit 0.27 statt `soccer-placeholder`; solange `soccer-website` noch nie angelegt wurde, wird er ausgelassen) |
+| Website erreichbar | – | länger als 5 Minuten nicht erreichbar: seit 0.27 `/de/` oder `/sitemap.xml` nicht 200 (vorher und bis zum Livegang-Befehl: `/` nicht 200), `/dashboard/` nicht 200, `/vorschau/` nicht 200/401 | Abruf von aussen über Traefik (deckt auch einen Ausfall von Traefik ab, ohne ihn anzufassen) |
 | Import-Dienst lebt | – | `soccer-import` meldet sich seit über 30 Minuten nicht (Lebenszeichen-Datei; 30 statt 15, weil ein langer Kontrolllauf es nicht erneuert) | Datei `import/lebenszeichen` |
 
 - **Technik:** Skript `tools/ueberwachen.sh` im Projektordner, läuft **jede Minute** über den Zeitplan des Servers
@@ -121,6 +121,9 @@ der Mailversand noch nicht eingerichtet, sagt das Skript das und schickt nichts.
 6. **Laufzeiten:** API-Abo, Domain, Postfach mit Datum und Resttagen.
 7. **Hinweise:** Vereine ohne Anzeigenamen der Website, offene Entscheide.
 8. **Am ersten Montag im Monat:** Erinnerung, die Monatssicherung auf den Laptop zu laden (Befehl aus `01`, 6.5).
+9. **Website** (seit 0.27, Livegang; Wunsch Carsten 25.11.2026: Sitemap einmal pro Woche prüfen): „Website und Sitemap
+   erreichbar: n Seiten in m Teil-Sitemaps.“ bzw. „Sitemap nicht erreichbar (…)“. Abruf von `/sitemap.xml` und allen
+   Teilen über die Domain.
 
 ## 5. Laufzeiten (M7)
 
