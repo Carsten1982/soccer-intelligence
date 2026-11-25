@@ -25,7 +25,7 @@ bash /docker/football-dashboard/tools/einspielen.sh github
 
 ## Erwartungswerte
 
-- Git-Stand vorher: `acf1c60` (oder der Stand nach den Doku-Commits).
+- Git-Stand vorher: `ea4ac3a` (der erste Versuch hat den Code schon geholt, aber nicht eingespielt; die Website lief weiter mit 0.24). Das Skript holt jetzt nur die Korrektur dazu.
 - Schritt 4: rund **750 bestanden**, keine Fehler (hier ohne echte Daten: 749 bestanden, 18 übersprungen).
 - Schritt 5: alle Container laufen, `/` = 200, `/dashboard/` = 200, `/vorschau/` = 401; drei Testmails.
 - Dashboard-Fusszeile: „Version 0.25 – Auswertung nach dem Spiel“.
