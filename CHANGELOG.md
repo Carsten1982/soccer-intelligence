@@ -8,6 +8,7 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 ## 25.11.2026 – Version 0.24 eingespielt
 
 - **Carsten** · Version 0.24 eingespielt (`acf1c60`, Pull Request #26; Tests grün, drei Testmails).
+- **Carsten** · Prüfung 0.24: Testmails, Fusszeile, Hinweistexte, Spielseite, Handy (Icon, grüne Leiste, 44 px) in Ordnung. Komprimierung/HSTS am Arbeitsrechner nicht prüfbar, Tempo im Zug „halbwegs“ – beides beim nächsten Release erneut abfragen.
 - **Claude** · Stand nachgetragen (`01`, Abschnitt 0).
 
 ## 24.11.2026 – Version 0.24: Qualität und Sicherheit
