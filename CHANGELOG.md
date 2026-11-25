@@ -5,6 +5,24 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 24.11.2026 – Version 0.24: Qualität und Sicherheit
+
+- **Carsten** · Designanpassungen 24.11.2026 (Design-Datei Version 508): zwei Hinweistexte DE/EN.
+- **Carsten** · Entscheide zum Frontend-Review (ChatGPT): Spielseiten erst ab 6 von 8 bewerteten Kennzahlen indexierbar; Web-App-Manifest mit selbst abgeleiteten Icons; „Zahlen im Detail“ 44 px hoch; `SportsEvent` entfernen.
+- **Carsten** · Entscheide zum Backend-Review: ZIP-Weg entfernen (ja); Container ohne root nach dem Livegang (notiert, `01`, Abschnitt 8); Speicher gemessen (Ruhezustand: Dashboard 168 MiB, Import 108 MiB, Vorschau 111 MiB).
+- **Claude** · `tools/einspielen.sh` nur noch Weg `github` (ohne Angabe ebenfalls github); ZIP-Weg, Paketsuche und Commit auf dem Server entfernt; Doku `01`, 6.1 (Notfall ohne Skript über `git merge --ff-only`). Tests: ZIP-Tests ersetzt durch „nur noch github“ und „neuer Stand darf das Skript ersetzen“. Speichergrenzen `mem_limit` (Dashboard 1 GB, Import 1,5 GB, Vorschau 1 GB).
+- **Carsten** · Juristische Prüfung von Impressum und Datenschutz erledigt; Nutzung der API-Daten in dieser Form zulässig (keine Rohdaten). Backend-Review von ChatGPT übergeben.
+- **Claude** · Backend- und Frontend-Review am Code geprüft, Bewertung in `docs/tests/pruefprotokoll_0.24_reviews.md`. Umgesetzt: **Seitenspeicher** (`website/vorschau.py`, Startseite 0,37 s → 0,001 s, 10 gleichzeitige 7,6 s → 0,01 s); HTTP-Dienst mit Zeitlimit 20 s, strenger Prüfung von `Content-Length` (negativ führte zu Lesen bis Verbindungsende) und `Permissions-Policy`; Dashboard-Anmeldung nimmt die Besucher-Adresse aus dem letzten, nicht fälschbaren `X-Forwarded-For`-Eintrag; Kontakt-Bremse prüft und belegt in einem Schritt; Website behält während des Datentauschs den bisherigen Stand; ZIP-Weg prüft Einträge vor dem Entpacken (`.env` konnte überschrieben werden); `no-new-privileges`, Komprimierung und HSTS (`docker-compose.yml`); `requests` 2.32.5; ⓘ-Chip mit 44 px Trefferfläche. Rechenkern unverändert. Tests R1–R5 (`test_review_024.py`).
+- **Carsten** · Livegang in Sicht (höchstens noch 3 Releases). Impressum mit eigenen Kontaktdaten; API-Football gestattet die Nutzung der Daten in dieser Form. Prüfung von Komprimierung und HSTS nach dem Livegang (`01`, Abschnitt 8).
+- **Claude** · Frontend-Review geprüft und bewertet (Messung: Startseite 0,37 s je Aufruf, bei 10 gleichzeitigen 7,6 s; Touch-Ziele bis auf „Zahlen im Detail“ und ⓘ bereits ≥ 44 px). Umgesetzt: `index_min_kennzahlen = 6` (`website.toml`, `seo.py`), `SportsEvent` entfernt, `/manifest.webmanifest` mit Icons 192/512/maskable (`display: browser`), `theme-color`, Aufklapper 44 px. Tests W19 angepasst, W32 neu.
+- **Claude** · Startseite, „Wie lese ich das?“ – Signalqualität: „… in früheren Spielen als Prognose bestätigt haben. Die Einstufung erfolgt in drei Stufen: stark, mittel oder gering.“ (EN entsprechend). Spielseite, Erklärung zum Chip „Nicht eingestuft“: „Ein Blick auf vergangene Spiele zeigt: Solche Abweichungen haben wenig Aussagekraft für zukünftige Spielverläufe. Deshalb stufen wir sie nicht als relevantes Signal ein.“ (EN entsprechend). Die Legende der Spieltag-Seite und das Glossar bleiben vorerst unverändert (im Entwurf offen). Tests W31 und w15 ergänzt.
+
+## 24.11.2026 – Version 0.23 eingespielt
+
+- **Carsten** · Version 0.23 eingespielt (`efcc976`, Pull Request #25; Tests grün). `tools/mail_einrichten.sh` ausgeführt: Zugangsdaten in `.env`, zwei Container neu gestartet, Prüfskript im Zeitplan des Servers (cron), drei Testmails angekommen.
+- **Claude** · Stand nachgetragen (`01`, Abschnitt 0).
+- **Carsten** · Releaseplan: kleine Layout-Anpassungen und Qualitätsrunde Front- und Backend zusammen als 0.24; Cookie-Hinweis und Google Analytics werden 0.25. Frontend-Review mit ChatGPT (Mobile first, app-nahes Erlebnis).
+
 ## 24.11.2026 – Version 0.23: E-Mail, Alarme, Überwachung und Designrunde
 
 - **Carsten** · Prüfung 0.22 (Punkte 1–6 in Ordnung); Wunsch: In „Läufe heute“ die Partie nennen. Postfächer `info@` und `alert@` eingerichtet (Weiterleitung an die private Adresse). Entscheide F1–F7 zu `docs/09` (cron-Eintrag ja, vier Container, höchstens 3 Mails je Alarm, Statusmail Montag 06:00, Laufzeiten VPS 22.06.2027, Domain 23.10.2027, Postfach 20.11.2028, alle automatisch). Wunsch: nach jedem Release Testmails über alle Wege.

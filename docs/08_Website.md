@@ -161,7 +161,8 @@ Regeln:
 
 - **Index-Regeln** (`seo.py`, eine Funktion je Seitenart für Seite und Sitemap): Spielseite indexierbar, wenn `index_ab`
   gesetzt ist, der Anstoss ab `index_ab` liegt, das Spiel in einem Tab der Spieltag-Seite steht oder gespielt ist, kein
-  ausschliessender Status und kein „Werte ab“ vorliegt und mindestens eine Kennzahl bewertet ist. Archivseite
+  ausschliessender Status und kein „Werte ab“ vorliegt und **mindestens 6 der 8 Kennzahlen** bewertet sind (seit 0.24,
+  `index_min_kennzahlen` in `website.toml`, Entscheid Carsten 24.11.2026 nach dem Frontend-Review; bis 0.23 eine). Archivseite
   indexierbar, wenn der Spieltag ab dem Tag von `index_ab` begonnen hat. Inhaltsseiten, Startseite und Spieltag immer;
   Cookie-Einstellungen und 404 nie. Nicht indexierbar = `noindex,follow`.
 - **Vor dem Livegang** ist `index_ab` in `app/config/website.toml` leer: nichts aus den Spiel- und Archivseiten ist
@@ -170,8 +171,8 @@ Regeln:
 - **Kopfbereich:** Title und Description je Seite (Spielseite je Zustand, Description höchstens 155 Zeichen: zuerst auf
   eine Kennzahl, dann ohne Signalqualität kürzen, notfalls am Wortende), `canonical`, `hreflang` de/en/x-default (= de),
   Open Graph (`og:locale` de_CH/en_GB, Bild `og-image.png`), Twitter-Karte, JSON-LD: Startseite Organization + WebSite,
-  sonst BreadcrumbList + WebPage bzw. ContactPage; `SportsEvent` (mit `startDate` inkl. Zeitzone, ohne Ort und ohne
-  `eventStatus`) nur auf indexierbaren Spielseiten mit bekannter Anstosszeit. 404: ohne canonical und hreflang.
+  sonst BreadcrumbList + WebPage bzw. ContactPage; **seit 0.24 kein `SportsEvent` mehr** (ohne Ort für Google ungültig,
+  kein Nutzen; Entscheid Carsten 24.11.2026; bis 0.23 auf indexierbaren Spielseiten). 404: ohne canonical und hreflang.
 - **robots.txt:** alles erlaubt (noindex-Seiten werden nicht gesperrt, sonst sähe Google das noindex nicht), Verweis auf
   die Sitemap. **Sitemap:** `/sitemap.xml` ist ein Index mit `/sitemaps/seiten.xml` (Startseite, Spieltag je Liga,
   Methodik, Glossar, Kontakt, Impressum, Datenschutz) und je Liga und Saison `/sitemaps/<liga>-<2026-27>.xml`; jeder
@@ -179,6 +180,16 @@ Regeln:
 - **Caching:** HTML `Cache-Control: public, max-age=300` (Vorschau und Fehlerseiten `no-store`); CSS, JS, Schriften und
   Icons 30 Tage; Excel 1 Tag; Weiterleitungen `no-store`. **Dateifehler:** Start-, Spieltag-, Archiv- und Spielseiten
   antworten mit **503**, `Retry-After: 600` und `no-store`; Inhaltsseiten bleiben mit 200 erreichbar.
+- **Seitenspeicher (seit 0.24, Frontend- und Backend-Review):** Der Dienst speichert jede fertige Seite (nur Status 200,
+  nicht das Kontaktformular) je Adresse, Datenstand der Dateien, Importstand und **Minute**. Ein Statuswechsel (z. B.
+  „Gespielt“ nach Anpfiff + 2 h) erscheint dadurch höchstens eine Minute später. Gleichzeitige Aufrufe derselben neuen
+  Seite rechnen nur einmal. Startseite: 0,37 s → 0,001 s; 10 gleichzeitige 7,6 s → 0,01 s (lokal gemessen). Während des
+  Datentauschs (`import/uebergabe.json`) bleibt der bisherige Datenstand. Zusätzlich: `Permissions-Policy`, Zeitlimit 20 s
+  je Verbindung, strenge Prüfung von `Content-Length`; Komprimierung und HSTS per Traefik-Label.
+- **Web-App-Manifest und Browserfarbe (seit 0.24, Entscheide Carsten 24.11.2026):** `/manifest.webmanifest` mit Name
+  „Soccer Intelligence“, Kurzname „Soccer Intel“, `display: browser` (Zurück-Knopf des Browsers bleibt), Start `/`,
+  Icons 192 und 512 px sowie „maskable“ 512 px (aus `favicon.svg` abgeleitet); `<meta name="theme-color" content="#0B3D2E">`.
+  „Zahlen im Detail“ auf der Spielseite mindestens 44 px hoch (Touch-Ziel).
 - **Barrierefreiheit:** Sprunglink „Zum Inhalt springen“, sichtbarer Fokus (dunkelgrün mit weissem Abstand, auf dunklen
   Flächen in Akzentfarbe), Tabs und Aufklapper ohne JavaScript, Tabellen mit `caption` und `scope`, Kontraste nach
   WCAG AA (Statuskachel #5B6B61, Formkreis „U“ #487560, Eingabefelder #7A8A81). Geprüft mit axe-core (WCAG 2.1 AA und
@@ -460,7 +471,7 @@ Computer einzeilig, bis 520 px höchstens 300 px breit mit festem Umbruch nach d
   - **Index-Fenster kommender Spiele:** indexierbar, sobald das Spiel in einem Tab der Spieltag-Seite erscheint
     (anstehender Spieltag und Spieltage mit erstem Spiel bis heute + 6; Sonderspiele ab 7 Tagen vorher). *Seit 0.21.1 (Carsten 20.11.2026): heute + 5, Sonderspiele ab 5 Tagen vorher.*
   - **Strukturierte Daten:** `SportsEvent` (mit `startDate` inkl. Zeitzone) nur auf indexierbaren Spielseiten; auf
-    `noindex`-Seiten nur `BreadcrumbList`.
+    `noindex`-Seiten nur `BreadcrumbList`. *Seit 0.24 entfällt `SportsEvent` (Entscheid Carsten 24.11.2026).*
 - **Für 0.21 beschlossen (Carsten 19.11.2026): Spielseiten ohne Werte.** Eine Spielseite ist indexierbar und in der
   Sitemap, wenn sie im Index-Fenster liegt (Thema 4), keinen der fünf ausschliessenden Status hat und **mindestens eine
   bewertete Kennzahl** zeigt; sonst `noindex,follow` und nicht in der Sitemap (Seite bleibt erreichbar). Eine Funktion

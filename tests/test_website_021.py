@@ -136,12 +136,16 @@ def test_w19_index_rules():
     for bewertung in ("status", "werte_ab"):
         assert not seo.spiel_indexierbar(_seite(bewertung=bewertung), live)
     assert not seo.spiel_indexierbar(_seite(anzahl_gewertet=0, bewertung="zu_wenig_daten"), live)
-    assert seo.spiel_indexierbar(_seite(bewertung="zu_wenig_daten", anzahl_gewertet=3), live)
+    # seit 0.24 (Entscheid Carsten 24.11.2026): mindestens 6 der 8 Kennzahlen bewertet
+    assert not seo.spiel_indexierbar(_seite(bewertung="zu_wenig_daten", anzahl_gewertet=5), live)
+    assert seo.spiel_indexierbar(_seite(bewertung="zu_wenig_daten", anzahl_gewertet=6), live)
+    assert not seo.spiel_indexierbar(_seite(anzahl_gewertet=7), seo.Konfig(datetime(2026, 12, 1), index_min_kennzahlen=8))
     assert not seo.spiel_indexierbar(_seite(saison="2024/2025"), live)
     assert seo.archiv_indexierbar(date(2026, 12, 4), live) and not seo.archiv_indexierbar(date(2026, 11, 27), live)
     assert not seo.archiv_indexierbar(date(2026, 12, 4), vorher)
     konfig = tomllib.loads((APP / "config" / "website.toml").read_text(encoding="utf-8"))
     assert konfig["index_ab"] == "" and konfig["seiten_ab_saison"] == "2025/2026"     # vor dem Livegang leer
+    assert konfig["index_min_kennzahlen"] == 6 and seo.konfig().index_min_kennzahlen == 6
 
 
 def test_w19_robots_and_sitemap(dienst, monkeypatch):
@@ -551,3 +555,32 @@ def test_w30_not_enough_data_names_the_new_team():
         "Da SV Elversberg neu in der Liga ist, reicht die Datenbasis für eine Bewertung noch nicht aus."
     assert seiten.zu_wenig_hinweis(seite, "en", ["SV Elversberg", "Hull City"]) == \
         "There are no values for this match yet because SV Elversberg and Hull City are new to the league."
+
+
+def test_w31_hinweistexte_design_508():
+    """Design 24.11.2026 (Version 508): Hinweistexte Startseite (Signalqualität) und Spielseite (Fall C) in DE und EN."""
+    de = json.loads((APP / "website" / "texte" / "de.json").read_text(encoding="utf-8"))
+    en = json.loads((APP / "website" / "texte" / "en.json").read_text(encoding="utf-8"))
+    assert de["lesen"]["signal"].startswith("Sie zeigt, wie häufig sich vergleichbare Auffälligkeiten in früheren Spielen als Prognose")
+    assert en["lesen"]["signal"].endswith("The rating has three levels: high, medium or low.")
+    assert de["spiel"]["c_notiz"].endswith("Deshalb stufen wir sie nicht als relevantes Signal ein.")
+    assert en["spiel"]["c_notiz"].startswith("A look at past matches shows that such deviations say little")
+
+
+def test_w32_frontend_review_024():
+    """0.24, Entscheide Carsten 24.11.2026 zum Frontend-Review: Manifest mit display „browser“ und Icons, theme-color,
+    kein SportsEvent mehr, „Zahlen im Detail“ mindestens 44 px hoch."""
+    m = vorschau.beantworten("/vorschau/manifest.webmanifest", "")
+    assert m.status == 200 and m.kopf["Content-Type"] == "application/manifest+json"
+    daten = json.loads(m.inhalt)
+    assert daten["display"] == "browser" and daten["start_url"] == "/vorschau/" and daten["theme_color"] == "#0B3D2E"
+    for icon in daten["icons"]:
+        bild = vorschau.beantworten(icon["src"], "")
+        assert bild.status == 200 and bild.inhalt[:4] == b"\x89PNG"
+        breite, hoehe = int.from_bytes(bild.inhalt[16:20], "big"), int.from_bytes(bild.inhalt[20:24], "big")
+        assert f"{breite}x{hoehe}" == icon["sizes"]
+    html = vorschau.beantworten("/vorschau/de/methodik/", "").inhalt.decode()
+    assert '<meta name="theme-color" content="#0B3D2E">' in html and 'rel="manifest"' in html
+    assert not hasattr(seo, "sportsevent") and "SportsEvent" not in (APP / "website" / "seiten.py").read_text(encoding="utf-8").replace("# SportsEvent", "")
+    css = (APP / "website" / "statisch" / "site.css").read_text(encoding="utf-8")
+    assert re.search(r"\.karte details\.detail > summary \{[^}]*min-height: 44px", css)

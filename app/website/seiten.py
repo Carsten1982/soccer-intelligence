@@ -364,8 +364,7 @@ def spiel_html(seite: dict, k: Kontext) -> str:
                else k.link("spieltag", liga=seite["liga"]))
     spieltag_abs = W.DOMAIN + A.pfad(A.Ziel("spieltag", lang, liga=seite["liga"]))
     jsonld = [_bc(k, (liga, spieltag_abs), (f"{heim} – {gast}" if lang == "de" else f"{heim} vs {gast}", k.absolut()))]
-    if index:
-        jsonld.append(seo.sportsevent(seite, heim, gast, k.absolut(), lang))
+    # SportsEvent seit 0.24 entfernt (Entscheid Carsten 24.11.2026): ohne Ort ungültig für Google, kein Nutzen
     og_titel = f"{heim} – {gast}" if seite["bewertung"] == "werte_ab" else None
     kopf = _kopf(k, titel, beschreibung, index=index, jsonld=jsonld, og_titel=og_titel)
     neu = [team(seite["liga"], n, lang) for n in seite.get("neu_in_liga") or []]

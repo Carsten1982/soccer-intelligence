@@ -236,7 +236,7 @@
     "richtung_titel": "Richtung:",
     "richtung": "Der Balken zeigt nach rechts, wenn der Wert über dem Durchschnitt liegt, und nach links, wenn er darunter liegt.",
     "signal_titel": "Signalqualität:",
-    "signal": "Sie zeigt, wie häufig sich vergleichbare Auffälligkeiten in früheren Saisons bestätigt haben. Die Einstufung erfolgt in drei Stufen: stark, mittel oder gering.",
+    "signal": "Sie zeigt, wie häufig sich vergleichbare Auffälligkeiten in früheren Spielen als Prognose bestätigt haben. Die Einstufung erfolgt in drei Stufen: stark, mittel oder gering.",
     "ligaschnitt_kurz": "Ligadurchschnitt"
   },
   "spiel": {
@@ -310,7 +310,7 @@
     "chip_nicht_eingestuft": "Nicht eingestuft",
     "chip_zu_wenig_daten": "Zu wenig Daten",
     "chip_info": "Erklärung anzeigen",
-    "c_notiz": "Vergangene Spiele zeigen: Solche Abweichungen haben sich in dieser Liga nicht zuverlässig bestätigt. Darum markieren wir sie nicht als auffällig.",
+    "c_notiz": "Ein Blick auf vergangene Spiele zeigt: Solche Abweichungen haben wenig Aussagekraft für zukünftige Spielverläufe. Deshalb stufen wir sie nicht als relevantes Signal ein.",
     "keine_bewertung": "Keine Bewertung möglich.",
     "d_letzte10": "Durchschnitt der letzten 10 Spiele",
     "d_letzte10_gelb": "Gelbe Karten der Mannschaft pro Spiel · Durchschnitt der letzten 10 Spiele",

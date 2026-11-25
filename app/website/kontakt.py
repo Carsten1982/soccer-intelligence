@@ -93,12 +93,29 @@ class Bremse:
         with self._lock:
             return len(self._aufraeumen(ip, jetzt)) < MAX_JE_STUNDE
 
+    def reservieren(self, ip: str, jetzt: float) -> bool:
+        """Prüfen und Platz belegen in einem Schritt (seit 0.24, Backend-Review A7): zwei gleichzeitige Anfragen
+        derselben Adresse können die Grenze so nicht gemeinsam überschreiten. Scheitert der Versand: freigeben()."""
+        with self._lock:
+            d = self._aufraeumen(ip, jetzt)
+            if len(d) >= MAX_JE_STUNDE:
+                return False
+            d.append(jetzt)
+            if len(self._zeiten) > 10_000:                  # Speicher begrenzen: abgelaufene Adressen entfernen (A8)
+                for k in [k for k, v in self._zeiten.items() if not v or jetzt - v[-1] > 3600]:
+                    del self._zeiten[k]
+            return True
+
+    def freigeben(self, ip: str, jetzt: float) -> None:
+        with self._lock:
+            d = self._zeiten.get(ip)
+            if d and jetzt in d:
+                d.remove(jetzt)
+
     def merken(self, ip: str, jetzt: float) -> None:
+        """Wie reservieren(), ohne Prüfung (für Tests und Aufrufer ohne Reservierung)."""
         with self._lock:
             self._aufraeumen(ip, jetzt).append(jetzt)
-            if len(self._zeiten) > 10_000:                  # Speicher begrenzen
-                for k in [k for k, v in self._zeiten.items() if not v][:5000]:
-                    del self._zeiten[k]
 
 
 BREMSE = Bremse()
@@ -156,7 +173,7 @@ def bearbeiten(form: dict, ip: str, lang: str, env=None, senden=None, jetzt: flo
     f.werte, f.fehler = werte, fehler
     if not f.aktiv or fehler:
         return f
-    if not BREMSE.erlaubt(ip, jetzt):
+    if not BREMSE.reservieren(ip, jetzt):
         f.status = "zu_viele"
         return f
     zeit = datetime.fromtimestamp(jetzt)
@@ -168,8 +185,8 @@ def bearbeiten(form: dict, ip: str, lang: str, env=None, senden=None, jetzt: flo
     ok, meldung = senden(betreff, text, werte["email"])
     print(f"Kontaktformular: {'gesendet' if ok else 'Versand gescheitert'}", flush=True)
     if ok:
-        BREMSE.merken(ip, jetzt)
         return None
+    BREMSE.freigeben(ip, jetzt)                         # nicht gesendet: zählt nicht gegen die Grenze
     _meldung(meldung, zeit)
     f.status = "versand_fehler"
     return f

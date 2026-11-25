@@ -173,3 +173,17 @@ def _import_von_hand(monkeypatch, tmp_path_factory):
     monkeypatch.setattr(E, "automatic_from", lambda: None)
     # Nie in den echten Backup-Ordner schreiben (Befund GitHub-Testlauf 20.11.2026: /backup ohne Schreibrecht)
     monkeypatch.setattr(E, "BACKUP_DIR", tmp_path_factory.mktemp("backup"))
+
+
+@pytest.fixture(autouse=True)
+def _seitenspeicher_leeren():
+    """Seit 0.24 speichert die Website fertige Seiten je Minute (website/vorschau.SEITEN). Tests ändern oft Einstellungen
+    (Sprache, Index-Regeln, Texte) bei gleichen Daten – darum vor jedem Test leeren, damit keiner eine fremde Seite sieht."""
+    try:
+        from website import vorschau
+    except Exception:  # noqa: BLE001 - ohne Website-Abhängigkeiten (z. B. nur Rechenkern) nichts zu tun
+        yield
+        return
+    vorschau.SEITEN.leeren()
+    yield
+    vorschau.SEITEN.leeren()

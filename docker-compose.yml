@@ -21,7 +21,9 @@ services:
     build:
       context: /docker/football-dashboard
     container_name: football-dashboard
+    mem_limit: 1g                                  # seit 0.24: Obergrenze (gemessen 24.11.2026 im Ruhezustand: 110–170 MiB; Import mit Reserve für den Bau der Excel-Fassung)
     restart: unless-stopped
+    security_opt: ["no-new-privileges:true"]        # seit 0.24 (Backend-Review C): keine Rechteausweitung im Container
     ports:
       - "127.0.0.1:8501:8501"
     volumes:
@@ -41,7 +43,7 @@ services:
       - "traefik.http.routers.soccer.tls.certresolver=letsencrypt"
       # Seit 0.15.2 ohne Passwortabfrage des Browsers (BasicAuth): Die Anmeldung macht das Dashboard selbst.
       # Anfragebremse je Besucher-Adresse gegen Durchprobieren (eine Seite lädt rund 30 Dateien auf einmal).
-      - "traefik.http.routers.soccer.middlewares=soccerintel-ratelimit,soccerintel-noindex"
+      - "traefik.http.routers.soccer.middlewares=soccerintel-ratelimit,soccerintel-noindex,soccerintel-hsts"
       - "traefik.http.middlewares.soccerintel-ratelimit.ratelimit.average=30"
       - "traefik.http.middlewares.soccerintel-ratelimit.ratelimit.burst=100"
       - "traefik.http.middlewares.soccerintel-noindex.headers.customresponseheaders.X-Robots-Tag=noindex, nofollow"
@@ -51,7 +53,9 @@ services:
     build:
       context: /docker/football-dashboard
     container_name: soccer-import
+    mem_limit: 1536m                                  # seit 0.24: Obergrenze (gemessen 24.11.2026 im Ruhezustand: 110–170 MiB; Import mit Reserve für den Bau der Excel-Fassung)
     restart: unless-stopped
+    security_opt: ["no-new-privileges:true"]        # seit 0.24 (Backend-Review C): keine Rechteausweitung im Container
     command: ["python", "-m", "importer.dienst"]
     volumes:
       - ./data:/data                              # schreibt neue Fassungen erst nach Freigabe (Tausch in einem Schritt)
@@ -73,7 +77,9 @@ services:
     build:
       context: /docker/football-dashboard
     container_name: soccer-vorschau
+    mem_limit: 1g                                  # seit 0.24: Obergrenze (gemessen 24.11.2026 im Ruhezustand: 110–170 MiB; Import mit Reserve für den Bau der Excel-Fassung)
     restart: unless-stopped
+    security_opt: ["no-new-privileges:true"]        # seit 0.24 (Backend-Review C): keine Rechteausweitung im Container
     command: ["python", "-m", "website.vorschau"]
     volumes:
       - ./data:/data:ro
@@ -99,7 +105,11 @@ services:
       - "traefik.http.routers.soccervorschau.rule=Host(`soccer-intelligence.com`) && PathPrefix(`/vorschau`)"
       - "traefik.http.routers.soccervorschau.entrypoints=websecure"
       - "traefik.http.routers.soccervorschau.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.soccervorschau.middlewares=soccervorschau-auth,soccerintel-ratelimit,soccerintel-noindex"
+      - "traefik.http.routers.soccervorschau.middlewares=soccervorschau-auth,soccerintel-ratelimit,soccerintel-noindex,soccerintel-compress,soccerintel-hsts"
+      # Seit 0.24 (Frontend-Review 1 und 19): Traefik komprimiert HTML, CSS und JS (gzip/Brotli) und sendet HSTS
+      # (Browser nutzen ein Jahr lang nur HTTPS). Nur für unsere Router; die Traefik-Grundkonfiguration bleibt unverändert.
+      - "traefik.http.middlewares.soccerintel-compress.compress=true"
+      - "traefik.http.middlewares.soccerintel-hsts.headers.stsSeconds=31536000"
       # Passwortabfrage des Browsers; Benutzer und bcrypt-Hash NUR in .env (tools/vorschau_passwort.sh), nie in Git
       - "traefik.http.middlewares.soccervorschau-auth.basicauth.users=${SOCCER_VORSCHAU_AUTH:-}"
       - "traefik.http.services.soccervorschau.loadbalancer.server.port=8080"

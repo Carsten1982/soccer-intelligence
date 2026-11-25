@@ -8,9 +8,9 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 
 ## 0. Stand und Versionen
 
-**In Betrieb:** Version 0.22 (seit 20.11.2026) – Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit Auffälligkeit und Signalqualität stark / mittel / gering (23 Schwellen), Top Anomalien, Datenqualität, Sensitivitätsanalyse, Datenimport über API-Football mit Schnappschuss je Spiel; Vorschau weiterer Spieltage ab heute + 5; Website-Vorschau unter `/vorschau` nach den Entwürfen vom 20.11. in Deutsch und Englisch (Archiv je Spieltag, Methodik mit Excel-Download, Glossar, Kontakt ohne Versand, Impressum, Datenschutz), vorbereitet für Suchmaschinen (noch nichts im Index, `index_ab` leer).
+**In Betrieb:** Version 0.23 (seit 24.11.2026, `efcc976`; Mailversand eingerichtet, Testmails über alle drei Wege angekommen, Prüfskript im Zeitplan) – E-Mail-Alarme, Statusmail, Server-Überwachung, Kontaktformular aktiv; Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit Auffälligkeit und Signalqualität stark / mittel / gering (23 Schwellen), Top Anomalien, Datenqualität, Sensitivitätsanalyse, Datenimport über API-Football mit Schnappschuss je Spiel; Vorschau weiterer Spieltage ab heute + 5; Website-Vorschau unter `/vorschau` nach den Entwürfen vom 20.11. in Deutsch und Englisch (Archiv je Spieltag, Methodik mit Excel-Download, Glossar, Kontakt ohne Versand, Impressum, Datenschutz), vorbereitet für Suchmaschinen (noch nichts im Index, `index_ab` leer).
 
-**Als Nächstes:** Version 0.23 einspielen (E-Mail, Alarme, Statusmail, Server-Überwachung, Kontaktformular, Datenqualität „Ergebnis fehlt“, Designrunde 24.11. mit Spielseite 2k final; danach einmalig `tools/mail_einrichten.sh`, Abschnitt 6.6). Danach 0.24 Cookie-Hinweis und Google Analytics. Design-Chat: Rückmeldungen 0.22 und zur Rechenlogik/Grenzwert übergeben (24.11.2026).
+**Als Nächstes:** Version 0.24 einspielen (Qualität und Sicherheit nach den Reviews: Seitenspeicher, HTTP-Absicherung, Komprimierung und HSTS, Manifest, Index ab 6 Kennzahlen, ZIP-Weg entfernt). Danach 0.25 Livegang (Domain umschalten, Passwort weg, `index_ab`, Sitemap), Cookie-Hinweis und Google Analytics vor oder nach dem Livegang (offen). Höchstens 3 Releases bis zum Livegang (Carsten 24.11.2026).
 
 **Als Nächstes – Releaseplan bis zum Livegang (Freigabe Carsten 19.11.2026):**
 
@@ -20,14 +20,16 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 | **0.21 Neue Website** | Templates, Sprachen, Adressen, SEO | Templates T1–T7, T9–T11 nach den Entwürfen; DE/EN mit Anzeigenamen je Sprache; Adressen `/de/`, `/en/`, 301, Canonical, hreflang, 404, 503; Indexierungsregeln, robots.txt, Sitemap; Titles/Descriptions/Social/JSON-LD; Tabs ohne JS, Fokus, Kontraste, axe-core; Caching; Excel-Download Methodik | Texte Archiv/Glossar, offene Glossar-Vorschläge |
 | **0.22 Daten nach jedem Spiel** | Import ohne Freigabe | Lauf nach jedem Spiel (Anpfiff + 2¼ h) mit Wiederholung, Kontrolllauf 04:00, Backups gestaffelt, Ereignisprotokoll (`06`, 10.2; Zuschnitt Carsten 20.11.2026) | – |
 | **0.23 E-Mail & Überwachung** | Alarme, Statusmail, Kontakt | Postfach `info@` mit Alias `alert@` (Hostinger), Alarme sofort (Import, Kontingent, Schnappschuss, Datei-Prüfung), Server-Überwachung (Festplatte, Arbeitsspeicher, CPU, eigene Container; Warnung/Kritisch), wöchentliche Statusmail, Kontaktformular-Versand | Postfächer und Zugangsdaten in `.env` |
-| **0.24 Einwilligung** | Cookies, Analytics | Cookie-Hinweis und Cookie-Einstellungen; Tag Manager und GA4 nach Zustimmung; Search Console | GA4-/GTM-IDs |
+| **0.24 Qualität** | Layout-Anpassungen, Qualitätsrunde Front- und Backend | Kleine Layout-Anpassungen aus der Prüfung von 0.23 (sonst 0.23.1); Review Frontend (SEO, Pagespeed, Ladezeiten, Technik; **Mobile first, app-nahes Erlebnis**) und Backend mit ChatGPT; Befunde nach Freigabe beheben; Gegenrechnung und Vollvergleich vorher/nachher (Entscheid Carsten 24.11.2026) | Review-Ergebnisse |
+| **0.25 Einwilligung** | Cookies, Analytics | Cookie-Hinweis und Cookie-Einstellungen; Tag Manager und GA4 nach Zustimmung; Search Console | GA4-/GTM-IDs |
 | **1.0 Qualität & Livegang** | Prüfung, Korrekturen, Umschalten | Qualitätschecks (Compound Engineering, Web Quality Skills, Lighthouse, axe mit echten Daten); Befunde beheben; Domain umschalten, `/` → `/de/`, Vorschau-Passwort weg, `index_ab` setzen, Sitemap einreichen | Impressum mit Projektadresse, juristische Prüfung DE/EN, Nutzungsrechte API-Football, Hosting-Angabe |
 
 Danach: **Prognose gegen Ergebnis** auf der Spielseite (je Kennzahl Wert vor dem Spiel aus dem Schnappschuss und tatsächlicher Wert, „bestätigt / nicht bestätigt“; Wunsch Carsten 20.11.2026, nach Abschluss der Releases bis 1.0) · Rückblick für Fans (Version 2/3) · E-Mail-Benachrichtigung über den Alarm hinaus · Phase 2: Wettquoten, Verletzungen, Tabellenstände · Phase 3: primäre Auffälligkeit je Spiel, neue KPIs · Rundum-Prüfung des Codes.
 
 | Version | Etappe | Inhalt | Eingespielt | Git | Tests |
 |---|---|---|---|---|---|
-| 0.23 | E-Mail und Überwachung | Mailversand über Hostinger (alert@, info@), Daten-Alarme (Import, Kontingent, Schnappschuss, Datei-Prüfung, Freigabe, Entscheid, Statistik, Laufzeiten), höchstens 3 Mails je Alarm, Statusmail Montag 06:00, Server-Prüfskript (cron, jede Minute), Laufzeiten VPS/Domain/Postfach, Kontaktformular aktiv, Testmails nach jedem Release, Läufe heute mit Partien | – | – | – |
+| 0.23 | E-Mail und Überwachung | Mailversand über Hostinger (alert@, info@), Daten-Alarme (Import, Kontingent, Schnappschuss, Datei-Prüfung, Freigabe, Entscheid, Statistik, Laufzeiten), höchstens 3 Mails je Alarm, Statusmail Montag 06:00, Server-Prüfskript (cron, jede Minute), Laufzeiten VPS/Domain/Postfach, Kontaktformular aktiv, Testmails nach jedem Release, Läufe heute mit Partien | 24.11.2026 | `efcc976` | grün (GitHub), Server bestanden |
+| 0.24 | Qualität und Sicherheit | Reviews Front-/Backend (Prüfprotokoll `docs/tests/pruefprotokoll_0.24_reviews.md`): Seitenspeicher je Minute, HTTP-Zeitlimit und Längenprüfung, Permissions-Policy, Dashboard-Adresse nicht fälschbar, Kontakt-Bremse atomar, kein gemischter Datenstand, ZIP-Weg entfernt, no-new-privileges, Speichergrenzen, Komprimierung und HSTS (Traefik-Label), requests 2.32.5; Manifest und Icons, theme-color, 44 px, Index ab 6 von 8 Kennzahlen, ohne SportsEvent; zwei Hinweistexte (Design 508) | – | – | – |
 | 0.22 | Daten nach jedem Spiel | Lauf nach jedem Spiel (Anpfiff + 2¼ h) mit Wiederholung, Übernahme ohne Freigabe (kritische Spiele einzeln zurückgehalten), Kontrolllauf 04:00, Backups gestaffelt, Ereignisprotokoll; Reiter Datenimport/API mit „Läufe heute“; Aufsteiger-Namen, Athletic Bilbao, Glossar freigegeben, Startseite ohne Datenstand-Zeile | 20.11.2026 | `1701bc6` | 699 |
 | 0.21.2 | Entwürfe 20.11., zweite Lieferung | Spielseite: grüne Schaltfläche „Alle Spiele des Spieltags“, Textlink zur Methodik, ohne Zeitzonen-Hinweis; Spieltag-Kopf ohne „Aktueller Datenstand“ und niedriger; Startseite: SEO-Box eigener Block, Chip neben der Kennzahl; Methodik-Schaltfläche mit Umbruch nur mobil | 20.11.2026 | `9efe682` | 664 |
 | 0.21.1 | Entwürfe 20.11. | Kräftigere Grüntöne, Spielseite ohne „Weitere Spiele“, Methodik-Einstieg als Karten, mobil einzeilige Navigation und Tabellen ohne Scrollbalken; Vorschau weiterer Spieltage heute + 5 statt + 6; Entwurf Abfrageplan (`06`, 10.2) | 20.11.2026 | `273b969` | 697 |
@@ -87,7 +89,7 @@ Ausbaustufen:
 | 18.11.2026 | **Begriff „Prognosewert“ wird „Signalqualität“** (Carsten): Stufen **stark / mittel / gering** statt hoch / mittel / gering, im Dashboard und auf der Website, in Code, Schwellendatei, Doku und Designs. Umgesetzt in 0.20 (Vollvergleich: Werte gleich, nur „hoch“ → „stark“). Achtung: „stark“ meinte bis 0.18 die Grösse der Abweichung (leicht/stark); ab der Umsetzung nur noch die Signalqualität. |
 | 18.11.2026 | **Nach Abnahme 0.19 (Carsten):** Text unter den Top Anomalien mit Zwischentiteln (Wortlaut Carsten mit zwei Präzisierungen), Reiter Sensitivitätsanalyse vor Datenqualität, Erklärtexte der Sensitivitätsanalyse überarbeitet, Schwellen je Liga unter dem Feld, Zeilen ohne Schwelle bleiben leer (keine Vorbelegung), KPI 03 bei genau 0,00 % mit eigenem Satz, Aufsteiger-Anzeige bestätigt, „Schüsse < aufs Tor + daneben“ nur noch Hinweis, Cache-Versionsnummer der Website, Bereinigungen B1, B3–B6 in 0.19.1. |
 | 18.11.2026 | **Auffälligkeit und Prognosewert** statt leicht/stark (Carsten, nach Gegenprüfung durch ChatGPT und Prüfrunde): Schwellen je Liga, KPI und Richtung nach fester Regel aus der Sensitivitätsanalyse (Funktioniert mit Rand > +2 Pp., stabil in zwei Dritteln der Saisons, Prognosewert hoch/mittel/gering), keine Handanpassung, Top Anomalien nach Prognosewert mit Liga-Mix, Neuberechnung einmal pro Saison mit Freigabe über GitHub. Details: KPI-Regelwerk 2.2, 2.6, 11; `docs/tests/pruefprotokoll_prognosewert.md`. |
-| 09.11.2026 | **GitHub ist die einzige Quelle** (Carsten): Änderungen entstehen nur noch auf GitHub (Claude Code mit dem Repository verbunden, Pull Request mit automatischen Tests, Freigabe durch Carsten mit „Squash and merge“). Der Server holt mit `tools/einspielen.sh github` ab und ändert selbst nichts mehr. Das Paket `release.zip` bleibt als Ersatz (Abschnitt 6.1). |
+| 09.11.2026 | **GitHub ist die einzige Quelle** (Carsten): Änderungen entstehen nur noch auf GitHub (Claude Code mit dem Repository verbunden, Pull Request mit automatischen Tests, Freigabe durch Carsten mit „Squash and merge“). Der Server holt mit `tools/einspielen.sh github` ab und ändert selbst nichts mehr. Das Paket `release.zip` bleibt als Ersatz (Abschnitt 6.1). *Seit 0.24 entfernt (Entscheid Carsten 24.11.2026).* |
 | 08.11.2026 | **Neue KPIs:** 5 Frontend-KPIs (05 Ecken, 06 Tore 1. HZ, 07 Tore 2. HZ, 08 Beide Teams treffen, 09 Schüsse aufs Tor) und 4 Simulations-KPIs nur im Backend (10/11 Angriff gegen Abwehr HZ 1/2, 12 Offensivdruck, 13 Abschluss-Effizienz). Schwellen pro Liga und KPI einstellbar (Datei `app/config/schwellen.toml`, Standard ±20/±35 %, kein eigener Tab). Kompakte Liga-Tabelle mit Details per Aufklappen. Reihenfolge: Spezifikation + Testfälle → Etappe H (KPI 05–09) → Etappe I (Simulations-Tab). Details: KPI-Regelwerk v2.0, CHANGELOG. |
 | 08.11.2026 | **Etappe H freigegeben (Carsten):** Testfälle KPI 05–09 bestätigt; **alle KPIs mit zwei Nachkommastellen** (auch Abweichung, Einstufung nach gerundetem Wert); **Top Anomalien über KPI 02–09** (bisherige Rangfolge, Gewichtung später); kompaktere Liga-Tabelle mit Aufklappen, Design-Vorschlag vor der Umsetzung. Danach Etappe I: interner Tab zur Schwellen-Analyse je KPI und Liga, Feintuning, Gewichtung der Top Anomalien. Ablauf: md-Dateien → Backup → Design-Vorschlag → Programmieren und Einspielen. |
 | 07.11.2026 | **Spieltage mit verlegten Spielen:** Die bestehende Logik für den aktuellen Spieltag bleibt. Spiele, die mehr als 3 Tage ausserhalb des Hauptzeitraums ihres Spieltags liegen, werden im Spielplan als `verschoben` gepflegt (keine KPIs, keine Top Anomalie). Keine Pflege auf Tagesebene, keine Mehrheitsregel. Grundlage: Auswertung 2022/23–2025/26, betroffen unter 2 % der Spiele (`04_Spielplan.md`, Abschnitt 6). |
@@ -275,41 +277,35 @@ Das Skript stoppt, wenn auf dem Server etwas geändert wurde, das nicht auf GitH
 bash /docker/football-dashboard/tools/zurueck.sh
 ```
 
-Fragt vorher nach. Schon übernommen oder committet: Ein Gegen-Commit stellt genau den alten Stand wieder her und wird gepusht (nichts geht verloren, Server und GitHub bleiben gleich). Noch nicht committet (Weg Paket, Antwort `n`): Dateien zurücksetzen, neue Dateien aus dem Paket entfernen. Danach Neubau und Prüfung. Die Excel-Dateien bleiben unberührt.
+Fragt vorher nach. Schon übernommen oder committet: Ein Gegen-Commit stellt genau den alten Stand wieder her und wird gepusht (nichts geht verloren, Server und GitHub bleiben gleich). Danach Neubau und Prüfung. Die Excel-Dateien bleiben unberührt.
 
-**Ersatz: Paket `release.zip`** (wenn GitHub nicht geht). Das Paket enthält `RELEASE.md` mit dem Commit-Text (Zeile `**Commit:** …`); sollen Dateien gelöscht werden, liegt `release_loeschen.txt` bei (eine Datei je Zeile). Mit WinSCP hochladen (Projektordner oder `/root`, auch als `release_2.zip`), dann `bash /docker/football-dashboard/tools/einspielen.sh` (ohne `github`). Am Schluss fragt es „Commit und Push machen (j/n)“. Das Skript stoppt, wenn GitHub schon weiter ist als der Server.
+**Kein Ersatzweg über ein Paket mehr** (seit 0.24, Backend-Review B, Entscheid Carsten 24.11.2026): Der frühere Weg mit
+`release.zip` ist entfernt. Er wurde seit dem 09.11.2026 nicht mehr gebraucht, und ein Paket hätte `.env` überschreiben
+können. Ist GitHub nicht erreichbar, wird gewartet.
 
-**Ohne Skript** (Notfall) – die Schritte für ein Paket einzeln:
+**Ohne Skript** (Notfall, GitHub erreichbar, Skript defekt):
 
 1. **Backup.** `git status` muss leer sein. Am Schluss steht der Git-Stand vorher.
    ```bash
    cd /docker/football-dashboard && git status --short && B=backup/$(date +%F_%H%M)_vor_release && mkdir -p "$B" && git rev-parse --short HEAD > "$B/git_stand.txt" && tar czf "$B/code_docs.tgz" app tests docs *.md && ls -la "$B" && cat "$B/git_stand.txt"
    ```
-2. **Paket** `release.zip` mit WinSCP hochladen und entpacken. Der Befehl holt die Datei auch aus `/root`:
+2. **Stand von GitHub holen** (nur „fast-forward“):
    ```bash
-   cd /docker/football-dashboard && { [ -f release.zip ] || mv /root/release.zip . ; } && python3 -m zipfile -e release.zip . && rm release.zip && git status --short
+   cd /docker/football-dashboard && git fetch -q && git merge --ff-only origin/main && git log -1 --oneline
    ```
-3. **Tests** im Wegwerf-Container (Projekt nur lesend eingebunden).
-   - `tests` am Ende ist wichtig, sonst sammelt pytest auch `backup/`.
-   - `SI_DATA_DIR=/src/data` ist wichtig, sonst finden die Seitentests die Excel-Dateien nicht.
-   - Bei Fehlern: **Stopp**, Ausgabe an Claude.
-   - Auf GitHub laufen immer **alle** Tests. Beim Einspielen mit dem Skript (seit 0.15.2) und für die Arbeit
-     zwischendurch genügt der schnelle Lauf ohne die Ende-zu-Ende-Tests (Marker `langsam`): `-m "not langsam"`.
-     Der Befehl unten macht den vollständigen Lauf (rund 20 Minuten).
+3. **Tests** im Wegwerf-Container (Projekt nur lesend eingebunden). `tests` am Ende ist wichtig, sonst sammelt pytest auch
+   `backup/`; `SI_DATA_DIR=/src/data` ist wichtig, sonst finden die Seitentests die Excel-Dateien nicht. Bei Fehlern:
+   **Stopp**, Ausgabe an Claude.
    ```bash
-   cd /docker/football-dashboard && docker run --rm -v "$PWD":/src:ro -e SI_DATA_DIR=/src/data -e PYTHONDONTWRITEBYTECODE=1 -w /src python:3.12-slim sh -c "pip install -q --root-user-action=ignore -r requirements-dev.txt && python -m pytest -q -p no:cacheprovider tests" 2>&1 | tail -15
+   cd /docker/football-dashboard && docker run --rm -v "$PWD":/src:ro -e SI_DATA_DIR=/src/data -e PYTHONDONTWRITEBYTECODE=1 -w /src python:3.12-slim sh -c "pip install -q --root-user-action=ignore -r requirements-dev.txt && python -m pytest -q -p no:cacheprovider -m 'not langsam' tests" 2>&1 | tail -15
    ```
-4. **Aktivieren** (nur unser Container) und **prüfen**. Erwartet: `200` und `200` (seit 0.15.2 Anmeldemaske; bis 0.15.1 `401`).
+4. **Aktivieren** (nur unsere Container) und **prüfen**:
    ```bash
-   cd /docker/football-dashboard && docker compose up -d --build football-dashboard && sleep 5 && docker ps --format "table {{.Names}}\t{{.Status}}" && docker logs football-dashboard --tail 8 && curl -s -o /dev/null -w "%{http_code}\n" https://soccer-intelligence.com/ ; curl -s -o /dev/null -w "%{http_code}\n" https://soccer-intelligence.com/dashboard/
+   cd /docker/football-dashboard && docker compose up -d --build football-dashboard soccer-import soccer-vorschau && sleep 5 && docker ps --format "table {{.Names}}\t{{.Status}}" && curl -s -o /dev/null -w "%{http_code}\n" https://soccer-intelligence.com/dashboard/
    ```
-5. **Im Browser** prüfen, was in `RELEASE.md` steht.
-6. **Commit und Push** mit dem Text aus `RELEASE.md`. Die Git-Nummer der letzten Zeile an Claude schicken.
-   ```bash
-   cd /docker/football-dashboard && git add -A && git commit -m "<Text aus RELEASE.md>" && git push && git log -1 --oneline
-   ```
+5. **Im Browser** prüfen, was in `RELEASE.md` steht, und die Git-Nummer an Claude schicken.
 
-Rückweg ohne Skript (noch nicht committet): `cd /docker/football-dashboard && git reset --hard <Git-Stand vorher> && docker compose up -d --build football-dashboard`
+Rückweg ohne Skript: `cd /docker/football-dashboard && git reset --hard <Git-Stand vorher> && docker compose up -d --build football-dashboard soccer-import soccer-vorschau` (danach ist der Server hinter GitHub; mit Claude klären).
 
 ### 6.2 Neue Excel-Datei aufspielen
 
@@ -544,8 +540,13 @@ CHANGELOG.md              Änderungsprotokoll
 - [ ] Ablauf: Knopf „Run workflow“ auf GitHub zum Einspielen (GitHub als einzige Quelle und automatische Tests erledigt 09.11.2026)
 - [ ] Spielplan Premier League, Spieltag 1 (16.–20.08. statt gespielt 21.–24.08.): prüft Carsten
 - [ ] Name des bisherigen Datenanbieters dokumentieren (`02_Datenbasis.md`, Regelwerk Abschnitt 8, Punkt 7)
-- [ ] Öffentliche Website: Impressum und Datenschutz – Texte seit 0.21 auf der Vorschau (Betreiberangaben aus `.env`); juristische Prüfung DE/EN vor dem Livegang offen
-- [ ] Server: Meldung „1 updates could not be installed automatically“ (unattended-upgrades) prüfen. Kein Upgrade auf Ubuntu 26.04 vorerst.
+- [x] Öffentliche Website: Impressum und Datenschutz – juristische Prüfung erledigt (Carsten 24.11.2026); Impressum mit den Kontaktdaten von Carsten (aus `.env`)
+- [ ] Server: Meldung „1 updates could not be installed automatically“ (unattended-upgrades) prüfen. Kein Upgrade auf Ubuntu 26.04 vorerst. Seit 24.11.2026 zusätzlich „System restart required“: Neustart zu ruhiger Zeit (betrifft den ganzen Server), Entscheid Carsten.
+- [ ] **Nach dem Livegang: Container ohne root** (Backend-Review C, Entscheid Carsten 24.11.2026). Eigener Benutzer im
+  `Dockerfile`; dafür auf dem Server einmalig die Besitzer von `data/`, `import/`, `backup/` (und `website-bilder/`) ändern.
+  Bewusst nicht vor dem Livegang: ein Fehler bei den Schreibrechten würde den Import stoppen. Danach prüfen, ob das
+  Root-Dateisystem schreibgeschützt laufen kann (`read_only` mit `tmpfs` für Zwischendateien).
+- [ ] **Nach dem Livegang prüfen: Komprimierung und HSTS** (Frontend-Review Punkte 1 und 19). Test am 24.11.2026: Browser ↔ Traefik spricht HTTP/2 (erledigt). Ausgangslage im Browser (Carsten, 24.11.2026, `site.css`): **keine** Komprimierung (`content-length: 61064`, kein `content-encoding`), **kein** HSTS – wie erwartet vor 0.24. Nach 0.24 im Browser (F12 → Netzwerk → `site.css` → Antwort-Header) erneut prüfen. Komprimierung und HSTS kommen per Label in 0.24; nach dem Livegang (ohne Passwort) prüfen mit `curl -s -D - -o /dev/null --compressed https://soccer-intelligence.com/statisch/site.css | grep -iE "^HTTP|content-encoding|content-length|strict-transport"` – erwartet `content-encoding: gzip` (oder `br`) und `strict-transport-security`.
 - [ ] Wo läuft der Chatbot? (nur zur Dokumentation)
 - [ ] Aufräumen in `backup/` nach einigen Wochen stabilen Betriebs
 - [ ] Offene KPI-Punkte im Regelwerk, Abschnitt 8 (nicht blockierend)

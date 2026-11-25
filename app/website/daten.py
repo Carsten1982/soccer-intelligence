@@ -15,6 +15,7 @@ import threading
 import tomllib
 from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import pandas as pd
@@ -32,6 +33,8 @@ from core.results import matchday_kpis
 from core.thresholds import ThresholdConfig, load_thresholds
 
 from . import einstellungen as W
+
+UEBERGABE = "uebergabe.json"     # wie importer/dienst.HANDOVER (steht nur während des Tauschs der Excel-Dateien)
 
 TZ = ZoneInfo(settings.TIMEZONE)
 DATUM = re.compile(r"^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?$")
@@ -125,9 +128,26 @@ class Daten:
         return tuple(file_key(f) for f in (settings.DATABASE_FILE, settings.FIXTURES_FILE, settings.THRESHOLDS_FILE,
                                             settings.LEAGUES_FILE, settings.TEAMS_FILE))
 
+    def _tausch_laeuft(self) -> bool:
+        """Seit 0.24 (Backend-Review D): Der Import tauscht Datenbank und Spielplan nacheinander. Solange sein
+        Übergabe-Protokoll steht (import/uebergabe.json, höchstens 10 Minuten alt), bleibt der bisherige Bestand –
+        so sieht die Website nie die neue Datenbank mit dem alten Spielplan."""
+        try:
+            alter = datetime.now().timestamp() - (Path(self.import_dir) / UEBERGABE).stat().st_mtime
+        except OSError:
+            return False
+        return alter < 600
+
+    def dateistand(self) -> tuple:
+        """Schlüssel des geladenen Datenstands (für den Seitenspeicher in vorschau.py)."""
+        self.bestand()
+        return self._schluessel
+
     def bestand(self) -> Bestand:
         schluessel = self._dateien()
         with self._lock:
+            if self._bestand is not None and schluessel != self._schluessel and self._tausch_laeuft():
+                return self._bestand
             if self._bestand is None or schluessel != self._schluessel:
                 leagues = load_leagues(settings.LEAGUES_FILE)
                 db = load_database(settings.DATABASE_FILE)

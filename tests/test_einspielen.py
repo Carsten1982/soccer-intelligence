@@ -11,7 +11,6 @@ Braucht bash und git. Im Test-Container auf dem Server (python:3.12-slim, ohne g
 import os
 import shutil
 import subprocess
-import zipfile
 from pathlib import Path
 
 import pytest
@@ -205,48 +204,22 @@ def test_rueckweg_fragt_vorher(u):
     assert r.returncode == 0 and "nichts geändert" in r.stdout and u.kopf(u.server) == jetzt
 
 
-def _paket(u: Umgebung, name: str = "release.zip") -> None:
-    with zipfile.ZipFile(u.server / name, "w") as z:
-        z.writestr("app/app.py", "print('paket')\n")
-        z.writestr("RELEASE.md", "# Release 2\n\n**Commit:** Paket zwei\n\n## Erwartungswerte\n\n- eins\n\n## Ende\n")
-
-
-def test_paket_weg_mit_umbenanntem_paket_committet_und_pusht(u):
-    _paket(u, "release_2.zip")
-    r = u.lauf("einspielen.sh")
+def test_nur_noch_weg_github(u):
+    """Seit 0.24 (Backend-Review B, Entscheid Carsten 24.11.2026) gibt es keinen ZIP-Weg mehr: ein liegengebliebenes
+    release.zip wird nie entpackt; ohne Angabe gilt github."""
+    vorher = u.kopf(u.server)
+    r = u.lauf("einspielen.sh", "paket")
+    assert r.returncode == 1 and "Erlaubt ist nur: github" in r.stdout and u.kopf(u.server) == vorher
+    u.neu_auf_github("app/neu.py", "neu\n")
+    r = u.lauf("einspielen.sh")                                       # ohne Angabe = github
     assert r.returncode == 0, r.stdout + r.stderr
-    assert u.git(u.server, "log", "-1", "--format=%s") == "Paket zwei"
     assert u.kopf(u.server) == u.kopf(u.github, "main")
-    assert not list(u.server.glob("release*.zip"))
 
 
-def test_paket_weg_stoppt_wenn_github_weiter_ist(u):
-    u.neu_auf_github("docs/neu.md", "x\n")
-    _paket(u)
-    vorher = u.kopf(u.server)
-    r = u.lauf("einspielen.sh")
-    assert r.returncode == 1 and "einspielen.sh github" in r.stdout
-    assert u.kopf(u.server) == vorher and (u.server / "release.zip").exists()   # Paket bleibt liegen
-
-
-def test_paket_weg_antwort_n_und_rueckweg(u):
-    vorher = u.kopf(u.server)
-    _paket(u)
-    r = u.lauf("einspielen.sh", antwort="n")
-    assert r.returncode == 0 and "Nicht committet" in r.stdout
-    assert u.lauf("zurueck.sh").returncode == 0
-    assert u.kopf(u.server) == vorher
-    assert (u.server / "app" / "app.py").read_text() == "print('v1')\n"
-    assert u.git(u.server, "status", "--porcelain") == ""
-
-
-def test_paket_darf_das_skript_selbst_ersetzen(u):
-    # Ein Paket mit neuer Fassung von einspielen.sh: bash muss mit der alten Fassung sauber zu Ende laufen.
+def test_neuer_stand_darf_das_skript_selbst_ersetzen(u):
+    # Ein Stand mit neuer Fassung von einspielen.sh: bash muss mit der alten Fassung sauber zu Ende laufen.
     neu = "#!/usr/bin/env bash\n" + "# neue Zeile, verschiebt alles\n" * 40 + (TOOLS / "einspielen.sh").read_text()
-    _paket(u)
-    with zipfile.ZipFile(u.server / "release.zip", "a") as z:
-        z.writestr("tools/einspielen.sh", neu)
-    r = u.lauf("einspielen.sh")
+    u.neu_auf_github("tools/einspielen.sh", neu)
+    r = u.lauf("einspielen.sh", "github")
     assert r.returncode == 0, r.stdout + r.stderr
-    assert u.git(u.server, "log", "-1", "--format=%s") == "Paket zwei"
     assert (u.server / "tools" / "einspielen.sh").read_text() == neu

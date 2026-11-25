@@ -105,11 +105,17 @@ def config() -> tuple[str, str] | None:
 
 # --- Streamlit ---------------------------------------------------------------------------------------------------
 
+def adresse_aus(headers) -> str:
+    """Besucher-Adresse aus den Kopfzeilen. Seit 0.24 (Backend-Review A5): der LETZTE Eintrag von X-Forwarded-For
+    stammt von Traefik und ist nicht fälschbar; den ersten kann der Besucher selbst mitschicken (so liesse sich die
+    Sperre nach Fehlversuchen umgehen). Gleiche Regel wie website/vorschau.py."""
+    weiter = [x.strip() for x in str(headers.get("X-Forwarded-For") or "").split(",") if x.strip()]
+    return weiter[-1] if weiter else (str(headers.get("X-Real-Ip") or "").strip() or "unbekannt")
+
+
 def _address() -> str:
     try:
-        headers = st.context.headers or {}
-        forwarded = headers.get("X-Forwarded-For") or headers.get("X-Real-Ip") or ""
-        return str(forwarded).split(",")[0].strip() or "unbekannt"
+        return adresse_aus(st.context.headers or {})
     except Exception:                                  # z. B. ohne Browser (Tests)
         return "unbekannt"
 

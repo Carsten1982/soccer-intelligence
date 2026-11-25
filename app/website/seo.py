@@ -5,8 +5,8 @@
   ist ohnehin immer „noindex, nofollow“.
 - **Title und Description** der Spielseite je Zustand, Description höchstens 155 Zeichen (zuerst auf eine Kennzahl
   kürzen, dann den Satz zur Signalqualität weglassen); nie leer.
-- **JSON-LD** je Seite: Organization + WebSite (Startseite), BreadcrumbList + WebPage bzw. ContactPage, SportsEvent nur
-  auf indexierbaren Spielseiten mit bekannter Anstosszeit, ohne Ort und ohne eventStatus.
+- **JSON-LD** je Seite: Organization + WebSite (Startseite), BreadcrumbList + WebPage bzw. ContactPage. SportsEvent
+  bis 0.23 auf indexierbaren Spielseiten, seit 0.24 entfernt (ohne Ort für Google ungültig; Entscheid Carsten 24.11.2026).
 """
 
 from __future__ import annotations
@@ -16,9 +16,7 @@ import tomllib
 from dataclasses import dataclass
 from datetime import date, datetime
 from functools import lru_cache
-from zoneinfo import ZoneInfo
 
-from core import settings
 from core.files import file_key
 
 from . import einstellungen as W
@@ -26,7 +24,6 @@ from . import format as F
 from .texte import t
 
 MAX_BESCHREIBUNG = 155
-TZ = ZoneInfo(settings.TIMEZONE)
 
 
 # --- Konfiguration (index_ab, seiten_ab_saison) ----------------------------------------------------------------
@@ -35,6 +32,7 @@ TZ = ZoneInfo(settings.TIMEZONE)
 class Konfig:
     index_ab: datetime | None = None          # Livegang (Europe/Zurich, ohne Zeitzonenangabe); None = nichts im Index
     seiten_ab_saison: str = "2025/2026"       # ältere Saisons haben (noch) keine Seiten
+    index_min_kennzahlen: int = 6             # seit 0.24: so viele der 8 Kennzahlen müssen bewertet sein
 
 
 @lru_cache(maxsize=4)
@@ -48,7 +46,8 @@ def _konfig(pfad: str, schluessel: tuple) -> Konfig:  # noqa: ARG001 - Teil des 
         index_ab = datetime.fromisoformat(roh) if roh else None
     except ValueError:
         index_ab = None
-    return Konfig(index_ab, str(daten.get("seiten_ab_saison", "2025/2026")))
+    return Konfig(index_ab, str(daten.get("seiten_ab_saison", "2025/2026")),
+                  int(daten.get("index_min_kennzahlen", 6)))
 
 
 def konfig() -> Konfig:
@@ -63,8 +62,9 @@ def saison_hat_seiten(saison: str, k: Konfig | None = None) -> bool:
 
 def spiel_indexierbar(seite: dict, k: Konfig | None = None) -> bool:
     """Spielseite im Index und in der Sitemap, wenn alle drei Bedingungen gelten: im Index-Fenster (Anstoss ab dem
-    Livegang und in einem Tab der Spieltag-Seite oder schon gespielt), kein ausschliessender Status und mindestens
-    eine bewertete Kennzahl. „Werte ab …“ ist nie indexierbar."""
+    Livegang und in einem Tab der Spieltag-Seite oder schon gespielt), kein ausschliessender Status und
+    genug bewertete Kennzahlen (seit 0.24 mindestens `index_min_kennzahlen` von 8, bis 0.23 eine; Entscheid Carsten
+    24.11.2026). „Werte ab …“ ist nie indexierbar."""
     k = k or konfig()
     if k.index_ab is None or not saison_hat_seiten(seite["saison"], k):
         return False
@@ -74,7 +74,7 @@ def spiel_indexierbar(seite: dict, k: Konfig | None = None) -> bool:
         return False
     if seite["bewertung"] in ("status", "werte_ab"):
         return False
-    return seite["anzahl_gewertet"] > 0
+    return seite["anzahl_gewertet"] >= max(1, k.index_min_kennzahlen)
 
 
 def archiv_indexierbar(beginn: date | None, k: Konfig | None = None) -> bool:
@@ -164,16 +164,6 @@ def webseite(url: str, name: str, lang: str, art: str = "WebPage") -> dict:
 def start_jsonld(url: str, lang: str) -> list[dict]:
     return [_org(), {"@type": "WebSite", "@id": f"{W.DOMAIN}/#website", "name": "Soccer Intelligence", "url": url,
                      "inLanguage": W.IN_LANGUAGE[lang], "publisher": {"@id": f"{W.DOMAIN}/#org"}}]
-
-
-def sportsevent(seite: dict, heim: str, gast: str, url: str, lang: str) -> dict | None:
-    """Nur mit bekannter Anstosszeit (keine erfundene Uhrzeit); startDate mit Zeitzone, ohne Ort und eventStatus."""
-    if not seite.get("anstoss"):
-        return None
-    start = datetime.fromisoformat(seite["anstoss_zeit"]).replace(tzinfo=TZ)
-    return {"@type": "SportsEvent", "name": f"{heim} – {gast}" if lang == "de" else f"{heim} vs {gast}",
-            "startDate": start.isoformat(timespec="minutes"), "url": url, "inLanguage": W.IN_LANGUAGE[lang],
-            "homeTeam": {"@type": "SportsTeam", "name": heim}, "awayTeam": {"@type": "SportsTeam", "name": gast}}
 
 
 def als_skript(teile: list[dict]) -> str:
