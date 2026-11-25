@@ -108,7 +108,7 @@ def test_w18_archive_page(dienst):
     a = vorschau.beantworten("/vorschau/de/spieltag/bundesliga/2026-27/10/", "datum=2026-11-24", d)
     html = a.inhalt.decode()
     assert a.status == 200 and t("archiv.kopf", liga="Bundesliga", n=10, saison="2026/27") in html
-    assert "Gespielt · 2:1" in html and 'href="/vorschau/de/spieltag/bundesliga/?datum=2026-11-24"' in html
+    assert '<b class="kg-tor" aria-hidden="true">2</b>' in html and 'href="/vorschau/de/spieltag/bundesliga/?datum=2026-11-24"' in html   # seit 0.26: neue Kachel auch im Archiv
     assert t("archiv.spieltag", n=11) in html                                       # Pfeil zum nächsten Spieltag
     assert vorschau.beantworten("/vorschau/de/spieltag/bundesliga/2026-27/12/", "", d).status == 404   # gibt es nicht
     assert vorschau.beantworten("/vorschau/de/spieltag/bundesliga/2026-27/11/", "datum=2026-11-24", d).status == 404
@@ -570,7 +570,7 @@ def test_w31_hinweistexte_design_508():
     assert de["lesen"]["signal"].startswith("Sie zeigt, wie häufig sich vergleichbare Auffälligkeiten in früheren Spielen als Prognose")
     assert en["lesen"]["signal"].endswith("The rating has three levels: high, medium or low.")
     # Fall-C-Satz seit 0.25 ersetzt (Release_08, Abschnitt 9; Liga als Feld je Liga und Sprache, Beschluss 44)
-    assert de["spiel"]["c_notiz"] == "Diese Abweichung ist {liga_in} kein verlässlicher Hinweis auf kommende Spiele."
+    assert de["spiel"]["c_notiz"] == "Diese Abweichung ist {liga_in} kein verlässlicher Hinweis für kommende Spiele."   # 0.26: „für“ (Beschluss 57)
     assert de["liga_in"]["la_liga"] == "in der La Liga" and en["liga_in"]["serie_a"] == "in Serie A"
 
 

@@ -237,6 +237,13 @@ def spieltag_daten(daten: Daten, web: W.WebLiga, zp: Zeitpunkt) -> dict:
         tab["sonderspiele"] = {"nachholspiel": sum(1 for s in spiele if s["sonderspiel"] == "nachholspiel"),
                                "vorgezogen": sum(1 for s in spiele if s["sonderspiel"] == "vorgezogen")}
     seite["tabs"] = tabs
+    # Seit 0.26 (Beschluss 53, Entscheid Carsten 25.11.2026): „Frühere Spieltage ansehen“ führt zur Archivseite des
+    # Spieltags vor dem ersten Tab; am 1. Spieltag einer Saison (oder ohne Archivseite) kein Link.
+    seite["frueher"] = None
+    if tabs and tabs[0]["spieltag"] > 1:
+        from . import seo
+        if seo.saison_hat_seiten(tabs[0]["saison"]):
+            seite["frueher"] = {"saison": tabs[0]["saison"], "nr": tabs[0]["spieltag"] - 1}
     return seite
 
 
@@ -270,6 +277,9 @@ def archiv_daten(daten: Daten, web: W.WebLiga, saison: str, nr: int, zp: Zeitpun
             gate = A.Gate("Werte folgen nachträglich")
         e = spiel_eintrag(g, werte.kpis, zp.jetzt, ergebnisse, b.team_ids, web.name, gate)
         e.pop("_sort")
+        e["bilanz"] = None                       # seit 0.26 (Entscheid Carsten 25.11.2026): Kachel wie Spieltag-Seite
+        if e["art"] == "gespielt" and e["ergebnis"]:
+            e["bilanz"] = bilanz(werte.kpis, spielzeile(daten, web.name, g.saison, g.heim, g.gast, zp.bis))
         eintraege.append(e)
     seite["spiele"] = eintraege
     seite["partien"] = sum(1 for s in eintraege if not s["sonderspiel"])

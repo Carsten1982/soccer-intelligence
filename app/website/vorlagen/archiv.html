@@ -24,7 +24,7 @@
 <div class="eng abschnitt-liga">
   {% if seite.veraltet %}{{ warnbox(t('veraltet.titel', datum=veraltet_text), t('veraltet.text')) }}{% endif %}
   <p class="zusammenfassung">{{ t('spieltag.nummer', n=seite.spieltag) }}{% if seite.beginn %} · {{ datum_voll(seite.beginn) }}{% endif %} · {{ zaehlform(seite) }} · {{ tn('spieltag.auffaellig', seite.auffaellig) }}</p>
-  {{ legende() }}
+  {{ legende(gespielt=true) }}
   <ul class="partien">
     {% for s in seite.spiele %}<li>{{ kachel(s, archiv=true) }}</li>{% endfor %}
   </ul>

@@ -225,7 +225,7 @@ a.kachel:hover { text-decoration: none; border-color: var(--gruen); }
 .sb-chip { display: inline-flex; align-items: center; min-height: 26px; padding: 0 10px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #F4F7F2; border: 1.5px solid var(--hell); }
 .sb-teams { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: center; gap: 24px; margin-top: 24px; }
 .sb-team { flex: 1 1 220px; min-width: 0; }
-.sb-name { font-family: var(--titel); font-weight: 700; font-size: clamp(27px, 5.85vw, 43.2px); line-height: 1.05; overflow-wrap: anywhere; }
+.sb-name { font-family: var(--titel); font-weight: 700; font-size: clamp(27px, 5.85vw, 43.2px); line-height: 1.05; overflow-wrap: break-word; hyphens: auto; text-wrap: balance; }  /* seit 0.26 (Beschluss 56): nur zwischen Wörtern bzw. mit Trennstrich umbrechen, nie abschneiden */
 .sb-strich { width: 56px; height: 4px; border-radius: 2px; margin: 12px auto 0; background: #5CC6D0; }
 .sb-strich.gast { background: #FF7FAE; }
 .sb-form { display: flex; gap: 6px; justify-content: center; margin-top: 14px; }
@@ -264,6 +264,8 @@ a.kachel:hover { text-decoration: none; border-color: var(--gruen); }
 /* Seit 0.23 (Entwurf 2k final, Beschlüsse 25–32): gleiche Karte für alle Fälle, grüne Karten rund 15 % niedriger. */
 .karte .oben { padding: 10px 16px 6px; }
 .karte .kopf-k { flex-wrap: wrap; gap: 6px 10px; }
+/* Seit 0.26 (Beschluss 58): Chip immer rechtsbündig, auch wenn er in eine eigene Zeile umbricht */
+.karte .kopf-k > .q-chip { margin-left: auto; }
 .karte .ikon { width: 34px; height: 34px; }
 .karte .ikon.normal { width: 36px; height: 36px; }
 .karte .wertzeile { gap: 0 10px; margin-top: 4px; }
@@ -778,8 +780,8 @@ a.knopf-voll:hover, a.knopf-rand:hover { text-decoration: none; }
 .a-stand { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .a-tore { font-family: "Outfit", sans-serif; font-size: 40px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .a-halbzeit { font-size: 14px; opacity: .85; white-space: nowrap; }
-.a-tabelle { width: 100%; border-collapse: separate; border-spacing: 0; background: #fff; border: 1px solid var(--rand); border-radius: 16px; overflow: hidden; }
-.a-tabelle tbody + tbody .a-kopf th { border-top: 1px solid var(--rand); }
+.a-tabelle { width: 100%; border-collapse: separate; border-spacing: 0; background: #fff; border: 1px solid #D3DED5; border-radius: 20px; overflow: hidden; }
+.a-tabelle + .a-tabelle { margin-top: 18px; }   /* seit 0.26 (Beschluss 55): zwei getrennte Karten */
 .a-kopf th { background: #EEF2EE; color: #3F4F45; font-size: 13px; font-weight: 600; padding: 10px 12px; text-align: right; vertical-align: bottom; hyphens: manual; }
 .a-kopf th.a-name { text-align: left; font-family: "Outfit", sans-serif; font-size: 15px; color: var(--text); }
 .a-zeile th, .a-zeile td { padding: 12px; border-top: 1px solid var(--rand); vertical-align: top; }
@@ -830,5 +832,8 @@ a.knopf-voll:hover, a.knopf-rand:hover { text-decoration: none; }
 .kg-grau { color: #55655B; font-weight: 500; }
 .kg-alle { color: #1E6B43; }
 /* Auswertung: Teamnamen neben dem Spielstand kleiner und nur an Wortgrenzen umbrechen (Prüfung 25.11.2026) */
-.a-teams .sb-name { font-size: clamp(18px, 4.6vw, 32px); overflow-wrap: normal; word-break: normal; hyphens: manual; }
+.a-teams .sb-name { font-size: clamp(18px, 4.6vw, 32px); }
 @media (max-width: 380px) { .a-teams .sb-name { font-size: 17px; } .a-tore { font-size: 34px; } }
+/* Spieltag: Link „Frühere Spieltage ansehen“ (seit 0.26, Beschluss 53) */
+.frueher { margin: 8px 0 0; }
+.frueher a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: 15px; color: #3E5247; text-decoration: underline; text-underline-offset: 3px; }

@@ -93,7 +93,8 @@
     "endstand_folgt": "Final score to follow",
     "endstand_sr": "Final score {ergebnis}",
     "erklaerung_gespielt_titel": "Played matches:",
-    "erklaerung_gespielt": "They show the final score and how many anomalies were confirmed. Select the tile to see the comparison."
+    "erklaerung_gespielt": "They show the final score and how many anomalies were confirmed. Select the tile to see the comparison.",
+    "frueher": "View earlier matchdays"
   },
   "stufe": {
     "stark": "High signal quality",
@@ -330,7 +331,7 @@
     "d_schwelle": "Anomaly threshold",
     "balken_vergleich": "Reference value",
     "bezug_liga": "the league average",
-    "bezug_marke": "the reference value",
+    "bezug_marke": "the 2.5 mark",
     "zu_wenig_daten_neu": "As {team} is new to the league, there is not yet enough data for an assessment.",
     "zu_wenig_daten_neu_zwei": "As {team1} and {team2} are new to the league, there is not yet enough data for an assessment.",
     "hinweis_zu_wenig_daten_neu": "There are no values for this match yet because {team} is new to the league.",
@@ -364,17 +365,18 @@
     "a_nein": "No",
     "a_halbzeit": "Half-time {ergebnis}",
     "a_endstand_sr": "Final score {ergebnis}",
-    "a_marke_zeile": "Reference value instead of league average: fixed mark of 2.5.",
+    "a_marke_zeile": "No league average – fixed mark of 2.5.",
     "a_box_titel": "Anomaly threshold",
     "a_box_satz": "Before the match, a value counts as a statistical anomaly {liga_in} from this deviation from the league average.",
     "a_box_keine": "no threshold",
-    "a_box_marke": "Fixed mark of 2.5 instead of league average",
+    "a_box_marke": "No league average – fixed mark of 2.5.",
     "a_hinweis_statistik": "Some statistics are not yet available. They will be added later.",
     "a_hinweis_ohne": "There were no expected values for this match because {team} is new to the league. Only the actual values are shown.",
     "a_hinweis_ohne_allg": "There were no expected values for this match. Only the actual values are shown.",
     "a_hinweis_wenig": "There are only a few matches for {team} so far. That is why there is no signal quality and no assessment.",
     "a_hinweis_nachholspiel": "This match belonged to an earlier matchday and was played on {datum}.",
-    "a_signal": "Signal quality {stufe}"
+    "a_signal": "Signal quality {stufe}",
+    "hinweis_titel": "Note:"
   },
   "start": {
     "h1_vorne": "Football,",

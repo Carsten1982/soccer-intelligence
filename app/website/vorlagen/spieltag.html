@@ -62,6 +62,8 @@
     {% endfor %}
   </div>
   <p class="zeitzone-hinweis">{{ t('allgemein.zeitzone') }}</p>
+  {% set fr = seite.get('frueher') %}
+  {% if fr %}<p class="frueher"><a href="{{ link('archiv', liga=seite.liga, saison=fr.saison, nr=fr.nr) }}">{{ pfeil_zurueck() }}{{ t('spieltag.frueher') }}</a></p>{% endif %}
   {% endif %}
 </div>
 
