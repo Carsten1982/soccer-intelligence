@@ -5,6 +5,11 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 25.11.2026 – Version 0.24 eingespielt
+
+- **Carsten** · Version 0.24 eingespielt (`acf1c60`, Pull Request #26; Tests grün, drei Testmails).
+- **Claude** · Stand nachgetragen (`01`, Abschnitt 0).
+
 ## 24.11.2026 – Version 0.24: Qualität und Sicherheit
 
 - **Carsten** · Designanpassungen 24.11.2026 (Design-Datei Version 508): zwei Hinweistexte DE/EN.
