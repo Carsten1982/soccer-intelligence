@@ -8,6 +8,7 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 ## 25.11.2026 – Version 0.27 (in Arbeit): Livegang
 
 - **Carsten** · Texte „bestätigt“ präzisiert (Vergleich mit dem Ligadurchschnitt): Einleitung der Methodik im eigenen Wortlaut (DE und EN), übrige Stellen nach Vorschlag Claude freigegeben.
+- **Carsten** · Englische Fassungen (Übersetzungsprüfung): Einleitung, Schritte 2 und 3, Satz zur Trefferquote übernommen; die bestehenden Begriffe der englischen Seite „success rate“ und „uplift“ bleiben (statt „hit rate“, „added value“), ebenso „Over 2.5 goals“.
 - **Claude** · Methodik Ebene 1 (Einleitung, Schritte 2 und 3) und Ebene 2 (Trefferquote), Startseite („Deutliche Abweichungen werden markiert …“), Glossar: neuer Begriff „Bestätigt / Nicht bestätigt“, „Trefferquote“ angeglichen – Deutsch und Englisch.
 
 ## 25.11.2026 – Version 0.26 eingespielt
