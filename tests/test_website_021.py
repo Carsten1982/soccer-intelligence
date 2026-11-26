@@ -630,3 +630,15 @@ def test_w19_sitemap_archiv_laufende_saison():
     assert "/2026-27/11/" not in teil                                                 # noch nicht begonnen
     alt = SM.sitemap("/sitemaps/bundesliga-2025-26.xml", d)
     assert alt is not None and "/2025-26/" not in alt                                 # Vorsaison: kein Archiv
+
+
+def test_w34_website_symbol_fuer_google(dienst):
+    """0.30.1 (Logo fehlt in den Google-Suchergebnissen, Carsten 26.11.2026): Google verlangt ein Symbol in einem
+    Vielfachen von 48 px. favicon.ico enthält 48 × 48, dazu SVG und PNG 192 × 192 – alle im Kopf der Startseite."""
+    from PIL import Image
+    html = vorschau.beantworten("/vorschau/de/", "", dienst).inhalt.decode()
+    assert '<link rel="icon" href="/vorschau/favicon.ico" sizes="48x48">' in html
+    assert '<link rel="icon" href="/vorschau/icon-192.png" sizes="192x192" type="image/png">' in html
+    assert (48, 48) in Image.open(W.STATISCH / "wurzel" / "favicon.ico").info["sizes"]
+    assert Image.open(W.STATISCH / "wurzel" / "icon-192.png").size == (192, 192)
+    assert vorschau.beantworten("/vorschau/icon-192.png", "", dienst).status == 200

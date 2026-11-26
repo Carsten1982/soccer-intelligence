@@ -9,6 +9,8 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 - **Carsten** · Prüfung 0.30 im Browser: Dashboard zeigt „Letzter Datenstand 03:01 Uhr“ und „Website & Server: Werte vorübergehend nicht verfügbar“. Foto folgt (wird heute Abend hochgeladen). KI-Karten ohne Link und englischer Footer korrekt.
 - **Claude** · Zwei Fehler behoben (`website/showcase.py`): Die Änderungszeit der Datenbank kommt in UTC und wird jetzt in Schweizer Zeit angezeigt (04:01 statt 03:01). Die Aktualität der Server-Werte wird über die Änderungszeit von `server.json` geprüft statt über deren Feld „zeit“, das das Prüfskript in der Uhrzeit des Servers (UTC) schreibt – dadurch galten die Werte als eine Stunde alt. Test S9.
+- **Carsten** · Die Website erscheint in Google (Startseite, Methodik); das Logo fehlt noch (graue Weltkugel).
+- **Claude** · Website-Symbol geprüft: `favicon.ico` enthält 48 × 48 (Vorgabe Google: Vielfaches von 48 px), dazu SVG; neu zusätzlich PNG 192 × 192 im Kopf (`basis.html`), `sizes` der ICO-Datei korrigiert. Google holt das Symbol mit eigenem Crawler, das dauert erfahrungsgemäss Tage bis wenige Wochen. Test W34.
 
 ## 26.11.2026 – Version 0.30 eingespielt (mit 0.29)
 

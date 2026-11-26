@@ -11,6 +11,10 @@
 - **„Website & Server“** zeigt wieder Werte. Das Prüfskript schreibt seine Uhrzeit in der Zeit des Servers (UTC); das
   Dashboard hielt die Werte deshalb für eine Stunde alt. Jetzt zählt die Änderungszeit der Datei.
 
+- **Website-Symbol für Google:** zusätzlich ein PNG-Symbol 192 × 192 im Kopf jeder Seite (das ICO enthält schon
+  48 × 48). Google zeigt das Logo in den Suchergebnissen erst, wenn sein Symbol-Crawler die Seite besucht hat
+  (erfahrungsgemäss einige Tage bis wenige Wochen).
+
 ## Einspielen
 
 ```bash
