@@ -5,6 +5,11 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 26.11.2026 – Version 0.30 eingespielt (mit 0.29)
+
+- **Carsten** · Version 0.30 eingespielt (`a38a0fb`, Pull Request #34), enthält 0.29 (englische Texte). Prüfung im Browser folgt.
+- **Claude** · Stand nachgetragen; Rückmeldung an den Design-Chat zu Release_14 und Release_15 erstellt (offene Fragen dort).
+
 ## 26.11.2026 – Version 0.30: Showcase (Release_15, Design 575)
 
 - **Carsten** · Entscheide: Adressen `/showcase`, `/showcase/project`, `/showcase/ki-automation`, `/showcase/ki-automation/data` (Englisch `/en/showcase/…`, vorerst nicht freigeschaltet); noindex, keine Verlinkung von der Plattform; nur Desktop; kein Cookie-Hinweis; Foto und Linkvorschau mit Foto (Bilder nur auf dem Server); Codezeilen 7’524 / 4’621 und „> 800 Testfälle“ als feste Zahlen, Version und Spiele live, „23“ Kombinationen; gleicher Hero-Satz auf Showcase und Projekt; Chip „In Entwicklung“ beim Wettbewerbsmonitoring; n8n bleibt; Entwurfs-Symbole statt Original-Logos; Dashboard-Zahlen aus dem Backend, fehlende Kennzahlen bauen, leere Zustände mit eigenen Texten.
