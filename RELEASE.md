@@ -29,7 +29,7 @@ bash /docker/football-dashboard/tools/einspielen.sh github
 
 ## Erwartungswerte
 
-- Tests rund **790 bestanden**, keine Fehler (der Browser-Test E7 wird auf dem Server übersprungen, kein Node).
+- Tests rund **775 bestanden**, keine Fehler (hier: 789 bestanden, 18 übersprungen; der Browser-Test E7 wird auf dem Server übersprungen, kein Node).
 - Schritt 5: „Container laufen (Dashboard, Import, Vorschau, Website) · / = 301 · /de/ = 200 …“, `/vorschau/` = 401;
   drei Testmails. Dashboard-Fusszeile: „Version 0.28 – Cookie-Hinweis und Google Analytics“.
 - Sicherheitsrichtlinie der Website mit den Google-Adressen (nur öffentlich):
