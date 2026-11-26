@@ -201,6 +201,8 @@ def _rahmen(k: Kontext, stand_iso: str | None) -> dict:
         "zeitreise": F.stand(k.jetzt, k.lang) if k.zeitreise and k.jetzt else None,
         "datum_wert": k.jetzt.strftime("%Y-%m-%dT%H:%M") if k.zeitreise and k.jetzt else "",
         "stand_text": F.stand(stand, k.lang),
+        # seit 0.28: Cookie-Wahl gilt für den ganzen Auftritt (Vorschau: nur unter /vorschau/); GA4 nur öffentlich
+        "cookie_pfad": k.prefix.rstrip("/") + "/", "ga_id": W.GA4_ID,
         "veraltet_text": F.tag(stand.date(), k.lang) if stand else F.STRICH,
     }
 
@@ -445,6 +447,15 @@ def inhalt_html(art: str, k: Kontext, stand_iso: str | None = None, **werte) -> 
     return _rendern("inhalt.html", k, kopf, stand_iso, art=art, teil=teil, aktiv=art,
                     betreiber={"name": W.BETREIBER_NAME, "adresse": W.BETREIBER_ADRESSE, "email": W.KONTAKT_EMAIL},
                     **werte)
+
+
+def cookie_html(k: Kontext, stand_iso: str | None = None, wahl: str = "") -> str:
+    """Cookie-Einstellungen (seit 0.28, Entwurf Cookie_Einstellungen): noindex,follow, nicht in der Sitemap.
+    wahl: gespeicherte Wahl aus dem Cookie („zugestimmt“, „abgelehnt“ oder leer)."""
+    k = k.mit(ziel=A.Ziel("cookie", k.lang))
+    kopf = _kopf(k, T.t("seo.cookie_titel", k.lang), T.t("seo.cookie_beschreibung", k.lang), index=False)
+    return _rendern("cookie.html", k, kopf, stand_iso, aktiv="cookie",
+                    wahl=wahl if wahl in ("zugestimmt", "abgelehnt") else "")
 
 
 def fehlt_html(k: Kontext, stand_iso: str | None = None) -> str:

@@ -1,0 +1,39 @@
+{% extends "basis.html" %}
+{% from "teile.html" import deko_feld, pfeil_zurueck with context %}
+{#- Cookie-Einstellungen (seit 0.28 nach Entwurf „Cookie_Einstellungen“). Zeigt die gespeicherte Wahl (Cookie
+    cookie_wahl, vom Server gelesen) und speichert eine neue Wahl. Ohne Skript schickt das Formular die Wahl an den
+    Server (Antwort mit Set-Cookie und Weiterleitung); mit Skript speichert site.js sofort, aktualisiert die Meldung und
+    startet bzw. beendet Google Analytics. Erreichbar über den Link in der Datenschutzerklärung, nicht im Footer. -#}
+{% block inhalt %}
+<div class="eng">
+  <div class="hero hero-spieltag hero-inhalt">
+    {{ deko_feld() }}
+    <div class="innen">
+      <a class="zurueck-hell" href="{{ link('datenschutz') }}">{{ pfeil_zurueck() }}{{ t('cookie.zurueck') }}</a>
+      <h1>{{ t('cookie.h1') }}</h1>
+    </div>
+  </div>
+</div>
+<div class="eng abschnitt-inhalt inhalt-cookie">
+  <div class="inhaltskarte">
+    <section>
+      <h2>{{ t('cookie.h2') }}</h2>
+      <p>{{ t('cookie.einleitung') }}</p>
+      <form class="cookie-wahl" method="post" action="{{ link('cookie') }}" data-cookie-seite>
+        <div class="cookie-wahl-titel">{{ t('cookie.aktuell') }}</div>
+        <p role="status" aria-live="polite" data-cookie-status
+           data-offen="{{ t('cookie.status_offen') }}" data-zugestimmt="{{ t('cookie.status_zugestimmt') }}"
+           data-abgelehnt="{{ t('cookie.status_abgelehnt') }}">{{ t('cookie.status_' + (wahl or 'offen')) }}</p>
+        <div class="cookie-knoepfe">
+          <button type="submit" name="wahl" value="abgelehnt" class="knopf-wahl" data-cookie-wahl="abgelehnt"
+                  aria-pressed="{{ 'true' if wahl == 'abgelehnt' else 'false' }}">{{ t('cookie.ablehnen') }}</button>
+          <button type="submit" name="wahl" value="zugestimmt" class="knopf-wahl" data-cookie-wahl="zugestimmt"
+                  aria-pressed="{{ 'true' if wahl == 'zugestimmt' else 'false' }}">{{ t('cookie.zustimmen') }}</button>
+        </div>
+      </form>
+      <p>{{ t('cookie.speicher_vor') }} <a href="{{ link('datenschutz') }}#google-analytics">{{ t('cookie.speicher_link') }}</a>{{ t('cookie.speicher_nach') }}</p>
+    </section>
+  </div>
+</div>
+<div class="abstand-unten"></div>
+{% endblock %}

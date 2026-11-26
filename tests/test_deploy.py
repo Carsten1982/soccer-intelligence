@@ -248,7 +248,7 @@ def test_www_leitet_auf_die_adresse_ohne_www():
     assert label["traefik.http.routers.soccerwww.tls.certresolver"] == "letsencrypt"          # Zertifikat für www
     assert label["traefik.http.routers.soccerwww.middlewares"].split(",")[-1] == "soccerweb-www"
     assert label["traefik.http.routers.soccerwww.service"] == label["traefik.http.routers.soccerweb.service"] == "soccerweb"
-    assert label["traefik.http.middlewares.soccerweb-www.redirectregex.permanent"] == "true"   # 301, nicht 302
+    assert label["traefik.http.middlewares.soccerweb-www.redirectregex.permanent"] == "true"   # dauerhaft (Traefik: 308)
     # YAML macht aus "\\." ein "\.", Compose aus "$$" ein "$": so kommt der Ausdruck bei Traefik an
     regex = label["traefik.http.middlewares.soccerweb-www.redirectregex.regex"].replace("\\\\", "\\")
     ersatz = label["traefik.http.middlewares.soccerweb-www.redirectregex.replacement"].replace("$$", "$")

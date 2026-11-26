@@ -10,3 +10,8 @@
 index_ab = "2026-11-26T00:00"   # Livegang (Entscheid Carsten 25.11.2026)
 seiten_ab_saison = "2025/2026"
 index_min_kennzahlen = 6
+
+# Google Analytics 4 (seit 0.28, Entscheid Carsten 25./26.11.2026): Mess-ID (öffentliche Kennung, steht später in jeder
+# Seite). Gemessen wird nur auf der öffentlichen Website, nie in der Vorschau, und erst nach Zustimmung im Cookie-Hinweis.
+# Leer = keine Messung.
+ga4_mess_id = "G-9XH0LGQLQ7"

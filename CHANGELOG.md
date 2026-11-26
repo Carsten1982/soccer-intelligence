@@ -5,6 +5,19 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 26.11.2026 – Version 0.28: Cookie-Hinweis und Google Analytics
+
+- **Carsten** · Entscheide: Aufbewahrung in GA4 14 Monate (wie in der geprüften Datenschutzerklärung), keine Messung in der Vorschau, Umsetzung genau nach den Entwürfen Cookie_Hinweis und Cookie_Einstellungen. Wunsch: nach dem Release die Einstellungen in GA4 gemeinsam durchgehen.
+- **Claude** · Cookie-Hinweis in jeder Seite (`basis.html`, `site.css`, `site.js`): zwei gleichwertige Knöpfe, kein Link, erscheint nur ohne gespeicherte Wahl; eigenes Cookie `cookie_wahl` 6 Monate. Seite Cookie-Einstellungen (`vorlagen/cookie.html`, `seiten.cookie_html`, `vorschau.py`): zeigt die Wahl, funktioniert mit und ohne Skript (Formular, Set-Cookie, 303), noindex. Google Analytics 4 (`G-9XH0LGQLQ7` in `website.toml`) wird erst nach Zustimmung geladen und nur auf der öffentlichen Website; Widerruf beendet die Messung und löscht `_ga`/`_ga_*`. CSP mit den Google-Adressen nur bei Mess-ID. Texte DE/EN nach den Entwürfen.
+- **Claude** · Fehler gefunden: In der englischen Datenschutzerklärung stand ein deutsches Wort zu viel („… Google browser add-on verhindern.“) – entfernt, Test E6.
+- **Claude** · Tests E1–E7 (`tests/test_einwilligung_028.py`), darunter ein Browser-Test mit Chromium: vor der Zustimmung keine Anfrage an Google. axe-core ohne Befund (DE/EN, 390 und 1280 px, mit sichtbarem Hinweis), kein Querscrollen. Doku `08`, Abschnitt 4.3.
+
+## 26.11.2026 – Version 0.27.1 eingespielt
+
+- **Carsten** · Version 0.27.1 eingespielt (`cacbb83`, Pull Request #31). `https://www.soccer-intelligence.com/en/` → 308 auf `https://soccer-intelligence.com/en/` (Traefik antwortet bei „permanent“ mit 308 statt 301 – ebenfalls dauerhaft, für Google gleichwertig); `http://www…` → 308 auf `https://www…`. Offener Punkt www erledigt.
+- **Carsten** · Google Search Console: Property `https://soccer-intelligence.com/` über DNS-TXT bei Hostinger bestätigt, Sitemap eingereicht (anfangs „Konnte nicht abgerufen werden“; Abruf mit Googlebot-Kennung = 200, `application/xml`).
+- **Claude** · Stand nachgetragen.
+
 ## 26.11.2026 – Version 0.27.1: www leitet weiter
 
 - **Carsten** · Abklärung www auf dem Server: DNS zeigt auf unseren Server, `http://www` → 308 auf `https://www`, dort 404 mit Standard-Zertifikat; Traefik mit HTTP-Challenge und globaler Umleitung auf HTTPS.

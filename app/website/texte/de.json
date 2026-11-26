@@ -478,7 +478,8 @@
     "glossar": "Glossar",
     "kontakt": "Kontakt",
     "impressum": "Impressum",
-    "datenschutz": "Datenschutzerklärung"
+    "datenschutz": "Datenschutzerklärung",
+    "cookie": "Cookie-Einstellungen"
   },
   "stufe_kurz": {
     "stark": "stark",
@@ -538,7 +539,9 @@
     "spiel_werte_ab": "{heim} – {gast} ({liga}, {n}. Spieltag, {datum}): Die Werte folgen, sobald beide Teams ihr vorheriges Ligaspiel gespielt haben.",
     "spiel_verschoben": "{heim} – {gast} ({liga}, {spieltag}): Spiel verschoben. Statistiken folgen, sobald der Termin feststeht.",
     "spiel_status": "{heim} – {gast} ({liga}, {spieltag}): {status}.",
-    "spiel_auswertung": "{heim} – {gast} ({liga}, {spieltag}, {datum}): Endstand {ergebnis}. Unsere Erwartungswerte im Vergleich zu den tatsächlichen Werten."
+    "spiel_auswertung": "{heim} – {gast} ({liga}, {spieltag}, {datum}): Endstand {ergebnis}. Unsere Erwartungswerte im Vergleich zu den tatsächlichen Werten.",
+    "cookie_titel": "Cookie-Einstellungen | Soccer Intelligence",
+    "cookie_beschreibung": "Cookie-Einstellungen von Soccer Intelligence: Webanalyse mit Google Analytics ein- oder ausschalten und deine Wahl jederzeit ändern."
   },
   "inhalt": {
     "email": "E-Mail",
@@ -655,5 +658,23 @@
     "premier_league": "in der Premier League",
     "serie_a": "in der Serie A",
     "la_liga": "in der La Liga"
+  },
+  "cookie": {
+    "_hinweis": "Seit 0.28 nach den Entwürfen Cookie_Hinweis und Cookie_Einstellungen (Design-Chat, Paket 25.11.2026).",
+    "region": "Cookie-Hinweis",
+    "hinweis": "Wir verwenden Webanalyse, um Soccer Intelligence zu verbessern. Die Nutzung erfolgt nur mit deiner Zustimmung.",
+    "ablehnen": "Ablehnen",
+    "zustimmen": "Zustimmen",
+    "zurueck": "Datenschutzerklärung",
+    "h1": "Cookie-Einstellungen",
+    "h2": "Webanalyse mit Google Analytics",
+    "einleitung": "Wir verwenden Webanalyse, um Soccer Intelligence zu verbessern. Die Nutzung erfolgt nur mit deiner Zustimmung. Du kannst deine Wahl hier jederzeit ändern. Eine Änderung gilt sofort und für die Zukunft.",
+    "aktuell": "Deine aktuelle Wahl",
+    "status_offen": "Noch keine Wahl: Google Analytics ist aus.",
+    "status_zugestimmt": "Zugestimmt: Google Analytics ist aktiv.",
+    "status_abgelehnt": "Abgelehnt: Google Analytics ist aus.",
+    "speicher_vor": "Deine Wahl speichern wir 6 Monate in deinem Browser, danach fragen wir erneut. Ohne Zustimmung werden keine Daten an Google Analytics gesendet. Was genau erfasst wird, steht in der",
+    "speicher_link": "Datenschutzerklärung",
+    "speicher_nach": "."
   }
 }

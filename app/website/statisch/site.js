@@ -88,3 +88,85 @@ document.querySelectorAll('form[data-ein-klick]').forEach(function (form) {
     if (knopf) { window.setTimeout(function () { knopf.disabled = true; }, 0); }
   });
 });
+
+// Seit 0.28 (Entwürfe Cookie_Hinweis und Cookie_Einstellungen, Entscheid Carsten 26.11.2026): Einwilligung für Google
+// Analytics 4. Grundsatz: Vor der Zustimmung wird nichts von Google geladen und kein Analyse-Cookie gesetzt.
+// - Die Wahl steht im eigenen Cookie „cookie_wahl“ (zugestimmt / abgelehnt), 6 Monate, danach wird erneut gefragt.
+// - Der Hinweis (in jeder Seite, verborgen) erscheint nur ohne gespeicherte Wahl. Ohne Skript erscheint er nie.
+// - Google Analytics wird nur geladen, wenn die Seite eine Mess-ID trägt (data-ga: nur die öffentliche Website, nie
+//   die Vorschau) UND zugestimmt wurde. Ablehnen/Widerruf beendet die Messung sofort und löscht _ga und _ga_*.
+(function () {
+  var body = document.body;
+  var pfad = body.getAttribute('data-cookie-pfad') || '/';
+  var ga = body.getAttribute('data-ga');
+  var geladen = false;
+
+  function wahl() {
+    var m = /(?:^|;\s*)cookie_wahl=(zugestimmt|abgelehnt)(?:;|$)/.exec(document.cookie);
+    return m ? m[1] : '';
+  }
+  function speichern(w) {
+    document.cookie = 'cookie_wahl=' + w + '; Max-Age=' + (180 * 86400) + '; Path=' + pfad + '; SameSite=Lax' +
+      (location.protocol === 'https:' ? '; Secure' : '');
+  }
+  function messen() {
+    if (!ga) { return; }
+    window['ga-disable-' + ga] = false;                         // nach Widerruf und neuer Zustimmung wieder messen
+    if (geladen) { return; }
+    geladen = true;
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { window.dataLayer.push(arguments); };
+    window.gtag('js', new Date());
+    window.gtag('config', ga);
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(ga);
+    document.head.appendChild(s);
+  }
+  function beenden() {
+    if (ga) { window['ga-disable-' + ga] = true; }              // keine weiteren Messungen auf dieser Seite
+    var host = location.hostname, domains = ['', host, '.' + host.replace(/^www\./, '')];
+    document.cookie.split(';').forEach(function (c) {
+      var name = c.split('=')[0].trim();
+      if (name !== '_ga' && name.indexOf('_ga_') !== 0) { return; }
+      domains.forEach(function (d) {
+        document.cookie = name + '=; Max-Age=0; Path=/' + (d ? '; Domain=' + d : '');
+      });
+    });
+  }
+  function anwenden(w) {
+    speichern(w);
+    if (w === 'zugestimmt') { messen(); } else { beenden(); }
+  }
+
+  var hinweis = document.querySelector('[data-cookie-hinweis]');
+  if (hinweis && !wahl()) {
+    hinweis.hidden = false;
+    body.classList.add('mit-cookie-hinweis');                   // Platz unten, damit der Footer erreichbar bleibt
+    hinweis.querySelectorAll('[data-cookie-wahl]').forEach(function (knopf) {
+      knopf.addEventListener('click', function () {
+        anwenden(knopf.getAttribute('data-cookie-wahl'));
+        hinweis.hidden = true;
+        body.classList.remove('mit-cookie-hinweis');
+      });
+    });
+  }
+
+  var seite = document.querySelector('[data-cookie-seite]');
+  if (seite) {
+    var status = seite.querySelector('[data-cookie-status]');
+    seite.querySelectorAll('[data-cookie-wahl]').forEach(function (knopf) {
+      knopf.addEventListener('click', function (e) {
+        e.preventDefault();                                     // ohne Skript schickt das Formular die Wahl an den Server
+        var w = knopf.getAttribute('data-cookie-wahl');
+        anwenden(w);
+        seite.querySelectorAll('[data-cookie-wahl]').forEach(function (k) {
+          k.setAttribute('aria-pressed', k === knopf ? 'true' : 'false');
+        });
+        status.textContent = status.getAttribute('data-' + w);
+      });
+    });
+  }
+
+  if (wahl() === 'zugestimmt') { messen(); }
+})();

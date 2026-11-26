@@ -35,7 +35,7 @@
 {% if jsonld %}<script type="application/ld+json">{{ jsonld }}</script>
 {% endif %}
 </head>
-<body>
+<body data-cookie-pfad="{{ cookie_pfad }}"{% if ga_id %} data-ga="{{ ga_id }}"{% endif %}>
 <a class="sprung" href="#inhalt">{{ t('allgemein.zum_inhalt') }}</a>
 {% if vorschau %}
 <aside class="vorschau" aria-label="{{ t('vorschau.leiste') }}">
@@ -101,6 +101,18 @@
     </div>
   </div>
 </footer>
+{% if aktiv != 'cookie' %}
+{#- Cookie-Hinweis (seit 0.28, Entwurf Cookie_Hinweis): steht in jeder Seite, bleibt aber verborgen. site.js zeigt ihn nur,
+    wenn noch keine Wahl gespeichert ist. Ohne Skript erscheint er nie – dann lädt auch nie etwas von Google. Kein Link
+    im Hinweis; die Cookie-Einstellungen sind über die Datenschutzerklärung erreichbar. -#}
+<div class="cookie-hinweis" role="region" aria-label="{{ t('cookie.region') }}" data-cookie-hinweis hidden>
+  <p>{{ t('cookie.hinweis') }}</p>
+  <div class="cookie-knoepfe">
+    <button type="button" class="knopf-wahl" data-cookie-wahl="abgelehnt">{{ t('cookie.ablehnen') }}</button>
+    <button type="button" class="knopf-wahl knopf-wahl-voll" data-cookie-wahl="zugestimmt">{{ t('cookie.zustimmen') }}</button>
+  </div>
+</div>
+{% endif %}
 <script src="{{ statisch('site.js') }}" defer></script>
 </body>
 </html>

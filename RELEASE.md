@@ -1,47 +1,58 @@
-# Release: Version 0.27.1 – www leitet weiter
+# Release: Version 0.28 – Cookie-Hinweis und Google Analytics
 
-**Stand:** 26.11.2026 · Version 0.27.1 · Befund nach dem Livegang (Carsten 26.11.2026), Entscheid Carsten 25.11.2026
+**Stand:** 26.11.2026 · Version 0.28 · Entwürfe Cookie_Hinweis und Cookie_Einstellungen, Entscheide Carsten 25./26.11.2026
 
-**Commit:** Version 0.27.1: www leitet auf die Adresse ohne www weiter
+**Commit:** Version 0.28: Cookie-Hinweis und Google Analytics
 
 ## Was ändert sich?
 
-- **`www.soccer-intelligence.com`** funktioniert: Traefik holt ein Zertifikat für `www` und leitet jede Adresse dauerhaft
-  (301) auf dieselbe Adresse ohne www weiter, z. B. `www.soccer-intelligence.com/en/` → `soccer-intelligence.com/en/`.
-  Bisher gab es unter `www` kein Zertifikat (Browser-Warnung) und keine Seite (404).
-- Umgesetzt nur mit Labels unseres Containers `soccer-website`; die Traefik-Grundkonfiguration bleibt unverändert
-  (sie leitet `http://` schon heute auf `https://` um und holt Zertifikate über Port 80).
-- Doku: Stand 0.27 eingespielt (Website live, Komprimierung und HSTS geprüft, PageSpeed mobil 100).
+- **Cookie-Hinweis** unten auf jeder Seite, bis eine Wahl getroffen ist: „Wir verwenden Webanalyse, um Soccer
+  Intelligence zu verbessern. Die Nutzung erfolgt nur mit deiner Zustimmung.“ mit **Ablehnen** und **Zustimmen**
+  (gleich gross, kein Link). Die Wahl gilt 6 Monate.
+- **Cookie-Einstellungen** unter `/de/cookie-einstellungen/` bzw. `/en/cookie-settings/` (Link in der
+  Datenschutzerklärung, Abschnitt Google Analytics): zeigt die Wahl und ändert sie jederzeit – auch ohne JavaScript.
+- **Google Analytics 4** (`G-9XH0LGQLQ7`) wird **erst nach „Zustimmen“** geladen und nur auf der öffentlichen Website,
+  nie in der Vorschau. Ablehnen oder Widerruf beendet die Messung sofort und löscht die Analyse-Cookies.
+- Englische Datenschutzerklärung: überzähliges deutsches Wort entfernt.
 
 ## Einspielen
 
+Pull Request zusammenführen („Squash and merge“, Tests grün), dann:
+
 ```bash
-tmux new -s release0271
+tmux new -s release028
 ```
 
 ```bash
 bash /docker/football-dashboard/tools/einspielen.sh github
 ```
 
-Ab jetzt baut das Skript die Website selbst mit (kein eigener Livegang-Befehl mehr).
-
 ## Erwartungswerte
 
-- Tests rund **758 bestanden**, keine Fehler (hier ohne echte Daten: 758 bestanden, 18 übersprungen).
+- Tests rund **775 bestanden**, keine Fehler (hier: 789 bestanden, 18 übersprungen; der Browser-Test E7 wird auf dem Server übersprungen, kein Node).
 - Schritt 5: „Container laufen (Dashboard, Import, Vorschau, Website) · / = 301 · /de/ = 200 …“, `/vorschau/` = 401;
-  drei Testmails. Dashboard-Fusszeile: „Version 0.27.1 – www leitet weiter“.
-- Nach rund 1 Minute (Zertifikat für www) auf dem Server:
+  drei Testmails. Dashboard-Fusszeile: „Version 0.28 – Cookie-Hinweis und Google Analytics“.
+- Sicherheitsrichtlinie der Website mit den Google-Adressen (nur öffentlich):
   ```bash
-  curl -sI https://www.soccer-intelligence.com/en/ | grep -iE "^HTTP|^location"
+  curl -sI https://soccer-intelligence.com/de/ | grep -i "content-security-policy" | grep -o "googletagmanager" | head -1
   ```
-  Erwartet: `HTTP/2 301` und `location: https://soccer-intelligence.com/en/`.
-  ```bash
-  curl -sI http://www.soccer-intelligence.com/de/methodik/ | grep -iE "^HTTP|^location"
-  ```
-  Erwartet: `308` auf `https://www.soccer-intelligence.com/de/methodik/` (Traefik), danach wie oben 301 ohne www.
+  Erwartet: `googletagmanager`.
 
 ## Im Browser prüfen
 
-1. `www.soccer-intelligence.com` eintippen → landet ohne Warnung auf `https://soccer-intelligence.com/de/`.
-2. `www.soccer-intelligence.com/en/` → `https://soccer-intelligence.com/en/`.
-3. Startseite, Dashboard (`/dashboard/`) und Vorschau (`/vorschau/`) wie bisher.
+Am besten in einem **privaten Fenster** (dort ist noch keine Wahl gespeichert):
+
+1. `https://soccer-intelligence.com/de/` → unten erscheint der **Cookie-Hinweis** (Handy: volle Breite; Computer:
+   links unten, schmal). Die Seite ist trotzdem bedienbar.
+2. **Vor der Wahl nichts an Google:** F12 → Netzwerk → Filter `google` → Seite neu laden (Strg+F5): **keine Einträge**.
+3. **Zustimmen** klicken → Hinweis verschwindet; im Netzwerk erscheinen jetzt `gtag/js?id=G-9XH0LGQLQ7` und `collect`.
+4. **GA4 → Berichte → Echtzeit:** innerhalb von 1–2 Minuten „1 Nutzer“.
+5. Datenschutzerklärung → Abschnitt Google Analytics → Link **Cookie-Einstellungen**: zeigt „Zugestimmt: Google
+   Analytics ist aktiv.“ → **Ablehnen** → „Abgelehnt: Google Analytics ist aus.“; F12 → Anwendung → Cookies: `_ga`
+   und `_ga_…` sind weg.
+6. Andere Seite öffnen: kein Hinweis mehr, keine Google-Anfragen.
+7. Englisch: `/en/` im neuen privaten Fenster → „We use web analytics …“ mit **Decline** / **Accept**.
+8. Vorschau `/vorschau/de/`: Hinweis erscheint auch dort, aber nach „Zustimmen“ **keine** Google-Anfragen.
+
+Danach gehen wir gemeinsam die **Einstellungen in GA4** durch (Aufbewahrung 14 Monate, Google-Signale,
+personalisierte Werbung, Datenfreigabe).

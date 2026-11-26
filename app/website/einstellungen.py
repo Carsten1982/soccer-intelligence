@@ -46,6 +46,23 @@ BETREIBER_ADRESSE = [z.strip() for z in os.environ.get("SI_IMPRESSUM_ADRESSE", "
 KONTAKT_EMAIL = os.environ.get("SI_KONTAKT_EMAIL", "").strip()
 VORSCHAU = bool(PREFIX.strip("/"))          # Vorschau unter /vorschau: noindex, kein Browser-Cache, Zeitreise
 
+
+def _ga4_mess_id() -> str:
+    """Mess-ID von Google Analytics 4 aus website.toml (seit 0.28). Nur die öffentliche Website misst (Entscheid Carsten
+    26.11.2026: nicht die Vorschau); ungültige oder leere Angabe = keine Messung."""
+    import re
+    import tomllib
+    try:
+        wert = str(tomllib.loads(WEBSITE_KONFIG.read_text(encoding="utf-8")).get("ga4_mess_id", "")).strip()
+    except (OSError, ValueError):
+        return ""
+    return wert if re.fullmatch(r"G-[A-Z0-9]{4,20}", wert) else ""
+
+
+GA4_ID = "" if VORSCHAU else _ga4_mess_id()      # leer = kein Google-Code, auch nach Zustimmung nicht
+COOKIE_WAHL = "cookie_wahl"                       # eigenes Cookie mit der Wahl (zugestimmt / abgelehnt), 6 Monate
+COOKIE_TAGE = 180
+
 VORMITTAG = (8, 0)                 # Zeitreise ohne Uhrzeit: 08:00, also nach dem Import um 04:00
 IMPORT_STUNDE = 4                  # täglicher Importlauf (importer/einstellungen.py, RUN_HOUR)
 
