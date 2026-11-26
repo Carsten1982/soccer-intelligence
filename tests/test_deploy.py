@@ -233,3 +233,31 @@ def test_website_container_livegang():
     # Priorität 40 schlägt die Platzhalterseite (Traefik: Länge der Regel), aber nicht /dashboard und /vorschau
     regel = lambda router: re.search(rf"routers\.{re.escape(router)}\.rule=([^\"]+)\"", compose).group(1)
     assert len(regel("soccer-placeholder")) < 40 < min(len(regel("soccer")), len(regel("soccervorschau")))
+
+
+def test_www_leitet_auf_die_adresse_ohne_www():
+    """0.27.1 (Befund 26.11.2026, Entscheid Carsten 25.11.2026): www.soccer-intelligence.com hatte kein Zertifikat und
+    keinen Router (Browser-Warnung, 404). Jetzt eigener Router mit Zertifikat und dauerhafter Weiterleitung auf dieselbe
+    Adresse ohne www – im Container der Website, ohne Änderung an Traefik."""
+    compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+    block = compose.split("\n  soccer-website:\n", 1)[1].split("\n  soccer-placeholder:\n", 1)[0]
+    label = {z.strip()[3:-1].split("=", 1)[0]: z.strip()[3:-1].split("=", 1)[1]
+             for z in block.splitlines() if z.strip().startswith('- "traefik.')}
+    assert label["traefik.http.routers.soccerwww.rule"] == "Host(`www.soccer-intelligence.com`)"
+    assert label["traefik.http.routers.soccerwww.entrypoints"] == "websecure"
+    assert label["traefik.http.routers.soccerwww.tls.certresolver"] == "letsencrypt"          # Zertifikat für www
+    assert label["traefik.http.routers.soccerwww.middlewares"].split(",")[-1] == "soccerweb-www"
+    assert label["traefik.http.routers.soccerwww.service"] == label["traefik.http.routers.soccerweb.service"] == "soccerweb"
+    assert label["traefik.http.middlewares.soccerweb-www.redirectregex.permanent"] == "true"   # 301, nicht 302
+    # YAML macht aus "\\." ein "\.", Compose aus "$$" ein "$": so kommt der Ausdruck bei Traefik an
+    regex = label["traefik.http.middlewares.soccerweb-www.redirectregex.regex"].replace("\\\\", "\\")
+    ersatz = label["traefik.http.middlewares.soccerweb-www.redirectregex.replacement"].replace("$$", "$")
+    assert ersatz == "https://soccer-intelligence.com/${1}"
+    python_ersatz = ersatz.replace("${1}", r"\1")
+    for vorher, nachher in (("https://www.soccer-intelligence.com/en/", "https://soccer-intelligence.com/en/"),
+                            ("https://www.soccer-intelligence.com/", "https://soccer-intelligence.com/"),
+                            ("https://www.soccer-intelligence.com/de/spieltag/serie-a/?x=1",
+                             "https://soccer-intelligence.com/de/spieltag/serie-a/?x=1")):
+        assert re.sub(regex, python_ersatz, vorher) == nachher
+    assert not re.match(regex, "https://soccer-intelligence.com/de/")                       # ohne www: keine Schleife
+    assert not re.match(regex, "https://wwwXsoccer-intelligence.com/")                      # Punkt ist maskiert

@@ -563,4 +563,5 @@ Computer einzeilig, bis 520 px höchstens 300 px breit mit festem Umbruch nach d
 | 0.25 | Auswertung nach dem Spiel (Spielseite und gespielte Kachel) |
 | 0.26 | Frühere Spieltage, Archiv mit Bilanz-Kacheln, Feinschliff, Impressum-Skript |
 | 0.27 | **Livegang** 26.11.2026: Website unter `/` (Container `soccer-website`), `index_ab` gesetzt, Archiv der laufenden Saison im Index, Texte zu „bestätigt“ (Methodik, Startseite, Glossar) |
+| 0.27.1 | `www.soccer-intelligence.com` leitet dauerhaft auf die Adresse ohne www weiter (Zertifikat für www) |
 | später | 0.28 Cookie-Hinweis und Google Analytics 4 (erst nach Zustimmung); Search Console nach dem Livegang |

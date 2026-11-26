@@ -153,10 +153,22 @@ services:
       # Eigene Middlewares (gleiche Werte wie Dashboard/Vorschau): Die Website hängt nicht an den Labels anderer
       # Container – sonst fiele sie beim Neubau oder Stopp von Dashboard/Vorschau kurz auf die Platzhalterseite zurück.
       - "traefik.http.routers.soccerweb.middlewares=soccerweb-ratelimit,soccerweb-compress,soccerweb-hsts"
+      - "traefik.http.routers.soccerweb.service=soccerweb"
       - "traefik.http.middlewares.soccerweb-ratelimit.ratelimit.average=30"
       - "traefik.http.middlewares.soccerweb-ratelimit.ratelimit.burst=100"
       - "traefik.http.middlewares.soccerweb-compress.compress=true"
       - "traefik.http.middlewares.soccerweb-hsts.headers.stsSeconds=31536000"
+      # www (seit 0.27.1, Entscheid Carsten 25.11.2026): eigener Router mit Zertifikat für www.soccer-intelligence.com,
+      # leitet jede Adresse dauerhaft auf dieselbe Adresse ohne www weiter (http → https erledigt Traefik selbst).
+      # In Compose steht "$$" für ein "$"; "${1}" ist der Pfad aus dem regulären Ausdruck.
+      - "traefik.http.routers.soccerwww.rule=Host(`www.soccer-intelligence.com`)"
+      - "traefik.http.routers.soccerwww.entrypoints=websecure"
+      - "traefik.http.routers.soccerwww.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.soccerwww.middlewares=soccerweb-ratelimit,soccerweb-hsts,soccerweb-www"
+      - "traefik.http.routers.soccerwww.service=soccerweb"
+      - "traefik.http.middlewares.soccerweb-www.redirectregex.regex=^https?://www\\.soccer-intelligence\\.com/(.*)"
+      - "traefik.http.middlewares.soccerweb-www.redirectregex.replacement=https://soccer-intelligence.com/$${1}"
+      - "traefik.http.middlewares.soccerweb-www.redirectregex.permanent=true"
       - "traefik.http.services.soccerweb.loadbalancer.server.port=8080"
 
   soccer-placeholder:

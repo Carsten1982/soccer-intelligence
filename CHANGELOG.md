@@ -5,6 +5,11 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 26.11.2026 – Version 0.27.1: www leitet weiter
+
+- **Carsten** · Abklärung www auf dem Server: DNS zeigt auf unseren Server, `http://www` → 308 auf `https://www`, dort 404 mit Standard-Zertifikat; Traefik mit HTTP-Challenge und globaler Umleitung auf HTTPS.
+- **Claude** · Router `soccerwww` im Container `soccer-website` (`docker-compose.yml`): Zertifikat über `letsencrypt`, Middleware `soccerweb-www` (redirectregex, dauerhaft) auf dieselbe Adresse ohne www; beide Router mit ausdrücklichem Dienst `soccerweb`. Test `test_www_leitet_auf_die_adresse_ohne_www` (Labels, Ausdruck und Ersetzung nachgerechnet, keine Schleife). Doku `01` Abschnitte 0, 3 und 8.
+
 ## 26.11.2026 – Version 0.27 eingespielt: Website live
 
 - **Carsten** · Version 0.27 eingespielt (`d6f712f`, Pull Request #30; Tests grün: 744 bestanden, 13 übersprungen, 18 langsame abgewählt; drei Testmails) und Livegang-Befehl ausgeführt: `/` = 301, `/de/` = 200, `/sitemap.xml` = 200, `/dashboard/` = 200, `/vorschau/` = 401. Prüfung im Browser (7 Punkte) bestanden.
