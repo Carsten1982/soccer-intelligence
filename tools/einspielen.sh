@@ -157,6 +157,20 @@ rm -f "$OFFEN"
 # Testmails über alle drei Versandwege (seit 0.23, Wunsch Carsten 20.11.2026, docs/09, Abschnitt 2.1).
 # Eine gescheiterte Testmail stoppt das Einspielen nicht, wird aber gemeldet.
 RELEASE_TEXT="$(sed -n 's/^APP_VERSION = "\(.*\)"/\1/p' app/core/settings.py | head -1) ($(git rev-parse --short HEAD))"
+# Seit 0.30: Testfälle und Version für das Showcase-Dashboard „Datenmonitoring“ (import/release.json, nur Zahlen).
+# Testfälle = bestanden + übersprungen + abgewählt (die langsamen laufen auf GitHub). Scheitert das, läuft alles weiter.
+python3 - "$BACKUP/tests.log" "$RELEASE_TEXT" "import/release.json" <<'PY' || info "Hinweis: release.json nicht geschrieben."
+import json, os, re, sys
+from datetime import datetime
+zeilen = [z for z in open(sys.argv[1], encoding="utf-8", errors="replace").read().splitlines() if re.search(r"\d+ passed", z)]
+zahl = lambda wort: int((re.search(r"(\d+) " + wort, zeilen[-1]) or [0, 0])[1]) if zeilen else 0
+daten = {"version": sys.argv[2].split(" ")[0], "tests": zahl("passed") + zahl("skipped") + zahl("deselected"),
+         "bestanden": zahl("passed"), "ergebnis": "bestanden", "zeit": datetime.now().replace(microsecond=0).isoformat()}
+tmp = sys.argv[3] + ".tmp"
+with open(tmp, "w", encoding="utf-8") as fh:
+    json.dump(daten, fh, ensure_ascii=False)
+os.replace(tmp, sys.argv[3])
+PY
 MAILS=0
 info "Testmails über alle drei Versandwege:"
 set +e

@@ -598,4 +598,61 @@ Computer einzeilig, bis 520 px höchstens 300 px breit mit festem Umbruch nach d
 | 0.27 | **Livegang** 26.11.2026: Website unter `/` (Container `soccer-website`), `index_ab` gesetzt, Archiv der laufenden Saison im Index, Texte zu „bestätigt“ (Methodik, Startseite, Glossar) |
 | 0.27.1 | `www.soccer-intelligence.com` leitet dauerhaft auf die Adresse ohne www weiter (Zertifikat für www) |
 | 0.28 | Cookie-Hinweis, Cookie-Einstellungen und Google Analytics 4 erst nach Zustimmung (Abschnitt 4.3) |
+| 0.29 | Englische Texte nach Release_14 (Design 571): «standout statistic(s)» statt «anomaly», Standard-Sätze S1–S3; Methodik DE: D1, D2 |
+| 0.30 | **Showcase** (Abschnitt 12): vier Seiten unter `/showcase…`, Dashboard „Datenmonitoring“ mit Live-Werten aus dem Backend |
 | später | Auswertung der Besucherzahlen (GA4), Rückblick für Fans |
+
+## 12. Showcase-Seiten (seit 0.30)
+
+Grundlage: Release_15 und Release_11 des Design-Chats, Entwürfe `Showcase_G`, `_Projekt`, `_KI`, `_Datenmonitoring`
+(Design 575); Entscheide Carsten 26.11.2026. **Kein Teil der Spiel-Plattform**, sondern ein Projekt-Showcase von Carsten
+Thiele für Bewerbungen. Code: `app/website/showcase.py`, Vorlagen `vorlagen/showcase/`, Stile `statisch/showcase.css`
+(Rahmen, von Hand) und `statisch/showcase-entwurf.css` (aus den eingebetteten Stilen der Entwürfe übernommen, eine Klasse
+je Stil – die Sicherheitsrichtlinie erlaubt keine eingebetteten Stile).
+
+| Seite | Adresse (DE) | Adresse (EN, vorbereitet) |
+|---|---|---|
+| Showcase | `/showcase` | `/en/showcase` |
+| Projekt | `/showcase/project` | `/en/showcase/project` |
+| KI-Agenten & Automatisierung | `/showcase/ki-automation` | `/en/showcase/ai-automation` |
+| Datenmonitoring (Dashboard) | `/showcase/ki-automation/data` | `/en/showcase/ai-automation/data` |
+
+- **Sichtbarkeit:** `noindex, nofollow` im HTML und im Kopf `X-Robots-Tag`; nicht in der Sitemap, nicht in robots.txt
+  gesperrt; **keine Verlinkung von der Plattform** (Test S3) – nur der Showcase verlinkt auf die Plattform. Kein
+  Cookie-Hinweis, keine Messung. Linkvorschau mit `og:title`, `og:description`, `og:image` (Banner mit Foto, 1200 × 630).
+- **Sprache:** nur Deutsch freigeschaltet; die englischen Texte stehen in `en.json` (Übersetzung des Design-Chats, an
+  Release_14 angepasst: „standout statistics“), werden aber erst nach der Übersetzungsprüfung freigeschaltet
+  (`SPRACHEN_FREI` in `showcase.py`). Bis dahin keine Sprachauswahl im Kopf.
+- **Nur Desktop:** Mindestbreite 1280 px, schmalere Fenster scrollen waagerecht; kein Handy-Layout.
+- **Bilder nur auf dem Server** (`website-bilder/`, nie in Git): `showcase-portrait.webp` (Foto im Hero, aus dem Entwurf,
+  grün eingefärbt) und `showcase-vorschau.jpg` (Linkvorschau). Fehlt das Foto, steht ein neutraler Platzhalter; fehlt
+  das Vorschaubild, gibt es kein `og:image`.
+- **Navigation:** Showcase · Projekt · Plattform (Startseite der Plattform) · KI & Automatisierung · Kontakt; aktiver
+  Reiter mit `aria-current`. KI-Seite: Karte 01 → Dashboard; Karten 02–04 ohne Link, Status „In Entwicklung“ (nur das
+  Datenmonitoring ist im Betrieb).
+- **Seite „Projekt“:** Version aus `APP_VERSION` (eine Quelle), Spiele live aus der Datenbank (gleiche Zahl wie im
+  Dashboard), 23 Kombinationen live aus der Schwellendatei (wie die Methodik), Ligen 4. Feste Zahlen nach Entscheid
+  Carsten 26.11.2026: 7’524 Codezeilen Backend, 4’621 Frontend, „> 800 Testfälle“ (gezählt am 26.11.2026: rund 5’200
+  Rechenkern/Import/Betrieb + 2’200 internes Dashboard, 4’500 Website; 810 Testfälle). Karte „Wettbewerbsmonitoring“ mit
+  Chip „In Entwicklung“; n8n bleibt.
+- **Dashboard „Datenmonitoring“** – Werte serverseitig aus dem Backend (keine öffentliche Schnittstelle), Seite höchstens
+  1 Minute alt, nur zusammengefasste Werte (nie Container- oder Servernamen, Pfade, Fehlertexte):
+
+| Anzeige | Quelle |
+|---|---|
+| Spiele in der Datenbank, je Liga (Ring), Ligen; Datenprüfung (Fehler, Warnungen, Hinweise in Datenbank und Spielplan); letzter Datenstand (Änderung der Datenbank) | geladener Bestand der Website |
+| Letzter Import | letzter erfolgreicher Lauf (Importstand) |
+| Letzte Importe (Tabelle, fünf Läufe), „Diese Woche: …“ | `import/ereignisse.jsonl` |
+| Nächster geplanter Lauf | Spielplan (Anpfiff + 2¼ h), Wiederholung aus dem Zustand, sonst Kontrolllauf 04:00 |
+| Hinweise im Verlauf (7 Tage), Datensicherung | `import/kennzahlen.json` (Import-Dienst, täglich, ab 0.30) |
+| Systemstatus, offene Alarme, Alarme der Woche | `import/alarme.json`, `import/ueberwachung.json` |
+| Website, Sitemap, Server-Auslastung, Dienste, Verfügbarkeit (30 Tage) | `import/server.json` (Prüfskript jede Minute; Verfügbarkeit je Tag ab 0.30) |
+| Abfragen heute (Anteil der eigenen Tagesgrenze) | Rohdaten des Imports |
+| Automatische Tests, letzte Version | `import/release.json` (Einspiel-Skript, ab dem Einspielen mit der Fassung 0.30 des Skripts) |
+
+- **Leere Zustände** (Entscheid Carsten 26.11.2026, Texte vorläufig, Design-Chat kann verfeinern): „Wird beim nächsten
+  Release erfasst“, „Noch keine Läufe im Protokoll.“, „Verlauf ab … (tägliche Aufzeichnung)“, „Messung ab diesem
+  Release“, „Werte vorübergehend nicht verfügbar“ (Prüfskript meldet sich länger als 10 Minuten nicht), „Keine“ (Alarme).
+- **Tests:** `tests/test_showcase_030.py` (S1–S8). axe-core 4.10 (WCAG 2 A/AA mit Kontrast, Best Practices) auf allen vier
+  Seiten bei 1280 und 1680 px ohne Befund; kein Querscrollen ab 1280 px; keine Meldung der Sicherheitsrichtlinie.
+

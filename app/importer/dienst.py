@@ -411,6 +411,11 @@ def betrieb_pruefen(base: Path, data_dir: Path, now: datetime, senden=None) -> N
         alarme.verarbeiten(base / "alarme.json", pruefungen.befunde(base, data_dir, local), local, senden, protokoll)
     except Exception:  # noqa: BLE001
         traceback.print_exc()
+    try:                                                  # seit 0.30: Tageswerte für den Showcase (Datenmonitoring)
+        from betrieb import kennzahlen
+        kennzahlen.aktualisieren(base, E.BACKUP_DIR, local)
+    except Exception:  # noqa: BLE001
+        traceback.print_exc()
     try:
         state = load_state(base)
         versuch = state.get("statusmail_versuch")

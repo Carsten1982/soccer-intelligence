@@ -25,6 +25,7 @@ from . import einstellungen as W
 from . import kontakt as KT
 from . import methodik as MT
 from . import seo
+from . import showcase as SC
 from . import sitemap as SM
 from .daten import Daten, zeitreise
 from .seiten import Kontext, archiv_html, cookie_html, fehlt_html, hinweis_html, inhalt_html, spiel_html, spieltag_html, start_html
@@ -66,6 +67,9 @@ THEME_FARBE = "#0B3D2E"                         # Markengrün (--gruen), auch <m
 HINTERGRUND = "#F4F7F2"                         # Seitenhintergrund (--bg)
 SEITE_CACHE = "public, max-age=300"             # Browser 5 Minuten (Beschluss 19.11.2026); Vorschau ohne Cache
 DATENSEITEN = ("start", "spieltag", "archiv", "spiel")
+# Bilder aus website-bilder/ (nur auf dem Server, nie in Git): Foto der Startseite, seit 0.30 Foto und Linkvorschau
+# des Showcase. Andere Dateinamen gibt es nicht (404).
+BILDER = {W.FOTO: "image/jpeg", SC.FOTO: "image/webp", SC.VORSCHAU_BILD: "image/jpeg"}
 
 
 class Antwort:
@@ -186,11 +190,12 @@ def beantworten(pfad: str, query: str, daten: Daten = DATEN, cookies: str | None
         return Antwort(200, SM.robots().encode("utf-8"), "text/plain; charset=utf-8", **{"Cache-Control": "public, max-age=3600"})
     if rest == "/sitemap.xml" or rest.startswith("/sitemaps/"):
         return _sitemap(rest, daten)
-    if rest == f"/bilder/{W.FOTO}":                         # Foto der Startseite, nur vom Server (Q6)
-        foto = W.BILDER / W.FOTO
+    bild = BILDER.get(rest.removeprefix("/bilder/")) if rest.startswith("/bilder/") else None
+    if bild:                                                # Fotos nur vom Server (Q6; seit 0.30 auch Showcase)
+        foto = W.BILDER / rest.removeprefix("/bilder/")
         if not foto.is_file():
             return Antwort(404, b"nicht gefunden", "text/plain; charset=utf-8")
-        return Antwort(200, foto.read_bytes(), "image/jpeg", **{"Cache-Control": "public, max-age=3600"})
+        return Antwort(200, foto.read_bytes(), bild, **{"Cache-Control": "public, max-age=3600"})
 
     werte = parse_qs(query)
     # Zeitreise (?datum=) nur in der Vorschau; die öffentliche Website zeigt immer den echten Stand (seit 0.27, Livegang)
@@ -210,6 +215,18 @@ def beantworten(pfad: str, query: str, daten: Daten = DATEN, cookies: str | None
         return Antwort(200, MT.excel(datei), MT.XLSX, **{
             "Cache-Control": "no-store" if W.VORSCHAU else "public, max-age=86400",
             "Content-Disposition": f'attachment; filename="{MT.DATEI[datei]}"'})
+
+    sc = SC.erkennen(rest)                                   # Showcase (seit 0.30): nie im Index, nie zwischen Nutzern
+    if sc:                                                   # unterschiedlich; höchstens 1 Minute alt
+        seite, lang = sc
+        schluessel = ("showcase", id(daten), seite, lang, zp.jetzt.replace(second=0, microsecond=0), W.VORSCHAU,
+                      (W.BILDER / SC.FOTO).is_file())
+        a = SEITEN.holen(schluessel, lambda: _html(200, SC.html(seite, lang, k, daten, zp.jetzt)))
+        kopf = {**a.kopf, "X-Robots-Tag": "noindex, nofollow"}
+        if not W.VORSCHAU:
+            kopf["Cache-Control"] = "public, max-age=60"
+        b = Antwort(a.status, a.inhalt, **kopf)
+        return b
 
     erk = AD.erkennen(rest)
     if erk.weiter and erk.status in (301, 302) and (erk.ziel is None or erk.ziel.art != "spiel"):

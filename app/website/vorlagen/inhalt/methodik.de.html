@@ -78,7 +78,7 @@
   {% call aufklapp("Wie berechnen wir die Spielwerte?") %}
   <ul>
     <li><b>Die acht Kennzahlen:</b> Erwartete Tore, Über 2,5 Tore, Gelbe Karten, Ecken, Tore 1. Halbzeit, Tore 2. Halbzeit, Beide Teams treffen, Schüsse aufs Tor.</li>
-    <li><b>Erwartung:</b> aus den letzten 10 Ligaspielen beider Teams, bis zwei Tage vor dem Anpfiff, aus laufender Saison und Vorsaison. Bei Gelben Karten zählt die Summe beider Teams, bei den übrigen Kennzahlen der Mittelwert.</li>
+    <li><b>Erwartung:</b> aus den letzten 10 Ligaspielen jeder Mannschaft, bis zwei Tage vor dem Anpfiff, aus laufender Saison und Vorsaison. Bei Gelben Karten zählt die Summe beider Teams, bei den übrigen Kennzahlen der Mittelwert.</li>
     <li><b>Vergleichswert:</b> Ligadurchschnitt der 20 Spieltage vor dem Spiel. Bei „Über 2,5 Tore“ gilt die feste Marke 2,5.</li>
     <li><b>Abweichung:</b> Erwartung im Verhältnis zum Vergleichswert, in Prozent, auf zwei Stellen gerundet.</li>
     <li><b>Auffällig</b> ist eine Abweichung, die strikt größer als die Schwelle ist. Genau auf der Schwelle (15,00 %) zählt nicht, 15,01 % schon.</li>
@@ -88,7 +88,7 @@
   {% endcall %}
   {% call aufklapp("Wie prüfen wir die Signalqualität?") %}
   <ul>
-    <li><b>Unsicherheit:</b> Auch bei gutem Ergebnis spielt Zufall mit. Darum geben wir eine Spanne an (95-%-Intervall nach Wilson), in der der Mehrwert aus heutiger Sicht liegen dürfte. Je weniger Spiele, desto breiter die Spanne. Das misst die Unsicherheit der Daten und ist keine Zusage für kommende Spiele.</li>
+    <li><b>Unsicherheit:</b> Auch bei gutem Ergebnis spielt Zufall mit. Darum geben wir eine Spanne an (95-%-Intervall nach Wilson), die zeigt, wie unsicher der gemessene Mehrwert ist. Je weniger Spiele, desto breiter die Spanne. Sie beschreibt die Unsicherheit in den historischen Daten und ist keine Prognose und keine Zusage für kommende Spiele.</li>
     <li><b>Mindestanforderungen:</b> Eine Schwelle bekommt nur dann eine Signalqualität, wenn sie mindestens 50 Spiele hat, der Mehrwert bei mindestens +5 Prozentpunkten liegt, der untere Rand der Spanne über +2 Prozentpunkten liegt und der Vorteil in mindestens zwei Dritteln der Saisons auftrat. Zusätzlich muss die Trefferquote mindestens 50 % betragen (gering ab 50 %, mittel ab 55 %, stark ab 60 % und +8 Prozentpunkten).</li>
     <li><b>Schwellen-Auswahl:</b> Getestet werden 10, 15, 20, 25, 30 und 35 %. Es gilt die Schwelle mit der besten Signalqualität, bei Gleichstand die mit mehr Spielen. Neu gerechnet wird einmal pro Saison.</li>
     <li><b>Test mit unbekannten Saisons:</b> Weil wir die beste Schwelle aus vielen auswählen, sehen die Zahlen im Rückblick etwas besser aus als später. Deshalb haben wir geprüft, wie die Schwellen in Saisons abschneiden, die bei der Auswahl nicht verwendet wurden. Dort traf „stark“ in rund 58 % statt 64 % der Fälle, immer noch rund 6 Prozentpunkte besser als der Normalfall. Auch das bleibt ein Blick zurück. Die laufende Saison 2026/27 wurde bei der Auswahl nicht verwendet. Mit den heutigen Schwellen trifft „stark“ dort bisher in 66 % der Fälle (Normalfall: 54 %). Das sind erst 163 Fälle und damit noch wenig aussagekräftig.</li>

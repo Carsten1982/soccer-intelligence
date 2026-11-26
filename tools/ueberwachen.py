@@ -221,7 +221,15 @@ def server_json(datei: Path, m: dict, now: datetime) -> None:
     for k in ("festplatte", "speicher", "cpu"):
         if m.get(k) is not None:
             woche[k] = max(woche.get(k) or 0, m[k])
-    alarme.speichern(datei, {**m, "woche": woche})
+    # Seit 0.30 (Showcase, Datenmonitoring): Verfügbarkeit der Website je Tag – [Prüfungen, davon erreichbar], 35 Tage.
+    # Erreichbar heisst: die Startseite (/de/, vor dem Livegang /) antwortet mit 200.
+    tage = dict(alt.get("verfuegbarkeit") or {})
+    tag = now.date().isoformat()
+    web = m.get("website") or {}
+    n, ok = tage.get(tag, [0, 0])
+    tage[tag] = [n + 1, ok + (1 if web.get("/de/", web.get("/")) == 200 else 0)]
+    tage = dict(sorted(tage.items())[-35:])
+    alarme.speichern(datei, {**m, "woche": woche, "verfuegbarkeit": tage})
 
 
 def pruefen(projekt: Path = PROJEKT, now: datetime | None = None, senden=None) -> list[alarme.Befund]:

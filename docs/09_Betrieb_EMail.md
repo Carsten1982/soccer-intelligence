@@ -125,6 +125,16 @@ der Mailversand noch nicht eingerichtet, sagt das Skript das und schickt nichts.
    erreichbar: n Seiten in m Teil-Sitemaps.“ bzw. „Sitemap nicht erreichbar (…)“. Abruf von `/sitemap.xml` und allen
    Teilen über die Domain.
 
+### 4.1 Kennzahlen für den Showcase (seit 0.30)
+
+Für das Dashboard „Datenmonitoring“ des Showcase (`08_Website.md`, Abschnitt 12) schreibt das Backend drei kleine
+Dateien nach `import/` (die Website liest sie nur):
+- `kennzahlen.json` – Import-Dienst (`betrieb/kennzahlen.py`), einmal am Tag und nach jeder neuen Fassung der
+  Datenbank: Ergebnis der Datenprüfung (Fehler, Warnungen, Hinweise) als Verlauf (60 Tage) und Backups (Anzahl, neueste).
+- `server.json` – Prüfskript (`tools/ueberwachen.py`), jede Minute; zusätzlich `verfuegbarkeit`: je Tag
+  [Prüfungen, davon Startseite erreichbar], 35 Tage.
+- `release.json` – Einspiel-Skript nach den Tests: Version, Anzahl Testfälle (bestanden + übersprungen + abgewählt).
+
 ## 5. Laufzeiten (M7)
 
 - Datei `app/config/laufzeiten.toml` (keine Geheimnisse, Änderung über Git): je Eintrag Name, Ablaufdatum,

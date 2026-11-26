@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="{{ lang }}">
+{#- Rahmen der Showcase-Seiten (seit 0.30, Entwürfe Showcase_G*, Design 575; docs/08_Website.md, Abschnitt 12).
+    Kein Teil der Spiel-Plattform: eigener Kopf (Showcase · Projekt · Plattform · KI & Automatisierung · Kontakt) und
+    Fuss, nie im Index (noindex im HTML und im Kopf X-Robots-Tag), nicht in der Sitemap, keine Messung, kein
+    Cookie-Hinweis. Die Plattform verlinkt nie hierher; nur der Showcase verlinkt auf die Plattform. -#}
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1280">
+<title>{{ s('title') }}</title>
+<meta name="description" content="{{ s('description') }}">
+<meta name="robots" content="noindex, nofollow">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Soccer Intelligence">
+<meta property="og:title" content="{{ s('title') }}">
+<meta property="og:description" content="{{ s('description') }}">
+<meta property="og:url" content="{{ absolut }}">
+<meta property="og:locale" content="{{ og_locale }}">
+{% if vorschau_bild %}<meta property="og:image" content="{{ vorschau_bild }}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{{ k('vorschau_alt') }}">
+{% endif %}
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="{{ url('/favicon.ico') }}" sizes="32x32">
+<link rel="icon" href="{{ url('/favicon.svg') }}" type="image/svg+xml">
+<link rel="apple-touch-icon" href="{{ url('/apple-touch-icon.png') }}">
+<meta name="theme-color" content="#0B3D2E">
+<link rel="preload" href="{{ statisch('schriften/inter-latin-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="{{ statisch('schriften/outfit-latin-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="{{ statisch('showcase-entwurf.css') }}">
+<link rel="stylesheet" href="{{ statisch('showcase.css') }}">
+</head>
+<body>
+<a class="sprung" href="#inhalt">{{ t('allgemein.zum_inhalt') }}</a>
+<div class="sc-seite">
+<div class="sc-rahmen">
+<header class="sc-kopf">
+  <a class="sc-logo" href="{{ sc_url('start') }}">
+    <svg width="44" height="44" viewBox="0 0 28 28" fill="none" aria-hidden="true"><rect x="3" y="15" width="5" height="9" rx="1.6" fill="#7CCB1F"/><rect x="11.5" y="9" width="5" height="15" rx="1.6" fill="#7CCB1F"/><rect x="20" y="3" width="5" height="21" rx="1.6" fill="#0B3D2E"/></svg>
+    <span>Soccer Intelligence</span>
+  </a>
+  <nav class="sc-nav" aria-label="{{ k('nav_label') }}">
+    <a class="sc-reiter" href="{{ sc_url('start') }}"{% if reiter == 'start' %} aria-current="page"{% endif %}>{{ k('nav_showcase') }}</a>
+    <a class="sc-reiter" href="{{ sc_url('projekt') }}"{% if reiter == 'projekt' %} aria-current="page"{% endif %}>{{ k('nav_projekt') }}</a>
+    <a class="sc-reiter" href="{{ link('start') }}">{{ k('nav_plattform') }}</a>
+    <a class="sc-reiter" href="{{ sc_url('ki') }}"{% if reiter == 'ki' %} aria-current="page"{% endif %}>{{ k('nav_ki') }}</a>
+    {#- Sprachauswahl folgt, sobald die englischen Texte geprüft sind (Entscheid Carsten 26.11.2026). -#}
+    <a class="sc-kontakt" href="{{ link('kontakt') }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>{{ k('kontakt') }}</a>
+  </nav>
+</header>
+<main id="inhalt">
+{% block inhalt %}{% endblock %}
+</main>
+</div>
+<footer class="sc-fuss">
+  <svg viewBox="0 0 600 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g fill="none" stroke="#F4F7F2" stroke-width="2.5"><circle cx="470" cy="100" r="70"/><line x1="470" y1="-20" x2="470" y2="220"/><rect x="540" y="40" width="80" height="120"/></g></svg>
+  <div class="sc-fuss-innen">
+    <a class="sc-fuss-logo" href="{{ sc_url('start') }}">
+      <svg width="48" height="48" viewBox="0 0 28 28" fill="none" aria-hidden="true"><rect x="3" y="15" width="5" height="9" rx="1.6" fill="#7CCB1F"/><rect x="11.5" y="9" width="5" height="15" rx="1.6" fill="#C6F26B"/><rect x="20" y="3" width="5" height="21" rx="1.6" fill="#F4F7F2"/></svg>
+      <span><span class="name">Soccer Intelligence</span><span class="tag">{{ k('tagline') }}</span></span>
+    </a>
+    <nav aria-label="{{ k('fuss_label') }}">
+      <a href="{{ link('kontakt') }}">{{ k('kontakt') }}</a>
+      <a href="{{ link('impressum') }}">{{ k('impressum') }}</a>
+      <a href="{{ link('datenschutz') }}">{{ k('datenschutz') }}</a>
+    </nav>
+  </div>
+  <div class="sc-streifen" aria-hidden="true"></div>
+</footer>
+</div>
+</body>
+</html>
