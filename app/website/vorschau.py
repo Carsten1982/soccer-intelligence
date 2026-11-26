@@ -69,7 +69,7 @@ SEITE_CACHE = "public, max-age=300"             # Browser 5 Minuten (Beschluss 1
 DATENSEITEN = ("start", "spieltag", "archiv", "spiel")
 # Bilder aus website-bilder/ (nur auf dem Server, nie in Git): Foto der Startseite, seit 0.30 Foto und Linkvorschau
 # des Showcase. Andere Dateinamen gibt es nicht (404).
-BILDER = {W.FOTO: "image/jpeg", SC.FOTO: "image/webp", SC.VORSCHAU_BILD: "image/jpeg"}
+BILDER = {W.FOTO: "image/jpeg", SC.FOTO: "image/webp", **{b: "image/jpeg" for b in SC.VORSCHAU_BILD.values()}}
 
 
 class Antwort:
@@ -220,7 +220,7 @@ def beantworten(pfad: str, query: str, daten: Daten = DATEN, cookies: str | None
     if sc:                                                   # unterschiedlich; höchstens 1 Minute alt
         seite, lang = sc
         schluessel = ("showcase", id(daten), seite, lang, zp.jetzt.replace(second=0, microsecond=0), W.VORSCHAU,
-                      (W.BILDER / SC.FOTO).is_file())
+                      (W.BILDER / SC.FOTO).is_file(), (W.BILDER / SC.VORSCHAU_BILD[lang]).is_file())
         a = SEITEN.holen(schluessel, lambda: _html(200, SC.html(seite, lang, k, daten, zp.jetzt)))
         kopf = {**a.kopf, "X-Robots-Tag": "noindex, nofollow"}
         if not W.VORSCHAU:

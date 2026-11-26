@@ -1,6 +1,6 @@
 """Showcase-Seiten (seit 0.30; Release_15, Entwürfe Showcase_G*, Design 575; docs/08_Website.md, Abschnitt 12).
 
-S1 Adressen: vier Seiten DE (mit und ohne Schrägstrich), Englisch noch nicht freigeschaltet (404); noindex im HTML und
+S1 Adressen: vier Seiten DE (mit und ohne Schrägstrich), unbekannte Adressen 404 (Englisch seit 0.31: test_showcase_031); noindex im HTML und
    im Kopf X-Robots-Tag; keine eingebetteten Stile oder Skripte; eine h1; eindeutige IDs.
 S2 Navigation und Verlinkung: aktiver Reiter, Plattform-, Kontakt-, Impressum- und Datenschutz-Links, Karte 01 auf
    das Dashboard, Karten 02–04 ohne Link; keine Verweise auf Entwurfsdateien.
@@ -54,7 +54,9 @@ def test_s1_seiten_noindex_und_sauber(dienst, seite, pfad):
         html = a.inhalt.decode()
         assert a.status == 200 and a.kopf["X-Robots-Tag"] == "noindex, nofollow"
         assert '<meta name="robots" content="noindex, nofollow">' in html and '<html lang="de">' in html
-        assert html.count("<h1") == 1 and "style=" not in html and "<style" not in html and "<script" not in html
+        assert html.count("<h1") == 1 and "style=" not in html and "<style" not in html
+        # Seit 0.31 nur site.js für das Sprachmenü, kein eingebettetes Skript
+        assert re.findall(r"<script[^>]*>", html) == [re.search(r'<script src="[^"]*/statisch/site\.js\?v=\w+" defer>', html).group(0)]
         assert not re.search(r"\son[a-z]+=", html)
         ids = re.findall(r'\sid="([^"]+)"', html)
         assert len(ids) == len(set(ids))
@@ -62,9 +64,9 @@ def test_s1_seiten_noindex_und_sauber(dienst, seite, pfad):
         assert f'<meta name="description" content="{escape(t(f"showcase.{seite}.description"))}">' in html
 
 
-def test_s1_englisch_noch_nicht_frei(dienst):
-    assert SC.SPRACHEN_FREI == ("de",)
-    for p in ("/en/showcase", "/en/showcase/project", "/en/showcase/ai-automation/data"):
+def test_s1_unbekannte_adressen(dienst):
+    # 0.30: Englisch noch 404; seit 0.31 freigeschaltet (test_showcase_031.py, A1)
+    for p in ("/en/showcase/ki-automation", "/showcase/ai-automation", "/en/showcase/gibt-es-nicht"):
         assert _seite(dienst, p).status == 404
     assert SC.erkennen("/showcase/gibt-es-nicht") is None and SC.erkennen("/showcases") is None
 
@@ -86,7 +88,7 @@ def test_s2_navigation(dienst, seite, aktiv):
     reiter = re.findall(r'<a class="sc-reiter" href="([^"]+)"', nav)
     assert reiter == ["/vorschau/showcase", "/vorschau/showcase/project", "/vorschau/de/", "/vorschau/showcase/ki-automation"]
     assert 'href="/vorschau/de/kontakt/"' in nav
-    fuss = html.split('<footer class="sc-fuss">', 1)[1]
+    fuss = html.split('<footer class="sc-fuss', 1)[1]
     for ziel in ("/vorschau/showcase", "/vorschau/de/kontakt/", "/vorschau/de/impressum/", "/vorschau/de/datenschutz/"):
         assert f'href="{ziel}"' in fuss
     assert ".dc.html" not in html and 'href="#' not in html.replace('href="#inhalt"', "")
@@ -283,7 +285,7 @@ def test_s8_vorschau_bild_und_foto(dienst, tmp_path, monkeypatch):
     html = _seite(dienst, "/showcase").inhalt.decode()
     assert "og:image" not in html and "sc-foto-leer" in html and "<img" not in html
     (tmp_path / SC.FOTO).write_bytes(b"RIFF....WEBP")
-    (tmp_path / SC.VORSCHAU_BILD).write_bytes(b"\xff\xd8")
+    (tmp_path / SC.VORSCHAU_BILD["de"]).write_bytes(b"\xff\xd8")
     html = _seite(dienst, "/showcase").inhalt.decode()
     assert '<meta property="og:image" content="https://soccer-intelligence.com/bilder/showcase-vorschau.jpg">' in html
     assert '<img src="/vorschau/bilder/showcase-portrait.webp" alt="Porträt von Carsten Thiele"' in html

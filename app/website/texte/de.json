@@ -347,12 +347,17 @@
     "chip_endstand_folgt": "Gespielt · Endstand folgt",
     "hinweis_endstand_folgt": "Die Auswertung erscheint, sobald der Endstand vorliegt. Bis dahin siehst du die Erwartungswerte.",
     "a_titel": "Erwartet und tatsächlich",
+    "a_leg_basis_titel": "Ligadurchschnitt / Vergleichswert:",
+    "a_leg_basis": "Der Wert, an dem wir uns orientieren. Meist der Ligadurchschnitt, bei „Über 2,5 Tore“ der feste Wert von 2,5.",
     "a_leg_erwartung_titel": "Erwartungswert:",
-    "a_leg_erwartung": "Der Wert, den wir vor dem Spiel aus den letzten 10 Spielen beider Teams berechnet haben.",
+    "a_leg_erwartung": "Der Wert, den wir aus den letzten 10 Ligaspielen jeder Mannschaft berechnet haben.",
     "a_leg_ist_titel": "Tatsächlich:",
-    "a_leg_ist": "Der Wert, der im Spiel erreicht wurde.",
+    "a_leg_ist": "Der im Spiel erreichte Wert.",
+    "a_leg_sig_titel": "Signalqualität:",
+    "a_leg_sig": "Zeigt, wie häufig sich vergleichbare Auffälligkeiten in der Vergangenheit bestätigt haben (stark, mittel oder gering).",
     "a_leg_ok_titel": "Bestätigt:",
-    "a_leg_ok": "Der tatsächliche Wert liegt in der erwarteten Richtung vom Ligadurchschnitt. Bei „Über 2,5 Tore“ zählen 3 Tore oder mehr bzw. 2 Tore oder weniger, bei „Beide Teams treffen“ Ja bzw. Nein.",
+    "a_leg_ok": "Wir prüfen, ob der tatsächliche Wert in die erwartete Richtung vom Ligadurchschnitt aus geht. Beispiel: Bei 12 erwarteten Ecken und einem Ligadurchschnitt von 10,9 ist die Tendenz auch bei 11 Ecken bestätigt. Der Erwartungswert muss also nicht exakt erreicht werden.",
+    "a_leg_schluss": "Bei „Über 2,5 Tore“ und „Beide Teams treffen“ gelten die jeweiligen Torgrenzen bzw. Ja-/Nein-Ergebnisse.",
     "a_spalte_liga": "Ligadurchschnitt",
     "a_spalte_erwartung": "Erwartungswert",
     "a_spalte_ist": "Tatsächlich",
@@ -690,7 +695,8 @@
       "datenschutz": "Datenschutz",
       "tagline": "Ein persönliches Digitalprojekt von Carsten Thiele · 2026",
       "fuss_label": "Fusszeile",
-      "vorschau_alt": "Soccer Intelligence – Porträt von Carsten Thiele und Titel des Projekt-Showcase"
+      "vorschau_alt": "Soccer Intelligence – Porträt von Carsten Thiele und Titel des Projekt-Showcase",
+      "sprache_label": "Sprache wählen"
     },
     "start": {
       "alt": "Porträt von Carsten Thiele",
@@ -922,7 +928,8 @@
       "alarme_woche": "Diese Woche: {n}",
       "verfuegbar_seit": "Gemessen seit {datum}",
       "verfuegbar_30": "Jede Minute geprüft",
-      "verlauf_folgt": "Messung ab diesem Release"
+      "verlauf_folgt": "Messung ab diesem Release",
+      "spaeter": "{datum} {zeit}"
     }
   }
 }

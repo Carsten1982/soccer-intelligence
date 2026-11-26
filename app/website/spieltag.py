@@ -258,6 +258,7 @@ def archiv_daten(daten: Daten, web: W.WebLiga, saison: str, nr: int, zp: Zeitpun
              "stand": zp.stand.isoformat(timespec="minutes") if zp.stand else None, "zeitreise": zp.zeitreise,
              "gesperrt": b.gesperrt, "veraltet": A.is_stale(zp.stand, zp.jetzt), "spiele": [], "vorher": None,
              "nachher": None, "nachher_aktuell": False, "beginn": None, "partien": 0, "auffaellig": 0,
+             "abgeschlossen": False,
              "sonderspiele": {"nachholspiel": 0, "vorgezogen": 0}}
     fixtures = b.fx.leagues.get(web.name)
     if fixtures is None or fixtures.empty:
@@ -286,6 +287,10 @@ def archiv_daten(daten: Daten, web: W.WebLiga, saison: str, nr: int, zp: Zeitpun
     seite["spiele"] = eintraege
     seite["partien"] = sum(1 for s in eintraege if not s["sonderspiel"])
     seite["auffaellig"] = sum(1 for s in eintraege if (s["qualitaet"] or s["art"]) in AUFFAELLIG)
+    # Seit 0.31 (Release_17, Entscheid Carsten 26.11.2026): Sind alle Partien gespielt, entfallen Legende,
+    # „Wie lese ich das?“ und die Zahl „· n mit Auffälligkeit“. Steht noch eine Partie aus (laufender Spieltag,
+    # verschobenes Spiel), bleibt die Seite wie bisher.
+    seite["abgeschlossen"] = bool(eintraege) and all(s["art"] == "gespielt" for s in eintraege)
     for art in ("nachholspiel", "vorgezogen"):
         seite["sonderspiele"][art] = sum(1 for s in eintraege if s["sonderspiel"] == art)
     nummern = sorted({int(x) for x in fxp.loc[fxp["saison"] == saison, "spieltag"]})

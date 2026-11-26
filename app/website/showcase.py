@@ -1,8 +1,9 @@
 """Showcase-Seiten (seit 0.30; Release_15 des Design-Chats, Entwürfe Showcase_G*, Design 575; docs/08, Abschnitt 12).
 
 Vier Seiten über das Projekt, nicht Teil der Spiel-Plattform: /showcase, /showcase/project, /showcase/ki-automation
-und /showcase/ki-automation/data (Dashboard „Datenmonitoring“). Nur Desktop, nie im Index, keine Messung. Englisch ist
-vorbereitet (/en/showcase/…), aber erst nach der Übersetzungsprüfung freigeschaltet (Entscheid Carsten 26.11.2026).
+und /showcase/ki-automation/data (Dashboard „Datenmonitoring“). Nur Desktop, nie im Index, keine Messung. Englisch seit
+0.31 unter /en/showcase, /en/showcase/project, /en/showcase/ai-automation und /en/showcase/ai-automation/data, mit
+Sprachauswahl im Kopf (Release_15 §9.1; Texte nach Release_16/18, Entscheid Carsten 26.11.2026).
 
 Das Dashboard liest die Werte serverseitig aus dem Backend (Entscheid Carsten 26.11.2026, keine öffentliche
 Schnittstelle) und zeigt nur zusammengefasste Angaben – nie Container- oder Servernamen, Pfade oder Fehlertexte:
@@ -31,11 +32,11 @@ PFADE = {"de": {"start": "/showcase", "projekt": "/showcase/project", "ki": "/sh
                 "daten": "/showcase/ki-automation/data"},
          "en": {"start": "/en/showcase", "projekt": "/en/showcase/project", "ki": "/en/showcase/ai-automation",
                 "daten": "/en/showcase/ai-automation/data"}}
-SPRACHEN_FREI = ("de",)              # Englisch erst nach der Übersetzungsprüfung (Entscheid Carsten 26.11.2026)
+SPRACHEN_FREI = ("de", "en")        # Englisch seit 0.31 freigeschaltet (Release_15 §9.1, Entscheid Carsten 26.11.2026)
 REITER = {"start": "start", "projekt": "projekt", "ki": "ki", "daten": "ki"}
 STATUS = {"s1": "live", "s2": "dev", "s3": "dev", "s4": "dev"}   # nur das Datenmonitoring ist im Betrieb (26.11.2026)
 FOTO = "showcase-portrait.webp"                                   # nur auf dem Server (website-bilder/), nie in Git
-VORSCHAU_BILD = "showcase-vorschau.jpg"                           # Linkvorschau 1200 × 630, ebenfalls nur auf dem Server
+VORSCHAU_BILD = {"de": "showcase-vorschau.jpg", "en": "showcase-vorschau-en.jpg"}   # Linkvorschau 1200 × 630, nur auf dem Server
 LIGEN = ("Bundesliga", "Premier League", "Serie A", "LaLiga")     # Reihenfolge wie im Entwurf
 RING = ("#C6F26B", "#7CCB1F", "#2E8B2A", "#0B3D2E")
 ANLASS = ("kontrolle", "spiel", "wiederholung")
@@ -187,7 +188,7 @@ def _wann(z: datetime, jetzt: datetime, lang: str) -> str:
         return t("showcase.daten.heute", lang, zeit=f"{z:%H:%M}")
     if z.date() == jetzt.date() + timedelta(days=1):
         return t("showcase.daten.morgen", lang, zeit=f"{z:%H:%M}")
-    return f"{datum(z.date(), lang, True)} {z:%H:%M}"
+    return t("showcase.daten.spaeter", lang, datum=datum(z.date(), lang, True), zeit=f"{z:%H:%M}")
 
 
 def _verlauf(kz: dict, lang: str) -> dict:
@@ -339,17 +340,22 @@ def html(seite: str, lang: str, k, daten, jetzt: datetime) -> str:
     from .seiten import ENV, _werte
     k = k.mit(lang=lang, ziel=None)
     foto = W.BILDER / FOTO
-    bild = W.BILDER / VORSCHAU_BILD
+    bild = W.BILDER / VORSCHAU_BILD[lang]
     werte = {
         **_werte(k),
         "s": lambda key, **w: t(f"showcase.{seite}.{key}", lang, **w),
         "k": lambda key, **w: t(f"showcase.kopf.{key}", lang, **w),
         "sc_url": lambda ziel: url(k.prefix, ziel, lang),
         "reiter": REITER[seite],
+        "seite": seite,
+        "sprachen": SPRACHEN_FREI,
+        "sprachname": W.SPRACHNAME,
+        "sprach_url": lambda sp: url(k.prefix, seite, sp),
+        "sc_alternates": [(sp, W.DOMAIN + PFADE[sp][seite]) for sp in SPRACHEN_FREI] if len(SPRACHEN_FREI) > 1 else [],
         "absolut": W.DOMAIN + PFADE[lang][seite],
         "og_locale": W.OG_LOCALE[lang],
         "foto": k.url(f"/bilder/{FOTO}") if foto.is_file() else None,
-        "vorschau_bild": W.DOMAIN + f"/bilder/{VORSCHAU_BILD}" if bild.is_file() else None,
+        "vorschau_bild": W.DOMAIN + f"/bilder/{VORSCHAU_BILD[lang]}" if bild.is_file() else None,
         "status": STATUS,
         "chip_text": lambda key: ("● " if STATUS[key] == "live" else "○ ")
         + t(f"showcase.ki.{'st_live' if STATUS[key] == 'live' else 'st_dev'}", lang),
