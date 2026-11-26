@@ -5,6 +5,11 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 26.11.2026 – Version 0.31 eingespielt, Repository öffentlich
+
+- **Carsten** · Version 0.31 eingespielt (`685338b`, Pull Request #36); Prüfung im Browser und Testmails in Ordnung. Showcase-Foto und beide Vorschaubilder auf dem Server. Repository auf GitHub öffentlich geschaltet, README mit vier Screenshots (`docs/*.png`).
+- **Claude** · Prüfung des öffentlichen Repositorys (79 Commits, 3 Zweige): keine Schlüssel, Tokens, Passwörter oder Hashes, `.env` nie committet, keine private E-Mail-Adresse. Offen: Datenrechte der Datenbank-Kopien und API-Rohdaten (`tests/referenz/`, frühere `data/` in der Historie), Schutz von `main`, Secret scanning; Vorschläge zu README, Topics und Social Preview an Carsten.
+
 ## 26.11.2026 – Version 0.31: Showcase Englisch, kompakter Hero, Archiv, „Wie lese ich das?“ (Release_20, Design 582)
 
 - **Carsten** · Version 0.30.1 eingespielt (`fa4221c`, Pull Request #35); Server läuft in UTC, `server.json` aktuell.
