@@ -85,7 +85,7 @@ Seit 0.21 gelten die Adressen aus Abschnitt 4.1 in beiden Sprachen; in der Vorsc
 | `/de/spieltag/<liga>/<2025-26>/<nr>/` | Archivseite je Spieltag (nur begonnene Spieltage, ab `seiten_ab_saison`) | 0.21 |
 | `/de/spiel/<liga>/<heim>-<gast>-<id>/`, `/en/match/…` | Spielseite, **eine je Paarung**; unbekannte ID oder Saison vor `seiten_ab_saison`: 404; abweichender Slug, andere Liga, fehlender Schrägstrich: 301 | 0.18 / 0.21 |
 | `/de/methodik/`, `/de/glossar/`, `/de/kontakt/`, `/de/impressum/`, `/de/datenschutz/` (englisch Abschnitt 4.1) | Inhaltsseiten (Abschnitt 7.3) | 0.21 |
-| `/de/cookie-einstellungen/`, `/en/cookie-settings/` | Hinweis „folgt“ bis 0.22 | 0.21 |
+| `/de/cookie-einstellungen/`, `/en/cookie-settings/` | Cookie-Einstellungen (Abschnitt 4.3; bis 0.27 Hinweis „folgt“) | 0.28 |
 | `/de/methodik/soccer-intelligence-schwellen.xlsx`, `/en/methodology/soccer-intelligence-thresholds.xlsx` | Excel-Datei der Methodik | 0.21 |
 | `/robots.txt`, `/sitemap.xml`, `/sitemaps/<teil>.xml` | Abschnitt 4.2 | 0.21 |
 | `/favicon.ico`, `/favicon.svg`, `/apple-touch-icon.png`, `/og-image.png` | Icons, Vorschaubild für soziale Netzwerke | 0.21 |
@@ -200,6 +200,39 @@ Regeln:
   Flächen in Akzentfarbe), Tabs und Aufklapper ohne JavaScript, Tabellen mit `caption` und `scope`, Kontraste nach
   WCAG AA (Statuskachel #5B6B61, Formkreis „U“ #487560, Eingabefelder #7A8A81). Geprüft mit axe-core (WCAG 2.1 AA und
   Best Practice) auf allen Seitenarten in beiden Sprachen, Desktop und Handy.
+
+### 4.3 Einwilligung und Google Analytics 4 (seit 0.28)
+
+Entwürfe Cookie_Hinweis und Cookie_Einstellungen (Design-Chat, Paket 25.11.2026); Entscheide Carsten 25./26.11.2026:
+GA4 direkt ohne Tag Manager, Aufbewahrung 14 Monate (wie in der Datenschutzerklärung), keine Messung in der Vorschau,
+Umsetzung genau nach den Entwürfen.
+
+- **Grundsatz:** Vor der Zustimmung wird nichts von Google geladen und kein Analyse-Cookie gesetzt. Wer nicht antwortet,
+  gilt als nicht zugestimmt; der Hinweis blockiert die Seite nicht.
+- **Cookie-Hinweis:** in jeder Seite (ausser Cookie-Einstellungen) als verborgener Bereich (`role="region"`, Beschriftung
+  „Cookie-Hinweis“ / „Cookie notice“) am unteren Rand, auf dem Handy volle Breite, sonst höchstens 560 px, links unten.
+  Zwei gleich grosse Knöpfe „Ablehnen“ und „Zustimmen“ (48 px), kein Link. `site.js` zeigt ihn nur ohne gespeicherte
+  Wahl; ohne Skript erscheint er nie (dann lädt auch nie etwas von Google). Solange er sichtbar ist, hat die Seite unten
+  Platz, damit der Footer erreichbar bleibt.
+- **Wahl:** eigenes Cookie `cookie_wahl` (`zugestimmt` / `abgelehnt`), 6 Monate (180 Tage), `SameSite=Lax`, `Secure`,
+  Pfad `/` (Vorschau: `/vorschau/`). Danach wird erneut gefragt.
+- **Cookie-Einstellungen** (`/de/cookie-einstellungen/`, `/en/cookie-settings/`): zeigt die gespeicherte Wahl (vom
+  Server aus dem Cookie gelesen, nie zwischengespeichert), zwei Knöpfe mit `aria-pressed`, Meldung mit
+  `aria-live="polite"`. Mit Skript gilt ein Klick sofort; ohne Skript schickt das Formular die Wahl an den Server
+  (Set-Cookie, 303 zurück). `noindex,follow`, nicht in der Sitemap. Erreichbar über den Link in der
+  Datenschutzerklärung (Abschnitt Google Analytics), nicht im Footer und nicht im Menü.
+- **Google Analytics 4:** Mess-ID in `app/config/website.toml` (`ga4_mess_id`). Nur die öffentliche Website trägt sie
+  (`data-ga` am `<body>`), die Vorschau nie. Nach Zustimmung lädt `site.js` `gtag.js` und sendet den Seitenaufruf.
+  Ablehnen oder Widerruf: Messung sofort beendet (`ga-disable-…`), Cookies `_ga` und `_ga_*` gelöscht (im Browser und,
+  ohne Skript, vom Server).
+- **Sicherheitsrichtlinie (CSP):** nur mit Mess-ID zusätzlich `https://*.googletagmanager.com` (Skript, Bild) sowie
+  `https://*.google-analytics.com` und `https://*.analytics.google.com` (Verbindung, Bild), wie von Google für GA4
+  angegeben; kein `unsafe-inline`. Die Vorschau bleibt streng.
+- **Einstellungen in GA4** (macht Carsten, passend zur Datenschutzerklärung): Aufbewahrung der Ereignisdaten 14 Monate,
+  Google-Signale aus, personalisierte Werbung aus, Datenfreigabe an Google aus.
+- **Tests:** `tests/test_einwilligung_028.py` (E1–E7), darunter ein Browser-Test mit Chromium (`tests/browser/
+  einwilligung.js`): vor der Zustimmung keine Anfrage an Google, nach Zustimmung `gtag.js`, Widerruf löscht die
+  Analyse-Cookies, ohne Skript kein Hinweis. Er läuft, wo Node mit Playwright vorhanden ist (auf GitHub übersprungen).
 
 ## 5. Seite Spieltag (Übergabe, Abschnitt 6)
 
@@ -564,4 +597,5 @@ Computer einzeilig, bis 520 px höchstens 300 px breit mit festem Umbruch nach d
 | 0.26 | Frühere Spieltage, Archiv mit Bilanz-Kacheln, Feinschliff, Impressum-Skript |
 | 0.27 | **Livegang** 26.11.2026: Website unter `/` (Container `soccer-website`), `index_ab` gesetzt, Archiv der laufenden Saison im Index, Texte zu „bestätigt“ (Methodik, Startseite, Glossar) |
 | 0.27.1 | `www.soccer-intelligence.com` leitet dauerhaft auf die Adresse ohne www weiter (Zertifikat für www) |
-| später | 0.28 Cookie-Hinweis und Google Analytics 4 (erst nach Zustimmung); Search Console nach dem Livegang |
+| 0.28 | Cookie-Hinweis, Cookie-Einstellungen und Google Analytics 4 erst nach Zustimmung (Abschnitt 4.3) |
+| später | Auswertung der Besucherzahlen (GA4), Rückblick für Fans |

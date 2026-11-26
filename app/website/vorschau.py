@@ -16,6 +16,7 @@ import mimetypes
 import sys
 import threading
 import traceback
+from http.cookies import CookieError, SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, quote, urlsplit
 
@@ -26,7 +27,7 @@ from . import methodik as MT
 from . import seo
 from . import sitemap as SM
 from .daten import Daten, zeitreise
-from .seiten import Kontext, archiv_html, fehlt_html, hinweis_html, inhalt_html, spiel_html, spieltag_html, start_html
+from .seiten import Kontext, archiv_html, cookie_html, fehlt_html, hinweis_html, inhalt_html, spiel_html, spieltag_html, start_html
 from .spiel import spiel_daten
 from .spieltag import archiv_daten, spieltag_daten
 from .start import start_daten
@@ -34,12 +35,25 @@ from .start import start_daten
 KT_MAX_BYTES = 20_000             # Kontaktformular: grösste Anfrage (5'000 Zeichen Nachricht plus Felder)
 
 DATEN = Daten()
+
+
+def _csp(ga4: str) -> str:
+    """Sicherheitsrichtlinie. Seit 0.28 mit Google Analytics (nur öffentliche Website mit Mess-ID): genau die Adressen,
+    die Google für GA4 nennt (Skript, Messung, Pixel). Geladen wird trotzdem erst nach Zustimmung (site.js)."""
+    google_skript = " https://*.googletagmanager.com" if ga4 else ""
+    google_bild = " https://*.google-analytics.com https://*.googletagmanager.com" if ga4 else ""
+    google_verbindung = (" https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com"
+                         if ga4 else "")
+    return (f"default-src 'self'; script-src 'self'{google_skript}; style-src 'self'; font-src 'self'; "
+            f"img-src 'self' data:{google_bild}; connect-src 'self'{google_verbindung}; base-uri 'none'; "
+            "form-action 'self'; frame-ancestors 'none'")
+
+
 SICHERHEIT = {
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "same-origin",
     "X-Frame-Options": "DENY",
-    "Content-Security-Policy": ("default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; "
-                                "img-src 'self' data:; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"),
+    "Content-Security-Policy": _csp(W.GA4_ID),
     # seit 0.24 (Frontend-Review 19): Browser-Funktionen, die die Seite nie braucht, ausdrücklich abschalten
     "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()",
 }
@@ -57,6 +71,23 @@ DATENSEITEN = ("start", "spieltag", "archiv", "spiel")
 class Antwort:
     def __init__(self, status: int, inhalt: bytes = b"", typ: str = "text/html; charset=utf-8", **kopf):
         self.status, self.inhalt, self.kopf = status, inhalt, {"Content-Type": typ, **kopf}
+        self.cookies: list[str] = []          # seit 0.28: je Eintrag eine Kopfzeile Set-Cookie
+
+
+def cookie_wahl(kopfzeile: str | None) -> str:
+    """Gespeicherte Cookie-Wahl aus der Kopfzeile Cookie: „zugestimmt“, „abgelehnt“ oder leer (seit 0.28)."""
+    try:
+        c = SimpleCookie(kopfzeile or "")
+    except CookieError:
+        return ""
+    wert = c[W.COOKIE_WAHL].value if W.COOKIE_WAHL in c else ""
+    return wert if wert in ("zugestimmt", "abgelehnt") else ""
+
+
+def _ga_cookies(kopfzeile: str | None) -> list[str]:
+    """Namen der Analyse-Cookies (_ga, _ga_*) aus der Kopfzeile Cookie – zum Löschen beim Ablehnen."""
+    namen = [t.split("=", 1)[0].strip() for t in (kopfzeile or "").split(";")]
+    return sorted({n for n in namen if n == "_ga" or n.startswith("_ga_")})
 
 
 def _html(status: int, text: str, vorschau: bool | None = None) -> Antwort:
@@ -137,7 +168,7 @@ def _manifest(prefix: str) -> Antwort:
                    **{"Cache-Control": "public, max-age=86400"})
 
 
-def beantworten(pfad: str, query: str, daten: Daten = DATEN) -> Antwort:
+def beantworten(pfad: str, query: str, daten: Daten = DATEN, cookies: str | None = None) -> Antwort:
     """Antwort für einen Aufruf (ohne Netzwerk testbar)."""
     prefix = W.PREFIX.rstrip("/")
     if pfad == f"{prefix}/_gesund":
@@ -191,6 +222,9 @@ def beantworten(pfad: str, query: str, daten: Daten = DATEN) -> Antwort:
         return Antwort(503, hinweis_html("daten", k, stand).encode("utf-8"),
                        **{"Cache-Control": "no-store", "Retry-After": "600"})
 
+    if z.art == "cookie":                                    # seit 0.28: zeigt die eigene Wahl, nie zwischenspeichern
+        return Antwort(200, cookie_html(k, stand, cookie_wahl(cookies)).encode("utf-8"), **{"Cache-Control": "no-store"})
+
     if z.art == "kontakt":                                   # seit 0.23: Formular mit Sicherheitsfrage, nie zwischenspeichern
         f = KT.leer(gesendet="gesendet" in werte)
         return Antwort(200, inhalt_html(z.art, k, stand, f=f).encode("utf-8"), **{"Cache-Control": "no-store"})
@@ -212,8 +246,6 @@ def beantworten(pfad: str, query: str, daten: Daten = DATEN) -> Antwort:
             return _html(200, archiv_html(seite, k))
         if z.art == "spiel":
             return _spiel(z, rest, daten, zp, k, stand, prefix, q)
-        if z.art == "cookie":                                    # Cookie-Einstellungen folgen mit 0.22
-            return _html(200, hinweis_html("folgt", k, stand, aktiv=z.art))
         return _html(200, inhalt_html(z.art, k, stand))
 
     foto_da = (W.BILDER / W.FOTO).is_file()
@@ -223,17 +255,20 @@ def beantworten(pfad: str, query: str, daten: Daten = DATEN) -> Antwort:
     return SEITEN.holen(schluessel, rechnen)
 
 
-def beantworten_post(pfad: str, inhalt: bytes, ip: str, daten: Daten = DATEN, senden=None) -> Antwort:
-    """POST: nur das Kontaktformular (seit 0.23). Erfolg -> 303 auf die Seite mit ?gesendet=1 (kein doppeltes Senden
-    beim Neuladen); Fehler -> Seite mit Eingaben und Fehlern je Feld."""
+def beantworten_post(pfad: str, inhalt: bytes, ip: str, daten: Daten = DATEN, senden=None,
+                     cookies: str | None = None) -> Antwort:
+    """POST: Kontaktformular (seit 0.23) und Cookie-Einstellungen ohne Skript (seit 0.28). Kontakt: Erfolg -> 303 auf
+    die Seite mit ?gesendet=1 (kein doppeltes Senden beim Neuladen); Fehler -> Seite mit Eingaben und Fehlern je Feld."""
     prefix = W.PREFIX.rstrip("/")
     rest = pfad[len(prefix):] if pfad.startswith(prefix + "/") else None
     erk = AD.erkennen(rest) if rest else None
-    if erk is None or erk.ziel is None or erk.ziel.art != "kontakt" or erk.weiter:
+    if erk is None or erk.ziel is None or erk.ziel.art not in ("kontakt", "cookie") or erk.weiter:
         return Antwort(405, b"nicht erlaubt", "text/plain; charset=utf-8", **{"Allow": "GET, HEAD"})
     if len(inhalt) > KT_MAX_BYTES:
         return Antwort(413, b"zu gross", "text/plain; charset=utf-8")
     form = parse_qs(inhalt.decode("utf-8", errors="replace"), keep_blank_values=True)
+    if erk.ziel.art == "cookie":
+        return _cookie_speichern(pfad, (form.get("wahl") or [""])[0], cookies)
     k = Kontext(vorschau=W.VORSCHAU).mit(lang=erk.ziel.lang)
     f = KT.bearbeiten(form, ip, erk.ziel.lang, senden=senden)
     if f is None:
@@ -242,6 +277,21 @@ def beantworten_post(pfad: str, inhalt: bytes, ip: str, daten: Daten = DATEN, se
     k = k.mit(jetzt=zp.jetzt)
     stand = zp.stand.isoformat(timespec="minutes") if zp.stand else None
     return Antwort(200, inhalt_html("kontakt", k, stand, f=f).encode("utf-8"), **{"Cache-Control": "no-store"})
+
+
+def _cookie_speichern(pfad: str, wahl: str, cookies: str | None) -> Antwort:
+    """Cookie-Einstellungen ohne Skript (seit 0.28): Wahl speichern (6 Monate), beim Ablehnen die Analyse-Cookies
+    löschen, dann 303 zurück auf die Seite (zeigt die neue Wahl)."""
+    if wahl not in ("zugestimmt", "abgelehnt"):
+        return Antwort(400, b"ungueltige Wahl", "text/plain; charset=utf-8")
+    a = _weiter(pfad, 303)
+    a.cookies.append(f"{W.COOKIE_WAHL}={wahl}; Max-Age={W.COOKIE_TAGE * 86400}; Path={W.PREFIX.rstrip('/')}/; "
+                     "SameSite=Lax; Secure")
+    if wahl == "abgelehnt":
+        domain = W.DOMAIN.split("://", 1)[1]
+        for name in _ga_cookies(cookies):
+            a.cookies.append(f"{name}=; Max-Age=0; Path=/; Domain={domain}")
+    return a
 
 
 def _spiel(z: AD.Ziel, rest: str, daten: Daten, zp, k: Kontext, stand, prefix: str, q: str) -> Antwort:
@@ -292,7 +342,7 @@ class Handler(BaseHTTPRequestHandler):
     def _senden(self, kopf_nur: bool = False) -> None:
         teile = urlsplit(self.path)
         try:
-            a = beantworten(teile.path, teile.query)
+            a = beantworten(teile.path, teile.query, cookies=self.headers.get("Cookie"))
         except Exception:  # noqa: BLE001 - jede Störung als Hinweisseite, Einzelheiten nur im Protokoll
             traceback.print_exc()
             try:
@@ -303,6 +353,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(a.status)
         for name, wert in {**SICHERHEIT, **a.kopf, "Content-Length": str(len(a.inhalt))}.items():
             self.send_header(name, wert)
+        for wert in a.cookies:
+            self.send_header("Set-Cookie", wert)
         self.end_headers()
         if not kopf_nur:
             self.wfile.write(a.inhalt)
@@ -327,13 +379,15 @@ class Handler(BaseHTTPRequestHandler):
         weiter = [x.strip() for x in (self.headers.get("X-Forwarded-For") or "").split(",") if x.strip()]
         ip = weiter[-1] if weiter else self.client_address[0]
         try:
-            a = beantworten_post(urlsplit(self.path).path, inhalt, ip)
+            a = beantworten_post(urlsplit(self.path).path, inhalt, ip, cookies=self.headers.get("Cookie"))
         except Exception:  # noqa: BLE001
             traceback.print_exc()
             a = Antwort(503, b"Bitte spaeter noch einmal versuchen.", "text/plain; charset=utf-8")
         self.send_response(a.status)
         for name, wert in {**SICHERHEIT, **a.kopf, "Content-Length": str(len(a.inhalt))}.items():
             self.send_header(name, wert)
+        for wert in a.cookies:
+            self.send_header("Set-Cookie", wert)
         self.end_headers()
         self.wfile.write(a.inhalt)
 

@@ -837,3 +837,22 @@ a.knopf-voll:hover, a.knopf-rand:hover { text-decoration: none; }
 /* Spieltag: Link „Frühere Spieltage ansehen“ (seit 0.26, Beschluss 53) */
 .frueher { margin: 8px 0 0; }
 .frueher a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: 15px; color: #3E5247; text-decoration: underline; text-underline-offset: 3px; }
+
+/* Cookie-Hinweis und Cookie-Einstellungen (seit 0.28, Entwürfe Cookie_Hinweis und Cookie_Einstellungen). Beide Knöpfe
+   gleich gross und gleich gewichtet, Tippflächen 48 px. Der Hinweis liegt fest am unteren Rand: auf dem Handy volle
+   Breite (12 px Abstand), sonst höchstens 560 px breit, links unten. */
+.cookie-hinweis { position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 50; max-width: 560px; padding: 16px;
+  background: #fff; border: 1px solid var(--rand); border-radius: 20px; box-shadow: 0 8px 28px rgba(11, 61, 46, 0.22); }
+.cookie-hinweis[hidden] { display: none; }
+.cookie-hinweis p { margin: 0; font-size: 15px; line-height: 1.5; color: var(--text); }
+.cookie-knoepfe { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.knopf-wahl { flex: 1 1 0; min-height: 48px; padding: 0 12px; border-radius: 999px; border: 1.5px solid var(--gruen);
+  background: #fff; color: var(--gruen); font-size: 16px; font-weight: 600; cursor: pointer; }
+.knopf-wahl-voll, .knopf-wahl[aria-pressed="true"] { background: var(--gruen); color: var(--akzent); }
+.cookie-wahl { margin-top: 20px; padding: 18px; background: var(--bg); border: 1px solid var(--rand2); border-radius: 16px; }
+.cookie-wahl-titel { font-size: 15px; font-weight: 600; color: var(--text); }
+.cookie-wahl p { margin: 6px 0 0; font-size: 17px; line-height: 1.5; color: var(--text2); }
+.cookie-wahl .cookie-knoepfe { margin-top: 16px; }
+.cookie-wahl .knopf-wahl { flex: 1 1 200px; padding: 0 20px; }
+.inhalt-cookie .cookie-wahl + p { margin-top: 16px; }
+body.mit-cookie-hinweis { padding-bottom: 190px; }

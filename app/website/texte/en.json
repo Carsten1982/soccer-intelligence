@@ -478,7 +478,8 @@
     "glossar": "Glossary",
     "kontakt": "Contact",
     "impressum": "Legal notice",
-    "datenschutz": "Privacy policy"
+    "datenschutz": "Privacy policy",
+    "cookie": "Cookie settings"
   },
   "stufe_kurz": {
     "stark": "High",
@@ -538,7 +539,9 @@
     "spiel_werte_ab": "{heim} vs {gast} ({liga}, Matchday {n}, {datum}): Values will follow once both teams have played their previous league match.",
     "spiel_verschoben": "{heim} vs {gast} ({liga}, {spieltag}): Match postponed. Statistics will follow once the date is confirmed.",
     "spiel_status": "{heim} vs {gast} ({liga}, {spieltag}): {status}.",
-    "spiel_auswertung": "{heim} vs {gast} ({liga}, {spieltag}, {datum}): Final score {ergebnis}. Our expected values compared with the actual values."
+    "spiel_auswertung": "{heim} vs {gast} ({liga}, {spieltag}, {datum}): Final score {ergebnis}. Our expected values compared with the actual values.",
+    "cookie_titel": "Cookie settings | Soccer Intelligence",
+    "cookie_beschreibung": "Cookie settings for Soccer Intelligence: switch web analytics with Google Analytics on or off and change your choice at any time."
   },
   "inhalt": {
     "email": "Email",
@@ -655,5 +658,23 @@
     "premier_league": "in the Premier League",
     "serie_a": "in Serie A",
     "la_liga": "in La Liga"
+  },
+  "cookie": {
+    "_hinweis": "Since 0.28, following the drafts Cookie_Hinweis and Cookie_Einstellungen (design chat, package 25.11.2026).",
+    "region": "Cookie notice",
+    "hinweis": "We use web analytics to improve Soccer Intelligence. Analytics are only enabled with your consent.",
+    "ablehnen": "Decline",
+    "zustimmen": "Accept",
+    "zurueck": "Privacy policy",
+    "h1": "Cookie settings",
+    "h2": "Web analytics with Google Analytics",
+    "einleitung": "We use web analytics to improve Soccer Intelligence. Analytics are only enabled with your consent. You can change your preferences here at any time. Any changes take effect immediately and apply going forward.",
+    "aktuell": "Your current choice",
+    "status_offen": "No choice yet: Google Analytics is off.",
+    "status_zugestimmt": "Accepted: Google Analytics is active.",
+    "status_abgelehnt": "Declined: Google Analytics is off.",
+    "speicher_vor": "We store your choice in your browser for 6 months, after which we ask again. Without your consent, no data is sent to Google Analytics. Details of exactly what is collected can be found in the",
+    "speicher_link": "privacy policy",
+    "speicher_nach": "."
   }
 }
