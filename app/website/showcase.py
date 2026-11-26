@@ -18,6 +18,7 @@ from __future__ import annotations
 import json
 from datetime import date, datetime, time, timedelta
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from core import settings
 from core.issues import FEHLER, HINWEIS, WARNUNG
@@ -40,6 +41,15 @@ RING = ("#C6F26B", "#7CCB1F", "#2E8B2A", "#0B3D2E")
 ANLASS = ("kontrolle", "spiel", "wiederholung")
 SERVER_ALT = timedelta(minutes=10)    # server.json älter: Werte gelten als nicht verfügbar
 BACKUP_AKTUELL = timedelta(days=2)
+ZONE = ZoneInfo(settings.TIMEZONE)   # Europe/Zurich: alle Zeiten der Anzeige
+
+
+def ortszeit(z: datetime | None) -> datetime | None:
+    """Zeit in Europe/Zurich ohne Zeitzonenangabe. Zeiten mit Zone (z. B. Änderungszeit einer Datei in UTC) werden
+    umgerechnet; Zeiten ohne Zone gelten schon als Ortszeit. Fehler gefunden in 0.30: Der Datenstand stand in UTC."""
+    if z is None:
+        return None
+    return z.astimezone(ZONE).replace(tzinfo=None) if z.tzinfo else z
 
 
 def erkennen(rest: str) -> tuple[str, str] | None:
@@ -206,8 +216,14 @@ def _server(import_dir: Path, kz: dict, jetzt: datetime, lang: str) -> dict:
     from betrieb import alarme
     tx = lambda k, **w: t(f"showcase.daten.{k}", lang, **w)   # noqa: E731
     srv = _json(import_dir / "server.json") or {}
-    zeit = datetime.fromisoformat(srv["zeit"]).replace(tzinfo=None) if srv.get("zeit") else None
-    frisch = zeit is not None and jetzt - zeit <= SERVER_ALT
+    # Aktualität über die Änderungszeit der Datei (unabhängig von der Zeitzone des Servers). Fehler gefunden in 0.30:
+    # Das Prüfskript schreibt „zeit“ in der Uhrzeit des Servers (UTC); verglichen mit der Schweizer Zeit galten die
+    # Werte als eine Stunde alt und damit als nicht verfügbar.
+    try:
+        zeit = ortszeit(datetime.fromtimestamp((import_dir / "server.json").stat().st_mtime, tz=ZONE)) if srv else None
+    except OSError:
+        zeit = None
+    frisch = zeit is not None and abs(jetzt - zeit) <= SERVER_ALT
     out = {"frisch": frisch, "stand": tx("stand_server", zeit=f"{datum(zeit.date(), lang)} · {zeit:%H:%M}") if frisch
            else tx("nicht_verfuegbar")}
     na = tx("na")
@@ -296,7 +312,7 @@ def monitoring(daten, jetzt: datetime, lang: str) -> dict:
         db_zeit, m["pruefung"] = None, {"fehler": "–", "warnungen": "–", "hinweise": "–"}
     if isinstance(m["pruefung"]["hinweise"], int):
         m["pruefung"] = {k: zahl(v, lang) for k, v in m["pruefung"].items()}
-    db_zeit = db_zeit.replace(tzinfo=None) if db_zeit else None
+    db_zeit = ortszeit(db_zeit)
     m["datenstand"] = {"datum": datum(db_zeit.date(), lang) if db_zeit else "–",
                        "zeit": tx("uhr", zeit=f"{db_zeit:%H:%M}") if db_zeit else ""}
     imp = daten.zeitpunkt().stand
