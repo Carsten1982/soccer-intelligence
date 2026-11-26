@@ -5,6 +5,13 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 26.11.2026 – Version 0.27 eingespielt: Website live
+
+- **Carsten** · Version 0.27 eingespielt (`d6f712f`, Pull Request #30; Tests grün: 744 bestanden, 13 übersprungen, 18 langsame abgewählt; drei Testmails) und Livegang-Befehl ausgeführt: `/` = 301, `/de/` = 200, `/sitemap.xml` = 200, `/dashboard/` = 200, `/vorschau/` = 401. Prüfung im Browser (7 Punkte) bestanden.
+- **Carsten** · Komprimierung und HSTS geprüft (offen seit 0.24): `content-encoding: zstd`, `strict-transport-security: max-age=31536000` – erledigt. PageSpeed Insights mobil: Leistung, Barrierefreiheit, Best Practices und SEO je 100 – Tempo-Frage aus 0.24 erledigt.
+- **Carsten** · Befund: `www.soccer-intelligence.com` ohne HTTPS (Browser-Warnung) – offener Punkt in `01`, Abschnitt 8.
+- **Claude** · Stand nachgetragen (`01`, Abschnitt 0 und Versionstabelle; erledigte Punkte aus Abschnitt 8 entfernt).
+
 ## 25.11.2026 – Version 0.27: Livegang
 
 - **Carsten** · Entscheide zum Livegang: Archivseiten der laufenden Saison je Liga indexierbar, auch Spieltage vor dem Livegang (1a); Website übernimmt `/`, Platzhalterseite läuft vorerst als Rückweg weiter (2); `index_ab` = 26.11.2026 (3); englische Begriffe „success rate“, „uplift“, „Over 2.5 goals“ bleiben (4a); Statusmail meldet die Sitemap (5); Search Console nach dem Livegang (6); Impressum über das Skript (7); Google Analytics 4 als eigenes Release 0.28, direkt ohne Tag Manager, erst nach Zustimmung (8b, 9, 11); Mess-ID geliefert; Aufbewahrung gewünscht 12 Monate (GA4 bietet 2 oder 14 Monate – offen).
