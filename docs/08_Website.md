@@ -598,4 +598,5 @@ Computer einzeilig, bis 520 px höchstens 300 px breit mit festem Umbruch nach d
 | 0.27 | **Livegang** 26.11.2026: Website unter `/` (Container `soccer-website`), `index_ab` gesetzt, Archiv der laufenden Saison im Index, Texte zu „bestätigt“ (Methodik, Startseite, Glossar) |
 | 0.27.1 | `www.soccer-intelligence.com` leitet dauerhaft auf die Adresse ohne www weiter (Zertifikat für www) |
 | 0.28 | Cookie-Hinweis, Cookie-Einstellungen und Google Analytics 4 erst nach Zustimmung (Abschnitt 4.3) |
+| 0.29 | Englische Texte nach Release_14 (Design 571): «standout statistic(s)» statt «anomaly», Standard-Sätze S1–S3; Methodik DE: D1, D2 |
 | später | Auswertung der Besucherzahlen (GA4), Rückblick für Fans |

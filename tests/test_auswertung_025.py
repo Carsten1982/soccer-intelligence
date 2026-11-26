@@ -122,7 +122,7 @@ def test_a5_ergebnisseite_de_en():
     assert 'class="sb-form"' not in html                                                  # keine Formkurve
     en = seiten.spiel_html(s, seiten.Kontext(lang="en"))
     for text in ("Expected and actual", "Half-time 1 : 0", "Confirmed", "Not confirmed", "Yes<", "Data to follow",
-                 "Before the match, a value counts as a statistical anomaly in the Bundesliga"):
+                 "Before the match, a value counts as a standout statistic in the Bundesliga"):
         assert text in en, text
     assert "Endstand 2 : 1" in seiten.seo.spiel_beschreibung(s, "A", "B", "de")              # Description (Abschn. 12)
 

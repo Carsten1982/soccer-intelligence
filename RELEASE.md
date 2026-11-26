@@ -1,27 +1,19 @@
-# Release: Version 0.28 – Cookie-Hinweis und Google Analytics
+# Release: Version 0.29 – Englische Texte
 
-**Stand:** 26.11.2026 · Version 0.28 · Entwürfe Cookie_Hinweis und Cookie_Einstellungen, Entscheide Carsten 25./26.11.2026
+**Stand:** 26.11.2026 · Version 0.29 · Release_14 des Design-Chats (Design 571), Entscheide Carsten 26.11.2026
 
-**Commit:** Version 0.28: Cookie-Hinweis und Google Analytics
+**Commit:** Version 0.29: Englische Texte nach Release_14
 
 ## Was ändert sich?
 
-- **Cookie-Hinweis** unten auf jeder Seite, bis eine Wahl getroffen ist: „Wir verwenden Webanalyse, um Soccer
-  Intelligence zu verbessern. Die Nutzung erfolgt nur mit deiner Zustimmung.“ mit **Ablehnen** und **Zustimmen**
-  (gleich gross, kein Link). Die Wahl gilt 6 Monate.
-- **Cookie-Einstellungen** unter `/de/cookie-einstellungen/` bzw. `/en/cookie-settings/` (Link in der
-  Datenschutzerklärung, Abschnitt Google Analytics): zeigt die Wahl und ändert sie jederzeit – auch ohne JavaScript.
-- **Google Analytics 4** (`G-9XH0LGQLQ7`) wird **erst nach „Zustimmen“** geladen und nur auf der öffentlichen Website,
-  nie in der Vorschau. Ablehnen oder Widerruf beendet die Messung sofort und löscht die Analyse-Cookies.
-- Englische Datenschutzerklärung: überzähliges deutsches Wort entfernt.
+- **Englisch:** «anomaly» heisst jetzt überall **«standout statistic(s)»** (Chips, Gruppen, Legenden, Box «Standout threshold», Startseite, Spieltag, Spielseite, Auswertung, Methodik, Glossar, Title/Description). «metric» im Fliesstext → «statistic»; die Gruppe «Metrics» bleibt.
+- **Neue Standard-Sätze:** Signalqualität (S1), Footer «Statistical analysis, not betting advice. Not affiliated with any leagues or clubs.» (S2), Hinweis zu Wetten «… no betting advice or predictions of winnings.» (S3); dazu «when making your own predictions», «average for that league», «data-driven», «Both teams scoring expected more/less often», Methodik Ebene 3 (Erwartung, Unsicherheit, Mindestanforderungen, «overall rate»).
+- **Deutsch, Methodik Ebene 3:** «letzte 10 Ligaspiele **jeder Mannschaft**» und neuer Satz zur Spanne (D1, D2). Alles andere im Deutschen unverändert.
+- Keine Änderung an Layout, Daten, Berechnung oder Adressen.
 
 ## Einspielen
 
 Pull Request zusammenführen („Squash and merge“, Tests grün), dann:
-
-```bash
-tmux new -s release028
-```
 
 ```bash
 bash /docker/football-dashboard/tools/einspielen.sh github
@@ -29,30 +21,13 @@ bash /docker/football-dashboard/tools/einspielen.sh github
 
 ## Erwartungswerte
 
-- Tests rund **775 bestanden**, keine Fehler (hier: 789 bestanden, 18 übersprungen; der Browser-Test E7 wird auf dem Server übersprungen, kein Node).
-- Schritt 5: „Container laufen (Dashboard, Import, Vorschau, Website) · / = 301 · /de/ = 200 …“, `/vorschau/` = 401;
-  drei Testmails. Dashboard-Fusszeile: „Version 0.28 – Cookie-Hinweis und Google Analytics“.
-- Sicherheitsrichtlinie der Website mit den Google-Adressen (nur öffentlich):
-  ```bash
-  curl -sI https://soccer-intelligence.com/de/ | grep -i "content-security-policy" | grep -o "googletagmanager" | head -1
-  ```
-  Erwartet: `googletagmanager`.
+- Tests rund **778 bestanden**, keine Fehler. Dashboard-Fusszeile: „Version 0.29 – Englische Texte“.
+- Schritt 5 wie bisher (`/` = 301, `/de/` = 200, `/vorschau/` = 401), drei Testmails.
 
 ## Im Browser prüfen
 
-Am besten in einem **privaten Fenster** (dort ist noch keine Wahl gespeichert):
-
-1. `https://soccer-intelligence.com/de/` → unten erscheint der **Cookie-Hinweis** (Handy: volle Breite; Computer:
-   links unten, schmal). Die Seite ist trotzdem bedienbar.
-2. **Vor der Wahl nichts an Google:** F12 → Netzwerk → Filter `google` → Seite neu laden (Strg+F5): **keine Einträge**.
-3. **Zustimmen** klicken → Hinweis verschwindet; im Netzwerk erscheinen jetzt `gtag/js?id=G-9XH0LGQLQ7` und `collect`.
-4. **GA4 → Berichte → Echtzeit:** innerhalb von 1–2 Minuten „1 Nutzer“.
-5. Datenschutzerklärung → Abschnitt Google Analytics → Link **Cookie-Einstellungen**: zeigt „Zugestimmt: Google
-   Analytics ist aktiv.“ → **Ablehnen** → „Abgelehnt: Google Analytics ist aus.“; F12 → Anwendung → Cookies: `_ga`
-   und `_ga_…` sind weg.
-6. Andere Seite öffnen: kein Hinweis mehr, keine Google-Anfragen.
-7. Englisch: `/en/` im neuen privaten Fenster → „We use web analytics …“ mit **Decline** / **Accept**.
-8. Vorschau `/vorschau/de/`: Hinweis erscheint auch dort, aber nach „Zustimmen“ **keine** Google-Anfragen.
-
-Danach gehen wir gemeinsam die **Einstellungen in GA4** durch (Aufbewahrung 14 Monate, Google-Signale,
-personalisierte Werbung, Datenfreigabe).
+1. `/en/` (Startseite): Legende Signalqualität mit dem neuen Satz, Footer «Statistical analysis, not betting advice. Not affiliated with any leagues or clubs.»
+2. `/en/matchday/bundesliga/`: Legende «These are standout matches.», Kacheln ohne Auffälligkeit «No standout statistics».
+3. Eine englische Spielseite: Gruppen «Standout statistics» / «No standout statistics», Box «Standout threshold»; auf dem Handy sauberer Umbruch.
+4. `/en/methodology/` Ebene 3 und `/de/methodik/` Ebene 3 («jeder Mannschaft», Satz zur Spanne).
+5. `/en/glossary/`: «Standout statistic», «Statistics».

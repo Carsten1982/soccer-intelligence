@@ -2,7 +2,7 @@
 {% from "methodik_teile.html" import tiefe, schritte, stufen_karten, werte, haken, regeln, aufklapp, ligen_tabellen, uebersicht, download with context %}
 {% from "teile.html" import q_balken, pfeil_weiter with context %}
 
-{% macro kopf() %}<h1>How our methodology works</h1><p class="unterzeile">Understand football. Put the numbers in context.</p><p>In just a few minutes, we explain how we identify standout matches and how often similar statistical anomalies were confirmed in the past.</p>{% endmacro %}
+{% macro kopf() %}<h1>How our methodology works</h1><p class="unterzeile">Understand football. Put the numbers in context.</p><p>In just a few minutes, we explain how we identify standout matches and how often similar standout statistics were confirmed in the past.</p>{% endmacro %}
 
 {% macro rumpf() %}
 {{ tiefe() }}
@@ -10,7 +10,7 @@
 <section class="ebene" id="ebene1" aria-labelledby="ebene1-titel" data-ebene="1">
   <span class="ebene-marke">Level 1 · In brief</span>
   <h2 class="ebene-titel" id="ebene1-titel">The principle at a glance</h2>
-  <p>Soccer Intelligence analyses upcoming football matches for <b>statistical anomalies</b>. To do this, we compare expected values – such as goals, corners and yellow cards – with the average for the respective league.</p>
+  <p>Soccer Intelligence analyses upcoming football matches for <b>standout statistics</b>. To do this, we compare expected values – such as goals, corners and yellow cards – with the average for the respective league.</p>
   <p>When a value differs significantly from the league average, we use historical match data to check how often similar patterns were confirmed in previous games. In other words, we look at how often the actual match value was on the expected side of the league average. This helps us determine the <b>signal quality</b>: high, medium or low.</p>
   {{ schritte([
     ("Find the deviation", "We compare a match's expected values with the league average. If a value differs from the league average by more than the set threshold, the match is flagged as a standout match."),
@@ -22,8 +22,8 @@
   <h4>What is our signal quality based on?</h4>
   <p>It is based on {{ m.saisons_wort }} analysed seasons, {{ m.kombinationen }} combinations that showed a measurable advantage in the past, and the uplift measured for them.</p>
   <ul class="grundlage">
-    <li><span class="gk-titel">Historical data</span><span class="gk-zahl">{{ m.saisons }} seasons analysed</span><p>We analysed the seasons {{ m.saison_von }} to {{ m.saison_bis }} to identify statistical anomalies that proved to be meaningful in the past.</p></li>
-    <li><span class="gk-titel">The combinations</span><span class="gk-zahl">{{ m.kombinationen }} of {{ m.moeglich }} possible combinations</span><p>We analyse {{ m.kennzahlen }} metrics across {{ m.ligen_zahl }} leagues, looking at both higher and lower values. Only {{ m.kombinationen }} of these {{ m.moeglich }} combinations showed a measurable advantage in the past.</p></li>
+    <li><span class="gk-titel">Historical data</span><span class="gk-zahl">{{ m.saisons }} seasons analysed</span><p>We analysed the seasons {{ m.saison_von }} to {{ m.saison_bis }} to identify standout statistics that proved to be meaningful in the past.</p></li>
+    <li><span class="gk-titel">The combinations</span><span class="gk-zahl">{{ m.kombinationen }} of {{ m.moeglich }} possible combinations</span><p>We analyse {{ m.kennzahlen }} statistics across {{ m.ligen_zahl }} leagues, looking at both higher and lower values. Only {{ m.kombinationen }} of these {{ m.moeglich }} combinations showed a measurable advantage in the past.</p></li>
     <li><span class="gk-titel">Signal quality</span><span class="gk-zahl">{{ m.stark }} High · {{ m.mittel }} Medium · {{ m.gering }} Low</span><p>The {{ m.kombinationen }} combinations are divided into three levels according to their historical uplift.</p></li>
   </ul>
   <div class="knopfreihe"><a class="knopf-voll knopf-weiter" href="#ebene2" data-tiefe-wahl="2" data-springen><span>Continue with numbers:<span class="umbruch-mobil"> </span>a worked example</span>{{ pfeil_weiter() }}</a></div>
@@ -39,7 +39,7 @@
     <ol class="schritte schritte--beispiel">
       <li class="schritt"><span class="schritt-nr" aria-hidden="true"><span class="nr">1</span></span><div class="schritt-inhalt">
         <p class="schritt-titel">Find the deviation</p>
-        {{ werte([("Expected number", "11.55 shots on target", false), ("League average", "9.37 shots on target", false), ("Deviation", "+23.31%", false), ("Bundesliga threshold (above average)", "15% → Statistical anomaly", true)]) }}
+        {{ werte([("Expected number", "11.55 shots on target", false), ("League average", "9.37 shots on target", false), ("Deviation", "+23.31%", false), ("Bundesliga threshold (above average)", "15% → Standout statistic", true)]) }}
       </div></li>
       <li class="schritt"><span class="schritt-nr" aria-hidden="true"><span class="nr">2</span></span><div class="schritt-inhalt">
         <p class="schritt-titel">Compare with past matches</p>
@@ -75,37 +75,37 @@
   <p>The main points are explained above. Here you can find out exactly how we calculate the values and how robust the results are.</p>
   {% call aufklapp("How do we calculate the match values?") %}
   <ul>
-    <li><b>The eight metrics:</b> Expected total goals, Over 2.5 goals, Yellow cards, Corners, Expected total goals in the first half, Expected total goals in the second half, Both teams to score, Shots on target.</li>
-    <li><b>Expected values:</b> Based on the last 10 league matches played by both teams, using data from the current and previous seasons. Only matches played at least two days before kick-off are included. For yellow cards, we add the values for both teams. For all other metrics, we calculate the average.</li>
+    <li><b>The eight statistics:</b> Expected total goals, Over 2.5 goals, Yellow cards, Corners, Expected total goals in the first half, Expected total goals in the second half, Both teams to score, Shots on target.</li>
+    <li><b>Expected values:</b> Based on each team's last 10 league matches, using data from the current season and the previous season. Only matches played at least two days before kick-off are included. For yellow cards, we add the values for both teams. For all other statistics, we calculate the average.</li>
     <li><b>Baseline:</b> The league average across the 20 matchdays before the match. For Over 2.5 goals, the fixed reference value is 2.5.</li>
     <li><b>Deviation:</b> The expected value compared with the baseline, expressed as a percentage and rounded to two decimal places.</li>
-    <li><b>Statistical anomaly:</b> A deviation that is strictly greater than the threshold. A value exactly at the threshold (15.00%) does not count. A value of 15.01% does.</li>
+    <li><b>Standout statistic:</b> A deviation that is strictly greater than the threshold. A value exactly at the threshold (15.00%) does not count. A value of 15.01% does.</li>
     <li><b>Not assessed:</b> Combinations without a proven threshold have no threshold. We show the deviation but do not rate it. The match page then shows “Not assessed”.</li>
-    <li><b>Provisional (P):</b> If a team has played fewer than 10 matches, for example because it has just been promoted, we still show the value. However, it is never flagged as a statistical anomaly.</li>
+    <li><b>Provisional (P):</b> If a team has played fewer than 10 matches, for example because it has just been promoted, we still show the value. However, it is never flagged as a standout statistic.</li>
   </ul>
   {% endcall %}
   {% call aufklapp("How do we check signal quality?") %}
   <ul>
-    <li><b>Uncertainty:</b> Even when the results look good, chance plays a part. That is why we show a range (95% confidence interval using the Wilson method) indicating where the uplift is likely to lie based on the available data. The fewer matches there are, the wider the range. This measures the uncertainty in the data and does not guarantee anything about future matches.</li>
-    <li><b>Minimum requirements:</b> A threshold only receives a signal quality rating if it meets all of the following conditions: at least 50 matches, an uplift of at least +5 percentage points, a lower confidence limit above +2 percentage points, and an advantage in at least two thirds of the seasons. The success rate must also be at least 50% (Low from 50%, Medium from 55%, High from 60% and +8 percentage points).</li>
+    <li><b>Uncertainty:</b> Even when the results look good, chance plays a part. That is why we show a range (a 95% confidence interval, calculated using the Wilson method) that reflects the uncertainty around the measured uplift. The fewer matches there are, the wider the range. The range describes uncertainty in the historical data. It is not a prediction or guarantee for future matches.</li>
+    <li><b>Minimum requirements:</b> A threshold only receives a signal quality rating if it meets all of the following conditions: at least 50 matches, an uplift of at least +5 percentage points, a lower confidence limit above +2 percentage points, and an advantage in at least two thirds of the seasons. The success rate must also be at least 50%: Low from 50%, Medium from 55%, and High from 60% together with an uplift of at least +8 percentage points.</li>
     <li><b>Threshold selection:</b> We test thresholds of 10%, 15%, 20%, 25%, 30% and 35%. We use the threshold with the highest signal quality. If two thresholds have the same rating, we select the one with more matches. We recalculate the thresholds once per season.</li>
-    <li><b>Testing on seasons not used to select the thresholds:</b> Because we select the best threshold from several options, the results look somewhat better when looking back than they may in the future. We therefore checked how the thresholds performed in seasons that were not used to select them. In those seasons, High signals had a success rate of around 58% instead of 64%. This is still around 6 percentage points above the normal rate. However, these results are also based on past matches.</li>
-    <li>The current 2026/27 season was not used to select the thresholds. Using the current thresholds, High signals have so far had a success rate of 66% (normal rate: 54%). However, this is based on only 163 cases, which is not yet enough to draw firm conclusions.</li>
+    <li><b>Testing on seasons not used to select the thresholds:</b> Because we select the best threshold from several options, the results look somewhat better when looking back than they may in the future. We therefore checked how the thresholds performed in seasons that were not used to select them. In those seasons, High signals had a success rate of around 58% instead of 64%. This is still around 6 percentage points above the overall rate. However, these results are also based on past matches.</li>
+    <li>The current 2026/27 season was not used to select the thresholds. Using the current thresholds, High signals have so far had a success rate of 66% (overall rate: 54%). However, this is based on only 163 cases, which is not yet enough to draw firm conclusions.</li>
   </ul>
   {% endcall %}
   <h3>How do the signals perform in each league?</h3>
-  <p>Select a league to see which metrics stand out and what signal quality they receive.</p>
+  <p>Select a league to see which statistics stand out and the signal quality assigned to them.</p>
   {{ ligen_tabellen(m) }}
   <p>The leagues differ. Serie A has more High signals, while the Bundesliga has fewer. That is why each league has its own thresholds.</p>
   {{ uebersicht(m) }}
-  <p class="liste-notiz gross" role="note"><b>Putting it in context:</b> Soccer Intelligence highlights statistical anomalies. Signal quality is based on past matches. It is neither a guarantee of the match outcome nor automatically a betting advantage. Results also differ between leagues.</p>
+  <p class="liste-notiz gross" role="note"><b>Putting it in context:</b> Soccer Intelligence highlights standout statistics. Signal quality is based on past matches. It is neither a guarantee of the match outcome nor automatically a betting advantage. Results also differ between leagues.</p>
   <p>Terms such as deviation, threshold and uplift are explained in the <a href="{{ link('glossar') }}">glossary</a>.</p>
 </section>
 
-{{ download(m, "Download all analyses", "The Excel file contains all figures by league, metric and direction.") }}
+{{ download(m, "Download all analyses", "The Excel file contains all figures by league, statistic and direction.") }}
 
 <section class="seo" aria-labelledby="seo-titel">
   <h2 id="seo-titel">What is this page about?</h2>
-  <p>This page explains the methodology behind Soccer Intelligence and its football statistics. We show how we identify statistical anomalies in goals, corners, yellow cards and shots on target across the Bundesliga, Premier League, La Liga and Serie A. Using a worked example and data from seven seasons, you can see how often similar statistical anomalies were confirmed by actual match results in the past. <strong>We provide transparent football statistics, but no betting advice or forecasts of potential winnings.</strong></p>
+  <p>This page explains the methodology behind Soccer Intelligence and its football statistics. We show how we identify standout statistics in goals, corners, yellow cards and shots on target across the Bundesliga, Premier League, La Liga and Serie A. Using a worked example and data from seven seasons, you can see how often similar patterns in past matches were followed by an actual value on the same side of the league average. <strong>We provide transparent football statistics, but no betting advice or predictions of winnings.</strong></p>
 </section>
 {% endmacro %}

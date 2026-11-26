@@ -332,14 +332,14 @@ def test_w24_worked_example_matches_threshold_file():
                  f"{zahl_de(s['vergleichsgruppe'])} %", f"+{zahl_de(s['mehrwert'])} Prozentpunkte", f'"{s["schwelle"]} % → auffällig"'):
         assert text in de, text
     for text in (f"{s['trefferquote']:.2f}%", f"{s['vergleichsgruppe']:.2f}%", f"+{s['mehrwert']:.2f} percentage points",
-                 f'"{s["schwelle"]}% → Statistical anomaly"'):
+                 f'"{s["schwelle"]}% → Standout statistic"'):
         assert text in en, text
     assert s["signalqualitaet"] == "stark" and s["saisons_positiv"] == "7/7"
 
 
 @pytest.mark.parametrize("lang, pfad, kopf", [
     ("de", "/vorschau/de/methodik/soccer-intelligence-schwellen.xlsx", "Kennzahl"),
-    ("en", "/vorschau/en/methodology/soccer-intelligence-thresholds.xlsx", "Metric"),
+    ("en", "/vorschau/en/methodology/soccer-intelligence-thresholds.xlsx", "Statistic"),
 ])
 def test_w24_excel_download(dienst, lang, pfad, kopf):
     from openpyxl import load_workbook
@@ -553,7 +553,7 @@ def test_w30_page_cards_chip_button_and_texts(monkeypatch):
     assert "Nicht auffällig" not in html and "Abweichung</span>" not in html          # Abweichung nicht wiederholt
     assert 'data-aufklapp="c-kpi02"' not in html and "Statistisch auffällig. Schwelle" not in html  # seit 0.25 ohne ⓘ
     en = seiten.spiel_html(s, seiten.Kontext(lang="en"))
-    for text in ("No anomaly flagged", "Not assessed", "below 41.60%", "Expected percentage",
+    for text in ("No standout statistics", "Not assessed", "below 41.60%", "Expected percentage",
                  "more than 35% below the league average", "In the Bundesliga, this deviation is not a reliable guide"):
         assert text in en, text
 

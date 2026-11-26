@@ -5,6 +5,12 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 26.11.2026 – Version 0.29: Englische Texte (Release_14, Design 571)
+
+- **Carsten** · Entscheide zur zweiten Übersetzungsprüfung: «anomaly» → «standout» als Paket, Standard-Sätze S1 (Signalqualität), S2 (Footer), S3 (Wetten), «tipsters» bleibt, zwei deutsche Klarstellungen in der Methodik (D1 «jeder Mannschaft», D2 Spanne).
+- **Claude** · Englische Sprachdatei, Methodik, Glossar und Impressum nach Release_14 angepasst (Chips, Gruppen, Box «Standout threshold», Legenden, SEO-Texte, Title/Description, Footer, Excel-Spaltenkopf «Statistic», Untertitel Ebene 3, «overall rate»). Methodik DE: D1 und D2. Abnahme-Suche als Test (`tests/test_englisch_029.py`): kein «anomal», «metric» (ausser «Metrics»), «normal rate» usw. mehr im Englischen. Bestehende Tests angepasst. Umbruch bei 360 px geprüft.
+- **Offen (Carsten):** deutsche Klammer der Mindestanforderungen angleichen? Glossar DE spricht weiterhin von «letzten 10 Ligaspielen beider Teams» (D1 galt nur für die Methodik) – angleichen?
+
 ## 26.11.2026 – Version 0.28 eingespielt
 
 - **Carsten** · Version 0.28 eingespielt (`4069af4`, Pull Request #32; Tests grün, drei Testmails). GA4-Echtzeit zeigt nach Zustimmung 1 aktiven Nutzer (Schweiz). Prüfung im Netzwerk-Tab am Arbeitsrechner nicht möglich; „vor der Zustimmung nichts an Google“ ist durch den Browser-Test E7 belegt. In GA4 zwei Konten „Soccer Intelligence“ gefunden: 417115377 (Property 565372051, `G-9XH0LGQLQ7`, in Gebrauch) und 417487272 (vermutlich leer, doppelt angelegt).
