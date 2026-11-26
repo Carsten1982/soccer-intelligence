@@ -1,150 +1,133 @@
-
 # Soccer Intelligence – A Personal Football Analytics Project
 
-### Football, analysed.
+**Football, analysed.**
 
 Soccer Intelligence started as a **personal learning project** driven by two interests: football and data.
 
-The idea was to explore how programming, data analysis and statistical methods could be used to look at football matches from a different perspective.
+I wanted to find out how programming, data analysis and statistical methods could be used to look at football matches from a different perspective. What began as a way to develop new skills gradually grew into an independent football analytics platform that anyone can visit.
 
-What began as an opportunity to develop new technical skills gradually evolved into an independent football analytics platform.
+🌐 **[Visit soccer-intelligence.com](https://soccer-intelligence.com)**
 
-The project combines my interest in football with hands-on learning in Python, data processing, statistical analysis and web development.
-
-🌐 **[Explore the project](https://soccer-intelligence.com)**
+![Homepage of Soccer Intelligence](docs/Homepage.png)
 
 ---
 
 ## About the Project
 
-Football generates enormous amounts of data. Goals, corners, yellow cards, expected goals and team performance indicators all tell part of the story.
+Football produces a huge amount of data: goals, corners, yellow cards, shots on target and much more. Each number tells part of the story.
 
 **But how can these numbers be put into context?**
 
-That was the question behind Soccer Intelligence.
+That question is behind Soccer Intelligence. For every upcoming match, the platform calculates expected values from both teams' recent league matches and compares them with the league average. Where a value differs clearly from the average, the match is highlighted, together with a note on how often similar cases were confirmed in the past.
 
-The project explores how statistical deviations from league averages can help identify matches that stand out from a data perspective – and how historical match data can provide additional context.
-
-Soccer Intelligence currently covers four major European football leagues:
+Soccer Intelligence currently covers four major European leagues:
 
 - Bundesliga
 - Premier League
-- La Liga
 - Serie A
+- LaLiga
 
-This is an **independent, non-commercial personal project**. It is primarily a way to learn, experiment and develop practical skills by building something around a subject I genuinely enjoy.
+The website is available in **English and German**.
 
-I also wanted to make the result accessible to other football enthusiasts who might find this analytical perspective interesting.
+This is an **independent, non-commercial personal project**. It is first and foremost a way to learn, experiment and build something around a subject I genuinely enjoy – and to share the result with other football fans who might find this perspective interesting.
 
 ---
 
-## What Can You Explore?
+## What You Can Explore
 
-### 1. Matchday Overview
+### 1. The Standout Matches
 
-The matchday dashboard provides an overview of upcoming fixtures across the four supported leagues.
+The homepage shows the most interesting deviations of the upcoming matchday at a glance – for example in **Over 2.5 goals**, **Both teams to score**, **expected total goals**, **corners** or **yellow cards**.
 
-Users can quickly identify matches that stand out statistically and explore the underlying indicators.
+Each deviation is shown as a percentage compared with the league average, together with its **signal quality** (high, medium or low). Signal quality shows how often similar standout statistics were confirmed in past matches.
 
-![Matchday Overview](docs/Matchday.png)
+### 2. Matchday Overview
 
-### 2. Standout Matches
+The matchday page lists all fixtures of the current matchday for each league. Matches with standout statistics are marked by signal quality, so they are easy to spot. Earlier matchdays remain available in an archive with final scores.
 
-One of the central ideas is to identify statistical values that differ significantly from their respective league averages.
+![Matchday overview](docs/Matchday.png)
 
-Examples include:
+### 3. Match Analysis
 
-- Over 2.5 goals
-- Both teams to score
-- Expected total goals
-- Yellow cards
-- Other statistical match indicators
+Every match has its own page with:
 
-Deviations are displayed as percentages, making unusual values easier to identify.
+- recent form of both teams
+- standout statistics with signal quality
+- expected values compared with the league average
+- a breakdown of all statistics, including those without anything unusual
 
-Each signal also includes a quality classification to help put the results into context.
+After the final whistle, the same page compares the **expected values with what actually happened** and shows whether each standout statistic was confirmed.
 
-![Standout Matches](docs/Homepage.png)
-
-### 3. Detailed Match Analysis
-
-Every selected match has its own analysis page.
-
-Users can explore individual fixtures and their statistical characteristics, including:
-
-- Recent team form
-- Standout statistical indicators
-- Expected values compared with league averages
-- Signal quality classifications
-- Detailed breakdowns of individual indicators
-
-The aim is not simply to display numbers, but to make them easier to understand and interpret.
-
-![Match Detail Analysis](docs/Match-detail-page.png)
+![Match analysis page](docs/Match-detail-page.png)
 
 ### 4. Transparent Methodology
 
-Transparency is an important part of the project.
+Transparency matters to me. The methodology page explains the approach in three levels:
 
-The methodology section explains how statistical deviations are identified and how historical match data is used to assess whether similar patterns have been confirmed in previous games.
+- **Level 1 – In brief:** the basic idea behind the analysis
+- **Level 2 – With numbers:** a worked example of the calculations
+- **Level 3 – Full details:** all rules, thresholds and the historical check, including a downloadable Excel file
 
-The explanations are structured into three levels:
+The aim is to make the approach understandable without a background in statistics.
 
-- **Level 1 – In brief:** The basic principle behind the analysis.
-- **Level 2 – With numbers:** A worked example showing how the calculations are applied.
-- **Level 3 – Full details:** A more comprehensive explanation of the calculations and historical verification.
+![Methodology page](docs/Methodology.png)
 
-The goal is to make the analytical approach understandable, even without an advanced statistical background.
+---
 
-![Methodology](docs/Methodology.png)
+## How It Was Built
+
+### Built with the support of AI
+
+Soccer Intelligence was developed with the support of AI, using **Claude Code**. I defined the ideas, rules and calculations, checked the results and made the decisions – and learned a great deal along the way about software development, data processing and running a website.
+
+### Technology
+
+- **Python** – data processing, statistical calculations and the website itself
+- **Jinja2, HTML and CSS** – the public website, optimised for mobile devices
+- **Streamlit** – an internal dashboard for data quality checks and analysis
+- **Docker** – each part of the platform runs in its own container
+- **Traefik** – reverse proxy with HTTPS
+- **Hostinger VPS** – server and hosting
+- **API-Football** – source of fixtures, results and match statistics
+- **Automated tests** – more than 800 test cases run before every release
+
+### What happens automatically
+
+- Match data is imported automatically after each match, with a daily control run.
+- Values are frozen before kick-off, so the comparison after the match is fair.
+- A monitoring script checks the website and server every minute and sends alerts by email if something goes wrong.
 
 ---
 
 ## The Learning Journey
 
-Building Soccer Intelligence has been a practical way to explore and improve my skills in several areas:
+Building Soccer Intelligence has been a practical way to explore and improve my skills in:
 
-- Python programming
-- Data processing and statistical analysis
-- Football analytics and performance indicators
-- Web application development with Streamlit
-- Docker and application deployment
-- Data visualisation and user experience
+- Python and data processing
+- statistical analysis and football statistics
+- web development, accessibility and search engine basics
+- Docker, servers and deployment
+- automated testing and monitoring
+- working with AI as a development partner
 
-Rather than just following tutorials or working through isolated exercises, I wanted to build something tangible – a project that combines different technologies and grows through experimentation.
+Rather than following isolated tutorials, I wanted to build something real – a project that combines many different topics and keeps growing through experimentation.
 
-There is still plenty to learn and improve. That is part of what makes the project interesting.
-
----
-
-## Technology Stack
-
-The project is built using a combination of:
-
-- **Python** – Data processing and statistical calculations
-- **Streamlit** – Interactive web application
-- **Docker** – Application containerisation
-- **Automated data processing** – Preparing and updating match information
-- **Statistical analysis** – Identifying deviations and evaluating historical patterns
+There is still plenty to learn and improve. That is part of what makes it interesting.
 
 ---
 
 ## A Personal Project, Shared with Others
 
-Soccer Intelligence is not a commercial product or a business venture.
+Soccer Intelligence is not a commercial product or a business.
 
-It is an independent project built out of curiosity, personal interest and the motivation to learn new things.
+It is an independent project built out of curiosity, an interest in football and the wish to keep learning.
 
-If you enjoy football, data analysis or technology, feel free to explore the platform. Feedback, suggestions and ideas are always welcome.
-
-Whether you are interested in the football analysis itself or simply curious about how such a project is built, I hope you find something interesting.
-
-### Explore Soccer Intelligence
+If you enjoy football, data or technology, feel free to explore the platform. **Feedback, suggestions and ideas are always welcome.**
 
 🌐 **Website:** [soccer-intelligence.com](https://soccer-intelligence.com)
 
 ---
 
-*An independent personal learning project. Statistical indicators provide analytical context and should not be interpreted as guarantees of future match outcomes.*
+*An independent personal learning project. The statistics provide analytical context only and are not predictions or guarantees of future match outcomes. This project does not offer betting advice.*
 
 **Built with curiosity, football and data.**
