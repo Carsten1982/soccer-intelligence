@@ -10,7 +10,7 @@ Diese Datei ist die **einzige Stelle** für Projektstand, Versionen, Server, Abl
 
 **In Betrieb:** Version 0.28 (seit 26.11.2026, `4069af4`) – **Website öffentlich** unter `https://soccer-intelligence.com/` (`www` leitet dauerhaft weiter; Cookie-Hinweis, Google Analytics 4 erst nach Zustimmung, Echtzeit-Bericht bestätigt) (Container `soccer-website`, Deutsch und Englisch, Archiv je Spieltag, Methodik mit Excel-Download, Glossar, Kontakt mit Versand, Impressum, Datenschutz; im Index ab 26.11.2026, Archiv der laufenden Saison, Sitemap; PageSpeed mobil 100/100/100/100); Vorschau mit Zeitreise unter `/vorschau` (Passwort); Platzhalterseite läuft ungenutzt als Rückweg; Auswertung nach dem Spiel, frühere Spieltage; Seitenspeicher, Komprimierung (zstd) und HSTS geprüft; E-Mail-Alarme, Statusmail mit Sitemap-Zeile, Server-Überwachung; Dashboard mit vier Ligen (Bundesliga, Premier League, Serie A, LaLiga), KPI 01–09 mit Auffälligkeit und Signalqualität stark / mittel / gering (23 Schwellen), Top Anomalien, Datenqualität, Sensitivitätsanalyse, Datenimport über API-Football mit Schnappschuss je Spiel; Vorschau weiterer Spieltage ab heute + 5.
 
-**Als Nächstes:** 0.29 einspielen (englische Texte nach Release_14). Search Console beobachten (Sitemap-Status); am Sonntag: Platzhalterseite stoppen, Server-Neustart, SPF-Eintrag prüfen, dann Container ohne root.
+**Als Nächstes:** 0.29 und 0.30 zusammen einspielen (englische Texte nach Release_14; **Showcase** unter `/showcase…` mit Dashboard „Datenmonitoring“, `08`, Abschnitt 12). Vorher die zwei Showcase-Bilder nach `website-bilder/` legen (RELEASE.md). Englische Showcase-Texte prüfen lassen, dann freischalten. Search Console beobachten (Sitemap-Status); am Sonntag: Platzhalterseite stoppen, Server-Neustart, SPF-Eintrag prüfen, dann Container ohne root.
 
 **Als Nächstes – Releaseplan bis zum Livegang (Freigabe Carsten 19.11.2026):**
 
@@ -139,7 +139,7 @@ Ausbaustufen:
 | `soccer-placeholder` | Platzhalterseite unter `/` (nginx, statisch), seit Etappe E; seit 0.27 ungenutzt (Rückweg, Abschnitt 6.7) | **ja** |
 | `soccer-import` | Datenimport über API-Football (täglich 04:00, bis 0.14 Montag bis Freitag), seit Version 0.14; kein Zugang von aussen | **ja** |
 | `soccer-vorschau` | Vorschau der öffentlichen Website unter `/vorschau` mit Passwortabfrage, seit Version 0.17 (`08_Website.md`) | **ja** |
-| `soccer-website` | Öffentliche Website unter `/` (gleiches Programm wie die Vorschau, ohne Passwort und Zeitreise), seit Version 0.27 | **ja** |
+| `soccer-website` | Öffentliche Website unter `/` (gleiches Programm wie die Vorschau, ohne Passwort und Zeitreise), seit Version 0.27; seit 0.30 auch der Showcase unter `/showcase…` (noindex, nicht von der Plattform verlinkt) | **ja** |
 | `article-generator` | Artikeltext-Generator | nein – nicht anfassen |
 | `n8n-wxit-n8n-1` | n8n Automatisierung | nein – nicht anfassen |
 | `traefik-traefik-1` | Webserver / HTTPS für alle Anwendungen | nein – nicht anfassen |
@@ -598,6 +598,8 @@ CHANGELOG.md              Änderungsprotokoll
   `Dockerfile`; dafür auf dem Server einmalig die Besitzer von `data/`, `import/`, `backup/` (und `website-bilder/`) ändern.
   Bewusst nicht vor dem Livegang: ein Fehler bei den Schreibrechten würde den Import stoppen. Danach prüfen, ob das
   Root-Dateisystem schreibgeschützt laufen kann (`read_only` mit `tmpfs` für Zwischendateien).
+- [ ] **Showcase Englisch** (0.30): Texte des Design-Chats (an Release_14 angepasst) prüfen lassen, dann in `app/website/showcase.py` `SPRACHEN_FREI = ("de", "en")` setzen und eine Sprachauswahl in den Kopf. Entscheid Carsten 26.11.2026.
+- [ ] **Showcase-Zahlen nachführen**: Codezeilen (7’524 / 4’621) und „> 800 Testfälle“ stehen fest in den Texten (Entscheid Carsten 26.11.2026); bei grösseren Releases prüfen. Version, Spiele und Kombinationen kommen live.
 - [ ] Wo läuft der Chatbot? (nur zur Dokumentation)
 - [ ] Aufräumen in `backup/` nach einigen Wochen stabilen Betriebs
 - [ ] Offene KPI-Punkte im Regelwerk, Abschnitt 8 (nicht blockierend)

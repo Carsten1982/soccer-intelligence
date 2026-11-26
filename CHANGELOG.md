@@ -5,6 +5,12 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 26.11.2026 – Version 0.30: Showcase (Release_15, Design 575)
+
+- **Carsten** · Entscheide: Adressen `/showcase`, `/showcase/project`, `/showcase/ki-automation`, `/showcase/ki-automation/data` (Englisch `/en/showcase/…`, vorerst nicht freigeschaltet); noindex, keine Verlinkung von der Plattform; nur Desktop; kein Cookie-Hinweis; Foto und Linkvorschau mit Foto (Bilder nur auf dem Server); Codezeilen 7’524 / 4’621 und „> 800 Testfälle“ als feste Zahlen, Version und Spiele live, „23“ Kombinationen; gleicher Hero-Satz auf Showcase und Projekt; Chip „In Entwicklung“ beim Wettbewerbsmonitoring; n8n bleibt; Entwurfs-Symbole statt Original-Logos; Dashboard-Zahlen aus dem Backend, fehlende Kennzahlen bauen, leere Zustände mit eigenen Texten.
+- **Claude** · Vier Showcase-Seiten nach den Entwürfen (`website/showcase.py`, `vorlagen/showcase/`, `statisch/showcase.css`, `statisch/showcase-entwurf.css` – Stile der Entwürfe als Klassen, weil eingebettete Stile nicht erlaubt sind). Dashboard mit Live-Werten: Bestand, Ereignisprotokoll, Alarme, server.json; neu im Backend: `betrieb/kennzahlen.py` (Tagesverlauf der Datenprüfung, Backups), Verfügbarkeit je Tag im Prüfskript, `release.json` im Einspiel-Skript. Tabelle „Letzte Importe“ als echte Tabelle. Tests S1–S8 (`tests/test_showcase_030.py`); axe-core ohne Befund (1280 und 1680 px).
+- **Claude** · Gezählt am 26.11.2026 (ohne Leerzeilen, Kommentare, Beschreibungen): Rechenkern/Import/Betrieb ≈ 5’200, internes Dashboard ≈ 2’200, Website ≈ 4’500 Zeilen, Tests ≈ 6’700 Zeilen und 810 Testfälle; 23 Kombinationen mit Schwelle.
+
 ## 26.11.2026 – Version 0.29: Englische Texte (Release_14, Design 571)
 
 - **Carsten** · Entscheide zur zweiten Übersetzungsprüfung: «anomaly» → «standout» als Paket, Standard-Sätze S1 (Signalqualität), S2 (Footer), S3 (Wetten), «tipsters» bleibt, zwei deutsche Klarstellungen in der Methodik (D1 «jeder Mannschaft», D2 Spanne).

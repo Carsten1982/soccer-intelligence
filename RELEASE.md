@@ -1,19 +1,40 @@
-# Release: Version 0.29 – Englische Texte
+# Release: Version 0.30 – Showcase (mit 0.29 Englische Texte)
 
-**Stand:** 26.11.2026 · Version 0.29 · Release_14 des Design-Chats (Design 571), Entscheide Carsten 26.11.2026
+**Stand:** 26.11.2026 · Version 0.30 · Release_15 des Design-Chats (Design 575), Entscheide Carsten 26.11.2026.
+Enthält auch **0.29** (englische Texte nach Release_14), das noch nicht eingespielt war.
 
-**Commit:** Version 0.29: Englische Texte nach Release_14
+**Commit:** Version 0.30: Showcase
 
 ## Was ändert sich?
 
-- **Englisch:** «anomaly» heisst jetzt überall **«standout statistic(s)»** (Chips, Gruppen, Legenden, Box «Standout threshold», Startseite, Spieltag, Spielseite, Auswertung, Methodik, Glossar, Title/Description). «metric» im Fliesstext → «statistic»; die Gruppe «Metrics» bleibt.
-- **Neue Standard-Sätze:** Signalqualität (S1), Footer «Statistical analysis, not betting advice. Not affiliated with any leagues or clubs.» (S2), Hinweis zu Wetten «… no betting advice or predictions of winnings.» (S3); dazu «when making your own predictions», «average for that league», «data-driven», «Both teams scoring expected more/less often», Methodik Ebene 3 (Erwartung, Unsicherheit, Mindestanforderungen, «overall rate»).
-- **Deutsch, Methodik Ebene 3:** «letzte 10 Ligaspiele **jeder Mannschaft**» und neuer Satz zur Spanne (D1, D2). Alles andere im Deutschen unverändert.
-- Keine Änderung an Layout, Daten, Berechnung oder Adressen.
+- **Showcase** (nur für deine Bewerbungen, nie im Index, nicht von der Plattform verlinkt):
+  - `/showcase` – Einstieg mit Foto und drei Kacheln
+  - `/showcase/project` – Projekt mit Zahlen (Version und Spiele live)
+  - `/showcase/ki-automation` – Monitoring und KI-Agenten (nur das Datenmonitoring „Im Betrieb“)
+  - `/showcase/ki-automation/data` – Dashboard „Datenmonitoring“ mit **echten Werten aus dem Backend**
+- **Backend:** täglicher Verlauf der Datenprüfung und Backups (`import/kennzahlen.json`), Verfügbarkeit je Tag im
+  Prüfskript, Testfälle beim Einspielen (`import/release.json`, ab dem nächsten Einspielen).
+- **0.29:** englische Texte mit „standout statistic(s)“ statt „anomaly“, neue Standard-Sätze, Methodik DE (D1, D2).
+
+## Vorher: zwei Bilder auf den Server legen
+
+Die Bilder hast du im Chat bekommen (`showcase-portrait.webp`, `showcase-vorschau.jpg`). Sie gehören nach
+`/docker/football-dashboard/website-bilder/` (wie das Foto der Startseite; nie in Git). Zum Beispiel vom Laptop aus
+(PowerShell oder Terminal, im Ordner mit den beiden Dateien):
+
+```bash
+scp showcase-portrait.webp showcase-vorschau.jpg root@72.60.132.157:/docker/football-dashboard/website-bilder/
+```
+
+Ohne die Bilder funktioniert alles; dann steht im Hero ein neutraler Platzhalter und die Linkvorschau ohne Bild.
 
 ## Einspielen
 
 Pull Request zusammenführen („Squash and merge“, Tests grün), dann:
+
+```bash
+tmux new -s release030
+```
 
 ```bash
 bash /docker/football-dashboard/tools/einspielen.sh github
@@ -21,13 +42,27 @@ bash /docker/football-dashboard/tools/einspielen.sh github
 
 ## Erwartungswerte
 
-- Tests rund **778 bestanden**, keine Fehler. Dashboard-Fusszeile: „Version 0.29 – Englische Texte“.
+- Tests rund **805 bestanden**, keine Fehler (hier: 821 bestanden, 18 übersprungen; der Browser-Test E7 wird auf dem
+  Server übersprungen). Dashboard-Fusszeile: „Version 0.30 – Showcase“.
 - Schritt 5 wie bisher (`/` = 301, `/de/` = 200, `/vorschau/` = 401), drei Testmails.
+- Danach (nur lesend):
+  ```bash
+  for u in /showcase /showcase/project /showcase/ki-automation /showcase/ki-automation/data /en/showcase; do printf "%-34s %s %s\n" "$u" "$(curl -s -o /dev/null -w "%{http_code}" "https://soccer-intelligence.com$u")" "$(curl -sI "https://soccer-intelligence.com$u" | grep -i '^x-robots-tag' | tr -d '\r')"; done
+  ```
+  Erwartet: vier Mal `200 x-robots-tag: noindex, nofollow`, `/en/showcase` = `404`.
+- Nach dem nächsten Kontrolllauf (04:00) liegt `import/kennzahlen.json` vor; „Hinweise im Verlauf“ zeigt ab dem zweiten
+  Tag eine Linie. „Automatische Tests“ zeigt bis zum nächsten Einspielen „Wird beim nächsten Release erfasst“ (beim
+  Einspielen von 0.30 läuft noch das alte Einspiel-Skript).
 
-## Im Browser prüfen
+## Im Browser prüfen (am Computer)
 
-1. `/en/` (Startseite): Legende Signalqualität mit dem neuen Satz, Footer «Statistical analysis, not betting advice. Not affiliated with any leagues or clubs.»
-2. `/en/matchday/bundesliga/`: Legende «These are standout matches.», Kacheln ohne Auffälligkeit «No standout statistics».
-3. Eine englische Spielseite: Gruppen «Standout statistics» / «No standout statistics», Box «Standout threshold»; auf dem Handy sauberer Umbruch.
-4. `/en/methodology/` Ebene 3 und `/de/methodik/` Ebene 3 («jeder Mannschaft», Satz zur Spanne).
-5. `/en/glossary/`: «Standout statistic», «Statistics».
+1. `https://soccer-intelligence.com/showcase`: Foto, Tablet, drei Kacheln; Reiter „Showcase“ aktiv.
+2. Kachel „Das Projekt“ → Projekt-Seite: **Version 0.30**, Spiele wie im Dashboard, **23**, **7’524 / 4’621**,
+   **> 800 Testfälle**, Chip „In Entwicklung“ beim Wettbewerbsmonitoring. „Plattform live erleben“ → Startseite.
+3. Reiter „KI & Automatisierung“: Karte 01 „Im Betrieb“ führt zum Dashboard; Karten 02–04 „In Entwicklung“ ohne Link.
+4. Dashboard: Systemstatus, Spiele je Liga, letzte Importe, Datenprüfung, Website & Server mit echten Werten, kein
+   gelbes Band „Entwurf“.
+5. Plattform (`/de/`): nirgends ein Link zum Showcase.
+6. Linkvorschau: den Link `https://soccer-intelligence.com/showcase` dir selbst per E-Mail oder in LinkedIn senden →
+   Titel, Text und Bild erscheinen (das Bild nur, wenn es auf dem Server liegt).
+7. 0.29: `/en/` Footer „Statistical analysis, not betting advice. Not affiliated with any leagues or clubs.“
