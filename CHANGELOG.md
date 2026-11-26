@@ -5,6 +5,18 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 26.11.2026 – Version 0.30.1: Showcase-Dashboard Zeitzonen
+
+- **Carsten** · Prüfung 0.30 im Browser: Dashboard zeigt „Letzter Datenstand 03:01 Uhr“ und „Website & Server: Werte vorübergehend nicht verfügbar“. Foto folgt (wird heute Abend hochgeladen). KI-Karten ohne Link und englischer Footer korrekt.
+- **Claude** · Zwei Fehler behoben (`website/showcase.py`): Die Änderungszeit der Datenbank kommt in UTC und wird jetzt in Schweizer Zeit angezeigt (04:01 statt 03:01). Die Aktualität der Server-Werte wird über die Änderungszeit von `server.json` geprüft statt über deren Feld „zeit“, das das Prüfskript in der Uhrzeit des Servers (UTC) schreibt – dadurch galten die Werte als eine Stunde alt. Test S9.
+- **Carsten** · Die Website erscheint in Google (Startseite, Methodik); das Logo fehlt noch (graue Weltkugel).
+- **Claude** · Website-Symbol geprüft: `favicon.ico` enthält 48 × 48 (Vorgabe Google: Vielfaches von 48 px), dazu SVG; neu zusätzlich PNG 192 × 192 im Kopf (`basis.html`), `sizes` der ICO-Datei korrigiert. Google holt das Symbol mit eigenem Crawler, das dauert erfahrungsgemäss Tage bis wenige Wochen. Test W34.
+
+## 26.11.2026 – Version 0.30 eingespielt (mit 0.29)
+
+- **Carsten** · Version 0.30 eingespielt (`a38a0fb`, Pull Request #34), enthält 0.29 (englische Texte). Prüfung im Browser folgt.
+- **Claude** · Stand nachgetragen; Rückmeldung an den Design-Chat zu Release_14 und Release_15 erstellt (offene Fragen dort).
+
 ## 26.11.2026 – Version 0.30: Showcase (Release_15, Design 575)
 
 - **Carsten** · Entscheide: Adressen `/showcase`, `/showcase/project`, `/showcase/ki-automation`, `/showcase/ki-automation/data` (Englisch `/en/showcase/…`, vorerst nicht freigeschaltet); noindex, keine Verlinkung von der Plattform; nur Desktop; kein Cookie-Hinweis; Foto und Linkvorschau mit Foto (Bilder nur auf dem Server); Codezeilen 7’524 / 4’621 und „> 800 Testfälle“ als feste Zahlen, Version und Spiele live, „23“ Kombinationen; gleicher Hero-Satz auf Showcase und Projekt; Chip „In Entwicklung“ beim Wettbewerbsmonitoring; n8n bleibt; Entwurfs-Symbole statt Original-Logos; Dashboard-Zahlen aus dem Backend, fehlende Kennzahlen bauen, leere Zustände mit eigenen Texten.

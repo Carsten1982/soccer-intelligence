@@ -15,10 +15,11 @@ S8 Linkvorschau: og:image nur, wenn das Bild auf dem Server liegt; Foto mit alt-
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 from html import escape
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -128,7 +129,7 @@ def test_s4_projekt_zahlen(dienst, monkeypatch):
     db = SimpleNamespace(leagues={k: [0] * n for k, n in zahlen.items()})
     monkeypatch.setattr(dienst, "bestand", lambda: SimpleNamespace(db=db, gesperrt=False), raising=False)
     html = _seite(dienst, "/showcase/project").inhalt.decode()
-    assert SC.version() == settings.APP_VERSION.split(" ")[0] == "0.30"
+    assert SC.version() == settings.APP_VERSION.split(" ")[0] and SC.version().startswith("0.")
     assert f">{SC.version()}</b>" in html                                         # Version aus einer Quelle
     assert html.count(">12’017<") == 2                                            # Produkt und „Projekt in Zahlen“
     assert html.count(">23<") == 2 and html.count(">4<") >= 2
@@ -158,15 +159,23 @@ def _betrieb(ordner: Path) -> None:
         "container": {"football-dashboard": {"status": "running"}, "soccer-import": {"status": "running"}},
         "website": {"/de/": 200, "/sitemap.xml": 200}, "verfuegbarkeit": {"2026-11-25": [1440, 1440], "2026-11-26": [840, 830]}}),
         encoding="utf-8")
+    _alter(ordner / "server.json", datetime(2026, 11, 26, 13, 59))
     (ordner / "kennzahlen.json").write_text(json.dumps({
         "verlauf": [{"tag": f"2026-11-{20 + i}", "fehler": 0, "warnungen": 0, "hinweise": 230 + i} for i in range(7)],
         "backups": {"anzahl": 12, "neueste": "2026-11-26"}}), encoding="utf-8")
     (ordner / "release.json").write_text(json.dumps({"version": "0.30", "tests": 810, "ergebnis": "bestanden"}), encoding="utf-8")
 
 
+def _alter(datei: Path, ortszeit: datetime) -> None:
+    """Änderungszeit der Datei auf diese Schweizer Ortszeit setzen (das Dashboard prüft die Aktualität daran)."""
+    ts = ortszeit.replace(tzinfo=SC.ZONE).timestamp()
+    os.utime(datei, (ts, ts))
+
+
 def _daten(dienst, ordner, monkeypatch):
     zahlen = {"Bundesliga": 2538, "Premier League": 3150, "Serie A": 3160, "LaLiga": 3169}
-    db = SimpleNamespace(leagues={k: [0] * n for k, n in zahlen.items()}, file_modified=datetime(2026, 11, 26, 4, 2),
+    db = SimpleNamespace(leagues={k: [0] * n for k, n in zahlen.items()},
+                         file_modified=datetime(2026, 11, 26, 3, 2, tzinfo=timezone.utc),   # Dateizeit in UTC
                          count=lambda s: {"Fehler": 0, "Warnung": 1}.get(s, 236))
     fx = SimpleNamespace(count=lambda s: 0)
     monkeypatch.setattr(dienst, "bestand", lambda: SimpleNamespace(db=db, fx=fx, gesperrt=False), raising=False)
@@ -212,9 +221,7 @@ def test_s6_leere_zustaende(dienst, tmp_path, monkeypatch):
                  "Werte vorübergehend nicht verfügbar", "Verlauf ab – (tägliche Aufzeichnung).", "Messung ab diesem Release"):
         assert text in html, text
     _betrieb(tmp_path)
-    alt = json.loads((tmp_path / "server.json").read_text())
-    alt["zeit"] = "2026-11-26T10:00:00"                                           # Prüfskript meldet sich nicht mehr
-    (tmp_path / "server.json").write_text(json.dumps(alt))
+    _alter(tmp_path / "server.json", datetime(2026, 11, 26, 10, 0))               # Prüfskript meldet sich nicht mehr
     html = _daten(dienst, tmp_path, monkeypatch)
     assert "Werte vorübergehend nicht verfügbar" in html and ">Erreichbar<" not in html
 
@@ -284,3 +291,19 @@ def test_s8_vorschau_bild_und_foto(dienst, tmp_path, monkeypatch):
     assert a.status == 200 and a.kopf["Content-Type"] == "image/webp"
     assert vorschau.beantworten("/vorschau/bilder/andere.jpg", "", dienst).status == 404
     assert '<meta property="og:url" content="https://soccer-intelligence.com/showcase">' in html
+
+
+def test_s9_zeitzonen(dienst, tmp_path, monkeypatch):
+    """Fehler gefunden nach dem Einspielen von 0.30 (Carsten, 26.11.2026): Datenstand in UTC (03:01 statt 04:01) und
+    Server-Werte „nicht verfügbar“, weil das Prüfskript „zeit“ in der Uhrzeit des Servers (UTC) schreibt."""
+    _betrieb(tmp_path)
+    alt = json.loads((tmp_path / "server.json").read_text())
+    alt["zeit"] = "2026-11-26T12:59:00"                                           # UTC des Servers, eine Stunde „zurück“
+    (tmp_path / "server.json").write_text(json.dumps(alt))
+    _alter(tmp_path / "server.json", datetime(2026, 11, 26, 13, 59))
+    html = _daten(dienst, tmp_path, monkeypatch)
+    assert "04:02 Uhr" in html and "03:02 Uhr" not in html                       # Datenstand in Schweizer Zeit
+    assert ">Erreichbar<" in html and "Stand: 26.11.2026 · 13:59" in html        # Server-Werte frisch
+    assert SC.ortszeit(datetime(2026, 7, 1, 2, 0, tzinfo=timezone.utc)) == datetime(2026, 7, 1, 4, 0)    # Sommerzeit
+    assert SC.ortszeit(datetime(2026, 11, 26, 4, 0)) == datetime(2026, 11, 26, 4, 0)                    # ohne Zone
+
