@@ -32,12 +32,26 @@ a:hover { text-decoration: underline; }
 .sc-logo { display: flex; align-items: center; gap: 14px; color: #0E2A1F; white-space: nowrap; }
 .sc-logo span { font-family: "Outfit", sans-serif; font-weight: 700; font-size: 28px; letter-spacing: -0.01em; }
 .sc-nav { display: flex; flex-wrap: nowrap; align-items: center; gap: 40px; }
+/* Seit 0.31: Mit der Sprachauswahl passt der Kopf bei 1280 px (Mindestbreite) nur mit kleineren Abständen; der Entwurf
+   (1680 px) bleibt unverändert. */
+@media (max-width: 1499px) { .sc-nav { gap: 20px; } }
 .sc-nav a.sc-reiter { display: inline-flex; align-items: center; height: 52px; font-size: 18px; font-weight: 500; white-space: nowrap; border-bottom: 3px solid transparent; }
 .sc-nav a.sc-reiter[aria-current="page"] { font-weight: 700; border-bottom-color: #C6F26B; }
 .sc-nav a.sc-reiter:hover { text-decoration: none; border-bottom-color: #D3DED5; }
 .sc-nav a.sc-reiter[aria-current="page"]:hover { border-bottom-color: #C6F26B; }
 .sc-kontakt { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 0 26px; border-radius: 999px; font-size: 18px; font-weight: 600; background: #C6F26B; color: #0B3D2E; }
 .sc-kontakt:hover { text-decoration: none; background: #B4E352; }
+
+/* Sprachauswahl (seit 0.31, Release_15 §9.1): Globus, «Deutsch / English», zwischen «KI & Automatisierung» und
+   «Kontakt». Öffnet ohne Skript über <details>; site.js setzt aria-expanded und schliesst per Esc oder Klick daneben. */
+.sc-sprache { position: relative; }
+.sc-sprache > summary { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border: 1.5px solid #D3DED5; border-radius: 999px; background: #FFFFFF; color: #0E2A1F; font-size: 15px; font-weight: 600; cursor: pointer; list-style: none; white-space: nowrap; }
+.sc-sprache > summary::-webkit-details-marker { display: none; }
+.sc-sprache[open] > summary svg:last-child { transform: rotate(180deg); }
+.sc-sprachen { position: absolute; right: 0; top: calc(100% + 6px); z-index: 50; min-width: 170px; padding: 6px; background: #FFFFFF; border: 1px solid #D3DED5; border-radius: 14px; box-shadow: 0 8px 28px rgba(11, 61, 46, 0.18); }
+.sc-sprachen a { display: flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 10px; font-size: 16px; font-weight: 500; color: #0E2A1F; }
+.sc-sprachen a[aria-current="true"] { background: #E8F1EA; font-weight: 700; }
+.sc-sprachen a:hover { text-decoration: none; background: #F4F7F2; }
 
 /* Fuss (Entwurf: dunkelgrün, Logo, Tagline, drei Schaltflächen, Lime-Streifen) */
 .sc-fuss { position: relative; overflow: hidden; background: #0B3D2E; color: #C4DACD; margin-top: 64px; }
@@ -50,20 +64,22 @@ a:hover { text-decoration: underline; }
 .sc-fuss nav { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .sc-fuss nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 999px; font-size: 17px; font-weight: 600; color: #F4F7F2; border: 1.5px solid rgba(244, 247, 242, 0.28); }
 .sc-fuss nav a:hover { text-decoration: none; border-color: #C6F26B; }
+.sc-fuss-eng { margin-top: 40px; }   /* Startseite (Design 581): Header, Hero und Kacheln ohne Scrollen auf Full HD */
 .sc-streifen { height: 8px; background: linear-gradient(90deg, #2E8B2A, #C6F26B 50%, #2E8B2A); }
 
-/* Hero mit Foto und Tablet sowie Karten (Klassen sg-* aus den Entwürfen) */
-.sg-hero { position: relative; display: grid; grid-template-columns: minmax(0, 1.03fr) minmax(0, 1.1fr); gap: 40px 24px; align-items: end; }
-.sg-vis { position: relative; aspect-ratio: 1.1 / 1; margin-bottom: calc(-1 * var(--pad, 72px)); }
-.sg-photo { position: absolute; left: -17%; bottom: 0; width: 80%; aspect-ratio: 1 / 1; z-index: 2; }
+/* Hero mit Foto und Tablet sowie Karten (Klassen sg-* aus den Entwürfen; seit 0.31 kompakter Hero, Design 581:
+   Hero 470 px hoch, Foto unten bündig, Tablet kleiner, Kacheln ca. 190 px) */
+.sg-hero { position: relative; display: grid; grid-template-columns: minmax(0, 1.03fr) minmax(0, 1.1fr); gap: 24px 24px; align-items: end; }
+.sg-vis { position: relative; height: 430px; margin-bottom: 0; }
+.sg-photo { position: absolute; left: -3%; bottom: 0; height: 100%; aspect-ratio: 1 / 1; z-index: 2; }
 .sg-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .sg-photo .sc-foto-leer { width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle at 50% 40%, rgba(198, 242, 107, 0.18), rgba(198, 242, 107, 0) 65%); }
-.sg-lap { position: absolute; right: -6%; bottom: 100px; width: 68%; container-type: inline-size; z-index: 1; perspective: 1600px; }
+.sg-lap { position: absolute; right: -2%; bottom: 64px; width: 58%; container-type: inline-size; z-index: 1; perspective: 1600px; }
 .sg-3d { position: relative; transform-style: preserve-3d; transform: rotateY(-20deg) rotateX(4deg); transform-origin: 50% 100%; }
-.sg-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 32px; }
-.sg-card { display: flex; flex-direction: column; background: #FFFFFF; border: 1px solid #D3DED5; border-radius: 28px; padding: 32px 36px; min-width: 0; color: #0E2A1F; text-decoration: none; scroll-margin-top: 16px; box-shadow: 0 6px 20px rgba(14, 42, 31, 0.05); }
+.sg-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 20px; }
+.sg-card { display: flex; flex-direction: column; background: #FFFFFF; border: 1px solid #D3DED5; border-radius: 24px; padding: 22px 30px; min-width: 0; color: #0E2A1F; text-decoration: none; scroll-margin-top: 16px; box-shadow: 0 6px 20px rgba(14, 42, 31, 0.05); }
 a.sg-card:hover { text-decoration: none; border-color: #0B3D2E; }
-.sg-hero-wrap { --pad: 72px; }
+.sg-hero-wrap { --pad: 0px; }
 
 /* Statuschips (Entwurf KI: Im Betrieb / In Entwicklung) und gelbe Kennzeichnung für Werte, die noch fehlen */
 .sc-chip { display: inline-flex; align-items: center; gap: 8px; min-height: 32px; padding: 0 14px; border-radius: 999px; font-size: 15px; font-weight: 700; white-space: nowrap; }

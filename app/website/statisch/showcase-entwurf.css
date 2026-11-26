@@ -2,16 +2,16 @@
    Automatisch aus den eingebetteten Stilangaben der Entwürfe übernommen (eine Klasse je Stil), damit die Seiten
    genau wie die Entwürfe aussehen und die Sicherheitsrichtlinie (keine eingebetteten Stile) eingehalten ist.
    Nur Desktop (Entscheid Carsten 26.11.2026). */
-.sx-1{--pad:72px;position:relative;overflow:hidden;background:#0B3D2E;color:#F4F7F2;border-radius:36px;padding:72px 80px 0;margin-top:24px} /* ki, projekt, start */
+.sx-1{--pad:0px;position:relative;overflow:hidden;background:#0B3D2E;color:#F4F7F2;border-radius:32px;padding:40px 64px 0;margin-top:24px} /* ki, projekt, start */
 .sx-2{position:absolute;inset:0;width:100%;height:100%;opacity:0.10} /* ki, projekt, start */
 .sx-3{position:absolute;left:35%;right:0;bottom:0;height:16%;background:repeating-linear-gradient(90deg,rgba(90,200,55,0.4) 0 6px,rgba(40,135,35,0.4) 6px 12px);-webkit-mask-image:linear-gradient(to top,#000 20%,transparent),linear-gradient(to right,transparent,#000 30%);-webkit-mask-composite:source-in;mask-image:linear-gradient(to top,#000 20%,transparent),linear-gradient(to right,transparent,#000 30%);mask-composite:intersect;pointer-events:none} /* ki, projekt, start */
 .sx-4{position:absolute;left:0;right:0;bottom:0;height:45%;background:radial-gradient(ellipse 70% 100% at 75% 100%,rgba(63,160,40,0.6),rgba(63,160,40,0) 70%);pointer-events:none} /* ki, projekt, start */
 .sx-5{padding-bottom:0} /* ki, projekt, start */
-.sx-6{position:relative;z-index:3;padding-bottom:72px} /* ki, projekt, start */
-.sx-7{font-size:19px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#C6F26B} /* ki, projekt, start */
-.sx-8{margin:10px 0 0;font-family:'Outfit',sans-serif;font-weight:700;font-size:96px;line-height:1.0;white-space:nowrap;letter-spacing:-0.02em;color:#FFFFFF} /* projekt, start */
-.sx-9{margin:10px 0 0;font-family:'Outfit',sans-serif;font-weight:700;font-size:46px;line-height:1.12;color:#FFFFFF} /* projekt, start */
-.sx-10{margin:18px 0 0;font-size:21px;line-height:1.6;color:#E3EEE6;max-width:34em} /* ki, projekt, start */
+.sx-6{position:relative;z-index:3;padding-bottom:40px} /* ki, projekt, start */
+.sx-7{font-size:16px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#C6F26B} /* ki, projekt, start */
+.sx-8{margin:6px 0 0;font-family:'Outfit',sans-serif;font-weight:700;font-size:72px;line-height:1.0;white-space:nowrap;letter-spacing:-0.02em;color:#FFFFFF} /* projekt, start */
+.sx-9{margin:8px 0 0;font-family:'Outfit',sans-serif;font-weight:700;font-size:32px;line-height:1.15;color:#FFFFFF} /* projekt, start */
+.sx-10{margin:14px 0 0;font-size:18px;line-height:1.55;color:#E3EEE6;max-width:34em} /* ki, projekt, start */
 .sx-11{background:#0A1F18;position:relative;border-radius:4.4cqw;padding:2.8cqw;background:#0A1F18;box-shadow:0 3cqw 8cqw rgba(0,0,0,0.5),inset 0 0 0 0.4cqw #3A5A4B} /* ki, projekt, start */
 .sx-12{background:#0F3D2D;border-radius:2cqw;padding:3.4cqw 3.6cqw 4cqw;color:#F4F7F2} /* ki, projekt, start */
 .sx-13{display:flex;align-items:center;justify-content:space-between;gap:2cqw} /* ki, projekt, start */
@@ -103,7 +103,7 @@
 .sx-99{font-size:19px;color:#3E5247;margin-top:4px} /* projekt */
 .sx-100{padding:4px 28px;border-left:1.5px solid #D3DED5} /* projekt */
 .sx-101{display:inline-flex;align-items:center;justify-content:center;gap:12px;min-height:76px;padding:12px 34px;border-radius:999px;background:#C6F26B;color:#0B3D2E;font-size:22px;font-weight:700;line-height:1.2;text-align:center;text-decoration:none;font-family:'Outfit',sans-serif} /* projekt */
-.sx-102{margin:10px 0 0;font-family:'Outfit',sans-serif;font-weight:700;font-size:72px;line-height:1.04;letter-spacing:-0.02em;color:#FFFFFF} /* ki */
+.sx-102{margin:6px 0 0;font-family:'Outfit',sans-serif;font-weight:700;font-size:56px;line-height:1.04;letter-spacing:-0.02em;color:#FFFFFF} /* ki */
 .sx-103{background:#EAF1EA;border:1px solid #D3DED5;border-radius:32px;padding:36px 40px 40px;margin-top:28px} /* ki */
 .sx-104{font-family:'Outfit',sans-serif;font-weight:700;font-size:22px;letter-spacing:0.06em;text-transform:uppercase;color:#4F7D0A} /* ki */
 .sx-105{margin:2px 0 0;font-family:'Outfit',sans-serif;font-weight:700;font-size:38px;line-height:1.1;color:#0E2A1F} /* ki */
@@ -193,3 +193,11 @@
 .sx-189{margin:0;font-family:'Outfit',sans-serif;font-weight:700;font-size:22px;line-height:1.15;color:#FFFFFF} /* daten */
 .sx-190{margin:0;font-size:17px;line-height:1.55;color:#E3EEE6} /* daten */
 .sx-191{margin-top:20px;display:flex;align-items:center;gap:12px;background:#FFF4D6;color:#6B4A00;border:1px solid #E8C873;border-radius:16px;padding:12px 18px;font-size:16px;line-height:1.45} /* daten */
+/* Seit 0.31: kompakter Hero (Release_15 §9.2, Design 581). Die Regeln sx-1, sx-6 bis sx-10 und sx-102 oben sind auf
+   die neuen Masse gesetzt; die Kacheln der Startseite haben eigene Klassen, weil die KI-Seite die alten behält. */
+.sx-k34{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:16px;background:#C6F26B;color:#0B3D2E} /* start */
+.sx-k36{font-family:'Outfit',sans-serif;font-weight:700;font-size:20px;line-height:1.1;color:#4F7D0A} /* start */
+.sx-k37{font-family:'Outfit',sans-serif;font-weight:700;font-size:28px;line-height:1.1} /* start */
+.sx-k38{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-top:12px;flex:1 1 auto} /* start */
+.sx-k39{font-size:17px;line-height:1.5;color:#1F3B2D} /* start */
+.sx-k40{flex:0 0 auto;align-self:flex-end;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;background:#0B3D2E;color:#FFFFFF} /* start */

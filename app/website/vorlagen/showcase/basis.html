@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="{{ lang }}">
-{#- Rahmen der Showcase-Seiten (seit 0.30, Entwürfe Showcase_G*, Design 575; docs/08_Website.md, Abschnitt 12).
+{#- Rahmen der Showcase-Seiten (seit 0.30, Entwürfe Showcase_G*, Design 575, seit 0.31 Design 582; docs/08_Website.md, Abschnitt 12).
     Kein Teil der Spiel-Plattform: eigener Kopf (Showcase · Projekt · Plattform · KI & Automatisierung · Kontakt) und
     Fuss, nie im Index (noindex im HTML und im Kopf X-Robots-Tag), nicht in der Sitemap, keine Messung, kein
     Cookie-Hinweis. Die Plattform verlinkt nie hierher; nur der Showcase verlinkt auf die Plattform. -#}
@@ -22,7 +22,8 @@
 <meta property="og:image:alt" content="{{ k('vorschau_alt') }}">
 {% endif %}
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="{{ url('/favicon.ico') }}" sizes="32x32">
+{% for hl, href in sc_alternates %}<link rel="alternate" hreflang="{{ hl }}" href="{{ href }}">
+{% endfor %}<link rel="icon" href="{{ url('/favicon.ico') }}" sizes="32x32">
 <link rel="icon" href="{{ url('/favicon.svg') }}" type="image/svg+xml">
 <link rel="apple-touch-icon" href="{{ url('/apple-touch-icon.png') }}">
 <meta name="theme-color" content="#0B3D2E">
@@ -45,7 +46,13 @@
     <a class="sc-reiter" href="{{ sc_url('projekt') }}"{% if reiter == 'projekt' %} aria-current="page"{% endif %}>{{ k('nav_projekt') }}</a>
     <a class="sc-reiter" href="{{ link('start') }}">{{ k('nav_plattform') }}</a>
     <a class="sc-reiter" href="{{ sc_url('ki') }}"{% if reiter == 'ki' %} aria-current="page"{% endif %}>{{ k('nav_ki') }}</a>
-    {#- Sprachauswahl folgt, sobald die englischen Texte geprüft sind (Entscheid Carsten 26.11.2026). -#}
+    {#- Sprachauswahl (seit 0.31, Release_15 §9.1): wechselt auf dieselbe Seite in der anderen Sprache. -#}
+    <details class="sc-sprache" data-sprachmenue>
+      <summary aria-haspopup="true" aria-label="{{ k('sprache_label') }}: {{ sprachname[lang] }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/></svg><span>{{ sprachname[lang] }}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+      <div class="sc-sprachen" role="group" aria-label="{{ k('sprache_label') }}">
+        {% for sp in sprachen %}<a href="{{ sprach_url(sp) }}" lang="{{ sp }}" hreflang="{{ sp }}" aria-current="{{ 'true' if sp == lang else 'false' }}">{{ sprachname[sp] }}</a>{% endfor %}
+      </div>
+    </details>
     <a class="sc-kontakt" href="{{ link('kontakt') }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>{{ k('kontakt') }}</a>
   </nav>
 </header>
@@ -53,7 +60,7 @@
 {% block inhalt %}{% endblock %}
 </main>
 </div>
-<footer class="sc-fuss">
+<footer class="sc-fuss{% if seite == 'start' %} sc-fuss-eng{% endif %}">
   <svg viewBox="0 0 600 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g fill="none" stroke="#F4F7F2" stroke-width="2.5"><circle cx="470" cy="100" r="70"/><line x1="470" y1="-20" x2="470" y2="220"/><rect x="540" y="40" width="80" height="120"/></g></svg>
   <div class="sc-fuss-innen">
     <a class="sc-fuss-logo" href="{{ sc_url('start') }}">
@@ -69,5 +76,7 @@
   <div class="sc-streifen" aria-hidden="true"></div>
 </footer>
 </div>
+{#- site.js nur für das Sprachmenü (aria-expanded, Esc, Klick daneben). Ohne data-ga im body misst es nie. -#}
+<script src="{{ statisch('site.js') }}" defer></script>
 </body>
 </html>

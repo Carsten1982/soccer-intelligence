@@ -117,10 +117,10 @@
 <div class="eng abschnitt-detail auswertung">
   <div class="kopfzeile-mitte">
     <h2 class="h2-klein">{{ t('spiel.a_titel') }}</h2>
+    {#- Seit 0.31 (Release_19): fünf Einträge und ein Schlusssatz; nur Sprache, Regel „Bestätigt“ unverändert. -#}
     <details class="lesen">{{ lesen_knopf() }}<div class="hinweisbox"><ul>
-      <li><b>{{ t('spiel.a_leg_erwartung_titel') }}</b> {{ t('spiel.a_leg_erwartung') }}</li>
-      <li><b>{{ t('spiel.a_leg_ist_titel') }}</b> {{ t('spiel.a_leg_ist') }}</li>
-      <li><b>{{ t('spiel.a_leg_ok_titel') }}</b> {{ t('spiel.a_leg_ok') }}</li>
+      {% for e in ('basis', 'erwartung', 'ist', 'sig', 'ok') %}<li><b>{{ t('spiel.a_leg_' ~ e ~ '_titel') }}</b> {{ t('spiel.a_leg_' ~ e) }}</li>
+      {% endfor %}<li>{{ t('spiel.a_leg_schluss') }}</li>
     </ul></div></details>
   </div>
   {#- Seit 0.26 (Beschluss 55): je Gruppe eine eigene Tabelle (Karte) -#}

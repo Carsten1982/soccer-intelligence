@@ -5,6 +5,14 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 26.11.2026 – Version 0.31: Showcase Englisch, kompakter Hero, Archiv, „Wie lese ich das?“ (Release_20, Design 582)
+
+- **Carsten** · Version 0.30.1 eingespielt (`fa4221c`, Pull Request #35); Server läuft in UTC, `server.json` aktuell.
+- **Carsten** · Entscheide zu Release_20: Englisch für den Showcase freischalten (Texte Release_16/18), Adresse `/en/showcase/ai-automation`, eigenes englisches Vorschaubild, Texte „Wie lese ich das?“ mit den drei Korrekturen (a „jeder Mannschaft“, b „standout statistics … (high, medium or low)“, c „vom Ligadurchschnitt aus“), Archiv nur ohne Legende, wenn alle Partien gespielt sind, kompakter Hero nach den Vorlagen des Design-Chats statt „Header 10 % schmaler“.
+- **Claude** · Showcase: Englisch freigeschaltet (`SPRACHEN_FREI`), Sprachauswahl im Kopf (`<details>`, `site.js` für `aria-expanded`, Esc, Klick daneben), `hreflang` DE/EN, Vorschaubild je Sprache (`showcase-vorschau-en.jpg`, nur auf dem Server). Kompakter Hero nach Design 581/582 (Stilklassen angepasst, Kacheln der Startseite mit eigenen Klassen), unter 1500 px kleinere Abstände in der Navigation, damit der Kopf bei 1280 px passt. Englische Texte nach Release_16 abgeglichen (u. a. „Imported“, „Control run“, „Server utilisation“, „System status: Warning / Critical issue“, Uhrzeiten mit „at“).
+- **Claude** · Archiv (Release_17): Sind alle Partien gespielt, entfallen Legende, „Wie lese ich das?“ und „· n auffällig“; sonst unverändert. Spielseite nach dem Spiel (Release_19): fünf Einträge und Schlusssatz in DE und EN; Regel „Bestätigt“ unverändert.
+- **Claude** · Tests A1–A2, B, C, D, E (`tests/test_release_031.py`); `test_showcase_030.py` an die Freischaltung angepasst. axe-core auf acht Showcase-Seiten (DE/EN, 1280 und 1680 px) ohne Befund, kein Querscrollen; Startseite 987 px hoch (Entwurf 990 px); „Wie lese ich das?“ bei 360 und 412 px ohne Überlauf.
+
 ## 26.11.2026 – Version 0.30.1: Showcase-Dashboard Zeitzonen
 
 - **Carsten** · Prüfung 0.30 im Browser: Dashboard zeigt „Letzter Datenstand 03:01 Uhr“ und „Website & Server: Werte vorübergehend nicht verfügbar“. Foto folgt (wird heute Abend hochgeladen). KI-Karten ohne Link und englischer Footer korrekt.

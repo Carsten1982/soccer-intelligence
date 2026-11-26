@@ -347,6 +347,17 @@ mit der neuen Kachel (Tore, Bilanz), nur Pfeile zum Blättern. Auswertung: Hinwe
 2,5“. Spielseite: „kein verlässlicher Hinweis für kommende Spiele“, Chips immer rechtsbündig, lange Teamnamen umbrechen
 nur zwischen Wörtern bzw. mit Trennstrich. Betreiberangaben mit `tools/impressum_einrichten.sh` (nur `.env`).
 
+**Seit 0.31 (Release_17 und Release_19, Design 582, Entscheide Carsten 26.11.2026):** Archivseite eines Spieltags, auf der
+**alle Partien gespielt** sind: ohne Legende der Signalqualität, ohne „Wie lese ich das?“ und ohne „· n auffällig“ in der
+Zeile unter dem Kopf (`abgeschlossen` in `archiv_daten`). Steht noch eine Partie aus (laufender Spieltag unter der
+Archivadresse, verschobenes Spiel), bleibt die Seite wie bisher; die aktuelle Spieltag-Seite ist nicht betroffen. Titel,
+Description und Sitemap unverändert. Spielseite nach dem Spiel, „Wie lese ich das?“: fünf Einträge (Ligadurchschnitt /
+Vergleichswert, Erwartungswert, Tatsächlich, Signalqualität, Bestätigt) und ein Schlusssatz zu „Über 2,5 Tore“ und „Beide
+Teams treffen“, mit drei Korrekturen gegenüber Release_19: „letzten 10 Ligaspielen jeder Mannschaft“ (wie Methodik D1),
+englisch „similar standout statistics … (high, medium or low)“ (Release_14), „in die erwartete Richtung vom
+Ligadurchschnitt aus“. Die Regel „Bestätigt“ (Regelwerk 11.1) ändert sich nicht. Tests D und E in
+`tests/test_release_031.py`.
+
 Werte unverändert aus dem Rechenkern (F6): Erwartungswert = `hauptwert`, Teamwerte = `heim`/`auswaerts`, Ligaschnitt = `referenz`, Abweichung = `abweichung` (gerundet), Stufe aus `schwellen.toml`; KPI 08 in Prozent.
 
 ### 7.2 Startseite (Entwurf 1d, ergänzend 1b; Übergabe Abschnitt 5)
@@ -600,17 +611,20 @@ Computer einzeilig, bis 520 px höchstens 300 px breit mit festem Umbruch nach d
 | 0.28 | Cookie-Hinweis, Cookie-Einstellungen und Google Analytics 4 erst nach Zustimmung (Abschnitt 4.3) |
 | 0.29 | Englische Texte nach Release_14 (Design 571): «standout statistic(s)» statt «anomaly», Standard-Sätze S1–S3; Methodik DE: D1, D2 |
 | 0.30 | **Showcase** (Abschnitt 12): vier Seiten unter `/showcase…`, Dashboard „Datenmonitoring“ mit Live-Werten aus dem Backend |
+| 0.30.1 | Showcase-Dashboard in Schweizer Zeit, Website-Symbol 192 px für Google |
+| 0.31 | Showcase auf Englisch mit Sprachauswahl, kompakter Hero (Design 582); Archiv ohne Legende, wenn alle Partien gespielt sind; neue Texte „Wie lese ich das?“ nach dem Spiel |
 | später | Auswertung der Besucherzahlen (GA4), Rückblick für Fans |
 
 ## 12. Showcase-Seiten (seit 0.30)
 
 Grundlage: Release_15 und Release_11 des Design-Chats, Entwürfe `Showcase_G`, `_Projekt`, `_KI`, `_Datenmonitoring`
-(Design 575); Entscheide Carsten 26.11.2026. **Kein Teil der Spiel-Plattform**, sondern ein Projekt-Showcase von Carsten
+(Design 575, seit 0.31 Design 582 mit kompaktem Hero und Sprachauswahl, Release_15 §9 und Release_20); Entscheide
+Carsten 26.11.2026. **Kein Teil der Spiel-Plattform**, sondern ein Projekt-Showcase von Carsten
 Thiele für Bewerbungen. Code: `app/website/showcase.py`, Vorlagen `vorlagen/showcase/`, Stile `statisch/showcase.css`
 (Rahmen, von Hand) und `statisch/showcase-entwurf.css` (aus den eingebetteten Stilen der Entwürfe übernommen, eine Klasse
 je Stil – die Sicherheitsrichtlinie erlaubt keine eingebetteten Stile).
 
-| Seite | Adresse (DE) | Adresse (EN, vorbereitet) |
+| Seite | Adresse (DE) | Adresse (EN, seit 0.31) |
 |---|---|---|
 | Showcase | `/showcase` | `/en/showcase` |
 | Projekt | `/showcase/project` | `/en/showcase/project` |
@@ -620,13 +634,23 @@ je Stil – die Sicherheitsrichtlinie erlaubt keine eingebetteten Stile).
 - **Sichtbarkeit:** `noindex, nofollow` im HTML und im Kopf `X-Robots-Tag`; nicht in der Sitemap, nicht in robots.txt
   gesperrt; **keine Verlinkung von der Plattform** (Test S3) – nur der Showcase verlinkt auf die Plattform. Kein
   Cookie-Hinweis, keine Messung. Linkvorschau mit `og:title`, `og:description`, `og:image` (Banner mit Foto, 1200 × 630).
-- **Sprache:** nur Deutsch freigeschaltet; die englischen Texte stehen in `en.json` (Übersetzung des Design-Chats, an
-  Release_14 angepasst: „standout statistics“), werden aber erst nach der Übersetzungsprüfung freigeschaltet
-  (`SPRACHEN_FREI` in `showcase.py`). Bis dahin keine Sprachauswahl im Kopf.
+- **Sprache (seit 0.31):** Deutsch und Englisch (`SPRACHEN_FREI` in `showcase.py`). Englische Texte nach Release_16
+  (Spalte Englisch) mit den Entscheiden aus Release_18; Zustandstexte des Dashboards ebenso („Imported“, „Control run“,
+  „System status: Warning / Critical issue“, Uhrzeiten mit „at“). Sprachauswahl im Kopf zwischen «KI & Automatisierung»
+  und «Kontakt» (Globus, «Deutsch / English», Screenreader «Sprache wählen» / «Choose language»), wechselt auf dieselbe
+  Seite; ohne Skript über `<details>`, `site.js` setzt `aria-expanded` und schliesst per Esc oder Klick daneben (ohne
+  `data-ga` misst es nie). `hreflang` zwischen DE und EN, `og:locale` und Beschreibung je Sprache. Auch die englischen
+  Seiten sind noindex, nicht in der Sitemap und nicht von der Plattform verlinkt. Die Begriffe „Notices“, „Control run“,
+  „Imported“, „Availability“ sind nur Anzeigetexte; das Backend arbeitet mit eigenen Codes.
 - **Nur Desktop:** Mindestbreite 1280 px, schmalere Fenster scrollen waagerecht; kein Handy-Layout.
 - **Bilder nur auf dem Server** (`website-bilder/`, nie in Git): `showcase-portrait.webp` (Foto im Hero, aus dem Entwurf,
-  grün eingefärbt) und `showcase-vorschau.jpg` (Linkvorschau). Fehlt das Foto, steht ein neutraler Platzhalter; fehlt
-  das Vorschaubild, gibt es kein `og:image`.
+  grün eingefärbt), `showcase-vorschau.jpg` (Linkvorschau Deutsch) und seit 0.31 `showcase-vorschau-en.jpg` (Englisch,
+  Entscheid Carsten 26.11.2026). Fehlt das Foto, steht ein neutraler Platzhalter; fehlt das Vorschaubild einer Sprache,
+  gibt es dort kein `og:image`.
+- **Kompakter Hero (seit 0.31, Design 581):** Hero 470 px, Titel 72 px (KI-Seite 56 px), Untertitel 32 px, Einleitung
+  18 px, Foto unten bündig, Tablet kleiner; Kacheln der Startseite ca. 190 px; Startseite 987 px hoch (Entwurf 990 px),
+  Header, Hero und Kacheln ohne Scrollen bei 1680 × 950 px. Unter 1500 px Breite sind die Abstände der Navigation 20 statt
+  40 px, damit der Kopf mit der Sprachauswahl bei 1280 px passt. Das Dashboard hat keinen Foto-Hero und bleibt gleich.
 - **Navigation:** Showcase · Projekt · Plattform (Startseite der Plattform) · KI & Automatisierung · Kontakt; aktiver
   Reiter mit `aria-current`. KI-Seite: Karte 01 → Dashboard; Karten 02–04 ohne Link, Status „In Entwicklung“ (nur das
   Datenmonitoring ist im Betrieb).
@@ -653,6 +677,7 @@ je Stil – die Sicherheitsrichtlinie erlaubt keine eingebetteten Stile).
 - **Leere Zustände** (Entscheid Carsten 26.11.2026, Texte vorläufig, Design-Chat kann verfeinern): „Wird beim nächsten
   Release erfasst“, „Noch keine Läufe im Protokoll.“, „Verlauf ab … (tägliche Aufzeichnung)“, „Messung ab diesem
   Release“, „Werte vorübergehend nicht verfügbar“ (Prüfskript meldet sich länger als 10 Minuten nicht), „Keine“ (Alarme).
-- **Tests:** `tests/test_showcase_030.py` (S1–S8). axe-core 4.10 (WCAG 2 A/AA mit Kontrast, Best Practices) auf allen vier
-  Seiten bei 1280 und 1680 px ohne Befund; kein Querscrollen ab 1280 px; keine Meldung der Sicherheitsrichtlinie.
+- **Tests:** `tests/test_showcase_030.py` (S1–S9), `tests/test_release_031.py` (A1, A2, B, C). axe-core 4.10 (WCAG 2 A/AA
+  mit Kontrast, Best Practices) auf allen acht Seiten (DE und EN) bei 1280 und 1680 px ohne Befund; kein Querscrollen ab
+  1280 px; keine Meldung der Sicherheitsrichtlinie.
 
