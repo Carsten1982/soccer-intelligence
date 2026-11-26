@@ -8,6 +8,7 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 ## 26.11.2026 – Version 0.28 eingespielt
 
 - **Carsten** · Version 0.28 eingespielt (`4069af4`, Pull Request #32; Tests grün, drei Testmails). GA4-Echtzeit zeigt nach Zustimmung 1 aktiven Nutzer (Schweiz). Prüfung im Netzwerk-Tab am Arbeitsrechner nicht möglich; „vor der Zustimmung nichts an Google“ ist durch den Browser-Test E7 belegt. In GA4 zwei Konten „Soccer Intelligence“ gefunden: 417115377 (Property 565372051, `G-9XH0LGQLQ7`, in Gebrauch) und 417487272 (vermutlich leer, doppelt angelegt).
+- **Carsten / Claude** · GA4-Einstellungen gemeinsam durchgegangen: Aufbewahrung 14 Monate, Google-Signale aus (waren an), Datenweitergabe an Google alle vier Optionen aus (waren an).
 - **Claude** · Stand nachgetragen.
 
 ## 26.11.2026 – Version 0.28: Cookie-Hinweis und Google Analytics
