@@ -129,7 +129,7 @@ def test_s4_projekt_zahlen(dienst, monkeypatch):
     db = SimpleNamespace(leagues={k: [0] * n for k, n in zahlen.items()})
     monkeypatch.setattr(dienst, "bestand", lambda: SimpleNamespace(db=db, gesperrt=False), raising=False)
     html = _seite(dienst, "/showcase/project").inhalt.decode()
-    assert SC.version() == settings.APP_VERSION.split(" ")[0] == "0.30"
+    assert SC.version() == settings.APP_VERSION.split(" ")[0] and SC.version().startswith("0.")
     assert f">{SC.version()}</b>" in html                                         # Version aus einer Quelle
     assert html.count(">12’017<") == 2                                            # Produkt und „Projekt in Zahlen“
     assert html.count(">23<") == 2 and html.count(">4<") >= 2
