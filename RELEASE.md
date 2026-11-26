@@ -42,7 +42,7 @@ bash /docker/football-dashboard/tools/einspielen.sh github
 
 ## Erwartungswerte
 
-- Tests rund **805 bestanden**, keine Fehler (hier: 821 bestanden, 18 übersprungen; der Browser-Test E7 wird auf dem
+- Tests rund **810 bestanden**, keine Fehler (hier: 824 bestanden, 18 übersprungen; der Browser-Test E7 wird auf dem
   Server übersprungen). Dashboard-Fusszeile: „Version 0.30 – Showcase“.
 - Schritt 5 wie bisher (`/` = 301, `/de/` = 200, `/vorschau/` = 401), drei Testmails.
 - Danach (nur lesend):
