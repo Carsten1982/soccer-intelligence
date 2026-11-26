@@ -1,3 +1,4 @@
+
 # Soccer Intelligence – A Personal Football Analytics Project
 
 ### Football, analysed.
@@ -45,7 +46,7 @@ The matchday dashboard provides an overview of upcoming fixtures across the four
 
 Users can quickly identify matches that stand out statistically and explore the underlying indicators.
 
-![Matchday Overview](docs/images/matchday-overview.png)
+![Matchday Overview](docs/Matchday.png)
 
 ### 2. Standout Matches
 
@@ -63,7 +64,7 @@ Deviations are displayed as percentages, making unusual values easier to identif
 
 Each signal also includes a quality classification to help put the results into context.
 
-![Standout Matches](docs/images/standout-matches.png)
+![Standout Matches](docs/Homepage.png)
 
 ### 3. Detailed Match Analysis
 
@@ -79,7 +80,7 @@ Users can explore individual fixtures and their statistical characteristics, inc
 
 The aim is not simply to display numbers, but to make them easier to understand and interpret.
 
-![Match Detail Analysis](docs/images/match-detail.png)
+![Match Detail Analysis](docs/Match-detail-page.png)
 
 ### 4. Transparent Methodology
 
@@ -95,7 +96,7 @@ The explanations are structured into three levels:
 
 The goal is to make the analytical approach understandable, even without an advanced statistical background.
 
-![Methodology](docs/images/methodology.png)
+![Methodology](docs/Methodology.png)
 
 ---
 
@@ -140,7 +141,7 @@ Whether you are interested in the football analysis itself or simply curious abo
 
 ### Explore Soccer Intelligence
 
-🌐 **Website:** [https://soccer-intelligence.com](https://soccer-intelligence.com)
+🌐 **Website:** [soccer-intelligence.com](https://soccer-intelligence.com)
 
 ---
 
