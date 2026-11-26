@@ -5,6 +5,12 @@ Wer: **Carsten**, **ChatGPT**, **Claude**
 
 ---
 
+## 26.11.2026 – Version 0.27.1 eingespielt
+
+- **Carsten** · Version 0.27.1 eingespielt (`cacbb83`, Pull Request #31). `https://www.soccer-intelligence.com/en/` → 308 auf `https://soccer-intelligence.com/en/` (Traefik antwortet bei „permanent“ mit 308 statt 301 – ebenfalls dauerhaft, für Google gleichwertig); `http://www…` → 308 auf `https://www…`. Offener Punkt www erledigt.
+- **Carsten** · Google Search Console: Property `https://soccer-intelligence.com/` über DNS-TXT bei Hostinger bestätigt, Sitemap eingereicht (anfangs „Konnte nicht abgerufen werden“; Abruf mit Googlebot-Kennung = 200, `application/xml`).
+- **Claude** · Stand nachgetragen.
+
 ## 26.11.2026 – Version 0.27.1: www leitet weiter
 
 - **Carsten** · Abklärung www auf dem Server: DNS zeigt auf unseren Server, `http://www` → 308 auf `https://www`, dort 404 mit Standard-Zertifikat; Traefik mit HTTP-Challenge und globaler Umleitung auf HTTPS.
